@@ -1,0 +1,105 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  
+}
+
+
+model CompanyDetails {
+  companyId             Int       @id @default(autoincrement()) @map("company_id")
+  companyName           String    @map("company_name")
+  companyCode           String    @unique @map("company_code")
+
+  companyLogo           String?   @map("company_logo")
+  companyEmail          String    @unique @map("company_email")
+  companyPhone          String?   @map("company_phone")
+  website               String?
+
+  gstNumber             String?   @map("gst_number")
+  panNumber             String?   @map("pan_number")
+  cinNumber             String?   @map("cin_number")
+  registrationNumber    String?   @map("registration_number")
+
+  industryType          String?   @map("industry_type")
+  companyType           String?   @map("company_type")
+
+  foundedDate           DateTime? @map("founded_date")
+
+  employeeStrength      Int?      @map("employee_strength")
+
+  addressLine1          String?   @map("address_line1")
+  addressLine2          String?   @map("address_line2")
+  city                  String?
+  state                 String?
+  country               String?
+  pincode               String?
+
+  timezone              String?
+  currency              String?
+
+  workingHoursPerDay    Float?    @map("working_hours_per_day")
+  workingDaysPerWeek    Int?      @map("working_days_per_week")
+
+  officeStartTime       String?   @map("office_start_time")
+  officeEndTime         String?   @map("office_end_time")
+
+  latitude              Decimal?  @db.Decimal(10, 8)
+  longitude             Decimal?  @db.Decimal(11, 8)
+  allowedRadius         Int?      @map("allowed_radius")
+
+  status                Boolean   @default(true)
+
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  @@map("company_details")
+}
+
+model Role {
+  roleId          Int              @id @default(autoincrement()) @map("role_id")
+  roleName        String           @unique @map("role_name")
+  roleCode        String           @unique @map("role_code")
+  description     String?
+  status          Boolean          @default(true)
+
+  rolePermissions RolePermission[]
+
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+
+  @@map("roles")
+}
+
+model Permission {
+  permissionId     Int              @id @default(autoincrement()) @map("permission_id")
+  permissionName   String           @unique @map("permission_name")
+  permissionCode   String           @unique @map("permission_code")
+  module           String
+  description      String?
+
+  rolePermissions  RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  id            Int        @id @default(autoincrement())
+
+  roleId        Int        @map("role_id")
+  permissionId  Int        @map("permission_id")
+
+  role          Role       @relation(fields: [roleId], references: [roleId])
+  permission    Permission @relation(fields: [permissionId], references: [permissionId])
+
+  @@unique([roleId, permissionId])
+  @@map("role_permissions")
+}
