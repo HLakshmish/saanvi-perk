@@ -10,96 +10,337 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  
 }
 
-
 model CompanyDetails {
-  companyId             Int       @id @default(autoincrement()) @map("company_id")
-  companyName           String    @map("company_name")
-  companyCode           String    @unique @map("company_code")
+  companyId   Int    @id @default(autoincrement()) @map("company_id")
+  companyName String @map("company_name")
+  companyCode String @unique @map("company_code")
 
-  companyLogo           String?   @map("company_logo")
-  companyEmail          String    @unique @map("company_email")
-  companyPhone          String?   @map("company_phone")
-  website               String?
+  companyLogo  String? @map("company_logo")
+  companyEmail String  @unique @map("company_email")
+  companyPhone String? @map("company_phone")
+  website      String?
 
-  gstNumber             String?   @map("gst_number")
-  panNumber             String?   @map("pan_number")
-  cinNumber             String?   @map("cin_number")
-  registrationNumber    String?   @map("registration_number")
+  gstNumber          String? @map("gst_number")
+  panNumber          String? @map("pan_number")
+  cinNumber          String? @map("cin_number")
+  registrationNumber String? @map("registration_number")
 
-  industryType          String?   @map("industry_type")
-  companyType           String?   @map("company_type")
+  industryType String? @map("industry_type")
+  companyType  String? @map("company_type")
 
-  foundedDate           DateTime? @map("founded_date")
+  foundedDate DateTime? @map("founded_date")
 
-  employeeStrength      Int?      @map("employee_strength")
+  employeeStrength Int? @map("employee_strength")
 
-  addressLine1          String?   @map("address_line1")
-  addressLine2          String?   @map("address_line2")
-  city                  String?
-  state                 String?
-  country               String?
-  pincode               String?
+  addressLine1 String? @map("address_line1")
+  addressLine2 String? @map("address_line2")
+  city         String?
+  state        String?
+  country      String?
+  pincode      String?
 
-  timezone              String?
-  currency              String?
+  timezone String?
+  currency String?
 
-  workingHoursPerDay    Float?    @map("working_hours_per_day")
-  workingDaysPerWeek    Int?      @map("working_days_per_week")
+  workingHoursPerDay Float? @map("working_hours_per_day")
+  workingDaysPerWeek Int?   @map("working_days_per_week")
 
-  officeStartTime       String?   @map("office_start_time")
-  officeEndTime         String?   @map("office_end_time")
+  officeStartTime String? @map("office_start_time")
+  officeEndTime   String? @map("office_end_time")
 
-  latitude              Decimal?  @db.Decimal(10, 8)
-  longitude             Decimal?  @db.Decimal(11, 8)
-  allowedRadius         Int?      @map("allowed_radius")
+  latitude      Decimal? @db.Decimal(10, 8)
+  longitude     Decimal? @db.Decimal(11, 8)
+  allowedRadius Int?     @map("allowed_radius")
 
-  status                Boolean   @default(true)
+  status Boolean @default(true)
 
-  createdAt             DateTime  @default(now()) @map("created_at")
-  updatedAt             DateTime  @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  departments Department[]
+  users       User[]
 
   @@map("company_details")
 }
 
 model Role {
-  roleId          Int              @id @default(autoincrement()) @map("role_id")
-  roleName        String           @unique @map("role_name")
-  roleCode        String           @unique @map("role_code")
-  description     String?
-  status          Boolean          @default(true)
+  roleId      Int     @id @default(autoincrement()) @map("role_id")
+  roleName    String  @unique @map("role_name")
+  roleCode    String  @unique @map("role_code")
+  description String?
+  status      Boolean @default(true)
 
   rolePermissions RolePermission[]
+  users           User[]
 
-  createdAt       DateTime         @default(now()) @map("created_at")
-  updatedAt       DateTime         @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("roles")
 }
 
 model Permission {
-  permissionId     Int              @id @default(autoincrement()) @map("permission_id")
-  permissionName   String           @unique @map("permission_name")
-  permissionCode   String           @unique @map("permission_code")
-  module           String
-  description      String?
+  permissionId   Int     @id @default(autoincrement()) @map("permission_id")
+  permissionName String  @unique @map("permission_name")
+  permissionCode String  @unique @map("permission_code")
+  module         String
+  description    String?
 
-  rolePermissions  RolePermission[]
+  rolePermissions RolePermission[]
 
   @@map("permissions")
 }
 
 model RolePermission {
-  id            Int        @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-  roleId        Int        @map("role_id")
-  permissionId  Int        @map("permission_id")
+  roleId       Int @map("role_id")
+  permissionId Int @map("permission_id")
 
-  role          Role       @relation(fields: [roleId], references: [roleId])
-  permission    Permission @relation(fields: [permissionId], references: [permissionId])
+  role       Role       @relation(fields: [roleId], references: [roleId])
+  permission Permission @relation(fields: [permissionId], references: [permissionId])
 
   @@unique([roleId, permissionId])
   @@map("role_permissions")
 }
+
+model Department {
+  departmentId   Int      @id @default(autoincrement()) @map("department_id")
+  companyId      Int      @map("company_id")
+  departmentCode String   @unique @map("department_code")
+  departmentName String   @map("department_name")
+  description    String?
+  status         Boolean  @default(true)
+  createdBy      Int?     @map("created_by") // FK -> Users.user_id
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  company       CompanyDetails @relation(fields: [companyId], references: [companyId])
+  createdByUser User?          @relation("DepartmentCreatedBy", fields: [createdBy], references: [userId])
+  users         User[]
+
+  @@map("departments")
+}
+
+// ==========================
+// User
+// ==========================
+model User {
+  userId       Int    @id @default(autoincrement()) @map("user_id")
+  employeeCode String @unique @map("employee_code")
+
+  companyId    Int  @map("company_id")
+  roleId       Int  @map("role_id")
+  departmentId Int? @map("department_id")
+
+  firstName String @map("first_name")
+  lastName  String @map("last_name")
+
+  officialEmail String  @unique @map("official_email")
+  phoneNumber   String? @map("phone_number")
+  password      String
+
+  employmentType EmploymentType @map("employment_type")
+
+  joiningDate      DateTime  @map("joining_date")
+  probationEndDate DateTime? @map("probation_end_date")
+
+  reportingToId Int? @map("reporting_to")
+  shiftId       Int? @map("shift_id")
+
+  status EmployeeStatus @default(ACTIVE)
+
+  lastLogin DateTime? @map("last_login")
+
+  createdBy Int? @map("created_by")
+  updatedBy Int? @map("updated_by")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  company    CompanyDetails @relation(fields: [companyId], references: [companyId])
+  role       Role           @relation(fields: [roleId], references: [roleId])
+  department Department?    @relation(fields: [departmentId], references: [departmentId])
+
+  manager      User?  @relation("ReportingManager", fields: [reportingToId], references: [userId])
+  subordinates User[] @relation("ReportingManager")
+
+  createdByUser User?  @relation("UserCreatedBy", fields: [createdBy], references: [userId])
+  createdUsers  User[] @relation("UserCreatedBy")
+
+  updatedByUser User?  @relation("UserUpdatedBy", fields: [updatedBy], references: [userId])
+  updatedUsers  User[] @relation("UserUpdatedBy")
+
+  createdDepartments Department[] @relation("DepartmentCreatedBy")
+
+  personalInformation PersonalInformation?
+  parentsInformation  ParentsInformation?
+  addresses           AddressInformation[]
+  bankDetails         BankDetails[]
+  documents           EmployeeDocument[]
+
+  @@map("users")
+}
+
+// ==========================
+// Personal Information
+// ==========================
+model PersonalInformation {
+  personalInfoId Int @id @default(autoincrement()) @map("personal_info_id")
+  userId         Int @unique @map("user_id")
+
+  dateOfBirth   DateTime? @map("date_of_birth")
+  gender        String?
+  maritalStatus String?   @map("marital_status")
+  bloodGroup    String?   @map("blood_group")
+  nationality   String?
+  religion      String?
+  motherTongue  String?   @map("mother_tongue")
+
+  aadhaarNumber        String? @unique @map("aadhaar_number")
+  panNumber            String? @unique @map("pan_number")
+  passportNumber       String? @unique @map("passport_number")
+  drivingLicenseNumber String? @unique @map("driving_license_number")
+
+  officialEmail String? @map("official_email")
+  personalEmail String? @map("personal_email")
+  profilePhoto  String? @map("profile_photo")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [userId])
+
+  @@map("personal_information")
+}
+
+// ==========================
+// Parents Information
+// ==========================
+model ParentsInformation {
+  parentId Int @id @default(autoincrement()) @map("parent_id")
+  userId   Int @unique @map("user_id")
+
+  fatherName       String? @map("father_name")
+  fatherMobile     String? @map("father_mobile")
+  fatherOccupation String? @map("father_occupation")
+
+  motherName       String? @map("mother_name")
+  motherMobile     String? @map("mother_mobile")
+  motherOccupation String? @map("mother_occupation")
+
+  guardianName   String? @map("guardian_name")
+  guardianMobile String? @map("guardian_mobile")
+  relationship   String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [userId])
+
+  @@map("parents_information")
+}
+
+// ==========================
+// Address Information
+// ==========================
+model AddressInformation {
+  addressId Int @id @default(autoincrement()) @map("address_id")
+  userId    Int @map("user_id")
+
+  addressType AddressType @map("address_type")
+
+  addressLine1 String  @map("address_line1")
+  addressLine2 String? @map("address_line2")
+
+  city       String
+  state      String
+  country    String
+  postalCode String @map("postal_code")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [userId])
+
+  @@map("address_information")
+}
+
+// ==========================
+// Bank Details
+// ==========================
+model BankDetails {
+  bankId Int @id @default(autoincrement()) @map("bank_id")
+  userId Int @map("user_id")
+
+  accountHolderName String @map("account_holder_name")
+  bankName          String @map("bank_name")
+  branchName        String @map("branch_name")
+  accountNumber     String @map("account_number")
+  ifscCode          String @map("ifsc_code")
+  accountType       String @map("account_type")
+
+  upiId         String? @map("upi_id")
+  salaryAccount Boolean @default(false) @map("salary_account")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [userId])
+
+  @@map("bank_details")
+}
+
+// ==========================
+// Employee Documents
+// ==========================
+model EmployeeDocument {
+  documentId Int @id @default(autoincrement()) @map("document_id")
+  userId     Int @map("user_id")
+
+  documentType   String  @map("document_type")
+  documentNumber String? @map("document_number")
+  documentUrl    String  @map("document_url")
+
+  expiryDate DateTime? @map("expiry_date")
+
+  verificationStatus VerificationStatus @default(PENDING) @map("verification_status")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [userId])
+
+  @@map("employee_documents")
+}
+
+// ==========================
+// Enums
+// ==========================
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERN
+}
+
+enum EmployeeStatus {
+  ACTIVE
+  INACTIVE
+  RESIGNED
+  TERMINATED
+}
+
+enum AddressType {
+  CURRENT
+  PERMANENT
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+
