@@ -1,0 +1,11 @@
+import { DashboardView } from "@/components/dashboard/DashboardView";
+
+export default function AdminDashboardPage() {
+  return (
+    <DashboardView
+      initialRole="admin"
+      userName="Varsha"
+      companyName="Saanvi Technologies"
+    />
+  );
+}

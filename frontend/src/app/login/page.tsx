@@ -8,11 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function LoginPage() {
-  return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-950 font-[family-name:var(--font-geist-sans)]">
-      <div className="w-full">
-        <LoginForm />
-      </div>
-    </div>
-  );
+  return <LoginForm />;
 }
