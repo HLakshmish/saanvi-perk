@@ -24,5 +24,8 @@ app.get("/", async (request, reply) => {
 
 app.register(require("./auth/auth.route"), { prefix: "/api/auth" });
 app.register(require("./company/company.route"), { prefix: "/api/companies" });
+app.register(require("./role/role.route"), { prefix: "/api/roles" });
+app.register(require("./department/department.route"), { prefix: "/api/departments" });
+app.register(require("./user/user.route"), { prefix: "/api/users" });
 
 module.exports = app;
