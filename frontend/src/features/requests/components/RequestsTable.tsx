@@ -60,31 +60,31 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
   );
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6 sm:p-8 shadow-2xs min-h-[500px] flex flex-col justify-between relative">
+    <div className="bg-white rounded-2xl border border-slate-200/80 p-6 sm:p-8 shadow-2xs hover:shadow-xs transition-all min-h-[500px] flex flex-col justify-between relative">
       <div>
         {/* Filters Header */}
         <div className="flex flex-wrap items-center gap-3 mb-6">
           <div className="relative min-w-[240px] sm:min-w-[280px]">
-            <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Search table items"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-gray-800 placeholder:text-gray-400"
+              className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-800 text-sm placeholder:text-slate-400 shadow-2xs"
             />
           </div>
 
           <button
             onClick={() => setIsDatePickerOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 bg-white hover:bg-gray-50 font-medium transition-colors cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2 border border-slate-300 rounded-xl text-sm text-slate-700 bg-white hover:bg-slate-50 font-semibold shadow-2xs transition-colors cursor-pointer"
           >
-            <CalendarIcon className="w-4 h-4 text-gray-500" />
+            <CalendarIcon className="w-4 h-4 text-slate-500" />
             <span>{dateRange}</span>
-            <ChevronDown className="w-3.5 h-3.5 text-gray-400 ml-1" />
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400 ml-1" />
           </button>
 
-          <button className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-lg shadow-2xs transition-colors">
+          <button className="px-5 py-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 text-white font-semibold text-sm rounded-xl shadow-md shadow-indigo-500/20 transition-all hover:-translate-y-0.5 cursor-pointer">
             Search
           </button>
         </div>
@@ -137,33 +137,33 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
 
       {/* Custom Date Picker Modal */}
       {isDatePickerOpen && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl border border-gray-200 w-full max-w-[640px] overflow-hidden flex flex-col">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200/80 w-full max-w-[640px] overflow-hidden flex flex-col animate-scale-in">
             {/* Modal Header Row: From & To inputs */}
-            <div className="grid grid-cols-2 gap-6 p-5 border-b border-gray-100 bg-slate-50/50">
+            <div className="grid grid-cols-2 gap-6 p-5 border-b border-slate-100 bg-slate-50/50">
               <div className="flex items-center gap-3">
-                <span className="text-xs font-semibold text-gray-500 w-8">From</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider w-8">From</span>
                 <div className="relative flex-1">
                   <input
                     type="text"
                     value="01-08-2026"
                     readOnly
-                    className="w-full text-xs font-bold text-gray-800 bg-white border border-gray-350 rounded-lg py-2 px-3 focus:outline-none"
+                    className="w-full text-xs font-bold text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 pl-3 pr-8 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-2xs"
                   />
-                  <CalendarIcon className="w-3.5 h-3.5 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2" />
+                  <CalendarIcon className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
                 </div>
               </div>
 
               <div className="flex items-center gap-3">
-                <span className="text-xs font-semibold text-gray-500 w-6">To</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider w-6">To</span>
                 <div className="relative flex-1">
                   <input
                     type="text"
                     value="31-08-2026"
                     readOnly
-                    className="w-full text-xs font-bold text-gray-800 bg-white border border-gray-350 rounded-lg py-2 px-3 focus:outline-none"
+                    className="w-full text-xs font-bold text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 pl-3 pr-8 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-2xs"
                   />
-                  <CalendarIcon className="w-3.5 h-3.5 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2" />
+                  <CalendarIcon className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
                 </div>
               </div>
             </div>
@@ -173,16 +173,16 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
               {/* August 2026 */}
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-3">
-                  <button className="p-1 hover:bg-gray-100 rounded-md text-gray-600 transition-colors">
+                  <button className="p-1 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-800 transition-colors cursor-pointer">
                     <ChevronLeft className="w-4 h-4" />
                   </button>
-                  <span className="text-xs font-bold text-gray-800">
+                  <span className="text-xs font-bold text-slate-800">
                     August 2026
                   </span>
                   <div className="w-6" /> {/* Placeholder spacing */}
                 </div>
 
-                <div className="grid grid-cols-7 text-center text-[10px] font-semibold text-gray-400 mb-2">
+                <div className="grid grid-cols-7 text-center text-[10px] font-bold text-slate-400 mb-2">
                   <span>Su</span>
                   <span>Mo</span>
                   <span>Tu</span>
@@ -192,7 +192,7 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
                   <span>Sa</span>
                 </div>
 
-                <div className="grid grid-cols-7 text-center text-xs gap-y-1.5 font-medium text-gray-700">
+                <div className="grid grid-cols-7 text-center text-xs gap-y-1.5 font-medium text-slate-700">
                   {/* Empty cells before Saturday */}
                   <span className="py-1"></span>
                   <span className="py-1"></span>
@@ -202,7 +202,7 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
                   <span className="py-1"></span>
 
                   {/* August 1 - Highlight Start */}
-                  <span className="flex justify-center items-center bg-blue-600 text-white font-bold rounded-l-md py-1">
+                  <span className="flex justify-center items-center bg-indigo-600 text-white font-bold rounded-l-xl py-1">
                     1
                   </span>
 
@@ -212,7 +212,7 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
                     return (
                       <span
                         key={day}
-                        className="py-1 bg-blue-50 text-blue-700 font-semibold"
+                        className="py-1 bg-indigo-50 text-indigo-700 font-semibold border-y border-indigo-100/40"
                       >
                         {day}
                       </span>
@@ -220,12 +220,12 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
                   })}
 
                   {/* August 30 */}
-                  <span className="py-1 bg-blue-50 text-blue-700 font-semibold">
+                  <span className="py-1 bg-indigo-50 text-indigo-700 font-semibold border-y border-indigo-100/40">
                     30
                   </span>
 
                   {/* August 31 - Highlight End */}
-                  <span className="flex justify-center items-center bg-blue-600 text-white font-bold rounded-r-md py-1">
+                  <span className="flex justify-center items-center bg-indigo-600 text-white font-bold rounded-r-xl py-1">
                     31
                   </span>
                 </div>
@@ -235,15 +235,15 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-3">
                   <div className="w-6" /> {/* Placeholder spacing */}
-                  <span className="text-xs font-bold text-gray-800">
+                  <span className="text-xs font-bold text-slate-800">
                     September 2026
                   </span>
-                  <button className="p-1 hover:bg-gray-100 rounded-md text-gray-600 transition-colors">
+                  <button className="p-1 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-800 transition-colors cursor-pointer">
                     <ChevronRightIcon className="w-4 h-4" />
                   </button>
                 </div>
 
-                <div className="grid grid-cols-7 text-center text-[10px] font-semibold text-gray-400 mb-2">
+                <div className="grid grid-cols-7 text-center text-[10px] font-bold text-slate-400 mb-2">
                   <span>Su</span>
                   <span>Mo</span>
                   <span>Tu</span>
@@ -253,7 +253,7 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
                   <span>Sa</span>
                 </div>
 
-                <div className="grid grid-cols-7 text-center text-xs gap-y-1.5 font-medium text-gray-600">
+                <div className="grid grid-cols-7 text-center text-xs gap-y-1.5 font-medium text-slate-600">
                   {/* Empty cells before Tuesday */}
                   <span className="py-1"></span>
                   <span className="py-1"></span>
@@ -262,7 +262,7 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
                   {Array.from({ length: 30 }, (_, i) => {
                     const day = i + 1;
                     return (
-                      <span key={day} className="py-1 text-gray-700">
+                      <span key={day} className="py-1 text-slate-700 font-semibold">
                         {day}
                       </span>
                     );
@@ -272,10 +272,10 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
             </div>
 
             {/* Modal Actions Footer */}
-            <div className="flex items-center justify-end gap-3 p-4 border-t border-gray-100 bg-slate-50/30">
+            <div className="flex items-center justify-end gap-3 p-4 border-t border-slate-100 bg-slate-50/30">
               <button
                 onClick={() => setIsDatePickerOpen(false)}
-                className="px-5 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 bg-white hover:bg-gray-50 font-semibold transition-colors cursor-pointer"
+                className="px-5 py-2 border border-slate-350 rounded-xl text-sm text-slate-700 bg-white hover:bg-slate-50 font-bold shadow-2xs transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -284,7 +284,7 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
                   setDateRange("01 Aug 2026 - 31 Aug 2026");
                   setIsDatePickerOpen(false);
                 }}
-                className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-lg shadow-2xs transition-colors cursor-pointer"
+                className="px-6 py-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 text-white font-bold text-sm rounded-xl shadow-md shadow-indigo-500/20 transition-all hover:-translate-y-0.5 cursor-pointer"
               >
                 Apply
               </button>

@@ -31,13 +31,13 @@ export const ApprovalsCompleted: React.FC<ApprovalsCompletedProps> = ({
   ];
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6 sm:p-8 shadow-2xs min-h-[500px] flex flex-col relative">
+    <div className="bg-white rounded-2xl border border-slate-200/80 p-6 sm:p-8 shadow-2xs hover:shadow-xs transition-all min-h-[500px] flex flex-col relative">
       {/* Header Titles */}
       <div className="mb-6 text-left">
-        <h2 className="text-base font-bold text-gray-900">
+        <h2 className="text-base font-bold text-slate-900">
           Completed Approvals
         </h2>
-        <p className="text-xs text-gray-500 mt-1 font-medium">
+        <p className="text-xs text-slate-500 mt-1 font-semibold">
           Select an employee or date range to view completed requests.
         </p>
       </div>
@@ -46,28 +46,28 @@ export const ApprovalsCompleted: React.FC<ApprovalsCompletedProps> = ({
       <div className="flex flex-wrap items-center gap-3 mb-10 z-30">
         {/* Name / Code input */}
         <div className="relative min-w-[220px] flex-1 max-w-xs">
-          <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             placeholder="Search by name or #code"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+            className="w-full pl-10 pr-3 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-2xs"
           />
         </div>
 
         {/* Select Date button */}
-        <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 bg-white hover:bg-gray-50 font-medium transition-colors cursor-pointer">
-          <CalendarIcon className="w-4 h-4 text-gray-500" />
+        <button className="flex items-center gap-2 px-4 py-2 border border-slate-300 rounded-xl text-sm text-slate-700 bg-white hover:bg-slate-50 font-semibold shadow-2xs transition-colors cursor-pointer">
+          <CalendarIcon className="w-4 h-4 text-slate-500" />
           <span>Select Date</span>
         </button>
 
         {/* Filter button */}
         <button
           onClick={onFilterClick}
-          className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 bg-white hover:bg-gray-50 font-medium transition-colors cursor-pointer"
+          className="flex items-center gap-2 px-4 py-2 border border-slate-300 rounded-xl text-sm text-slate-700 bg-white hover:bg-slate-50 font-semibold shadow-2xs transition-colors cursor-pointer"
         >
-          <Filter className="w-4 h-4 text-gray-500" />
+          <Filter className="w-4 h-4 text-slate-500" />
           <span>Filter</span>
         </button>
 
@@ -75,15 +75,15 @@ export const ApprovalsCompleted: React.FC<ApprovalsCompletedProps> = ({
         <div className="relative min-w-[160px]">
           <button
             onClick={() => setShowTypeDropdown(!showTypeDropdown)}
-            className="w-full flex items-center justify-between px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-800 bg-white hover:bg-gray-50 font-medium transition-colors cursor-pointer"
+            className="w-full flex items-center justify-between px-4 py-2 border border-slate-300 rounded-xl text-sm text-slate-800 bg-white hover:bg-slate-50 font-semibold shadow-2xs transition-colors cursor-pointer"
           >
             <span className="capitalize">{selectedType}</span>
-            <ChevronDown className="w-4 h-4 text-gray-400 ml-1" />
+            <ChevronDown className="w-4 h-4 text-slate-400 ml-1" />
           </button>
 
           {/* Dropdown Options list overlay */}
           {showTypeDropdown && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1.5 z-40 max-h-60 overflow-y-auto">
+            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl py-1.5 z-40 max-h-60 overflow-y-auto">
               {approvalTypes.map((type) => (
                 <button
                   key={type}
@@ -93,8 +93,8 @@ export const ApprovalsCompleted: React.FC<ApprovalsCompletedProps> = ({
                   }}
                   className={`w-full text-left px-4 py-2 text-xs font-semibold hover:bg-slate-50 transition-colors uppercase ${
                     selectedType === type
-                      ? "text-blue-600 bg-blue-50/40"
-                      : "text-gray-700"
+                      ? "text-indigo-600 bg-indigo-50/50"
+                      : "text-slate-700"
                   }`}
                 >
                   {type}
@@ -105,7 +105,7 @@ export const ApprovalsCompleted: React.FC<ApprovalsCompletedProps> = ({
         </div>
 
         {/* Search button */}
-        <button className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-lg shadow-2xs transition-colors cursor-pointer">
+        <button className="px-5 py-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 text-white font-semibold text-sm rounded-xl shadow-md shadow-indigo-500/20 transition-all hover:-translate-y-0.5 cursor-pointer">
           Search
         </button>
       </div>

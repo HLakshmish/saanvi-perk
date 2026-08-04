@@ -17,7 +17,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
         {label && (
           <label
             htmlFor={inputId}
-            className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+            className="text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider"
           >
             {label}
           </label>
@@ -26,15 +26,15 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           type={type}
           id={inputId}
           className={cn(
-            "flex w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-900 transition-all placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-100 dark:focus:ring-blue-500/20 dark:focus:border-blue-500",
+            "flex w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-2xs transition-all placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:focus:ring-indigo-500/20 dark:focus:border-indigo-500",
             error &&
-              "border-red-500 focus:ring-red-500/20 focus:border-red-500 dark:border-red-500 dark:focus:border-red-500",
+              "border-rose-500 focus:ring-rose-500/20 focus:border-rose-500 dark:border-rose-500 dark:focus:border-rose-500",
             className
           )}
           ref={ref}
           {...props}
         />
-        {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
+        {error && <p className="text-xs text-rose-500 font-semibold mt-0.5">{error}</p>}
       </div>
     );
   }
