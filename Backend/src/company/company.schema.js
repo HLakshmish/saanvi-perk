@@ -37,8 +37,21 @@ const createCompanySchema = {
     summary: 'Creates a new company in the system',
     body: {
         type: 'object',
-        required: ['companyName', 'companyCode', 'companyEmail'],
-        properties: companyBodyProperties
+        required: ['companyName', 'companyCode', 'companyEmail', 'superAdmin'],
+        properties: {
+            ...companyBodyProperties,
+            superAdmin: {
+                type: 'object',
+                required: ['email', 'password', 'firstName'],
+                properties: {
+                    email: { type: 'string', format: 'email' },
+                    password: { type: 'string' },
+                    firstName: { type: 'string' },
+                    lastName: { type: 'string', nullable: true },
+                    phoneNumber: { type: 'string', nullable: true }
+                }
+            }
+        }
     },
     response: {
         201: {
@@ -49,7 +62,20 @@ const createCompanySchema = {
                 message: { type: 'string' },
                 data: {
                     type: 'object',
-                    properties: { companyId: { type: 'number' }, ...companyBodyProperties }
+                    properties: { 
+                        companyId: { type: 'number' }, 
+                        ...companyBodyProperties,
+                        superAdmin: {
+                            type: 'object',
+                            properties: {
+                                superAdminId: { type: 'number' },
+                                email: { type: 'string' },
+                                firstName: { type: 'string' },
+                                lastName: { type: 'string', nullable: true },
+                                phoneNumber: { type: 'string', nullable: true }
+                            }
+                        }
+                    }
                 }
             }
         }

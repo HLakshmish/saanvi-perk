@@ -22,6 +22,7 @@ app.get("/", async (request, reply) => {
     };
 });
 
+app.register(require("./auth/auth.route"), { prefix: "/api/auth" });
 app.register(require("./company/company.route"), { prefix: "/api/companies" });
 
 module.exports = app;

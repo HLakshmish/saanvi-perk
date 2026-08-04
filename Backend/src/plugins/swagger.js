@@ -10,7 +10,17 @@ async function swaggerPlugin(app) {
                 title: "Perk HRMS API",
                 description: "API Documentation",
                 version: "1.0.0"
-            }
+            },
+            components: {
+                securitySchemes: {
+                    bearerAuth: {
+                        type: 'http',
+                        scheme: 'bearer',
+                        bearerFormat: 'JWT'
+                    }
+                }
+            },
+            security: [{ bearerAuth: [] }]
         }
     });
 
