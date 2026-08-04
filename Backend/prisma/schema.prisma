@@ -4,8 +4,7 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -61,8 +60,36 @@ model CompanyDetails {
 
   departments Department[]
   users       User[]
+  superAdmin  SuperAdmin?
 
   @@map("company_details")
+}
+
+// ==========================
+// Super Admin
+// ==========================
+model SuperAdmin {
+  superAdminId Int      @id @default(autoincrement()) @map("super_admin_id")
+
+  companyId    Int      @unique @map("company_id")
+
+  email         String   @unique
+  password      String
+
+  firstName     String   @map("first_name")
+  lastName      String?  @map("last_name")
+  phoneNumber   String?  @map("phone_number")
+
+  status        Boolean  @default(true)
+
+  lastLogin     DateTime? @map("last_login")
+
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  company        CompanyDetails @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
+
+  @@map("super_admins")
 }
 
 model Role {
@@ -117,7 +144,7 @@ model Department {
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
-  company       CompanyDetails @relation(fields: [companyId], references: [companyId])
+  company       CompanyDetails @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
   createdByUser User?          @relation("DepartmentCreatedBy", fields: [createdBy], references: [userId])
   users         User[]
 
@@ -160,7 +187,7 @@ model User {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  company    CompanyDetails @relation(fields: [companyId], references: [companyId])
+  company    CompanyDetails @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
   role       Role           @relation(fields: [roleId], references: [roleId])
   department Department?    @relation(fields: [departmentId], references: [departmentId])
 
@@ -211,7 +238,7 @@ model PersonalInformation {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  user User @relation(fields: [userId], references: [userId])
+  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
 
   @@map("personal_information")
 }
@@ -238,7 +265,7 @@ model ParentsInformation {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  user User @relation(fields: [userId], references: [userId])
+  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
 
   @@map("parents_information")
 }
@@ -263,7 +290,7 @@ model AddressInformation {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  user User @relation(fields: [userId], references: [userId])
+  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
 
   @@map("address_information")
 }
@@ -288,7 +315,7 @@ model BankDetails {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  user User @relation(fields: [userId], references: [userId])
+  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
 
   @@map("bank_details")
 }
@@ -310,7 +337,7 @@ model EmployeeDocument {
 
   createdAt DateTime @default(now()) @map("created_at")
 
-  user User @relation(fields: [userId], references: [userId])
+  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
 
   @@map("employee_documents")
 }

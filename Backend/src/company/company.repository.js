@@ -2,8 +2,29 @@ const prisma = require("../config/prisma");
 
 class CompanyRepository {
     async createCompany(data) {
+        const { superAdmin, ...companyData } = data;
+        
+        const createData = {
+            ...companyData,
+        };
+
+        if (superAdmin) {
+            createData.superAdmin = {
+                create: superAdmin
+            };
+        }
+
         return await prisma.companyDetails.create({
-            data
+            data: createData,
+            include: {
+                superAdmin: true
+            }
+        });
+    }
+
+    async getSuperAdminByEmail(email) {
+        return await prisma.superAdmin.findUnique({
+            where: { email }
         });
     }
 
