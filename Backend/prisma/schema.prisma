@@ -305,6 +305,8 @@ model AddressInformation {
 
   user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
 
+  @@unique([userId, addressType])
+
   @@map("address_information")
 }
 
