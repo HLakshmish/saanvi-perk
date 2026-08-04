@@ -27,5 +27,14 @@ app.register(require("./company/company.route"), { prefix: "/api/companies" });
 app.register(require("./role/role.route"), { prefix: "/api/roles" });
 app.register(require("./department/department.route"), { prefix: "/api/departments" });
 app.register(require("./user/user.route"), { prefix: "/api/users" });
+app.register(require("./personalinfo/personalinfo.route"), {
+    prefix: "/api/personal-information"
+});
+app.register(require("./parentinfo/parentinfo.route"), {
+    prefix: "/api/parent-info"
+});
+app.register(require("./addressinfo/addressinfo.route"), {
+    prefix: "/api/address-info"
+});
 
 module.exports = app;
