@@ -12,15 +12,15 @@ export interface SearchBoxProps {
 export const SearchBox = React.forwardRef<HTMLInputElement, SearchBoxProps>(
   ({ value, onChange, placeholder = "Search...", className }, ref) => {
     return (
-      <div className={cn("relative w-full flex items-center", className)}>
-        <Search className="absolute left-3.5 h-4 w-4 text-gray-400 pointer-events-none z-10" />
+      <div className={cn("relative w-full flex items-center shadow-2xs rounded-xl", className)}>
+        <Search className="absolute left-3.5 h-4 w-4 text-slate-400 pointer-events-none z-10" />
         <input
           ref={ref}
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+          className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-xl text-sm bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium"
         />
       </div>
     );

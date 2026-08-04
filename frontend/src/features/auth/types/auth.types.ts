@@ -1,8 +1,11 @@
+export type UserRole = "owner" | "superadmin" | "admin" | "employee";
+
 export interface User {
   id: string;
   email: string;
   name: string;
-  role: "admin" | "employee" | "manager";
+  role: UserRole;
+  companyId?: number | null;
   avatarUrl?: string;
 }
 
