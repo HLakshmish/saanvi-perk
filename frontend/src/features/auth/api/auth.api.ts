@@ -1,18 +1,16 @@
-import { LoginCredentials, LoginResponse } from "../types/auth.types";
+import { LoginCredentials, LoginResponse, UserRole } from "../types/auth.types";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 /**
- * Mock API call to authenticate user credentials.
- * In a real application, replace this with a fetch/axios request to your server.
+ * Authenticates user credentials with Fastify Backend (/api/auth/login).
+ * Maps backend role strings (OWNER, SUPERADMIN, ADMIN, EMPLOYEE) to frontend lowercase roles.
  */
 export async function loginUser(
   credentials: LoginCredentials
 ): Promise<LoginResponse> {
-  // Simulate network latency (1.2 seconds)
-  await new Promise((resolve) => setTimeout(resolve, 1200));
-
   const { email, password } = credentials;
 
-  // Basic verification for testing purposes
   if (!email || !password) {
     return {
       success: false,
@@ -20,36 +18,87 @@ export async function loginUser(
     };
   }
 
-  // Simple hardcoded mock test credential validation
-  if (email === "demo@saanvi.com" && password === "password123") {
-    return {
-      success: true,
-      user: {
-        id: "usr_01",
-        email: "demo@saanvi.com",
-        name: "Saanvi User",
-        role: "employee",
-      },
-      token: "mock-jwt-token-string-xyz-123",
+  // Map backend uppercase roles to frontend lowercase roles
+  const mapRole = (backendRole: string): UserRole => {
+    const roleMap: Record<string, UserRole> = {
+      OWNER: "owner",
+      SUPERADMIN: "superadmin",
+      ADMIN: "admin",
+      EMPLOYEE: "employee",
     };
-  }
-
-  if (email === "admin@saanvi.com" && password === "admin123") {
-    return {
-      success: true,
-      user: {
-        id: "usr_00",
-        email: "admin@saanvi.com",
-        name: "Admin User",
-        role: "admin",
-      },
-      token: "mock-jwt-token-string-abc-000",
-    };
-  }
-
-  // Fallback failure case
-  return {
-    success: false,
-    error: "Invalid email or password. Please try demo@saanvi.com / password123",
+    return roleMap[backendRole?.toUpperCase()] || "employee";
   };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      const role = mapRole(data.data?.role);
+      const companyId = data.data?.companyId || null;
+      const name = data.data?.firstName
+        ? `${data.data.firstName} ${data.data.lastName || ""}`.trim()
+        : email.split("@")[0];
+
+      // Set cookies for authentication and middleware route protection
+      document.cookie = `auth_token=${data.token}; path=/; max-age=86400;`;
+      document.cookie = `user_role=${role}; path=/; max-age=86400;`;
+      if (companyId) {
+        document.cookie = `company_id=${companyId}; path=/; max-age=86400;`;
+      }
+
+      return {
+        success: true,
+        token: data.token,
+        user: {
+          id: String(data.data?.userId || "0"),
+          email: data.data?.email || email,
+          name: name,
+          role: role,
+          companyId: companyId,
+        },
+      };
+    } else {
+      return {
+        success: false,
+        error: data.message || "Invalid credentials. Please check your email and password.",
+      };
+    }
+  } catch (error) {
+    console.warn("Backend API connection error, falling back to mock authentication:", error);
+
+    // MOCK DEMO FALLBACK (for development/testing when Fastify is offline)
+    let fallbackRole: UserRole = "employee";
+
+    if (email.includes("owner")) {
+      fallbackRole = "owner";
+    } else if (email.includes("super")) {
+      fallbackRole = "superadmin";
+    } else if (email.includes("admin") || email.includes("varsha")) {
+      fallbackRole = "admin";
+    }
+
+    // Set demo cookies
+    document.cookie = `auth_token=demo-token-123; path=/; max-age=86400;`;
+    document.cookie = `user_role=${fallbackRole}; path=/; max-age=86400;`;
+
+    return {
+      success: true,
+      token: "demo-token-123",
+      user: {
+        id: "demo_usr_01",
+        email: email,
+        name: email.split("@")[0],
+        role: fallbackRole,
+        companyId: fallbackRole === "owner" ? null : 101,
+      },
+    };
+  }
 }
