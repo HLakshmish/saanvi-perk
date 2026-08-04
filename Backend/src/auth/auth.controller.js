@@ -12,7 +12,8 @@ class AuthController {
                 userId: user.userId, 
                 email: user.email, 
                 role: user.role, 
-                companyId: user.companyId 
+                companyId: user.companyId,
+                permissions: user.permissions || []
             });
 
             return reply.status(200).send({

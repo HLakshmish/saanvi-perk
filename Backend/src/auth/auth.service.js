@@ -39,6 +39,48 @@ class AuthService {
             }
         }
 
+        // 3. Check if it's a regular User
+        const bcrypt = require("bcrypt");
+        const regularUser = await prisma.user.findUnique({
+            where: { officialEmail: email },
+            include: {
+                role: {
+                    include: {
+                        rolePermissions: {
+                            include: {
+                                permission: true
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        if (regularUser) {
+            const isMatch = await bcrypt.compare(password, regularUser.password);
+            if (isMatch) {
+                if (regularUser.status !== 'ACTIVE') {
+                    throw new Error("User account is not active");
+                }
+
+                // Update last login
+                await prisma.user.update({
+                    where: { userId: regularUser.userId },
+                    data: { lastLogin: new Date() }
+                });
+
+                const permissions = regularUser.role.rolePermissions.map(rp => rp.permission.permissionCode);
+
+                return {
+                    userId: regularUser.userId,
+                    email: regularUser.officialEmail,
+                    role: 'USER',
+                    companyId: regularUser.companyId,
+                    permissions: permissions
+                };
+            }
+        }
+
         throw new Error("Invalid email or password");
     }
 }
