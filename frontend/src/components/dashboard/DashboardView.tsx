@@ -15,6 +15,7 @@ import { CheersToPeersWidget } from "./widgets/CheersToPeersWidget";
 import { RequestsView } from "@/features/requests/components/RequestsView";
 import { ApprovalsView } from "@/features/approvals/components/ApprovalsView";
 import { AttendanceView } from "@/features/attendance/components/AttendanceView";
+import { EmployeeListPage } from "@/features/employees";
 import { RefreshCw, HelpCircle } from "lucide-react";
 
 interface DashboardViewProps {
@@ -30,9 +31,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 }) => {
   const [role, setRole] = useState<UserRole>(initialRole);
   const [activeTab, setActiveTab] = useState<string>("dashboard");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const renderTabContent = () => {
     switch (activeTab) {
+      case "employees":
+        return <EmployeeListPage currentRole={role} />;
       case "requests":
         return <RequestsView />;
       case "approval":
@@ -109,6 +113,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         onRoleChange={setRole}
         userName={userName}
         companyName={companyName}
+        onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
       />
 
       {/* Main Area: Sidebar + Content */}
@@ -118,6 +123,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           currentRole={role}
           activeTab={activeTab}
           onTabChange={setActiveTab}
+          isSidebarOpen={isSidebarOpen}
         />
 
         {/* Content View */}

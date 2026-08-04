@@ -8,7 +8,7 @@ export const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "rounded-2xl border border-gray-200/80 bg-white/70 backdrop-blur-md text-gray-950 shadow-sm transition-all duration-300 hover:shadow-md dark:border-gray-800/80 dark:bg-gray-950/70 dark:text-gray-50",
+      "rounded-2xl border border-slate-200/80 bg-white text-slate-900 shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-50",
       className
     )}
     {...props}
@@ -22,7 +22,7 @@ export const CardHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex flex-col space-y-1.5 p-6 sm:p-8", className)}
+    className={cn("flex flex-col space-y-1.5 p-6 sm:p-7", className)}
     {...props}
   />
 ));
@@ -35,7 +35,7 @@ export const CardTitle = React.forwardRef<
   <h3
     ref={ref}
     className={cn(
-      "text-2xl font-bold leading-none tracking-tight text-gray-900 dark:text-white",
+      "text-xl sm:text-2xl font-bold leading-none tracking-tight text-slate-900 dark:text-white",
       className
     )}
     {...props}
@@ -49,7 +49,7 @@ export const CardDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn("text-sm text-gray-500 dark:text-gray-400", className)}
+    className={cn("text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium", className)}
     {...props}
   />
 ));
@@ -61,7 +61,7 @@ export const CardContent = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("p-6 sm:p-8 pt-0 sm:pt-0", className)}
+    className={cn("p-6 sm:p-7 pt-0 sm:pt-0", className)}
     {...props}
   />
 ));
@@ -73,7 +73,7 @@ export const CardFooter = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex items-center p-6 sm:p-8 pt-0 sm:pt-0", className)}
+    className={cn("flex items-center p-6 sm:p-7 pt-0 sm:pt-0", className)}
     {...props}
   />
 ));

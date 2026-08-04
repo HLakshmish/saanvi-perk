@@ -60,31 +60,31 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
   );
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6 sm:p-8 shadow-2xs min-h-[500px] flex flex-col justify-between relative">
+    <div className="bg-white rounded-2xl border border-slate-200/80 p-6 sm:p-8 shadow-2xs hover:shadow-xs transition-all min-h-[500px] flex flex-col justify-between relative">
       <div>
         {/* Filters Header */}
         <div className="flex flex-wrap items-center gap-3 mb-6">
           <div className="relative min-w-[240px] sm:min-w-[280px]">
-            <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Search table items"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-gray-800 placeholder:text-gray-400"
+              className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-800 text-sm placeholder:text-slate-400 shadow-2xs"
             />
           </div>
 
           <button
             onClick={() => setIsDatePickerOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 bg-white hover:bg-gray-50 font-medium transition-colors cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2 border border-slate-300 rounded-xl text-sm text-slate-700 bg-white hover:bg-slate-50 font-semibold shadow-2xs transition-colors cursor-pointer"
           >
-            <CalendarIcon className="w-4 h-4 text-gray-500" />
+            <CalendarIcon className="w-4 h-4 text-slate-500" />
             <span>{dateRange}</span>
-            <ChevronDown className="w-3.5 h-3.5 text-gray-400 ml-1" />
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400 ml-1" />
           </button>
 
-          <button className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-lg shadow-2xs transition-colors">
+          <button className="px-5 py-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 text-white font-semibold text-sm rounded-xl shadow-md shadow-indigo-500/20 transition-all hover:-translate-y-0.5 cursor-pointer">
             Search
           </button>
         </div>
