@@ -8,11 +8,16 @@ const {
 } = require("./company.schema");
 
 async function companyRoutes(fastify, options) {
-    fastify.post("/", { schema: createCompanySchema }, companyController.createCompany.bind(companyController));
-    fastify.get("/:id", { schema: getCompanyByIdSchema }, companyController.getCompanyById.bind(companyController));
-    fastify.get("/", { schema: getAllCompaniesSchema }, companyController.getAllCompanies.bind(companyController));
-    fastify.put("/:id", { schema: updateCompanySchema }, companyController.updateCompany.bind(companyController));
-    fastify.delete("/:id", { schema: deleteCompanySchema }, companyController.deleteCompany.bind(companyController));
+    const opts = (schema) => ({
+        schema,
+        preValidation: [fastify.authenticate]
+    });
+
+    fastify.post("/", opts(createCompanySchema), companyController.createCompany.bind(companyController));
+    fastify.get("/:id", opts(getCompanyByIdSchema), companyController.getCompanyById.bind(companyController));
+    fastify.get("/", opts(getAllCompaniesSchema), companyController.getAllCompanies.bind(companyController));
+    fastify.put("/:id", opts(updateCompanySchema), companyController.updateCompany.bind(companyController));
+    fastify.delete("/:id", opts(deleteCompanySchema), companyController.deleteCompany.bind(companyController));
 }
 
 module.exports = companyRoutes;

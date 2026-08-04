@@ -6,7 +6,19 @@ class CompanyService {
         if (existingCode) {
             throw new Error("Company code already exists");
         }
-        return await companyRepository.createCompany(data);
+
+        if (data.superAdmin && data.superAdmin.email) {
+            const existingEmail = await companyRepository.getSuperAdminByEmail(data.superAdmin.email);
+            if (existingEmail) {
+                throw new Error("Super admin email already exists");
+            }
+        }
+
+        const company = await companyRepository.createCompany(data);
+        if (company.superAdmin) {
+            delete company.superAdmin.password;
+        }
+        return company;
     }
 
     async getCompanyById(id) {
