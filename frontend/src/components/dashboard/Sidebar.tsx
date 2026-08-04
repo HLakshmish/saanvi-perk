@@ -5,8 +5,8 @@ import { UserRole } from "@/types/dashboard";
 import {
   LayoutGrid,
   Users,
-  Calendar,
-  FileText,
+  CalendarCheck,
+  FileCheck,
   Clock,
   Umbrella,
   Receipt,
@@ -31,9 +31,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutGrid, roles: ["superadmin", "admin", "employee"] },
     { id: "employees", label: "Employees", icon: Users, roles: ["superadmin", "admin"] },
-    { id: "attendance", label: "Attendance", icon: Calendar, roles: ["superadmin", "admin", "employee"] },
-    { id: "documents", label: "Documents", icon: FileText, roles: ["superadmin", "admin", "employee"] },
-    { id: "time-tracking", label: "Time Tracking", icon: Clock, roles: ["superadmin", "admin", "employee"] },
+    { id: "requests", label: "Requests", icon: CalendarCheck, roles: ["superadmin", "admin", "employee"] },
+    { id: "approval", label: "Approval", icon: FileCheck, roles: ["superadmin", "admin", "employee"] },
+    { id: "attendance", label: "Attendance", icon: Clock, roles: ["superadmin", "admin", "employee"] },
     { id: "holidays-leaves", label: "Leaves & Holidays", icon: Umbrella, roles: ["superadmin", "admin", "employee"] },
     { id: "payroll", label: "Payroll", icon: Banknote, roles: ["superadmin", "admin", "employee"] },
     { id: "expenses", label: "Expenses", icon: Receipt, roles: ["superadmin", "admin", "employee"] },
