@@ -60,6 +60,7 @@ model CompanyDetails {
 
   departments Department[]
   users       User[]
+  roles       Role[]
   superAdmin  SuperAdmin?
 
   @@map("company_details")
@@ -94,17 +95,22 @@ model SuperAdmin {
 
 model Role {
   roleId      Int     @id @default(autoincrement()) @map("role_id")
-  roleName    String  @unique @map("role_name")
-  roleCode    String  @unique @map("role_code")
+  companyId   Int     @map("company_id")
+  roleName    String  @map("role_name")
+  roleCode    String  @map("role_code")
   description String?
   status      Boolean @default(true)
 
   rolePermissions RolePermission[]
   users           User[]
+  
+  company     CompanyDetails @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  @@unique([companyId, roleName])
+  @@unique([companyId, roleCode])
   @@map("roles")
 }
 
@@ -136,18 +142,23 @@ model RolePermission {
 model Department {
   departmentId   Int      @id @default(autoincrement()) @map("department_id")
   companyId      Int      @map("company_id")
-  departmentCode String   @unique @map("department_code")
+  departmentCode String   @map("department_code")
   departmentName String   @map("department_name")
+  departmentHead Int?     @map("department_head")
   description    String?
   status         Boolean  @default(true)
   createdBy      Int?     @map("created_by") // FK -> Users.user_id
+  updatedBy      Int?     @map("updated_by") // FK -> Users.user_id
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
   company       CompanyDetails @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
   createdByUser User?          @relation("DepartmentCreatedBy", fields: [createdBy], references: [userId])
-  users         User[]
+  updatedByUser User?          @relation("DepartmentUpdatedBy", fields: [updatedBy], references: [userId])
+  headUser      User?          @relation("DepartmentHead", fields: [departmentHead], references: [userId])
+  users         User[]         @relation("DepartmentUsers")
 
+  @@unique([companyId, departmentCode])
   @@map("departments")
 }
 
@@ -189,7 +200,7 @@ model User {
 
   company    CompanyDetails @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
   role       Role           @relation(fields: [roleId], references: [roleId])
-  department Department?    @relation(fields: [departmentId], references: [departmentId])
+  department Department?    @relation("DepartmentUsers", fields: [departmentId], references: [departmentId])
 
   manager      User?  @relation("ReportingManager", fields: [reportingToId], references: [userId])
   subordinates User[] @relation("ReportingManager")
@@ -201,6 +212,8 @@ model User {
   updatedUsers  User[] @relation("UserUpdatedBy")
 
   createdDepartments Department[] @relation("DepartmentCreatedBy")
+  updatedDepartments Department[] @relation("DepartmentUpdatedBy")
+  headedDepartments  Department[] @relation("DepartmentHead")
 
   personalInformation PersonalInformation?
   parentsInformation  ParentsInformation?
