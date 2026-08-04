@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { LoginCredentials, LoginErrors } from "../types/auth.types";
 import { loginUser } from "../api/auth.api";
 
 export function useLogin() {
+  const router = useRouter();
   const [credentials, setCredentials] = useState<LoginCredentials>({
     email: "",
     password: "",
@@ -37,7 +39,6 @@ export function useLogin() {
       [name]: value,
     }));
 
-    // Clear field-specific error when user types
     if (errors[name as keyof LoginErrors]) {
       setErrors((prev) => ({
         ...prev,
@@ -56,8 +57,22 @@ export function useLogin() {
     try {
       const response = await loginUser(credentials);
       if (response.success && response.user) {
-        setSuccessMessage(`Welcome back, ${response.user.name}!`);
-        // Here you would typically store the token, set context, and redirect
+        const { role } = response.user;
+
+        // Route mapping per role
+        const routeMap: Record<string, string> = {
+          owner: "/owner/dashboard",
+          superadmin: "/superadmin/dashboard",
+          admin: "/admin/dashboard",
+          employee: "/employee/dashboard",
+        };
+
+        const destination = routeMap[role] || "/admin/dashboard";
+        setSuccessMessage("Login successful! Redirecting...");
+
+        setTimeout(() => {
+          router.push(destination);
+        }, 600);
       } else {
         setErrors((prev) => ({
           ...prev,
