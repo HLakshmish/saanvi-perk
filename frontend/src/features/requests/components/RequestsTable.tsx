@@ -11,6 +11,7 @@ import {
   ChevronRight as ChevronRightIcon,
   ChevronsRight,
 } from "lucide-react";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 
 interface RequestsTableProps {
   onRowClick: (id: string) => void;
@@ -136,173 +137,11 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
       </div>
 
       {/* Custom Date Picker Modal */}
-      {isDatePickerOpen && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fade-in">
-          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/80 w-full max-w-[660px] overflow-hidden flex flex-col relative animate-scale-in">
-            {/* Close Button */}
-            <button
-              onClick={() => setIsDatePickerOpen(false)}
-              className="absolute top-4 right-4 p-1 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-all cursor-pointer z-10"
-              title="Close"
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-
-            {/* Modal Header Row: From & To inputs */}
-            <div className="grid grid-cols-2 gap-6 p-6 pr-14 border-b border-slate-100 bg-slate-50/50">
-              <div className="flex items-center gap-3">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider w-8">From</span>
-                <div className="relative flex-1">
-                  <input
-                    type="text"
-                    value="01-08-2026"
-                    readOnly
-                    className="w-full text-xs font-bold text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 pl-3 pr-8 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-2xs"
-                  />
-                  <CalendarIcon className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider w-6">To</span>
-                <div className="relative flex-1">
-                  <input
-                    type="text"
-                    value="31-08-2026"
-                    readOnly
-                    className="w-full text-xs font-bold text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 pl-3 pr-8 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-2xs"
-                  />
-                  <CalendarIcon className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
-                </div>
-              </div>
-            </div>
-
-            {/* Calendar Sheets Container */}
-            <div className="flex flex-col sm:flex-row gap-6 p-6 justify-between">
-              {/* August 2026 */}
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-4">
-                  <button className="p-1 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-800 transition-colors cursor-pointer">
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  <span className="text-xs font-bold text-slate-900">
-                    August 2026
-                  </span>
-                  <div className="w-6" /> {/* Placeholder spacing */}
-                </div>
-
-                <div className="grid grid-cols-7 text-center text-[10px] font-bold text-slate-400 mb-2">
-                  <span>Su</span>
-                  <span>Mo</span>
-                  <span>Tu</span>
-                  <span>We</span>
-                  <span>Th</span>
-                  <span>Fr</span>
-                  <span>Sa</span>
-                </div>
-
-                <div className="grid grid-cols-7 text-center text-xs gap-y-1.5 font-semibold text-slate-700">
-                  {/* Empty cells before Saturday */}
-                  <span className="py-1"></span>
-                  <span className="py-1"></span>
-                  <span className="py-1"></span>
-                  <span className="py-1"></span>
-                  <span className="py-1"></span>
-                  <span className="py-1"></span>
-
-                  {/* August 1 - Highlight Start */}
-                  <span className="flex justify-center items-center bg-indigo-600 text-white font-bold rounded-l-xl py-1 select-none">
-                    1
-                  </span>
-
-                  {/* August 2 - 29 (Selected range highlight) */}
-                  {Array.from({ length: 28 }, (_, i) => {
-                    const day = i + 2;
-                    return (
-                      <span
-                        key={day}
-                        className="py-1 bg-indigo-50 text-indigo-700 font-bold border-y border-indigo-100/30 select-none cursor-pointer"
-                      >
-                        {day}
-                      </span>
-                    );
-                  })}
-
-                  {/* August 30 */}
-                  <span className="py-1 bg-indigo-50 text-indigo-700 font-bold border-y border-indigo-100/30 select-none cursor-pointer">
-                    30
-                  </span>
-
-                  {/* August 31 - Highlight End */}
-                  <span className="flex justify-center items-center bg-indigo-600 text-white font-bold rounded-r-xl py-1 select-none">
-                    31
-                  </span>
-                </div>
-              </div>
-
-              {/* September 2026 */}
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-6" /> {/* Placeholder spacing */}
-                  <span className="text-xs font-bold text-slate-900">
-                    September 2026
-                  </span>
-                  <button className="p-1 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-850 transition-colors cursor-pointer">
-                    <ChevronRightIcon className="w-4 h-4" />
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-7 text-center text-[10px] font-bold text-slate-400 mb-2">
-                  <span>Su</span>
-                  <span>Mo</span>
-                  <span>Tu</span>
-                  <span>We</span>
-                  <span>Th</span>
-                  <span>Fr</span>
-                  <span>Sa</span>
-                </div>
-
-                <div className="grid grid-cols-7 text-center text-xs gap-y-1.5 font-semibold text-slate-600">
-                  {/* Empty cells before Tuesday */}
-                  <span className="py-1"></span>
-                  <span className="py-1"></span>
-
-                  {/* September 01 - 30 */}
-                  {Array.from({ length: 30 }, (_, i) => {
-                    const day = i + 1;
-                    return (
-                      <span key={day} className="py-1 text-slate-700 font-bold select-none cursor-pointer hover:bg-slate-50 rounded-md transition-colors">
-                        {day}
-                      </span>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            {/* Modal Actions Footer */}
-            <div className="flex items-center justify-end gap-3 p-4 border-t border-slate-100 bg-slate-50/30">
-              <button
-                onClick={() => setIsDatePickerOpen(false)}
-                className="px-5 py-2 border border-slate-350 rounded-xl text-sm text-slate-700 bg-white hover:bg-slate-50 font-bold shadow-2xs transition-colors cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  setDateRange("01 Aug 2026 - 31 Aug 2026");
-                  setIsDatePickerOpen(false);
-                }}
-                className="px-6 py-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 text-white font-bold text-sm rounded-xl shadow-md shadow-indigo-500/20 transition-all hover:-translate-y-0.5 cursor-pointer"
-              >
-                Apply
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <DateRangePicker
+        isOpen={isDatePickerOpen}
+        onClose={() => setIsDatePickerOpen(false)}
+        onApply={(range) => setDateRange(range)}
+      />
 
       {/* Footer Pagination controls */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-100 pt-6 mt-8 text-xs text-gray-500 font-medium">

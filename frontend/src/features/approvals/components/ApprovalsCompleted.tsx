@@ -8,6 +8,8 @@ import {
   ChevronDown,
 } from "lucide-react";
 
+import { DateRangePicker } from "@/components/ui/date-range-picker";
+
 interface ApprovalsCompletedProps {
   onFilterClick: () => void;
 }
@@ -18,6 +20,8 @@ export const ApprovalsCompleted: React.FC<ApprovalsCompletedProps> = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
   const [selectedType, setSelectedType] = useState("All");
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [dateRange, setDateRange] = useState("Select Date");
 
   const approvalTypes = [
     "All",
@@ -57,9 +61,12 @@ export const ApprovalsCompleted: React.FC<ApprovalsCompletedProps> = ({
         </div>
 
         {/* Select Date button */}
-        <button className="flex items-center gap-2 px-4 py-2 border border-slate-300 rounded-xl text-sm text-slate-700 bg-white hover:bg-slate-50 font-semibold shadow-2xs transition-colors cursor-pointer">
+        <button
+          onClick={() => setIsDatePickerOpen(true)}
+          className="flex items-center gap-2 px-4 py-2 border border-slate-300 rounded-xl text-sm text-slate-700 bg-white hover:bg-slate-50 font-semibold shadow-2xs transition-colors cursor-pointer"
+        >
           <CalendarIcon className="w-4 h-4 text-slate-500" />
-          <span>Select Date</span>
+          <span>{dateRange}</span>
         </button>
 
         {/* Filter button */}
@@ -186,6 +193,13 @@ export const ApprovalsCompleted: React.FC<ApprovalsCompletedProps> = ({
           </svg>
         </div>
       </div>
+
+      {/* Date Picker Modal */}
+      <DateRangePicker
+        isOpen={isDatePickerOpen}
+        onClose={() => setIsDatePickerOpen(false)}
+        onApply={(range) => setDateRange(range)}
+      />
     </div>
   );
 };

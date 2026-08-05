@@ -120,6 +120,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         userName={userName}
         companyName={companyName}
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+        onTabChange={setActiveTab}
       />
 
       {/* Main Area: Sidebar + Content */}
