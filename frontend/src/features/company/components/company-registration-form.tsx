@@ -30,6 +30,21 @@ export function CompanyRegistrationForm({ onSuccess, editCompany }: CompanyRegis
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
+  const steps = editCompany
+    ? [
+        { number: 1, title: "Identity", icon: Building2 },
+        { number: 2, title: "Workplace", icon: Clock },
+        { number: 3, title: "Tax & Legal", icon: FileCheck2 },
+      ]
+    : [
+        { number: 1, title: "Identity", icon: Building2 },
+        { number: 2, title: "Owner", icon: UserCheck },
+        { number: 3, title: "Workplace", icon: Clock },
+        { number: 4, title: "Tax & Legal", icon: FileCheck2 },
+      ];
+
+  const maxSteps = steps.length;
+
   const [formData, setFormData] = useState<CreateCompanyInput>({
     companyName: "",
     companyCode: "",
@@ -58,7 +73,7 @@ export function CompanyRegistrationForm({ onSuccess, editCompany }: CompanyRegis
     longitude: 77.5946,
     allowedRadius: 100,
 
-    // SuperAdmin Account
+    // SuperAdmin Account (Used only when creating new company)
     superAdmin: {
       firstName: "",
       lastName: "",
@@ -89,11 +104,11 @@ export function CompanyRegistrationForm({ onSuccess, editCompany }: CompanyRegis
         officeEndTime: editCompany.officeEndTime || "18:00",
         allowedRadius: editCompany.allowedRadius || 100,
         superAdmin: {
-          firstName: editCompany.superAdmin?.firstName || "",
-          lastName: editCompany.superAdmin?.lastName || "",
-          email: editCompany.superAdmin?.email || "",
-          password: "", // Leave blank unless changing
-          phoneNumber: editCompany.superAdmin?.phoneNumber || "",
+          firstName: "",
+          lastName: "",
+          email: "",
+          password: "",
+          phoneNumber: "",
         },
       });
     }
@@ -131,7 +146,7 @@ export function CompanyRegistrationForm({ onSuccess, editCompany }: CompanyRegis
         setErrorMsg("Official Company Email is required.");
         return false;
       }
-    } else if (step === 2) {
+    } else if (!editCompany && step === 2) {
       if (!formData.superAdmin.firstName) {
         setErrorMsg("Owner / SuperAdmin First Name is required.");
         return false;
@@ -140,7 +155,7 @@ export function CompanyRegistrationForm({ onSuccess, editCompany }: CompanyRegis
         setErrorMsg("Owner / SuperAdmin Email is required.");
         return false;
       }
-      if (!editCompany && (!formData.superAdmin.password || formData.superAdmin.password.length < 6)) {
+      if (!formData.superAdmin.password || formData.superAdmin.password.length < 6) {
         setErrorMsg("Password must be at least 6 characters.");
         return false;
       }
@@ -150,7 +165,7 @@ export function CompanyRegistrationForm({ onSuccess, editCompany }: CompanyRegis
 
   const nextStep = () => {
     if (validateStep(currentStep)) {
-      setCurrentStep((prev) => Math.min(prev + 1, 4));
+      setCurrentStep((prev) => Math.min(prev + 1, maxSteps));
     }
   };
 
@@ -159,12 +174,7 @@ export function CompanyRegistrationForm({ onSuccess, editCompany }: CompanyRegis
     setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (currentStep < 4) {
-      nextStep();
-      return;
-    }
+  const handleFinalSubmit = async () => {
     if (!validateStep(currentStep)) return;
 
     setIsLoading(true);
@@ -174,8 +184,9 @@ export function CompanyRegistrationForm({ onSuccess, editCompany }: CompanyRegis
     try {
       let response;
       if (editCompany?.companyId) {
-        // PUT API CALL
-        response = await updateCompany(editCompany.companyId, formData);
+        // Strip superAdmin from payload when editing company
+        const { superAdmin, ...updatePayload } = formData;
+        response = await updateCompany(editCompany.companyId, updatePayload);
       } else {
         // POST API CALL
         response = await createCompany(formData);
@@ -204,13 +215,6 @@ export function CompanyRegistrationForm({ onSuccess, editCompany }: CompanyRegis
     }
   };
 
-  const steps = [
-    { number: 1, title: "Company Identity", icon: Building2 },
-    { number: 2, title: "Owner Account", icon: UserCheck },
-    { number: 3, title: "Workplace & Geo-Fence", icon: Clock },
-    { number: 4, title: "Tax & Compliance", icon: FileCheck2 },
-  ];
-
   return (
     <>
       <style>{`
@@ -229,8 +233,8 @@ export function CompanyRegistrationForm({ onSuccess, editCompany }: CompanyRegis
         }
         .forced-light-theme input:focus,
         .forced-light-theme input:focus-visible {
-          border-color: #f99d5e !important;
-          box-shadow: 0 0 0 3px rgba(249, 157, 94, 0.2) !important;
+          border-color: #4f39f6 !important;
+          box-shadow: 0 0 0 3px rgba(79, 57, 246, 0.2) !important;
           outline: none !important;
         }
         .forced-light-theme label {
@@ -243,7 +247,7 @@ export function CompanyRegistrationForm({ onSuccess, editCompany }: CompanyRegis
         {/* Form Title Banner */}
         <div className="mb-6 pb-4 border-b border-slate-100 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-[#f99d5e]/15 flex items-center justify-center text-[#e8783a]">
+            <div className="w-9 h-9 rounded-xl bg-[#4f39f6]/10 flex items-center justify-center text-[#4f39f6]">
               {editCompany ? <Pencil className="w-5 h-5" /> : <Building2 className="w-5 h-5" />}
             </div>
             <div>
@@ -258,28 +262,28 @@ export function CompanyRegistrationForm({ onSuccess, editCompany }: CompanyRegis
         </div>
 
         {/* Wizard Progress Bar */}
-        <div className="flex items-center justify-between mb-8 pb-6 border-b border-slate-100 overflow-x-auto">
+        <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-100 w-full">
           {steps.map((step, idx) => {
             const isActive = currentStep === step.number;
             const isDone = currentStep > step.number;
 
             return (
               <React.Fragment key={step.number}>
-                <div className="flex items-center gap-2.5 shrink-0">
+                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                   <div
-                    className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                    className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                       isDone
                         ? "bg-emerald-500 text-white"
                         : isActive
-                        ? "bg-[#f99d5e] text-[#0c111a] ring-4 ring-[#f99d5e]/20"
+                        ? "bg-[#4f39f6] text-white ring-4 ring-[#4f39f6]/20"
                         : "bg-slate-100 text-slate-400 border border-slate-200"
                     }`}
                   >
-                    {isDone ? <CheckCircle2 className="w-5 h-5" /> : step.number}
+                    {isDone ? <CheckCircle2 className="w-4 h-4" /> : step.number}
                   </div>
                   <span
-                    className={`text-xs font-semibold hidden sm:inline ${
-                      isActive ? "text-[#e8783a]" : isDone ? "text-emerald-600" : "text-slate-400"
+                    className={`text-xs font-semibold whitespace-nowrap ${
+                      isActive ? "text-[#4f39f6]" : isDone ? "text-emerald-600" : "text-slate-400"
                     }`}
                   >
                     {step.title}
@@ -287,7 +291,7 @@ export function CompanyRegistrationForm({ onSuccess, editCompany }: CompanyRegis
                 </div>
 
                 {idx < steps.length - 1 && (
-                  <div className={`h-0.5 w-8 sm:w-12 mx-2 ${currentStep > step.number ? "bg-emerald-500" : "bg-slate-200"}`} />
+                  <div className={`h-0.5 flex-1 min-w-[12px] mx-1 sm:mx-2.5 ${currentStep > step.number ? "bg-emerald-500" : "bg-slate-200"}`} />
                 )}
               </React.Fragment>
             );
@@ -310,13 +314,13 @@ export function CompanyRegistrationForm({ onSuccess, editCompany }: CompanyRegis
         )}
 
         {/* Form Steps */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={(e) => { e.preventDefault(); if (currentStep < maxSteps) nextStep(); }} className="space-y-6">
           
           {/* STEP 1: COMPANY IDENTITY */}
           {currentStep === 1 && (
             <div className="space-y-4 animate-in fade-in duration-200">
               <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-[#e8783a]" />
+                <Building2 className="w-5 h-5 text-[#4f39f6]" />
                 <span>Step 1: Company Profile</span>
               </h3>
 
@@ -367,7 +371,7 @@ export function CompanyRegistrationForm({ onSuccess, editCompany }: CompanyRegis
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-semibold text-slate-700">Industry Type</label>
                   <select
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:border-[#f99d5e] focus:outline-none focus:ring-2 focus:ring-[#f99d5e]/20"
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:border-[#4f39f6] focus:outline-none focus:ring-2 focus:ring-[#4f39f6]/20"
                     value={formData.industryType}
                     onChange={(e) => handleChange("industryType", e.target.value)}
                   >
@@ -383,11 +387,11 @@ export function CompanyRegistrationForm({ onSuccess, editCompany }: CompanyRegis
             </div>
           )}
 
-          {/* STEP 2: SUPERADMIN / OWNER ACCOUNT */}
-          {currentStep === 2 && (
+          {/* STEP 2 (FOR NEW COMPANY ONLY): SUPERADMIN / OWNER ACCOUNT */}
+          {!editCompany && currentStep === 2 && (
             <div className="space-y-4 animate-in fade-in duration-200">
               <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
-                <UserCheck className="w-5 h-5 text-[#e8783a]" />
+                <UserCheck className="w-5 h-5 text-[#4f39f6]" />
                 <span>Step 2: Superadmin Credentials</span>
               </h3>
 
@@ -419,23 +423,23 @@ export function CompanyRegistrationForm({ onSuccess, editCompany }: CompanyRegis
                 />
 
                 <Input
-                  label={editCompany ? "Password (Leave blank to keep unchanged)" : "Superadmin Login Password *"}
+                  label="Superadmin Login Password *"
                   type="password"
                   placeholder="••••••••"
                   value={formData.superAdmin.password || ""}
                   onChange={(e) => handleSuperAdminChange("password", e.target.value)}
-                  required={!editCompany}
+                  required
                 />
               </div>
             </div>
           )}
 
-          {/* STEP 3: WORKPLACE RULES & GEO-FENCING */}
-          {currentStep === 3 && (
+          {/* WORKPLACE RULES & GEO-FENCING (Step 2 when editing, Step 3 when creating new) */}
+          {((editCompany && currentStep === 2) || (!editCompany && currentStep === 3)) && (
             <div className="space-y-4 animate-in fade-in duration-200">
               <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
-                <Clock className="w-5 h-5 text-[#e8783a]" />
-                <span>Step 3: Workplace Rules & Geo-Fencing</span>
+                <Clock className="w-5 h-5 text-[#4f39f6]" />
+                <span>Step {editCompany ? 2 : 3}: Workplace Rules & Geo-Fencing</span>
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -510,12 +514,12 @@ export function CompanyRegistrationForm({ onSuccess, editCompany }: CompanyRegis
             </div>
           )}
 
-          {/* STEP 4: TAX & COMPLIANCE */}
-          {currentStep === 4 && (
+          {/* TAX & COMPLIANCE (Step 3 when editing, Step 4 when creating new) */}
+          {((editCompany && currentStep === 3) || (!editCompany && currentStep === 4)) && (
             <div className="space-y-4 animate-in fade-in duration-200">
               <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
-                <FileCheck2 className="w-5 h-5 text-[#e8783a]" />
-                <span>Step 4: Tax & Compliance</span>
+                <FileCheck2 className="w-5 h-5 text-[#4f39f6]" />
+                <span>Step {editCompany ? 3 : 4}: Tax & Compliance</span>
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -574,18 +578,19 @@ export function CompanyRegistrationForm({ onSuccess, editCompany }: CompanyRegis
               <div />
             )}
 
-            {currentStep < 4 ? (
+            {currentStep < maxSteps ? (
               <button
                 type="button"
                 onClick={nextStep}
-                className="px-5 py-2.5 rounded-xl bg-[#f99d5e] hover:bg-[#f88a42] text-[#0c111a] text-xs sm:text-sm font-bold flex items-center gap-1.5 shadow-md transition-colors cursor-pointer"
+                className="px-5 py-2.5 rounded-xl bg-[#4f39f6] hover:bg-[#4330db] text-white text-xs sm:text-sm font-bold flex items-center gap-1.5 shadow-md transition-colors cursor-pointer"
               >
                 Next
                 <ChevronRight className="w-4 h-4" />
               </button>
             ) : (
               <button
-                type="submit"
+                type="button"
+                onClick={handleFinalSubmit}
                 disabled={isLoading}
                 className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-semibold flex items-center gap-2 shadow-md transition-colors cursor-pointer disabled:opacity-50"
               >
