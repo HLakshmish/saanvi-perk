@@ -13,13 +13,13 @@ export interface Employee {
 export interface RoleSelection {
   roleId: number;
   roleName: string;
-  roleCode: string;
+  roleCode?: string;
 }
 
 export interface DepartmentSelection {
   departmentId: number;
   departmentName: string;
-  departmentCode: string;
+  departmentCode?: string;
 }
 
 export interface CreateEmployeeInput {
@@ -33,18 +33,4 @@ export interface CreateEmployeeInput {
   joiningDate: string;
   roleId: number | string;
   departmentId?: number | string | null;
-}
-
-export interface RoleSelection {
-  roleId: number;
-  roleName: string;
-  roleCode?: string;
-}
-
-export interface DepartmentSelection {
-  departmentId: number;
-  departmentName: string;
-  departmentCode?: string;
-  roleId: string | number;
-  departmentId?: string | number | null;
 }
