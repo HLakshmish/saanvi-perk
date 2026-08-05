@@ -16,6 +16,7 @@ import { RequestsView } from "@/features/requests/components/RequestsView";
 import { ApprovalsView } from "@/features/approvals/components/ApprovalsView";
 import { AttendanceView } from "@/features/attendance/components/AttendanceView";
 import { EmployeeListPage } from "@/features/employees";
+import { ExpensesView } from "@/features/expenses";
 import { RefreshCw, HelpCircle } from "lucide-react";
 
 interface DashboardViewProps {
@@ -43,6 +44,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         return <ApprovalsView />;
       case "attendance":
         return <AttendanceView />;
+      case "expenses":
+        return <ExpensesView currentRole={role} currentUserName={userName} />;
       case "dashboard":
       default:
         return (
