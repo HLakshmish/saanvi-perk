@@ -138,9 +138,20 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
       {/* Custom Date Picker Modal */}
       {isDatePickerOpen && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fade-in">
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200/80 w-full max-w-[640px] overflow-hidden flex flex-col animate-scale-in">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/80 w-full max-w-[660px] overflow-hidden flex flex-col relative animate-scale-in">
+            {/* Close Button */}
+            <button
+              onClick={() => setIsDatePickerOpen(false)}
+              className="absolute top-4 right-4 p-1 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-all cursor-pointer z-10"
+              title="Close"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
             {/* Modal Header Row: From & To inputs */}
-            <div className="grid grid-cols-2 gap-6 p-5 border-b border-slate-100 bg-slate-50/50">
+            <div className="grid grid-cols-2 gap-6 p-6 pr-14 border-b border-slate-100 bg-slate-50/50">
               <div className="flex items-center gap-3">
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider w-8">From</span>
                 <div className="relative flex-1">
@@ -169,14 +180,14 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
             </div>
 
             {/* Calendar Sheets Container */}
-            <div className="flex flex-col sm:flex-row gap-6 p-5 justify-between">
+            <div className="flex flex-col sm:flex-row gap-6 p-6 justify-between">
               {/* August 2026 */}
               <div className="flex-1">
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center justify-between mb-4">
                   <button className="p-1 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-800 transition-colors cursor-pointer">
                     <ChevronLeft className="w-4 h-4" />
                   </button>
-                  <span className="text-xs font-bold text-slate-800">
+                  <span className="text-xs font-bold text-slate-900">
                     August 2026
                   </span>
                   <div className="w-6" /> {/* Placeholder spacing */}
@@ -192,7 +203,7 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
                   <span>Sa</span>
                 </div>
 
-                <div className="grid grid-cols-7 text-center text-xs gap-y-1.5 font-medium text-slate-700">
+                <div className="grid grid-cols-7 text-center text-xs gap-y-1.5 font-semibold text-slate-700">
                   {/* Empty cells before Saturday */}
                   <span className="py-1"></span>
                   <span className="py-1"></span>
@@ -202,7 +213,7 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
                   <span className="py-1"></span>
 
                   {/* August 1 - Highlight Start */}
-                  <span className="flex justify-center items-center bg-indigo-600 text-white font-bold rounded-l-xl py-1">
+                  <span className="flex justify-center items-center bg-indigo-600 text-white font-bold rounded-l-xl py-1 select-none">
                     1
                   </span>
 
@@ -212,7 +223,7 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
                     return (
                       <span
                         key={day}
-                        className="py-1 bg-indigo-50 text-indigo-700 font-semibold border-y border-indigo-100/40"
+                        className="py-1 bg-indigo-50 text-indigo-700 font-bold border-y border-indigo-100/30 select-none cursor-pointer"
                       >
                         {day}
                       </span>
@@ -220,12 +231,12 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
                   })}
 
                   {/* August 30 */}
-                  <span className="py-1 bg-indigo-50 text-indigo-700 font-semibold border-y border-indigo-100/40">
+                  <span className="py-1 bg-indigo-50 text-indigo-700 font-bold border-y border-indigo-100/30 select-none cursor-pointer">
                     30
                   </span>
 
                   {/* August 31 - Highlight End */}
-                  <span className="flex justify-center items-center bg-indigo-600 text-white font-bold rounded-r-xl py-1">
+                  <span className="flex justify-center items-center bg-indigo-600 text-white font-bold rounded-r-xl py-1 select-none">
                     31
                   </span>
                 </div>
@@ -233,12 +244,12 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
 
               {/* September 2026 */}
               <div className="flex-1">
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center justify-between mb-4">
                   <div className="w-6" /> {/* Placeholder spacing */}
-                  <span className="text-xs font-bold text-slate-800">
+                  <span className="text-xs font-bold text-slate-900">
                     September 2026
                   </span>
-                  <button className="p-1 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-800 transition-colors cursor-pointer">
+                  <button className="p-1 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-850 transition-colors cursor-pointer">
                     <ChevronRightIcon className="w-4 h-4" />
                   </button>
                 </div>
@@ -253,7 +264,7 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
                   <span>Sa</span>
                 </div>
 
-                <div className="grid grid-cols-7 text-center text-xs gap-y-1.5 font-medium text-slate-600">
+                <div className="grid grid-cols-7 text-center text-xs gap-y-1.5 font-semibold text-slate-600">
                   {/* Empty cells before Tuesday */}
                   <span className="py-1"></span>
                   <span className="py-1"></span>
@@ -262,7 +273,7 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
                   {Array.from({ length: 30 }, (_, i) => {
                     const day = i + 1;
                     return (
-                      <span key={day} className="py-1 text-slate-700 font-semibold">
+                      <span key={day} className="py-1 text-slate-700 font-bold select-none cursor-pointer hover:bg-slate-50 rounded-md transition-colors">
                         {day}
                       </span>
                     );
