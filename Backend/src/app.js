@@ -36,5 +36,8 @@ app.register(require("./parentinfo/parentinfo.route"), {
 app.register(require("./addressinfo/addressinfo.route"), {
     prefix: "/api/address-info"
 });
+app.register(require("./bankdetails/bankdetails.route"), {
+    prefix: "/api/bank-details"
+});
 
 module.exports = app;
