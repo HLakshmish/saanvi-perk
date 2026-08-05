@@ -36,7 +36,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: "requests", label: "Requests", icon: CalendarCheck, roles: ["superadmin", "admin", "employee"] },
     { id: "approval", label: "Approval", icon: FileCheck, roles: ["superadmin", "admin", "employee"] },
     { id: "attendance", label: "Attendance", icon: Clock, roles: ["superadmin", "admin", "employee"] },
-    { id: "holidays-leaves", label: "Leaves & Holidays", icon: Umbrella, roles: ["superadmin", "admin", "employee"] },
+    { id: "holidays-leaves", label: "Leaves", icon: Umbrella, roles: ["superadmin", "admin", "employee"] },
     { id: "payroll", label: "Payroll", icon: Banknote, roles: ["superadmin", "admin", "employee"] },
     { id: "expenses", label: "Expenses", icon: Receipt, roles: ["superadmin", "admin", "employee"] },
     { id: "analytics", label: "Analytics", icon: TrendingUp, roles: ["superadmin", "admin"] },
