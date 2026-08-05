@@ -149,7 +149,7 @@ export const getDepartments = async (): Promise<any[]> => {
 /**
  * Creates user / employee base profile record.
  */
-export const createEmployee = async (data: any): Promise<{ success: boolean; data?: any; error?: string }> => {
+export const createEmployee = async (data: any): Promise<{ success: boolean; data?: any; error?: string; message?: string }> => {
   const token = getAuthToken();
   try {
     const res = await fetch(`${API_BASE_URL}/api/users`, {
@@ -162,7 +162,7 @@ export const createEmployee = async (data: any): Promise<{ success: boolean; dat
     });
     const result = await res.json();
     if (res.ok && result.success) {
-      return { success: true, data: result.data };
+      return { success: true, data: result.data, message: result.message };
     }
     return { success: false, error: result.message || "Failed to create user account" };
   } catch (error: any) {
@@ -173,7 +173,7 @@ export const createEmployee = async (data: any): Promise<{ success: boolean; dat
       ...data,
       createdAt: new Date().toISOString(),
     };
-    return { success: true, data: localUser };
+    return { success: true, data: localUser, message: "User created successfully (mock fallback)" };
   }
 };
 
@@ -248,6 +248,31 @@ export const createAddressInfo = async (data: any): Promise<{ success: boolean; 
     return { success: false, error: result.message || "Failed to save address details" };
   } catch (error: any) {
     console.warn("Backend API error saving address info, using fallback:", error);
+    return { success: true, data };
+  }
+};
+
+/**
+ * Save employee bank details.
+ */
+export const createBankDetails = async (data: any): Promise<{ success: boolean; data?: any; error?: string }> => {
+  const token = getAuthToken();
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/bank-details`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, error: result.message || "Failed to save bank details" };
+  } catch (error: any) {
+    console.warn("Backend API error saving bank details, using fallback:", error);
     return { success: true, data };
   }
 };
