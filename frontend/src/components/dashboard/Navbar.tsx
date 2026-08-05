@@ -11,6 +11,7 @@ interface NavbarProps {
   userName: string;
   companyName: string;
   onToggleSidebar?: () => void;
+  onTabChange?: (tab: string) => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -18,9 +19,11 @@ export const Navbar: React.FC<NavbarProps> = ({
   userName,
   companyName,
   onToggleSidebar,
+  onTabChange,
 }) => {
   const router = useRouter();
   const [isProfileOpen, setIsProfileOpen] = React.useState(false);
+  const [isQuickActionsOpen, setIsQuickActionsOpen] = React.useState(false);
 
   const handleLogout = () => {
     document.cookie = "auth_token=; path=/; max-age=0;";
@@ -73,10 +76,66 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Quick Actions Dropdown */}
         <div className="relative hidden md:block">
-          <button className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 rounded-xl text-slate-700 bg-white hover:bg-slate-50 text-xs font-semibold shadow-2xs transition-colors cursor-pointer">
+          <button
+            onClick={() => setIsQuickActionsOpen(!isQuickActionsOpen)}
+            className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 rounded-xl text-slate-700 bg-white hover:bg-slate-50 text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+          >
             <span>Quick Actions</span>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+            <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${isQuickActionsOpen ? "rotate-180" : ""}`} />
           </button>
+          
+          {isQuickActionsOpen && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setIsQuickActionsOpen(false)} />
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-200/80 overflow-hidden z-50 py-1.5 animate-in fade-in slide-in-from-top-2 duration-200">
+                <button
+                  onClick={() => {
+                    onTabChange?.("attendance");
+                    setIsQuickActionsOpen(false);
+                  }}
+                  className="w-full text-left px-4 py-2 hover:bg-slate-50 text-xs font-semibold text-slate-750 transition-colors cursor-pointer"
+                >
+                  Attendance
+                </button>
+                <button
+                  onClick={() => {
+                    onTabChange?.("holidays-leaves");
+                    setIsQuickActionsOpen(false);
+                  }}
+                  className="w-full text-left px-4 py-2 hover:bg-slate-50 text-xs font-semibold text-slate-750 transition-colors cursor-pointer"
+                >
+                  Leaves
+                </button>
+                <button
+                  onClick={() => {
+                    onTabChange?.("attendance");
+                    setIsQuickActionsOpen(false);
+                  }}
+                  className="w-full text-left px-4 py-2 hover:bg-slate-50 text-xs font-semibold text-slate-750 transition-colors cursor-pointer"
+                >
+                  Over Time
+                </button>
+                <button
+                  onClick={() => {
+                    onTabChange?.("expenses");
+                    setIsQuickActionsOpen(false);
+                  }}
+                  className="w-full text-left px-4 py-2 hover:bg-slate-55 text-xs font-semibold text-slate-750 transition-colors cursor-pointer"
+                >
+                  Reimbursements
+                </button>
+                <button
+                  onClick={() => {
+                    onTabChange?.("requests");
+                    setIsQuickActionsOpen(false);
+                  }}
+                  className="w-full text-left px-4 py-2 hover:bg-slate-50 text-xs font-semibold text-slate-750 transition-colors cursor-pointer"
+                >
+                  Requests
+                </button>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Role Selector Dropdown */}
