@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { EmployeeList } from "./employee-list";
+import { AddEmployeeWizard } from "./add-employee-wizard";
 import { Button } from "@/components/ui/button";
 import { UserRole } from "@/types/dashboard";
 
@@ -8,6 +9,9 @@ interface EmployeeListPageProps {
 }
 
 export const EmployeeListPage: React.FC<EmployeeListPageProps> = ({ currentRole }) => {
+  const [showWizard, setShowWizard] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
   const isAuthorized = currentRole === "admin" || currentRole === "superadmin";
 
   if (!isAuthorized) {
@@ -18,6 +22,19 @@ export const EmployeeListPage: React.FC<EmployeeListPageProps> = ({ currentRole 
           You do not have permission to view the employee directory or organization hierarchy.
         </p>
       </div>
+    );
+  }
+
+  if (showWizard) {
+    return (
+      <AddEmployeeWizard
+        currentRole={currentRole}
+        onCancel={() => setShowWizard(false)}
+        onSuccess={() => {
+          setRefreshKey((prev) => prev + 1);
+          setShowWizard(false);
+        }}
+      />
     );
   }
 
@@ -39,7 +56,12 @@ export const EmployeeListPage: React.FC<EmployeeListPageProps> = ({ currentRole 
             <Button variant="outline" size="sm" className="h-9 text-xs">
               Export List
             </Button>
-            <Button variant="primary" size="sm" className="h-9 text-xs">
+            <Button
+              variant="primary"
+              size="sm"
+              className="h-9 text-xs"
+              onClick={() => setShowWizard(true)}
+            >
               Add Employee
             </Button>
           </div>
@@ -48,7 +70,7 @@ export const EmployeeListPage: React.FC<EmployeeListPageProps> = ({ currentRole 
 
       {/* Main Employee Module Content */}
       <div>
-        <EmployeeList />
+        <EmployeeList key={refreshKey} />
       </div>
     </div>
   );

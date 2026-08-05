@@ -1,10 +1,11 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { SearchBox } from "@/components/ui/search-box";
 import { Pagination } from "./pagination";
 import { EmployeeTable } from "./employee-table";
 import { OrganizationChart } from "./organization-chart";
-import { MOCK_EMPLOYEES } from "../data/employees.data";
-import { LayoutGrid, List } from "lucide-react";
+import { Employee } from "../types/employees.types";
+import { getEmployees } from "../api/employees.api";
+import { LayoutGrid, List, Loader2 } from "lucide-react";
 
 
 export const EmployeeList: React.FC = () => {
@@ -12,18 +13,43 @@ export const EmployeeList: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    const fetchEmployees = async () => {
+      setIsLoading(true);
+      try {
+        const data = await getEmployees();
+        if (active) {
+          setEmployees(data);
+        }
+      } catch (err) {
+        console.error("Failed to load employees:", err);
+      } finally {
+        if (active) {
+          setIsLoading(false);
+        }
+      }
+    };
+    fetchEmployees();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // 1. Filter employees based on search term (name or code)
   const filteredEmployees = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
-    if (!term) return MOCK_EMPLOYEES;
+    if (!term) return employees;
 
-    return MOCK_EMPLOYEES.filter(
+    return employees.filter(
       (emp) =>
         emp.name.toLowerCase().includes(term) ||
         emp.employeeCode.toLowerCase().includes(term)
     );
-  }, [searchTerm]);
+  }, [searchTerm, employees]);
 
   // Reset to first page when search query changes to prevent empty page states
   const handleSearchChange = (value: string) => {
@@ -36,6 +62,15 @@ export const EmployeeList: React.FC = () => {
     const startIndex = (currentPage - 1) * pageSize;
     return filteredEmployees.slice(startIndex, startIndex + pageSize);
   }, [filteredEmployees, currentPage, pageSize]);
+
+  if (isLoading) {
+    return (
+      <div className="w-full h-64 flex flex-col items-center justify-center gap-3">
+        <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+        <span className="text-slate-500 text-xs font-semibold">Loading employee directory...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full flex flex-col gap-4">
@@ -102,7 +137,7 @@ export const EmployeeList: React.FC = () => {
         ) : (
           /* Organizational Chart View */
           <div className="w-full overflow-x-auto">
-            <OrganizationChart employees={MOCK_EMPLOYEES} />
+            <OrganizationChart employees={employees} />
           </div>
         )}
       </div>

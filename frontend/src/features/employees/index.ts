@@ -1,3 +1,4 @@
+export * from "./components/add-employee-wizard";
 export * from "./components/employee-list-page";
 export * from "./components/employee-list";
 export * from "./components/employee-table";
