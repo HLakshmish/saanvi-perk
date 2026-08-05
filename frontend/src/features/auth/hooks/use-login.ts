@@ -75,7 +75,7 @@ export function useLogin() {
         
         // Keep standard UI state for backwards compatibility if needed, but primarily use toast
         setSuccessMessage("Login successful! Redirecting...");
-        toast.success("Login successful! Redirecting...", { duration: 2500 });
+        toast.success("Login successful!", { duration: 2500 });
 
         setTimeout(() => {
           router.push(destination);
