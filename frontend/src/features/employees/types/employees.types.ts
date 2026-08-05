@@ -10,6 +10,18 @@ export interface Employee {
   reportsTo?: string; // manager's employeeCode
 }
 
+export interface RoleSelection {
+  roleId: number;
+  roleName: string;
+  roleCode: string;
+}
+
+export interface DepartmentSelection {
+  departmentId: number;
+  departmentName: string;
+  departmentCode: string;
+}
+
 export interface CreateEmployeeInput {
   firstName: string;
   lastName: string;
@@ -33,4 +45,6 @@ export interface DepartmentSelection {
   departmentId: number;
   departmentName: string;
   departmentCode?: string;
+  roleId: string | number;
+  departmentId?: string | number | null;
 }
