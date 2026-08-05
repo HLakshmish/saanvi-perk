@@ -53,17 +53,16 @@ export const AddEmployeeForm: React.FC<AddEmployeeFormProps> = ({
         getDepartments(),
       ]);
 
-      if (rolesRes.success && rolesRes.data) {
-        setRoles(rolesRes.data);
+      if (Array.isArray(rolesRes)) {
+        setRoles(rolesRes);
       } else {
-        setErrorMsg(rolesRes.message || "Failed to load roles list.");
+        setErrorMsg("Failed to load roles list.");
       }
 
-      if (deptsRes.success && deptsRes.data) {
-        setDepartments(deptsRes.data);
+      if (Array.isArray(deptsRes)) {
+        setDepartments(deptsRes);
       } else {
-        // Only set error if not already set by roles
-        setErrorMsg((prev) => prev || deptsRes.message || "Failed to load departments list.");
+        setErrorMsg((prev) => prev || "Failed to load departments list.");
       }
 
       setIsFetchingMetadata(false);

@@ -11,6 +11,7 @@ import {
   createPersonalInfo,
   createParentInfo,
   createAddressInfo,
+  createBankDetails,
   syncLocalEmployee,
 } from "../api/employees.api";
 import {
@@ -113,6 +114,9 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
     bankBranch: "",
     accountType: "Savings",
     uanNumber: "",
+    accountHolderName: "",
+    upiId: "",
+    salaryAccount: true,
 
     // Step 2: User Creation
     employeeCode: "",
@@ -295,8 +299,24 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
           setErrorMsg("PAN Number format is invalid (Format: ABCDE1234F).");
           return false;
         }
-        if (formData.ifscCode && !validateIFSC(formData.ifscCode)) {
+        if (!formData.bankName) {
+          setErrorMsg("Bank Name is required.");
+          return false;
+        }
+        if (!formData.bankAccountNo) {
+          setErrorMsg("Bank Account Number is required.");
+          return false;
+        }
+        if (!formData.ifscCode) {
+          setErrorMsg("IFSC Code is required.");
+          return false;
+        }
+        if (!validateIFSC(formData.ifscCode)) {
           setErrorMsg("IFSC Code format is invalid (e.g. SBIN0001234).");
+          return false;
+        }
+        if (!formData.bankBranch) {
+          setErrorMsg("Bank Branch is required.");
           return false;
         }
       }
@@ -511,6 +531,21 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
         };
         await createAddressInfo(permanentAddressData);
       }
+
+      // 5. Create Bank Details Record
+      const bankDetailsData = {
+        userId: createdUserId,
+        accountHolderName: (formData.accountHolderName || `${formData.firstName} ${formData.lastName}`).trim(),
+        bankName: formData.bankName,
+        branchName: formData.bankBranch,
+        accountNumber: formData.bankAccountNo,
+        ifscCode: formData.ifscCode,
+        accountType: formData.accountType,
+        upiId: formData.upiId || null,
+        salaryAccount: formData.salaryAccount,
+      };
+
+      await createBankDetails(bankDetailsData);
 
       // Sync local registry for frontend display
       const selectedRole = roles.find((r) => r.roleId === Number(formData.roleId));
@@ -1083,7 +1118,7 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
                       />
 
                       <div className="flex flex-col gap-1.5">
-                        <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Account Type</label>
+                        <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Account Type *</label>
                         <select
                           className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none"
                           value={formData.accountType}
@@ -1092,6 +1127,33 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
                           <option value="Savings">Savings</option>
                           <option value="Current">Current</option>
                         </select>
+                      </div>
+
+                      <Input
+                        label="Account Holder Name"
+                        placeholder="Prefills with full name if left blank"
+                        value={formData.accountHolderName}
+                        onChange={(e) => handleChange("accountHolderName", e.target.value)}
+                      />
+
+                      <Input
+                        label="UPI ID"
+                        placeholder="e.g. employee@upi"
+                        value={formData.upiId}
+                        onChange={(e) => handleChange("upiId", e.target.value)}
+                      />
+
+                      <div className="flex items-center gap-2 py-2 sm:col-span-2">
+                        <input
+                          type="checkbox"
+                          id="salaryAccount"
+                          checked={formData.salaryAccount}
+                          onChange={(e) => handleChange("salaryAccount", e.target.checked)}
+                          className="w-4 h-4 rounded text-indigo-600 border-slate-300 focus:ring-indigo-500"
+                        />
+                        <label htmlFor="salaryAccount" className="text-xs font-semibold text-slate-700 cursor-pointer select-none">
+                          Is this a Salary Account?
+                        </label>
                       </div>
 
                       <Input
