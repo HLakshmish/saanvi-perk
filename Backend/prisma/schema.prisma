@@ -70,25 +70,25 @@ model CompanyDetails {
 // Super Admin
 // ==========================
 model SuperAdmin {
-  superAdminId Int      @id @default(autoincrement()) @map("super_admin_id")
+  superAdminId Int @id @default(autoincrement()) @map("super_admin_id")
 
-  companyId    Int      @unique @map("company_id")
+  companyId Int @unique @map("company_id")
 
-  email         String   @unique
-  password      String
+  email    String @unique
+  password String
 
-  firstName     String   @map("first_name")
-  lastName      String?  @map("last_name")
-  phoneNumber   String?  @map("phone_number")
+  firstName   String  @map("first_name")
+  lastName    String? @map("last_name")
+  phoneNumber String? @map("phone_number")
 
-  status        Boolean  @default(true)
+  status Boolean @default(true)
 
-  lastLogin     DateTime? @map("last_login")
+  lastLogin DateTime? @map("last_login")
 
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  company        CompanyDetails @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
+  company CompanyDetails @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
 
   @@map("super_admins")
 }
@@ -103,8 +103,8 @@ model Role {
 
   rolePermissions RolePermission[]
   users           User[]
-  
-  company     CompanyDetails @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
+
+  company CompanyDetails @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -220,6 +220,9 @@ model User {
   addresses           AddressInformation[]
   bankDetails         BankDetails[]
   documents           EmployeeDocument[]
+  pfDetail            PFDetail?
+  esiDetail           ESIDetail?
+  insuranceDetail     InsuranceDetail?
 
   @@map("users")
 }
@@ -306,7 +309,6 @@ model AddressInformation {
   user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
 
   @@unique([userId, addressType])
-
   @@map("address_information")
 }
 
@@ -340,17 +342,18 @@ model BankDetails {
 // ==========================
 model EmployeeDocument {
   documentId Int @id @default(autoincrement()) @map("document_id")
-  userId     Int @map("user_id")
 
-  documentType   String  @map("document_type")
-  documentNumber String? @map("document_number")
-  documentUrl    String  @map("document_url")
+  userId Int @map("user_id")
 
-  expiryDate DateTime? @map("expiry_date")
+  documentType DocumentType @map("document_type")
 
-  verificationStatus VerificationStatus @default(PENDING) @map("verification_status")
+  document Bytes @map("document") @db.ByteA
 
-  createdAt DateTime @default(now()) @map("created_at")
+  status Boolean @default(true)
+
+  uploadedAt DateTime @default(now()) @map("uploaded_at")
+
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
 
@@ -385,4 +388,143 @@ enum VerificationStatus {
   REJECTED
 }
 
+// ==========================
+// PF Details
+// ==========================
+model PFDetail {
+  pfDetailId Int @id @default(autoincrement()) @map("pf_detail_id")
 
+  userId Int @unique @map("user_id")
+
+  uanNumber String? @map("uan_number")
+
+  isInternationalWorker Boolean @default(false) @map("is_international_worker")
+
+  educationLevel String? @map("education_level")
+
+  pfNumber String? @map("pf_number")
+
+  pfJoiningDate DateTime? @map("pf_joining_date")
+
+  pfLeavingDate DateTime? @map("pf_leaving_date")
+
+  documentNumber String? @map("document_number")
+
+  documentType String? @map("document_type")
+
+  documentExpiryDate DateTime? @map("document_expiry_date")
+
+  reasonForLeaving String? @map("reason_for_leaving")
+
+  phcCategory String? @map("phc_category")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@map("pf_details")
+}
+
+// ==========================
+// ESI Details
+// ==========================
+model ESIDetail {
+  esiDetailId Int @id @default(autoincrement()) @map("esi_detail_id")
+
+  userId Int @unique @map("user_id")
+
+  esiNumber String? @map("esi_number")
+
+  esiJoiningDate DateTime? @map("esi_joining_date")
+
+  esiLeavingDate DateTime? @map("esi_leaving_date")
+
+  reasonForLeaving String? @map("reason_for_leaving")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@map("esi_details")
+}
+
+// ==========================
+// Insurance Details
+// ==========================
+model InsuranceDetail {
+  insuranceId Int @id @default(autoincrement()) @map("insurance_id")
+
+  userId Int @unique @map("user_id")
+
+  insuranceProvider String? @map("insurance_provider")
+
+  insuranceType String? @map("insurance_type")
+
+  policyNumber String? @map("policy_number")
+
+  insuranceExpiryDate DateTime? @map("insurance_expiry_date")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@map("insurance_details")
+}
+
+enum EducationLevel {
+  BELOW_10TH
+  SSLC
+  PUC
+  DIPLOMA
+  GRADUATE
+  POST_GRADUATE
+  DOCTORATE
+  OTHER
+}
+
+enum DocumentType {
+  AADHAAR
+  PAN
+  PASSPORT
+  DRIVING_LICENSE
+  VOTER_ID
+  PHOTO
+  RESUME
+  OFFER_LETTER
+  EXPERIENCE_CERTIFICATE
+  DEGREE_CERTIFICATE
+  SALARY_SLIP
+  RELIEVING_LETTER
+  OTHER
+}
+
+enum ReasonForLeaving {
+  RESIGNED
+  TERMINATED
+  RETIRED
+  TRANSFERRED
+  CONTRACT_COMPLETED
+  DECEASED
+  OTHER
+}
+
+enum PHCCategory {
+  GENERAL
+  PH
+  EXEMPT
+}
+
+enum InsuranceType {
+  HEALTH
+  LIFE
+  ACCIDENT
+  GROUP_MEDICAL
+  GROUP_LIFE
+  OTHER
+}

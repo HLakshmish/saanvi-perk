@@ -1,3 +1,4 @@
+const fp = require("fastify-plugin");
 const multipart = require("@fastify/multipart");
 
 async function multipartPlugin(app) {
@@ -8,4 +9,4 @@ async function multipartPlugin(app) {
     });
 }
 
-module.exports = multipartPlugin;
+module.exports = fp(multipartPlugin);

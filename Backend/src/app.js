@@ -39,5 +39,17 @@ app.register(require("./addressinfo/addressinfo.route"), {
 app.register(require("./bankdetails/bankdetails.route"), {
     prefix: "/api/bank-details"
 });
+app.register(require("./pfdetail/pfdetail.route"), {
+    prefix: "/api/pf-details"
+});
+app.register(require("./esidetail/esidetail.route"), {
+    prefix: "/api/esi-details"
+});
+app.register(require("./insurancedetail/insurancedetail.route"), {
+    prefix: "/api/insurance-details"
+});
+app.register(require("./employeedocument/employeedocument.route"), {
+    prefix: "/api/employee-documents"
+});
 
 module.exports = app;
