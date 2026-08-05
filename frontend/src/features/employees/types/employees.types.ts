@@ -31,6 +31,20 @@ export interface CreateEmployeeInput {
   phoneNumber?: string | null;
   employmentType: "FULL_TIME" | "PART_TIME" | "CONTRACT" | "INTERN";
   joiningDate: string;
+  roleId: number | string;
+  departmentId?: number | string | null;
+}
+
+export interface RoleSelection {
+  roleId: number;
+  roleName: string;
+  roleCode?: string;
+}
+
+export interface DepartmentSelection {
+  departmentId: number;
+  departmentName: string;
+  departmentCode?: string;
   roleId: string | number;
   departmentId?: string | number | null;
 }

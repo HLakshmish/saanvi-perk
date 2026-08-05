@@ -9,7 +9,6 @@ import {
   Plus,
   Globe,
   Mail,
-  Calendar,
   Users,
   LogOut,
   Eye,
@@ -21,9 +20,12 @@ import {
   LayoutGrid,
   Phone,
   Pencil,
+  ArrowLeft,
+  List,
 } from "lucide-react";
 
 export default function OwnerDashboardPage() {
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -87,32 +89,43 @@ export default function OwnerDashboardPage() {
   return (
     <>
       <style>{`
-        .owner-header-bg { background-color: #003e6b; }
-        .brand-orange-bg { background-color: #f99d5e; }
-        .brand-orange-text { color: #f99d5e; }
-        .brand-orange-border { border-color: #f99d5e; }
-        .brand-bg-white { background-color: #fff9f5; }
+        .sidebar-header-bg { background-color: #0f172a; }
+        .brand-purple-bg { background-color: #4f39f6; }
+        .brand-purple-text { color: #4f39f6; }
+        .brand-purple-border { border-color: #4f39f6; }
         .brand-btn-primary { 
-          background-color: #f99d5e; 
-          color: #003e6b; 
+          background-color: #4f39f6; 
+          color: #ffffff; 
           font-weight: 700;
         }
         .brand-btn-primary:hover { 
-          background-color: #f88a42; 
-          box-shadow: 0 4px 14px rgba(249, 157, 94, 0.35);
+          background-color: #4330db; 
+          box-shadow: 0 4px 14px rgba(79, 57, 246, 0.35);
         }
         .brand-badge { 
-          background-color: rgba(249, 157, 94, 0.12); 
-          color: #e8783a; 
+          background-color: rgba(79, 57, 246, 0.12); 
+          color: #4f39f6; 
         }
       `}</style>
 
-      <div className="min-h-screen brand-bg-white font-sans text-slate-800">
-        {/* ─── Top Header Bar (Deep Blue + Brand Orange Logo) ─── */}
-        <header className="owner-header-bg border-b border-[#f99d5e]/10 sticky top-0 z-40 shadow-sm">
+      <div className="min-h-screen bg-slate-50 font-sans text-slate-800">
+        {/* ─── Top Header Bar ─── */}
+        <header className="sidebar-header-bg border-b border-slate-800 sticky top-0 z-40 shadow-md">
           <div className="max-w-6xl mx-auto flex items-center justify-between px-4 sm:px-8 h-16">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl brand-orange-bg flex items-center justify-center text-[#003e6b] text-lg font-extrabold shadow-sm">
+              {showRegistrationForm && (
+                <button
+                  onClick={() => {
+                    setShowRegistrationForm(false);
+                    setEditingCompany(null);
+                  }}
+                  className="p-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer mr-1"
+                  title="Back to Companies List"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+              )}
+              <div className="w-10 h-10 rounded-xl brand-purple-bg flex items-center justify-center text-white text-lg font-extrabold shadow-md shadow-[#4f39f6]/30">
                 S
               </div>
               <div className="flex items-center gap-2">
@@ -124,7 +137,7 @@ export default function OwnerDashboardPage() {
 
             <button
               onClick={handleLogout}
-              className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white/70 hover:text-[#f99d5e] hover:bg-white/5 rounded-xl transition-all cursor-pointer border border-transparent"
+              className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-all cursor-pointer border border-transparent hover:border-slate-700"
             >
               <LogOut className="w-4 h-4" />
               <span className="hidden sm:inline">Logout</span>
@@ -132,61 +145,71 @@ export default function OwnerDashboardPage() {
           </div>
         </header>
 
-        {/* ─── Main Content Container (Crisp White / Light Theme) ─── */}
+        {/* ─── Main Content Container ─── */}
         <main className="max-w-6xl mx-auto px-4 sm:px-8 py-8 sm:py-12">
           {/* Page Header & Actions */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 mb-8">
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-center">
-                <LayoutGrid className="w-5 h-5 brand-orange-text" />
+          {!showRegistrationForm && (
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 mb-8">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-white border border-slate-200 shadow-xs flex items-center justify-center">
+                  <LayoutGrid className="w-5 h-5 brand-purple-text" />
+                </div>
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                    Company Management
+                  </h1>
+                  <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+                    Register and manage multi-tenant companies on Saanvi Perk.
+                  </p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-                  Company Management
-                </h1>
-                <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-                  Register and manage multi-tenant companies on Saanvi Perk.
-                </p>
-              </div>
-            </div>
 
-            <div className="flex items-center gap-3">
-              {/* Registered Companies Count Badge */}
-              {!showRegistrationForm && (
-                <div className="px-3.5 py-2 rounded-xl bg-white border border-slate-200 shadow-xs text-center flex items-center gap-2">
+              <div className="flex items-center gap-3">
+                {/* View Mode Toggle */}
+                <div className="flex items-center bg-white border border-slate-200 p-1 rounded-xl shadow-2xs mr-2">
+                  <button
+                    onClick={() => setViewMode("grid")}
+                    className={`p-1.5 rounded-lg transition-all ${
+                      viewMode === "grid" ? "bg-[#4f39f6]/10 text-[#4f39f6]" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+                    }`}
+                    title="Grid View"
+                  >
+                    <LayoutGrid className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setViewMode("list")}
+                    className={`p-1.5 rounded-lg transition-all ${
+                      viewMode === "list" ? "bg-[#4f39f6]/10 text-[#4f39f6]" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+                    }`}
+                    title="List View"
+                  >
+                    <List className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Registered Companies Count Badge */}
+                <div className="px-3.5 py-2 rounded-xl bg-white border border-slate-200 shadow-2xs text-center flex items-center gap-2 hidden sm:flex">
                   <span className="text-xs text-slate-500 font-semibold">Total Companies:</span>
-                  <span className="text-base font-extrabold brand-orange-text">
+                  <span className="text-base font-extrabold brand-purple-text">
                     {companies.length}
                   </span>
                 </div>
-              )}
 
-              <button
-                onClick={() => {
-                  setShowRegistrationForm(!showRegistrationForm);
-                  setEditingCompany(null);
-                  setSelectedCompany(null);
-                }}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-sm ${
-                  showRegistrationForm
-                    ? "bg-slate-200 text-slate-700 hover:bg-slate-300"
-                    : "brand-btn-primary shadow-[#f99d5e]/20"
-                }`}
-              >
-                {showRegistrationForm ? (
-                  <>
-                    <X className="w-4 h-4" />
-                    Back to Companies List
-                  </>
-                ) : (
-                  <>
-                    <Plus className="w-4 h-4" />
-                    Register New Company
-                  </>
-                )}
-              </button>
+                <button
+                  onClick={() => {
+                    setShowRegistrationForm(true);
+                    setEditingCompany(null);
+                    setSelectedCompany(null);
+                  }}
+                  className="brand-btn-primary flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-xs shadow-[#4f39f6]/20"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span className="hidden sm:inline">Register New Company</span>
+                  <span className="sm:hidden">New</span>
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* ─── CONDITIONAL VIEW ─── */}
           {showRegistrationForm ? (
@@ -201,15 +224,15 @@ export default function OwnerDashboardPage() {
           ) : (
             <>
               {isLoading ? (
-                <div className="text-center py-20 bg-white rounded-2xl border border-slate-200 shadow-sm">
-                  <div className="w-10 h-10 border-4 border-slate-200 border-t-[#f99d5e] rounded-full animate-spin mx-auto mb-4" />
+                <div className="text-center py-20 bg-white rounded-2xl border border-slate-200 shadow-xs">
+                  <div className="w-10 h-10 border-4 border-slate-200 border-t-[#4f39f6] rounded-full animate-spin mx-auto mb-4" />
                   <p className="text-sm font-medium text-slate-500">Loading registered companies...</p>
                 </div>
               ) : companies.length === 0 ? (
                 /* ── Empty State ── */
-                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-12 sm:p-20 text-center">
-                  <div className="w-20 h-20 rounded-2xl bg-[#f99d5e]/10 border border-[#f99d5e]/20 flex items-center justify-center mx-auto mb-6">
-                    <Building2 className="w-10 h-10 brand-orange-text" />
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-12 sm:p-20 text-center">
+                  <div className="w-20 h-20 rounded-2xl bg-[#4f39f6]/10 border border-[#4f39f6]/20 flex items-center justify-center mx-auto mb-6">
+                    <Building2 className="w-10 h-10 brand-purple-text" />
                   </div>
                   <h2 className="text-xl font-bold text-slate-900 mb-2">
                     No Companies Registered Yet
@@ -222,25 +245,27 @@ export default function OwnerDashboardPage() {
                       setEditingCompany(null);
                       setShowRegistrationForm(true);
                     }}
-                    className="brand-btn-primary px-6 py-3 rounded-xl text-sm font-bold shadow-md shadow-[#f99d5e]/20 inline-flex items-center gap-2 cursor-pointer transition-all hover:shadow-lg"
+                    className="brand-btn-primary px-6 py-3 rounded-xl text-sm font-bold shadow-md shadow-[#4f39f6]/20 inline-flex items-center gap-2 cursor-pointer transition-all hover:shadow-lg"
                   >
                     <Plus className="w-4 h-4" />
                     Register Your First Company
                   </button>
                 </div>
               ) : (
-                /* ── Companies Grid (Clean White Cards) ── */
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                /* ── Companies Grid/List ── */
+                <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 gap-6" : "flex flex-col gap-4"}>
                   {companies.map((company) => (
                     <div
                       key={company.companyId}
-                      className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-[#f99d5e]/40 transition-all p-6 flex flex-col justify-between group"
+                      className={`bg-white rounded-2xl border border-slate-200 shadow-xs hover:shadow-md hover:border-[#4f39f6]/40 transition-all p-6 group ${
+                        viewMode === "list" ? "flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6" : "flex flex-col justify-between"
+                      }`}
                     >
-                      <div>
+                      <div className={viewMode === "list" ? "flex-1 flex flex-col md:flex-row items-start md:items-center gap-6 w-full" : ""}>
                         {/* Company Header */}
-                        <div className="flex items-start justify-between mb-4">
+                        <div className={`flex items-start justify-between mb-4 ${viewMode === "list" ? "md:mb-0 md:min-w-[250px]" : ""}`}>
                           <div className="flex items-center gap-3.5">
-                            <div className="w-12 h-12 rounded-xl brand-orange-bg flex items-center justify-center text-[#0c111a] text-lg font-extrabold shrink-0 shadow-sm">
+                            <div className="w-12 h-12 rounded-xl brand-purple-bg flex items-center justify-center text-white text-lg font-extrabold shrink-0 shadow-xs">
                               {company.companyName?.charAt(0)?.toUpperCase() || "C"}
                             </div>
                             <div>
@@ -248,53 +273,31 @@ export default function OwnerDashboardPage() {
                                 {company.companyName}
                               </h3>
                               <span className="brand-badge text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider inline-block mt-1">
-                                Code: {company.companyCode}
+                                CODE: {company.companyCode}
                               </span>
                             </div>
                           </div>
 
-                          <div
-                            className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
-                              company.status
-                                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                : "bg-rose-50 text-rose-700 border-rose-200"
-                            }`}
-                          >
-                            {company.status ? "Active" : "Inactive"}
-                          </div>
                         </div>
 
-                        {/* Company Details */}
-                        <div className="space-y-2 text-xs text-slate-600 mb-5 bg-slate-50/70 p-3.5 rounded-xl border border-slate-100">
+                        {/* Company Details (Clean, no date field) */}
+                        <div className={`space-y-2 text-xs text-slate-600 mb-5 bg-slate-50/70 p-3.5 rounded-xl border border-slate-100 ${viewMode === "list" ? "mb-0 md:flex-1 w-full md:w-auto" : ""}`}>
                           <div className="flex items-center gap-2.5">
-                            <Mail className="w-3.5 h-3.5 text-[#f99d5e]" />
+                            <Mail className="w-3.5 h-3.5 text-[#4f39f6]" />
                             <span className="font-medium text-slate-700">{company.companyEmail}</span>
                           </div>
                           {company.website && (
                             <div className="flex items-center gap-2.5">
-                              <Globe className="w-3.5 h-3.5 text-[#f99d5e]" />
+                              <Globe className="w-3.5 h-3.5 text-[#4f39f6]" />
                               <span className="font-medium text-slate-700">{company.website}</span>
                             </div>
                           )}
-                          <div className="flex items-center gap-2.5">
-                            <Calendar className="w-3.5 h-3.5 text-[#f99d5e]" />
-                            <span className="text-slate-500">
-                              Registered:{" "}
-                              <strong className="text-slate-700 font-semibold">
-                                {new Date(company.createdAt).toLocaleDateString("en-IN", {
-                                  day: "2-digit",
-                                  month: "short",
-                                  year: "numeric",
-                                })}
-                              </strong>
-                            </span>
-                          </div>
                         </div>
 
                         {/* SuperAdmin Info */}
                         {company.superAdmin && (
-                          <div className="bg-[#f99d5e]/10 border border-[#f99d5e]/20 rounded-xl p-3 flex items-center gap-3 mb-4">
-                            <div className="w-8 h-8 rounded-full brand-orange-bg flex items-center justify-center text-[#0c111a]">
+                          <div className={`bg-[#4f39f6]/10 border border-[#4f39f6]/20 rounded-xl p-3 flex items-center gap-3 mb-4 ${viewMode === "list" ? "mb-0 md:min-w-[200px]" : ""}`}>
+                            <div className="w-8 h-8 rounded-full brand-purple-bg flex items-center justify-center text-white">
                               <Users className="w-4 h-4" />
                             </div>
                             <div className="text-xs">
@@ -302,7 +305,7 @@ export default function OwnerDashboardPage() {
                                 {company.superAdmin.firstName}{" "}
                                 {company.superAdmin.lastName || ""}
                               </span>
-                              <span className="text-[#e8783a] ml-1.5 text-[10px] font-extrabold uppercase">
+                              <span className="text-[#4f39f6] ml-1.5 text-[10px] font-extrabold uppercase">
                                 • SuperAdmin
                               </span>
                               <p className="text-[11px] text-slate-500">{company.superAdmin.email}</p>
@@ -311,20 +314,20 @@ export default function OwnerDashboardPage() {
                         )}
                       </div>
 
-                      {/* Card Actions: View, Edit (PUT), Delete */}
-                      <div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-2">
+                      {/* Card Actions: View, Edit, Delete */}
+                      <div className={`pt-4 border-t border-slate-100 flex items-center justify-end gap-2 ${viewMode === "list" ? "pt-0 border-t-0 lg:w-auto w-full" : ""}`}>
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => handleViewCompany(company.companyId)}
                             className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border border-slate-200"
                           >
-                            <Eye className="w-3.5 h-3.5 text-[#e8783a]" />
+                            <Eye className="w-3.5 h-3.5 text-[#4f39f6]" />
                             <span>View</span>
                           </button>
 
                           <button
                             onClick={() => handleEditCompany(company)}
-                            className="px-3 py-1.5 rounded-xl bg-[#f99d5e]/15 hover:bg-[#f99d5e]/25 text-[#e8783a] text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border border-[#f99d5e]/30"
+                            className="px-3 py-1.5 rounded-xl bg-[#4f39f6]/10 hover:bg-[#4f39f6]/20 text-[#4f39f6] text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border border-[#4f39f6]/30"
                           >
                             <Pencil className="w-3.5 h-3.5" />
                             <span>Edit</span>
@@ -346,7 +349,7 @@ export default function OwnerDashboardPage() {
             </>
           )}
 
-          {/* ─── VIEW COMPANY DETAILS MODAL (With Edit Button) ─── */}
+          {/* ─── VIEW COMPANY DETAILS MODAL ─── */}
           {selectedCompany && (
             <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
               <div className="bg-white rounded-2xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 relative max-h-[90vh] overflow-y-auto">
@@ -359,7 +362,7 @@ export default function OwnerDashboardPage() {
 
                 {/* Modal Header */}
                 <div className="flex items-center gap-3.5 mb-6 pb-5 border-b border-slate-100">
-                  <div className="w-14 h-14 rounded-xl brand-orange-bg flex items-center justify-center text-[#0c111a] font-extrabold text-xl shadow-md">
+                  <div className="w-14 h-14 rounded-xl brand-purple-bg flex items-center justify-center text-white font-extrabold text-xl shadow-md">
                     {selectedCompany.companyName.charAt(0).toUpperCase()}
                   </div>
                   <div>
@@ -376,7 +379,7 @@ export default function OwnerDashboardPage() {
                   {/* Contact Info */}
                   <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-2">
                     <div className="font-bold text-slate-900 flex items-center gap-2 mb-1">
-                      <Mail className="w-4 h-4 brand-orange-text" />
+                      <Mail className="w-4 h-4 brand-purple-text" />
                       <span>Contact Information</span>
                     </div>
                     <div className="text-slate-600">Email: <span className="text-slate-900 font-semibold">{selectedCompany.companyEmail}</span></div>
@@ -386,23 +389,23 @@ export default function OwnerDashboardPage() {
                       </div>
                     )}
                     {selectedCompany.website && (
-                      <div className="text-slate-600">Website: <span className="brand-orange-text font-semibold">{selectedCompany.website}</span></div>
+                      <div className="text-slate-600">Website: <span className="brand-purple-text font-semibold">{selectedCompany.website}</span></div>
                     )}
                   </div>
 
                   {/* Workplace & Hours */}
                   <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-2">
                     <div className="font-bold text-slate-900 flex items-center gap-2 mb-1">
-                      <Clock className="w-4 h-4 brand-orange-text" />
+                      <Clock className="w-4 h-4 brand-purple-text" />
                       <span>Workplace Schedule & Geo-Fence</span>
                     </div>
                     <div className="grid grid-cols-2 gap-3 mb-2">
                       <div className="bg-white rounded-lg p-2.5 text-center border border-slate-200 shadow-2xs">
-                        <span className="text-lg font-extrabold brand-orange-text block">{selectedCompany.workingHoursPerDay || 8}</span>
+                        <span className="text-lg font-extrabold brand-purple-text block">{selectedCompany.workingHoursPerDay || 8}</span>
                         <span className="text-[10px] text-slate-400 font-bold uppercase">Hrs / Day</span>
                       </div>
                       <div className="bg-white rounded-lg p-2.5 text-center border border-slate-200 shadow-2xs">
-                        <span className="text-lg font-extrabold brand-orange-text block">{selectedCompany.workingDaysPerWeek || 5}</span>
+                        <span className="text-lg font-extrabold brand-purple-text block">{selectedCompany.workingDaysPerWeek || 5}</span>
                         <span className="text-[10px] text-slate-400 font-bold uppercase">Days / Week</span>
                       </div>
                     </div>
@@ -420,7 +423,7 @@ export default function OwnerDashboardPage() {
                   {/* Tax & Compliance */}
                   <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-2">
                     <div className="font-bold text-slate-900 flex items-center gap-2 mb-1">
-                      <FileCheck2 className="w-4 h-4 brand-orange-text" />
+                      <FileCheck2 className="w-4 h-4 brand-purple-text" />
                       <span>Tax & Compliance</span>
                     </div>
                     <div className="text-slate-600">GST: <span className="text-slate-900 font-semibold font-mono">{selectedCompany.gstNumber || "N/A"}</span></div>
@@ -429,9 +432,9 @@ export default function OwnerDashboardPage() {
 
                   {/* Superadmin Info */}
                   {selectedCompany.superAdmin && (
-                    <div className="p-4 rounded-xl bg-[#f99d5e]/10 border border-[#f99d5e]/25 space-y-1.5">
+                    <div className="p-4 rounded-xl bg-[#4f39f6]/10 border border-[#4f39f6]/25 space-y-1.5">
                       <div className="font-bold text-slate-900 flex items-center gap-2 mb-1">
-                        <Users className="w-4 h-4 brand-orange-text" />
+                        <Users className="w-4 h-4 brand-purple-text" />
                         <span>Assigned SuperAdmin</span>
                       </div>
                       <div className="text-slate-600">Name: <span className="text-slate-900 font-bold">{selectedCompany.superAdmin.firstName} {selectedCompany.superAdmin.lastName || ""}</span></div>
@@ -443,7 +446,7 @@ export default function OwnerDashboardPage() {
                 <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
                   <button
                     onClick={() => handleEditCompany(selectedCompany)}
-                    className="px-4 py-2 bg-[#f99d5e] text-[#0c111a] font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-sm hover:bg-[#f88a42] transition-colors cursor-pointer"
+                    className="px-4 py-2 bg-[#4f39f6] text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-xs hover:bg-[#4330db] transition-colors cursor-pointer"
                   >
                     <Pencil className="w-3.5 h-3.5" />
                     <span>Edit Company Details</span>

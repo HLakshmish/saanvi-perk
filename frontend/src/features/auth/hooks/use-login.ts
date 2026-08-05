@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { LoginCredentials, LoginErrors } from "../types/auth.types";
 import { loginUser } from "../api/auth.api";
 
@@ -51,7 +52,10 @@ export function useLogin() {
     e.preventDefault();
     setSuccessMessage(null);
 
-    if (!validate()) return;
+    if (!validate()) {
+      toast.error("Please fix the validation errors.");
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -68,22 +72,29 @@ export function useLogin() {
         };
 
         const destination = routeMap[role] || "/admin/dashboard";
+        
+        // Keep standard UI state for backwards compatibility if needed, but primarily use toast
         setSuccessMessage("Login successful! Redirecting...");
+        toast.success("Login successful! Redirecting...", { duration: 2500 });
 
         setTimeout(() => {
           router.push(destination);
-        }, 600);
+        }, 1200); // slightly longer to let toast animate and be read
       } else {
+        const errorMsg = response.error || "Login failed";
         setErrors((prev) => ({
           ...prev,
-          general: response.error || "Login failed",
+          general: errorMsg,
         }));
+        toast.error(errorMsg);
       }
     } catch (err) {
+      const fallbackError = "An unexpected error occurred. Please try again.";
       setErrors((prev) => ({
         ...prev,
-        general: "An unexpected error occurred. Please try again.",
+        general: fallbackError,
       }));
+      toast.error(fallbackError);
     } finally {
       setIsLoading(false);
     }

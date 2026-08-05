@@ -116,25 +116,6 @@ export function LoginForm() {
                 </p>
               </div>
 
-              {/* Alerts */}
-              {errors.general && (
-                <div className="rounded-lg border border-red-200/80 bg-red-50/50 px-3.5 py-2.5 text-xs sm:text-sm text-red-600 flex items-start gap-2 animate-in fade-in duration-200">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 shrink-0 mt-0.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-                  </svg>
-                  <span>{errors.general}</span>
-                </div>
-              )}
-
-              {successMessage && (
-                <div className="rounded-lg border border-green-200/80 bg-green-50/50 px-3.5 py-2.5 text-xs sm:text-sm text-green-600 flex items-start gap-2 animate-in fade-in duration-200">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 shrink-0 mt-0.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span>{successMessage}</span>
-                </div>
-              )}
-
               <form onSubmit={handleSubmit} noValidate className="space-y-4">
                 
                 <Input

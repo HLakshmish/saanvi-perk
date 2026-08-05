@@ -62,6 +62,7 @@ export const AddEmployeeForm: React.FC<AddEmployeeFormProps> = ({
       if (Array.isArray(deptsRes)) {
         setDepartments(deptsRes);
       } else {
+        // Only set error if not already set by roles
         setErrorMsg((prev) => prev || "Failed to load departments list.");
       }
 
@@ -129,12 +130,12 @@ export const AddEmployeeForm: React.FC<AddEmployeeFormProps> = ({
     setIsLoading(false);
 
     if (res.success) {
-      setSuccessMsg(res.message || "Employee added successfully!");
+      setSuccessMsg("Employee added successfully!");
       setTimeout(() => {
         onSuccess();
       }, 1500);
     } else {
-      setErrorMsg(res.message || "Failed to create employee. Please try again.");
+      setErrorMsg(res.error || "Failed to create employee. Please try again.");
     }
   };
 
