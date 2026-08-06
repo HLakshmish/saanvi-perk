@@ -23,32 +23,32 @@ app.get("/", async (request, reply) => {
 });
 
 app.register(require("./auth/auth.route"), { prefix: "/api/auth" });
-app.register(require("./company/company.route"), { prefix: "/api/companies" });
-app.register(require("./role/role.route"), { prefix: "/api/roles" });
-app.register(require("./department/department.route"), { prefix: "/api/departments" });
-app.register(require("./user/user.route"), { prefix: "/api/users" });
-app.register(require("./personalinfo/personalinfo.route"), {
+app.register(require("./Organisation/company/company.route"), { prefix: "/api/companies" });
+app.register(require("./Organisation/role/role.route"), { prefix: "/api/roles" });
+app.register(require("./Organisation/department/department.route"), { prefix: "/api/departments" });
+app.register(require("./UsersDetails/user/user.route"), { prefix: "/api/users" });
+app.register(require("./UsersDetails/personalinfo/personalinfo.route"), {
     prefix: "/api/personal-information"
 });
-app.register(require("./parentinfo/parentinfo.route"), {
+app.register(require("./UsersDetails/parentinfo/parentinfo.route"), {
     prefix: "/api/parent-info"
 });
-app.register(require("./addressinfo/addressinfo.route"), {
+app.register(require("./UsersDetails/addressinfo/addressinfo.route"), {
     prefix: "/api/address-info"
 });
-app.register(require("./bankdetails/bankdetails.route"), {
+app.register(require("./UsersDetails/bankdetails/bankdetails.route"), {
     prefix: "/api/bank-details"
 });
-app.register(require("./pfdetail/pfdetail.route"), {
+app.register(require("./UsersDetails/pfdetail/pfdetail.route"), {
     prefix: "/api/pf-details"
 });
-app.register(require("./esidetail/esidetail.route"), {
+app.register(require("./UsersDetails/esidetail/esidetail.route"), {
     prefix: "/api/esi-details"
 });
-app.register(require("./insurancedetail/insurancedetail.route"), {
+app.register(require("./UsersDetails/insurancedetail/insurancedetail.route"), {
     prefix: "/api/insurance-details"
 });
-app.register(require("./employeedocument/employeedocument.route"), {
+app.register(require("./UsersDetails/employeedocument/employeedocument.route"), {
     prefix: "/api/employee-documents"
 });
 

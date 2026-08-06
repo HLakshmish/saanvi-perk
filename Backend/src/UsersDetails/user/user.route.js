@@ -1,5 +1,5 @@
 const userController = require("./user.controller");
-const requirePermission = require("../middleware/checkPermission");
+const requirePermission = require("../../middleware/checkPermission");
 const { 
     createUserSchema, 
     getUserByIdSchema, 

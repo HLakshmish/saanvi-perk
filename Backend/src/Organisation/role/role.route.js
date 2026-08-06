@@ -1,5 +1,5 @@
 const roleController = require("./role.controller");
-const requirePermission = require("../middleware/checkPermission");
+const requirePermission = require("../../middleware/checkPermission");
 const { 
     createRoleSchema, 
     getRoleByIdSchema, 
