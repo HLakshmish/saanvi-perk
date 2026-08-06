@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { UserRole } from "@/types/dashboard";
+import { getCompanySuperAdmin } from "@/features/employees/api/employees.api";
 import { Navbar } from "./Navbar";
 import { Sidebar } from "./Sidebar";
 import { EmployeeStatsWidget } from "./widgets/EmployeeStatsWidget";
@@ -35,10 +36,34 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const [activeTab, setActiveTab] = useState<string>("dashboard");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
+  const [resolvedCompanyName, setResolvedCompanyName] = useState(companyName);
+  const [resolvedUserName, setResolvedUserName] = useState(userName);
+
+  useEffect(() => {
+    const loadCompanyMetadata = async () => {
+      try {
+        const res = await getCompanySuperAdmin();
+        if (res.success && res.data) {
+          const comp = res.data;
+          if (comp.companyName) {
+            setResolvedCompanyName(comp.companyName);
+          }
+          if (comp.superAdmin && role === "superadmin") {
+            const sa = comp.superAdmin;
+            setResolvedUserName(`${sa.firstName} ${sa.lastName || ""}`.trim());
+          }
+        }
+      } catch (err) {
+        console.warn("Could not load dynamic dashboard metadata:", err);
+      }
+    };
+    loadCompanyMetadata();
+  }, [role]);
+
   const renderTabContent = () => {
     switch (activeTab) {
       case "employees":
-        return <EmployeeListPage currentRole={role} />;
+        return <EmployeeListPage currentRole={role} currentUserName={resolvedUserName} currentCompanyName={resolvedCompanyName} />;
       case "requests":
         return <RequestsView />;
       case "approval":
@@ -128,8 +153,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       <Navbar
         currentRole={role}
         onRoleChange={setRole}
-        userName={userName}
-        companyName={companyName}
+        userName={resolvedUserName}
+        companyName={resolvedCompanyName}
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         onTabChange={setActiveTab}
       />

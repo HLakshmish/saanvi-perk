@@ -6,9 +6,15 @@ import { UserRole } from "@/types/dashboard";
 
 interface EmployeeListPageProps {
   currentRole: UserRole;
+  currentUserName?: string;
+  currentCompanyName?: string;
 }
 
-export const EmployeeListPage: React.FC<EmployeeListPageProps> = ({ currentRole }) => {
+export const EmployeeListPage: React.FC<EmployeeListPageProps> = ({
+  currentRole,
+  currentUserName,
+  currentCompanyName,
+}) => {
   const [showWizard, setShowWizard] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -70,7 +76,7 @@ export const EmployeeListPage: React.FC<EmployeeListPageProps> = ({ currentRole 
 
       {/* Main Employee Module Content */}
       <div>
-        <EmployeeList key={refreshKey} />
+        <EmployeeList key={refreshKey} currentUserName={currentUserName} currentCompanyName={currentCompanyName} />
       </div>
     </div>
   );

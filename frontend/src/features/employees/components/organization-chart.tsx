@@ -1,64 +1,143 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Employee } from "../types/employees.types";
 import { EmployeeCard } from "./employee-card";
-import { Search } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
+import { getCompanySuperAdmin } from "../api/employees.api";
+import { cn } from "@/lib/utils";
 
 interface OrganizationChartProps {
   employees: Employee[];
   className?: string;
+  currentUserName?: string;
+  currentCompanyName?: string;
 }
 
 export const OrganizationChart: React.FC<OrganizationChartProps> = ({
   employees,
   className,
+  currentUserName,
+  currentCompanyName,
 }) => {
-  // Find the default focused employee (the CEO CHINMAYA BAIRY, code ST00001, or fallback to first employee)
-  const defaultFocusCode = useMemo(() => {
-    const ceo = employees.find((emp) => emp.designation.toLowerCase() === "ceo");
-    return ceo ? ceo.employeeCode : employees[0]?.employeeCode;
-  }, [employees]);
-
-  const [focusedCode, setFocusedCode] = useState<string>(defaultFocusCode || "");
+  const [superAdmin, setSuperAdmin] = useState<Employee | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [highlightedCode, setHighlightedCode] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  // Get focused employee details
-  const focusedEmployee = useMemo(() => {
-    return employees.find((emp) => emp.employeeCode === focusedCode);
-  }, [employees, focusedCode]);
+  useEffect(() => {
+    const fetchSuperAdmin = async () => {
+      try {
+        setIsLoading(true);
+        const res = await getCompanySuperAdmin();
+        if (res.success && res.data) {
+          const comp = res.data;
+          const sa = comp.superAdmin;
+          
+          const companyLocation = comp.city
+            ? (comp.state ? `${comp.city}, ${comp.state}` : comp.city)
+            : (currentCompanyName || "Corporate");
 
-  // Find manager of the focused employee
-  const manager = useMemo(() => {
-    if (!focusedEmployee || !focusedEmployee.reportsTo) return null;
-    return employees.find((emp) => emp.employeeCode === focusedEmployee.reportsTo);
-  }, [employees, focusedEmployee]);
+          if (sa) {
+            setSuperAdmin({
+              id: `sa-${sa.superAdminId}`,
+              employeeCode: `SA-${String(sa.superAdminId).padStart(5, "0")}`,
+              name: `${sa.firstName} ${sa.lastName || ""}`.trim(),
+              email: sa.email,
+              location: companyLocation,
+              department: "Management",
+              designation: "SuperAdmin",
+              employeeGroup: "Full-Time",
+              reportsTo: undefined,
+            });
+          } else {
+            // Fallback dynamically mapping the active SuperAdmin session
+            setSuperAdmin({
+              id: "sa-root",
+              employeeCode: "SA-00001",
+              name: currentUserName || "System Superadmin",
+              email: comp.companyEmail || "superadmin@saanvi.com",
+              location: companyLocation,
+              department: "Management",
+              designation: "SuperAdmin",
+              employeeGroup: "Full-Time",
+              reportsTo: undefined,
+            });
+          }
+        } else {
+          // Fallback if company details couldn't be loaded
+          setSuperAdmin({
+            id: "sa-root",
+            employeeCode: "SA-00001",
+            name: currentUserName || "System Superadmin",
+            email: "superadmin@saanvi.com",
+            location: currentCompanyName || "Saanvi Technologies",
+            department: "Management",
+            designation: "SuperAdmin",
+            employeeGroup: "Full-Time",
+            reportsTo: undefined,
+          });
+        }
+      } catch (e) {
+        console.warn("Failed to fetch company SuperAdmin details", e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchSuperAdmin();
+  }, [currentUserName, currentCompanyName]);
 
-  // Find direct reportees of the focused employee
-  const reportees = useMemo(() => {
-    if (!focusedEmployee) return [];
-    return employees.filter((emp) => emp.reportsTo === focusedEmployee.employeeCode);
-  }, [employees, focusedEmployee]);
+  // Filter Admins from employee list
+  const admins = useMemo(() => {
+    return employees.filter(
+      (emp) => emp.designation.toLowerCase() === "admin"
+    );
+  }, [employees]);
+
+  // Combine SuperAdmin + employees for search
+  const allSearchable = useMemo(() => {
+    const list = [...employees];
+    if (superAdmin) {
+      list.unshift(superAdmin);
+    }
+    return list;
+  }, [employees, superAdmin]);
 
   // Filter employees for the search box
   const searchResults = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     if (!query) return [];
-    return employees.filter(
+    return allSearchable.filter(
       (emp) =>
         emp.name.toLowerCase().includes(query) ||
         emp.employeeCode.toLowerCase().includes(query)
     );
-  }, [employees, searchQuery]);
+  }, [allSearchable, searchQuery]);
 
   const handleSelectEmployee = (code: string) => {
-    setFocusedCode(code);
+    setHighlightedCode(code);
     setSearchQuery("");
     setIsDropdownOpen(false);
+    // Remove highlight after 4 seconds
+    setTimeout(() => {
+      setHighlightedCode((prev) => (prev === code ? "" : prev));
+    }, 4000);
   };
 
-  if (!focusedEmployee) {
+  if (isLoading) {
     return (
-      <div className="text-center py-8 text-gray-500 font-medium">
+      <div className="flex flex-col items-center justify-center py-16 gap-2.5">
+        <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+        <span className="text-slate-500 text-xs font-semibold">Loading hierarchy chart...</span>
+      </div>
+    );
+  }
+
+  // SuperAdmin will always be the root node, or fallback to first employee if superAdmin is somehow null
+  const rootNode = superAdmin || (employees.length > 0 ? employees[0] : null);
+
+  if (!rootNode) {
+    return (
+      <div className="text-center py-12 text-gray-500 font-medium">
         No employee hierarchy data found.
       </div>
     );
@@ -67,7 +146,7 @@ export const OrganizationChart: React.FC<OrganizationChartProps> = ({
   return (
     <div className={`relative flex flex-col w-full bg-white rounded-2xl border border-gray-200/80 shadow-xs p-6 ${className}`}>
       
-      {/* Top Section: Search bar aligned to top-right of panel */}
+      {/* Top Section: Search bar */}
       <div className="flex justify-end mb-8 relative z-20">
         <div className="relative w-80">
           <div className="relative flex items-center">
@@ -115,54 +194,70 @@ export const OrganizationChart: React.FC<OrganizationChartProps> = ({
         </div>
       </div>
 
-      {/* Hierarchy Render Tree (Centered) */}
-      <div className="flex flex-col items-center justify-center w-full min-h-[400px] overflow-x-auto select-none py-6">
+      {/* Tree Visualization */}
+      <div className="flex flex-col items-center justify-center w-full min-h-[500px] overflow-x-auto select-none py-8">
         
-        {/* 1. Manager Card (at the very top if exists) */}
-        {manager && (
-          <div className="flex flex-col items-center mb-1">
-            <EmployeeCard
-              employee={manager}
-              onClick={() => handleSelectEmployee(manager.employeeCode)}
-            />
-            {/* Connection Line */}
-            <div className="w-[1.5px] h-6 bg-slate-300"></div>
-          </div>
-        )}
-
-        {/* 2. Focused Employee Card */}
-        <div className="flex flex-col items-center">
+        {/* Level 0: SuperAdmin / Root */}
+        <div className="flex flex-col items-center mb-8">
           <EmployeeCard
-            employee={focusedEmployee}
-            className="ring-2 ring-blue-500/60 ring-offset-2 !bg-blue-50/10"
+            employee={rootNode}
+            className={cn(
+              "ring-indigo-500/85 ring-offset-2",
+              rootNode.employeeCode === highlightedCode ? "ring-4 animate-pulse scale-105" : "ring-2 !bg-indigo-50/10"
+            )}
           />
+          {admins.length > 0 && (
+            <div className="w-[1.5px] h-8 bg-slate-300"></div>
+          )}
         </div>
 
-        {/* 3. Reportees Section (if focused employee has reportees) */}
-        {reportees.length > 0 && (
-          <div className="flex flex-col items-center w-full">
-            {/* Connection Line */}
-            <div className="w-[1.5px] h-6 bg-slate-300"></div>
-            
-            {/* Reportees Button/Badge Pill */}
-            <div className="bg-slate-50 border border-slate-200 text-slate-600 text-xs font-semibold px-5 py-1.5 rounded shadow-2xs select-none">
-              {reportees.length} Reportee{reportees.length > 1 ? "s" : ""}
-            </div>
+        {/* Level 1: Admins */}
+        {admins.length > 0 ? (
+          <div className="flex flex-row items-start justify-center gap-12 relative">
+            {admins.map((admin) => {
+              const adminReportees = employees.filter(
+                (emp) => emp.reportsTo === admin.employeeCode && emp.designation.toLowerCase() !== "admin"
+              );
 
-            {/* Gap space */}
-            <div className="h-4"></div>
-
-            {/* 4-Column Grid Layout matching screenshot exactly */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full max-w-[1250px] px-4">
-              {reportees.map((rep) => (
-                <div key={rep.id} className="flex justify-center">
+              return (
+                <div key={admin.id} className="flex flex-col items-center relative">
+                  {/* Admin Card */}
                   <EmployeeCard
-                    employee={rep}
-                    onClick={() => handleSelectEmployee(rep.employeeCode)}
+                    employee={admin}
+                    className={cn(
+                      admin.employeeCode === highlightedCode ? "ring-4 ring-blue-500/80 ring-offset-2 scale-105 animate-pulse" : "ring-1 ring-slate-300/80 !bg-slate-50/50"
+                    )}
                   />
+
+                  {/* Line down to reportees */}
+                  {adminReportees.length > 0 && (
+                    <div className="w-[1.5px] h-8 bg-slate-300"></div>
+                  )}
+
+                  {/* Reportees Grid */}
+                  {adminReportees.length > 0 && (
+                    <div className="flex flex-col gap-4 mt-1">
+                      {adminReportees.map((rep) => (
+                        <div key={rep.id} className="flex flex-col items-center">
+                          <EmployeeCard
+                            employee={rep}
+                            className={cn(
+                              rep.employeeCode === highlightedCode
+                                ? "ring-4 ring-blue-500/80 ring-offset-2 scale-105 animate-pulse"
+                                : "!bg-white border-dashed border-slate-300"
+                            )}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="text-center py-6 px-8 rounded-xl bg-slate-50 border border-dashed border-slate-200 text-slate-500 text-xs font-semibold max-w-sm">
+            No Admins onboarded yet. Onboard an Admin to build the reporting tree.
           </div>
         )}
 

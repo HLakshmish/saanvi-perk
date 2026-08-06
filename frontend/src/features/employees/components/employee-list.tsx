@@ -4,11 +4,20 @@ import { Pagination } from "./pagination";
 import { EmployeeTable } from "./employee-table";
 import { OrganizationChart } from "./organization-chart";
 import { Employee } from "../types/employees.types";
-import { getEmployees } from "../api/employees.api";
+import { getEmployees, deleteUser } from "../api/employees.api";
 import { LayoutGrid, List, Loader2 } from "lucide-react";
+import { EmployeeDetailsModal } from "./employee-details-modal";
+import { EmployeeEditModal } from "./employee-edit-modal";
 
+interface EmployeeListProps {
+  currentUserName?: string;
+  currentCompanyName?: string;
+}
 
-export const EmployeeList: React.FC = () => {
+export const EmployeeList: React.FC<EmployeeListProps> = ({
+  currentUserName,
+  currentCompanyName,
+}) => {
   const [activeTab, setActiveTab] = useState<"list" | "chart">("list");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -16,27 +25,25 @@ export const EmployeeList: React.FC = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Modal triggers
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [isViewOpen, setIsViewOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+
+  const fetchEmployees = async () => {
+    setIsLoading(true);
+    try {
+      const data = await getEmployees();
+      setEmployees(data);
+    } catch (err) {
+      console.error("Failed to load employees:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    let active = true;
-    const fetchEmployees = async () => {
-      setIsLoading(true);
-      try {
-        const data = await getEmployees();
-        if (active) {
-          setEmployees(data);
-        }
-      } catch (err) {
-        console.error("Failed to load employees:", err);
-      } finally {
-        if (active) {
-          setIsLoading(false);
-        }
-      }
-    };
     fetchEmployees();
-    return () => {
-      active = false;
-    };
   }, []);
 
   // 1. Filter employees based on search term (name or code)
@@ -62,6 +69,38 @@ export const EmployeeList: React.FC = () => {
     const startIndex = (currentPage - 1) * pageSize;
     return filteredEmployees.slice(startIndex, startIndex + pageSize);
   }, [filteredEmployees, currentPage, pageSize]);
+
+  // Action handlers
+  const handleView = (emp: Employee) => {
+    setSelectedEmployee(emp);
+    setIsViewOpen(true);
+  };
+
+  const handleEdit = (emp: Employee) => {
+    setSelectedEmployee(emp);
+    setIsEditOpen(true);
+  };
+
+  const handleDelete = async (emp: Employee) => {
+    if (!confirm(`Are you sure you want to delete employee ${emp.name} (${emp.employeeCode})? This will permanently erase their credentials and files.`)) {
+      return;
+    }
+    try {
+      const res = await deleteUser(Number(emp.id));
+      if (res.success) {
+        alert("Employee deleted successfully.");
+        await fetchEmployees();
+      } else {
+        alert(res.error || "Failed to delete employee user profile.");
+      }
+    } catch (err) {
+      alert("Failed to delete employee profile.");
+    }
+  };
+
+  const handleEditSuccess = async () => {
+    await fetchEmployees();
+  };
 
   if (isLoading) {
     return (
@@ -118,7 +157,12 @@ export const EmployeeList: React.FC = () => {
         {activeTab === "list" ? (
           <div className="flex flex-col gap-4">
             {/* Table Component */}
-            <EmployeeTable employees={paginatedEmployees} />
+            <EmployeeTable
+              employees={paginatedEmployees}
+              onView={handleView}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
 
             {/* Pagination Controls */}
             {filteredEmployees.length > 0 && (
@@ -137,10 +181,39 @@ export const EmployeeList: React.FC = () => {
         ) : (
           /* Organizational Chart View */
           <div className="w-full overflow-x-auto">
-            <OrganizationChart employees={employees} />
+            <OrganizationChart
+              employees={employees}
+              currentUserName={currentUserName}
+              currentCompanyName={currentCompanyName}
+            />
           </div>
         )}
       </div>
+
+      {/* Modals */}
+      {selectedEmployee && (
+        <>
+          <EmployeeDetailsModal
+            isOpen={isViewOpen}
+            onClose={() => {
+              setIsViewOpen(false);
+              setSelectedEmployee(null);
+            }}
+            employeeId={Number(selectedEmployee.id)}
+            employeeName={selectedEmployee.name}
+          />
+          <EmployeeEditModal
+            isOpen={isEditOpen}
+            onClose={() => {
+              setIsEditOpen(false);
+              setSelectedEmployee(null);
+            }}
+            onSuccess={handleEditSuccess}
+            employeeId={Number(selectedEmployee.id)}
+            employeeName={selectedEmployee.name}
+          />
+        </>
+      )}
     </div>
   );
 };

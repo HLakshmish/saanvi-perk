@@ -1,8 +1,11 @@
-import React from "react";
+import { Eye, Pencil, Trash2 } from "lucide-react";
 import { Employee } from "../types/employees.types";
 
 interface EmployeeTableProps {
   employees: Employee[];
+  onView: (employee: Employee) => void;
+  onEdit: (employee: Employee) => void;
+  onDelete: (employee: Employee) => void;
 }
 
 // Utility to get design styles for different employee groups
@@ -20,7 +23,7 @@ const getGroupBadgeStyles = (group: string): string => {
   return "bg-slate-50 text-slate-700 border-slate-200";
 };
 
-export const EmployeeTable: React.FC<EmployeeTableProps> = ({ employees }) => {
+export const EmployeeTable: React.FC<EmployeeTableProps> = ({ employees, onView, onEdit, onDelete }) => {
   if (employees.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-12 border border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
@@ -46,6 +49,7 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({ employees }) => {
               <th className="py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wider">Designation</th>
               <th className="py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wider">Status</th>
               <th className="py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wider">Employment Group</th>
+              <th className="py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wider text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 bg-white">
@@ -101,6 +105,42 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({ employees }) => {
                   >
                     {employee.employeeGroup}
                   </span>
+                </td>
+
+                {/* Actions */}
+                <td className="py-3.5 px-4 text-right">
+                  <div className="flex items-center justify-end gap-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onView(employee);
+                      }}
+                      className="p-1 hover:bg-slate-100 text-indigo-600 rounded-lg transition-colors cursor-pointer"
+                      title="View Details"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEdit(employee);
+                      }}
+                      className="p-1 hover:bg-slate-100 text-emerald-600 rounded-lg transition-colors cursor-pointer"
+                      title="Edit Profile"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(employee);
+                      }}
+                      className="p-1 hover:bg-rose-50 text-rose-600 rounded-lg transition-colors cursor-pointer"
+                      title="Delete Employee"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
