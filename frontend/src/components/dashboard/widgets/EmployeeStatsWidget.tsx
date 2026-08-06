@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { ChevronRight } from "lucide-react";
+import { Users, UserCheck, CalendarOff, UserX } from "lucide-react";
 
 interface EmployeeStatsProps {
   headcount?: number;
@@ -16,46 +16,56 @@ export const EmployeeStatsWidget: React.FC<EmployeeStatsProps> = ({
   onLeave = 0,
   absent = 17,
 }) => {
+  const stats = [
+    {
+      label: "Headcount",
+      value: headcount,
+      icon: Users,
+    },
+    {
+      label: "At Work",
+      value: atWork,
+      icon: UserCheck,
+    },
+    {
+      label: "On Leave",
+      value: onLeave,
+      icon: CalendarOff,
+    },
+    {
+      label: "Absent",
+      value: absent,
+      icon: UserX,
+    },
+  ];
+
   return (
-    <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-xs flex flex-col justify-between">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-gray-800 text-sm sm:text-base flex items-center gap-1 cursor-pointer hover:text-blue-600">
-          Employee Statistics <ChevronRight className="w-4 h-4 text-gray-500" />
-        </h3>
-      </div>
+    <div className="col-span-1 md:col-span-2 lg:col-span-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+        {stats.map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <div
+              key={stat.label}
+              className="bg-white rounded-xl border border-slate-200/80 p-3.5 sm:p-4 shadow-sm transition-all duration-200 hover:border-[#4f39f6]/40 hover:shadow-md group"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className="w-8 h-8 rounded-lg bg-[#4f39f6]/10 flex items-center justify-center text-[#4f39f6] group-hover:bg-[#4f39f6] group-hover:text-white transition-colors">
+                  <Icon className="w-4 h-4" />
+                </div>
+              </div>
 
-      <p className="text-xs text-gray-600 font-medium mb-4">
-        Headcount: <span className="font-bold text-gray-900">{headcount}</span>
-      </p>
-
-      {/* Metric Rings / Doughnut Indicators */}
-      <div className="space-y-3">
-        {/* At Work */}
-        <div className="flex items-center gap-3 p-3 rounded-lg border border-purple-100 bg-purple-50/30">
-          <div className="w-9 h-9 rounded-full border-4 border-blue-500 border-t-transparent flex items-center justify-center shrink-0" />
-          <div className="flex-1 flex items-center justify-between text-xs sm:text-sm">
-            <span className="font-semibold text-gray-700">At Work</span>
-            <span className="font-bold text-gray-900">{atWork}</span>
-          </div>
-        </div>
-
-        {/* On Leave */}
-        <div className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 bg-gray-50/50">
-          <div className="w-9 h-9 rounded-full border-4 border-gray-300 flex items-center justify-center shrink-0" />
-          <div className="flex-1 flex items-center justify-between text-xs sm:text-sm">
-            <span className="font-semibold text-gray-700">On Leave</span>
-            <span className="font-bold text-gray-900">{onLeave}</span>
-          </div>
-        </div>
-
-        {/* Absent */}
-        <div className="flex items-center gap-3 p-3 rounded-lg border border-red-100 bg-red-50/30">
-          <div className="w-9 h-9 rounded-full border-4 border-rose-500 border-t-transparent flex items-center justify-center shrink-0" />
-          <div className="flex-1 flex items-center justify-between text-xs sm:text-sm">
-            <span className="font-semibold text-gray-700">Absent</span>
-            <span className="font-bold text-gray-900">{absent}</span>
-          </div>
-        </div>
+              <div>
+                <p className="text-2xl font-extrabold text-slate-900 tracking-tight leading-none mb-1">
+                  {stat.value}
+                </p>
+                <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                  {stat.label}
+                </p>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
