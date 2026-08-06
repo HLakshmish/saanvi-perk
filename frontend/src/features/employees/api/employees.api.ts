@@ -1,4 +1,4 @@
-import { Employee } from "../types/employees.types";
+import { Employee, CreatePFDetailInput, CreateESIDetailInput, CreateInsuranceDetailInput } from "../types/employees.types";
 import { MOCK_EMPLOYEES } from "../data/employees.data";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
@@ -54,6 +54,28 @@ export const getEmployees = async (): Promise<Employee[]> => {
   const localList = getLocalEmployees();
 
   try {
+    // 1. Fetch Company details dynamically to get the branch location (city/state)
+    let companyLocation = "Headquarters";
+    const companyId = getCompanyIdCookie();
+    if (companyId) {
+      try {
+        const compRes = await fetch(`${API_BASE_URL}/api/companies/${companyId}`, {
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+        const compResult = await compRes.json();
+        if (compRes.ok && compResult.success && compResult.data) {
+          const comp = compResult.data;
+          if (comp.city) {
+            companyLocation = comp.state ? `${comp.city}, ${comp.state}` : comp.city;
+          }
+        }
+      } catch (err) {
+        console.warn("Could not load company location, using fallback:", err);
+      }
+    }
+
     const res = await fetch(`${API_BASE_URL}/api/users`, {
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -63,22 +85,41 @@ export const getEmployees = async (): Promise<Employee[]> => {
     const result = await res.json();
 
     if (res.ok && Array.isArray(result.data)) {
-      const remoteEmployees: Employee[] = result.data.map(mapUserToEmployee);
+      // Create a map of userId -> employeeCode
+      const userIdToCodeMap = new Map<number, string>();
+      result.data.forEach((user: any) => {
+        if (user.userId && user.employeeCode) {
+          userIdToCodeMap.set(user.userId, user.employeeCode);
+        }
+      });
+
+      const remoteEmployees: Employee[] = result.data.map((user: any) => {
+        const mgrCode = user.reportingToId ? userIdToCodeMap.get(user.reportingToId) : undefined;
+        return {
+          id: String(user.userId),
+          employeeCode: user.employeeCode,
+          name: `${user.firstName} ${user.lastName || ""}`.trim(),
+          email: user.officialEmail,
+          location: companyLocation,
+          department: user.department?.departmentName || "General",
+          designation: user.role?.roleName || "Staff",
+          employeeGroup: (user.employmentType || "FULL_TIME").replace("_", "-"),
+          reportsTo: mgrCode,
+        };
+      });
+
       const remoteCodes = new Set(remoteEmployees.map((e: Employee) => e.employeeCode));
       const combined = [
         ...remoteEmployees,
         ...localList.filter((e) => !remoteCodes.has(e.employeeCode)),
-        ...MOCK_EMPLOYEES.filter(
-          (e) => !remoteCodes.has(e.employeeCode) && !localList.some((l) => l.employeeCode === e.employeeCode)
-        ),
       ];
       return combined;
     }
 
-    return [...localList, ...MOCK_EMPLOYEES];
+    return [...localList];
   } catch (error) {
-    console.warn("Backend API error fetching employees, using mock list:", error);
-    return [...localList, ...MOCK_EMPLOYEES];
+    console.warn("Backend API error fetching employees:", error);
+    return [...localList];
   }
 };
 
@@ -166,14 +207,8 @@ export const createEmployee = async (data: any): Promise<{ success: boolean; dat
     }
     return { success: false, error: result.message || "Failed to create user account" };
   } catch (error: any) {
-    console.warn("Backend API error creating employee user, using fallback:", error);
-    // Emulate successful local user creation if offline/error for testing
-    const localUser = {
-      userId: Math.floor(Math.random() * 10000) + 1,
-      ...data,
-      createdAt: new Date().toISOString(),
-    };
-    return { success: true, data: localUser, message: "User created successfully (mock fallback)" };
+    console.error("Backend API error creating employee user:", error);
+    return { success: false, error: error.message || "Failed to create user account" };
   }
 };
 
@@ -197,8 +232,8 @@ export const createPersonalInfo = async (data: any): Promise<{ success: boolean;
     }
     return { success: false, error: result.message || "Failed to save personal details" };
   } catch (error: any) {
-    console.warn("Backend API error saving personal info, using fallback:", error);
-    return { success: true, data };
+    console.error("Backend API error saving personal info:", error);
+    return { success: false, error: error.message || "Failed to save personal details" };
   }
 };
 
@@ -222,8 +257,8 @@ export const createParentInfo = async (data: any): Promise<{ success: boolean; d
     }
     return { success: false, error: result.message || "Failed to save family details" };
   } catch (error: any) {
-    console.warn("Backend API error saving family info, using fallback:", error);
-    return { success: true, data };
+    console.error("Backend API error saving family info:", error);
+    return { success: false, error: error.message || "Failed to save family details" };
   }
 };
 
@@ -247,8 +282,8 @@ export const createAddressInfo = async (data: any): Promise<{ success: boolean; 
     }
     return { success: false, error: result.message || "Failed to save address details" };
   } catch (error: any) {
-    console.warn("Backend API error saving address info, using fallback:", error);
-    return { success: true, data };
+    console.error("Backend API error saving address info:", error);
+    return { success: false, error: error.message || "Failed to save address details" };
   }
 };
 
@@ -272,8 +307,8 @@ export const createBankDetails = async (data: any): Promise<{ success: boolean; 
     }
     return { success: false, error: result.message || "Failed to save bank details" };
   } catch (error: any) {
-    console.warn("Backend API error saving bank details, using fallback:", error);
-    return { success: true, data };
+    console.error("Backend API error saving bank details:", error);
+    return { success: false, error: error.message || "Failed to save bank details" };
   }
 };
 
@@ -288,4 +323,531 @@ export const syncLocalEmployee = (user: any, details: any) => {
   });
   saveLocalEmployee(mappedEmp);
 };
+
+export const createPFDetail = async (data: CreatePFDetailInput): Promise<{ success: boolean; data?: any; error?: string }> => {
+  const token = getAuthToken();
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/pf-details`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, error: result.message || "Failed to save PF details" };
+  } catch (error: any) {
+    console.error("API error saving PF details:", error);
+    return { success: false, error: error.message || "Failed to save PF details" };
+  }
+};
+
+export const createESIDetail = async (data: CreateESIDetailInput): Promise<{ success: boolean; data?: any; error?: string }> => {
+  const token = getAuthToken();
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/esi-details`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, error: result.message || "Failed to save ESI details" };
+  } catch (error: any) {
+    console.error("API error saving ESI details:", error);
+    return { success: false, error: error.message || "Failed to save ESI details" };
+  }
+};
+
+export const createInsuranceDetail = async (data: CreateInsuranceDetailInput): Promise<{ success: boolean; data?: any; error?: string }> => {
+  const token = getAuthToken();
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/insurance-details`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, error: result.message || "Failed to save insurance details" };
+  } catch (error: any) {
+    console.error("API error saving insurance details:", error);
+    return { success: false, error: error.message || "Failed to save insurance details" };
+  }
+};
+
+export const uploadEmployeeDocument = async (
+  userId: number,
+  documentType: string,
+  file: File
+): Promise<{ success: boolean; data?: any; error?: string }> => {
+  const token = getAuthToken();
+  try {
+    const formData = new FormData();
+    formData.append("userId", String(userId));
+    formData.append("documentType", documentType);
+    formData.append("file", file);
+
+    const res = await fetch(`${API_BASE_URL}/api/employee-documents`, {
+      method: "POST",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: formData,
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, error: result.message || "Failed to upload document" };
+  } catch (error: any) {
+    console.error("API error uploading document:", error);
+    return { success: false, error: error.message || "Failed to upload document" };
+  }
+};
+
+export const getUserById = async (userId: number): Promise<{ success: boolean; data?: any; error?: string }> => {
+  const token = getAuthToken();
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
+      method: "GET",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, error: result.message || "Failed to fetch user profile" };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const updateUser = async (userId: number, data: any): Promise<{ success: boolean; data?: any; error?: string }> => {
+  const token = getAuthToken();
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, error: result.message || "Failed to update user profile" };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const deleteUser = async (userId: number): Promise<{ success: boolean; error?: string }> => {
+  const token = getAuthToken();
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
+      method: "DELETE",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true };
+    }
+    return { success: false, error: result.message || "Failed to delete user profile" };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const getPersonalInfoByUserId = async (userId: number): Promise<{ success: boolean; data?: any; error?: string }> => {
+  const token = getAuthToken();
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/personal-information?userId=${userId}`, {
+      method: "GET",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, error: result.message || "Failed to fetch personal info" };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const updatePersonalInfo = async (id: number, data: any): Promise<{ success: boolean; data?: any; error?: string }> => {
+  const token = getAuthToken();
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/personal-information/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, error: result.message || "Failed to update personal info" };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const getParentInfoByUserId = async (userId: number): Promise<{ success: boolean; data?: any; error?: string }> => {
+  const token = getAuthToken();
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/parent-info/user/${userId}`, {
+      method: "GET",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, error: result.message || "Failed to fetch parent info" };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const updateParentInfo = async (userId: number, data: any): Promise<{ success: boolean; data?: any; error?: string }> => {
+  const token = getAuthToken();
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/parent-info/user/${userId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, error: result.message || "Failed to update parent info" };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const getAddressInfoByUserId = async (userId: number): Promise<{ success: boolean; data?: any; error?: string }> => {
+  const token = getAuthToken();
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/address-info/user/${userId}`, {
+      method: "GET",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, error: result.message || "Failed to fetch address info" };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const updateAddressInfo = async (userId: number, addressType: string, data: any): Promise<{ success: boolean; data?: any; error?: string }> => {
+  const token = getAuthToken();
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/address-info/user/${userId}/${addressType}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, error: result.message || "Failed to update address details" };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const getBankDetailsByUserId = async (userId: number): Promise<{ success: boolean; data?: any; error?: string }> => {
+  const token = getAuthToken();
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/bank-details?userId=${userId}`, {
+      method: "GET",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, error: result.message || "Failed to fetch bank details" };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const updateBankDetails = async (id: number, data: any): Promise<{ success: boolean; data?: any; error?: string }> => {
+  const token = getAuthToken();
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/bank-details/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, error: result.message || "Failed to update bank details" };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const getPFDetailsByUserId = async (userId: number): Promise<{ success: boolean; data?: any; error?: string }> => {
+  const token = getAuthToken();
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/pf-details?userId=${userId}`, {
+      method: "GET",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, error: result.message || "Failed to fetch PF details" };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const updatePFDetail = async (id: number, data: any): Promise<{ success: boolean; data?: any; error?: string }> => {
+  const token = getAuthToken();
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/pf-details/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, error: result.message || "Failed to update PF details" };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const getESIDetailsByUserId = async (userId: number): Promise<{ success: boolean; data?: any; error?: string }> => {
+  const token = getAuthToken();
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/esi-details?userId=${userId}`, {
+      method: "GET",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, error: result.message || "Failed to fetch ESI details" };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const updateESIDetail = async (id: number, data: any): Promise<{ success: boolean; data?: any; error?: string }> => {
+  const token = getAuthToken();
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/esi-details/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, error: result.message || "Failed to update ESI details" };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const getInsuranceDetailsByUserId = async (userId: number): Promise<{ success: boolean; data?: any; error?: string }> => {
+  const token = getAuthToken();
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/insurance-details?userId=${userId}`, {
+      method: "GET",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, error: result.message || "Failed to fetch insurance details" };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const updateInsuranceDetail = async (id: number, data: any): Promise<{ success: boolean; data?: any; error?: string }> => {
+  const token = getAuthToken();
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/insurance-details/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, error: result.message || "Failed to update insurance details" };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const getEmployeeDocumentsByUserId = async (userId: number): Promise<{ success: boolean; data?: any; error?: string }> => {
+  const token = getAuthToken();
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/employee-documents?userId=${userId}`, {
+      method: "GET",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, error: result.message || "Failed to fetch employee documents" };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const deleteEmployeeDocument = async (id: number): Promise<{ success: boolean; error?: string }> => {
+  const token = getAuthToken();
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/employee-documents/${id}`, {
+      method: "DELETE",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true };
+    }
+    return { success: false, error: result.message || "Failed to delete document" };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const downloadEmployeeDocument = async (id: number): Promise<void> => {
+  const token = getAuthToken();
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/employee-documents/${id}/download`, {
+      method: "GET",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    if (!res.ok) throw new Error("Failed to download document");
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `document_${id}.bin`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error("Download error:", error);
+    alert("Failed to download document file.");
+  }
+};
+
+function getCompanyIdCookie(): number | null {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.match(/(?:^|; )company_id=([^;]*)/);
+  return match ? Number(match[1]) : null;
+}
+
+export const getCompanySuperAdmin = async (): Promise<{ success: boolean; data?: any; error?: string }> => {
+  const token = getAuthToken();
+  const companyId = getCompanyIdCookie();
+  if (!companyId) return { success: false, error: "No company ID cookie found" };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/companies/${companyId}`, {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    const result = await res.json();
+    if (res.ok && result.success && result.data) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, error: "Company details not found" };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
+
+
 

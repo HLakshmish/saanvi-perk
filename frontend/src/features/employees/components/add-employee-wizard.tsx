@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,6 +13,10 @@ import {
   createAddressInfo,
   createBankDetails,
   syncLocalEmployee,
+  createPFDetail,
+  createESIDetail,
+  createInsuranceDetail,
+  uploadEmployeeDocument,
 } from "../api/employees.api";
 import {
   ChevronLeft,
@@ -30,6 +34,8 @@ import {
   UploadCloud,
   Check,
   User as UserIcon,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 
 interface AddEmployeeWizardProps {
@@ -49,6 +55,7 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
   const [activeSubTab, setActiveSubTab] = useState<"profile" | "address" | "family" | "statutory">("profile");
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
@@ -56,6 +63,10 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
   const [roles, setRoles] = useState<any[]>([]);
   const [departments, setDepartments] = useState<any[]>([]);
   const [managers, setManagers] = useState<any[]>([]);
+
+  const filteredAdmins = useMemo(() => {
+    return managers.filter((m) => m.designation.toLowerCase() === "admin");
+  }, [managers]);
 
   // Wizard Data State
   const [formData, setFormData] = useState({
@@ -114,6 +125,11 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
     bankBranch: "",
     accountType: "Savings",
     uanNumber: "",
+    esiNumber: "",
+    insuranceProvider: "",
+    insuranceType: "HEALTH",
+    policyNumber: "",
+    insuranceExpiryDate: "",
     accountHolderName: "",
     upiId: "",
     salaryAccount: true,
@@ -147,11 +163,14 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
     docType: "Aadhaar",
     docNumber: "",
     docExpiryDate: "",
+    docFile: null as File | null,
+    docFileName: "",
     uploadedDocs: [] as Array<{
       type: string;
       number: string;
       fileName: string;
       expiry: string;
+      file?: File | null;
     }>,
 
     // Step 6: Others
@@ -341,16 +360,21 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
         setErrorMsg("User Role assignment is required.");
         return false;
       }
+
+      const selectedRole = roles.find((r) => String(r.roleId) === String(formData.roleId));
+      const isRoleAdmin = selectedRole?.roleName.toLowerCase() === "admin";
+      const isRoleEmployee = selectedRole?.roleName.toLowerCase() === "employee" || selectedRole?.roleName.toLowerCase() === "staff";
+
+      if (isRoleEmployee && !formData.reportingToId) {
+        setErrorMsg("Reporting Manager (Admin) is required for employees under the hierarchy.");
+        return false;
+      }
+
       if (!formData.joiningDate) {
         setErrorMsg("Joining Date is required.");
         return false;
       }
-    } else if (step === 3) {
-      if (!formData.annualCtc) {
-        setErrorMsg("Annual CTC value is required.");
-        return false;
-      }
-    } else if (step === 5) {
+    } else if (step === 4) {
       // Documents section can proceed without strict uploads unless added.
     }
 
@@ -371,7 +395,7 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
         setCurrentStep(2);
       }
     } else {
-      setCurrentStep((prev) => Math.min(prev + 1, 6));
+      setCurrentStep((prev) => Math.min(prev + 1, 5));
     }
   };
 
@@ -401,14 +425,17 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
     const newDoc = {
       type: formData.docType,
       number: formData.docNumber,
-      fileName: `${formData.docType.toLowerCase()}_copy.pdf`,
+      fileName: formData.docFileName || `${formData.docType.toLowerCase()}_copy.pdf`,
       expiry: formData.docExpiryDate,
+      file: formData.docFile,
     };
     setFormData((prev) => ({
       ...prev,
       uploadedDocs: [...prev.uploadedDocs, newDoc],
       docNumber: "",
       docExpiryDate: "",
+      docFile: null,
+      docFileName: "",
     }));
     setSuccessMsg("Document attached successfully!");
     setTimeout(() => setSuccessMsg(null), 2000);
@@ -431,7 +458,7 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (currentStep < 6) {
+    if (currentStep < 5) {
       nextStep();
       return;
     }
@@ -486,7 +513,10 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
         officialEmail: formData.officialEmail || null,
       };
 
-      await createPersonalInfo(personalData);
+      const personalRes = await createPersonalInfo(personalData);
+      if (!personalRes.success) {
+        throw new Error(personalRes.error || "Failed to save personal details.");
+      }
 
       // 3. Create Parent Info Record
       const parentData = {
@@ -502,7 +532,10 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
         relationship: formData.guardianRelationship || null,
       };
 
-      await createParentInfo(parentData);
+      const parentRes = await createParentInfo(parentData);
+      if (!parentRes.success) {
+        throw new Error(parentRes.error || "Failed to save family details.");
+      }
 
       // 4. Create Address Records
       const currentAddressData = {
@@ -516,7 +549,10 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
         postalCode: formData.currentAddress.postalCode,
       };
 
-      await createAddressInfo(currentAddressData);
+      const currentAddressRes = await createAddressInfo(currentAddressData);
+      if (!currentAddressRes.success) {
+        throw new Error(currentAddressRes.error || "Failed to save current address details.");
+      }
 
       if (!formData.isSameAddress) {
         const permanentAddressData = {
@@ -529,7 +565,10 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
           country: formData.permanentAddress.country,
           postalCode: formData.permanentAddress.postalCode,
         };
-        await createAddressInfo(permanentAddressData);
+        const permAddressRes = await createAddressInfo(permanentAddressData);
+        if (!permAddressRes.success) {
+          throw new Error(permAddressRes.error || "Failed to save permanent address details.");
+        }
       }
 
       // 5. Create Bank Details Record
@@ -545,7 +584,83 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
         salaryAccount: formData.salaryAccount,
       };
 
-      await createBankDetails(bankDetailsData);
+      const bankRes = await createBankDetails(bankDetailsData);
+      if (!bankRes.success) {
+        throw new Error(bankRes.error || "Failed to save bank details.");
+      }
+
+      // 6. Create PF Details Record (if uanNumber is provided)
+      if (formData.uanNumber) {
+        const pfData = {
+          userId: createdUserId,
+          uanNumber: formData.uanNumber,
+          isInternationalWorker: false,
+          educationLevel: null,
+          pfNumber: null,
+          pfJoiningDate: null,
+          pfLeavingDate: null,
+          documentNumber: null,
+          documentType: null,
+          documentExpiryDate: null,
+          reasonForLeaving: null,
+          phcCategory: null,
+        };
+        const pfRes = await createPFDetail(pfData);
+        if (!pfRes.success) {
+          throw new Error(pfRes.error || "Failed to save PF details.");
+        }
+      }
+
+      // 7. Create ESI Details Record (if esiNumber is provided)
+      if (formData.esiNumber) {
+        const esiData = {
+          userId: createdUserId,
+          esiNumber: formData.esiNumber,
+          esiJoiningDate: null,
+          esiLeavingDate: null,
+          reasonForLeaving: null,
+        };
+        const esiRes = await createESIDetail(esiData);
+        if (!esiRes.success) {
+          throw new Error(esiRes.error || "Failed to save ESI details.");
+        }
+      }
+
+      // 8. Create Insurance Details Record (if policyNumber or insuranceProvider is provided)
+      if (formData.insuranceProvider || formData.policyNumber) {
+        const insuranceData = {
+          userId: createdUserId,
+          insuranceProvider: formData.insuranceProvider || null,
+          insuranceType: (formData.insuranceType || "HEALTH") as any,
+          policyNumber: formData.policyNumber || null,
+          insuranceExpiryDate: formData.insuranceExpiryDate ? new Date(formData.insuranceExpiryDate).toISOString() : null,
+        };
+        const insRes = await createInsuranceDetail(insuranceData);
+        if (!insRes.success) {
+          throw new Error(insRes.error || "Failed to save insurance details.");
+        }
+      }
+
+      // 9. Upload Documents (if any documents are attached)
+      if (formData.uploadedDocs && formData.uploadedDocs.length > 0) {
+        for (const doc of formData.uploadedDocs) {
+          if (doc.file) {
+            // Map the type string to the expected enum value
+            let documentType = "OTHER";
+            const normType = doc.type.toLowerCase();
+            if (normType.includes("aadhaar")) documentType = "AADHAAR";
+            else if (normType.includes("pan")) documentType = "PAN";
+            else if (normType.includes("passport")) documentType = "PASSPORT";
+            else if (normType.includes("degree")) documentType = "DEGREE_CERTIFICATE";
+            else if (normType.includes("relieving")) documentType = "RELIEVING_LETTER";
+            
+            const docRes = await uploadEmployeeDocument(createdUserId, documentType, doc.file);
+            if (!docRes.success) {
+              throw new Error(docRes.error || `Failed to upload document: ${doc.type}`);
+            }
+          }
+        }
+      }
 
       // Sync local registry for frontend display
       const selectedRole = roles.find((r) => r.roleId === Number(formData.roleId));
@@ -574,10 +689,9 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
   const steps = [
     { number: 1, title: "Profile Info", icon: UserIcon },
     { number: 2, title: "User Account", icon: Briefcase },
-    { number: 3, title: "Compensation/CTC", icon: DollarSign },
-    { number: 4, title: "Approval Rules", icon: ShieldAlert },
-    { number: 5, title: "Documents", icon: FileText },
-    { number: 6, title: "Others", icon: Users },
+    { number: 3, title: "Approval Rules", icon: ShieldAlert },
+    { number: 4, title: "Documents", icon: FileText },
+    { number: 5, title: "Others", icon: Users },
   ];
 
   return (
@@ -1184,6 +1298,62 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
                       />
                     </div>
                   </div>
+
+                  {/* ESI Details */}
+                  <div className="space-y-4 pt-4 border-t border-slate-100">
+                    <h3 className="text-xs font-extrabold text-slate-700 tracking-wide uppercase">ESI Details</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <Input
+                        label="ESI Number"
+                        placeholder="ESI Account Number"
+                        value={formData.esiNumber}
+                        onChange={(e) => handleChange("esiNumber", e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Insurance Details */}
+                  <div className="space-y-4 pt-4 border-t border-slate-100">
+                    <h3 className="text-xs font-extrabold text-slate-700 tracking-wide uppercase">Insurance Details</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <Input
+                        label="Insurance Provider"
+                        placeholder="e.g. LIC / HDFC Ergo"
+                        value={formData.insuranceProvider}
+                        onChange={(e) => handleChange("insuranceProvider", e.target.value)}
+                      />
+                      
+                      <div className="flex flex-col gap-1.5 text-left">
+                        <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider font-semibold">Insurance Type</label>
+                        <select
+                          className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none"
+                          value={formData.insuranceType}
+                          onChange={(e) => handleChange("insuranceType", e.target.value)}
+                        >
+                          <option value="HEALTH">Health Insurance</option>
+                          <option value="LIFE">Life Insurance</option>
+                          <option value="ACCIDENT">Accident Insurance</option>
+                          <option value="GROUP_MEDICAL">Group Medical</option>
+                          <option value="GROUP_LIFE">Group Life</option>
+                          <option value="OTHER">Other</option>
+                        </select>
+                      </div>
+
+                      <Input
+                        label="Policy Number"
+                        placeholder="Insurance Policy ID"
+                        value={formData.policyNumber}
+                        onChange={(e) => handleChange("policyNumber", e.target.value)}
+                      />
+
+                      <Input
+                        label="Insurance Expiry Date"
+                        type="date"
+                        value={formData.insuranceExpiryDate}
+                        onChange={(e) => handleChange("insuranceExpiryDate", e.target.value)}
+                      />
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -1217,21 +1387,44 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Input
-                  label="Login Password *"
-                  type="password"
-                  placeholder="••••••••"
-                  value={formData.password}
-                  onChange={(e) => handleChange("password", e.target.value)}
-                  required
-                />
+                <div className="flex flex-col gap-1.5 text-left w-full relative">
+                  <label className="text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                    Login Password *
+                  </label>
+                  <div className="relative w-full">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      value={formData.password}
+                      onChange={(e) => handleChange("password", e.target.value)}
+                      required
+                      className="flex w-full rounded-xl border border-slate-300 bg-white pl-4 pr-11 py-2.5 text-sm text-slate-900 shadow-2xs transition-all placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors p-1"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
 
                 <div className="flex flex-col gap-1.5 text-left">
                   <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Assigned Role *</label>
                   <select
                     className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none"
                     value={formData.roleId}
-                    onChange={(e) => handleChange("roleId", e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const selRole = roles.find((r) => String(r.roleId) === String(val));
+                      const isAdm = selRole?.roleName.toLowerCase() === "admin";
+                      setFormData((prev) => ({
+                        ...prev,
+                        roleId: val,
+                        reportingToId: isAdm ? "" : prev.reportingToId,
+                      }));
+                    }}
                     required
                   >
                     <option value="">-- Choose Role --</option>
@@ -1295,110 +1488,38 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
                 <div className="flex flex-col gap-1.5 text-left">
                   <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Reporting Manager</label>
                   <select
-                    className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none"
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed"
                     value={formData.reportingToId}
                     onChange={(e) => handleChange("reportingToId", e.target.value)}
+                    disabled={roles.find((r) => String(r.roleId) === String(formData.roleId))?.roleName.toLowerCase() === "admin"}
                   >
-                    <option value="">-- None --</option>
-                    {managers.map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {m.name} ({m.employeeCode})
-                      </option>
-                    ))}
+                    {roles.find((r) => String(r.roleId) === String(formData.roleId))?.roleName.toLowerCase() === "admin" ? (
+                      <option value="">-- Reports to SuperAdmin --</option>
+                    ) : (
+                      <>
+                        <option value="">-- Select Admin Manager --</option>
+                        {filteredAdmins.map((m) => (
+                          <option key={m.id} value={m.id}>
+                            {m.name} ({m.employeeCode})
+                          </option>
+                        ))}
+                        {filteredAdmins.length === 0 && (
+                          <option value="" disabled>-- No Admins Available. Please onboard an Admin first --</option>
+                        )}
+                      </>
+                    )}
                   </select>
                 </div>
               </div>
             </div>
           )}
 
-          {/* STEP 3: CTC / COMPENSATION */}
+          {/* STEP 3: APPROVAL RULES */}
           {currentStep === 3 && (
             <div className="space-y-4 animate-in fade-in duration-200">
               <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                <DollarSign className="w-5 h-5 text-indigo-600" />
-                <span>Step 3: CTC Structure & Salary Distribution</span>
-              </h3>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Input
-                  label="Annual CTC (Gross Salary) *"
-                  type="number"
-                  placeholder="e.g. 600000"
-                  value={formData.annualCtc}
-                  onChange={(e) => {
-                    const ctcVal = Number(e.target.value);
-                    const basicVal = Math.round(ctcVal * 0.4); // 40% basic
-                    const hraVal = Math.round(basicVal * 0.5); // 50% hra
-                    const pfVal = Math.round(basicVal * 0.12); // 12% basic for pf
-                    const allowance = ctcVal - basicVal - hraVal - pfVal;
-                    setFormData((prev) => ({
-                      ...prev,
-                      annualCtc: e.target.value,
-                      basicSalary: String(basicVal),
-                      hra: String(hraVal),
-                      employerPf: String(pfVal),
-                      employeePf: String(pfVal),
-                      specialAllowance: String(Math.max(0, allowance)),
-                    }));
-                  }}
-                  required
-                />
-
-                <Input
-                  label="Monthly Basic Salary"
-                  type="number"
-                  value={formData.basicSalary}
-                  onChange={(e) => handleChange("basicSalary", e.target.value)}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Input
-                  label="Monthly House Rent Allowance (HRA)"
-                  type="number"
-                  value={formData.hra}
-                  onChange={(e) => handleChange("hra", e.target.value)}
-                />
-
-                <Input
-                  label="Special Allowance"
-                  type="number"
-                  value={formData.specialAllowance}
-                  onChange={(e) => handleChange("specialAllowance", e.target.value)}
-                />
-
-                <Input
-                  label="Professional Tax (PT)"
-                  type="number"
-                  value={formData.professionalTax}
-                  onChange={(e) => handleChange("professionalTax", e.target.value)}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200">
-                <Input
-                  label="Employer PF contribution (Monthly)"
-                  type="number"
-                  value={formData.employerPf}
-                  onChange={(e) => handleChange("employerPf", e.target.value)}
-                />
-
-                <Input
-                  label="Employee PF contribution (Monthly)"
-                  type="number"
-                  value={formData.employeePf}
-                  onChange={(e) => handleChange("employeePf", e.target.value)}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* STEP 4: APPROVAL RULES */}
-          {currentStep === 4 && (
-            <div className="space-y-4 animate-in fade-in duration-200">
-              <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
                 <ShieldAlert className="w-5 h-5 text-indigo-600" />
-                <span>Step 4: Role Permissions & Approval Hierarchies</span>
+                <span>Step 3: Role Permissions & Approval Hierarchies</span>
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1447,49 +1568,81 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
             </div>
           )}
 
-          {/* STEP 5: DOCUMENTS UPLOADS */}
-          {currentStep === 5 && (
+          {/* STEP 4: DOCUMENTS UPLOADS */}
+          {currentStep === 4 && (
             <div className="space-y-4 animate-in fade-in duration-200">
               <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
                 <FileText className="w-5 h-5 text-indigo-600" />
-                <span>Step 5: KYC Verification & Document Vault</span>
+                <span>Step 4: KYC Verification & Document Vault</span>
               </h3>
 
               {/* Upload Input form */}
-              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 p-4 border border-slate-200 rounded-xl bg-slate-50/50">
-                <div className="flex flex-col gap-1.5 text-left">
-                  <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Document Type</label>
-                  <select
-                    className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none"
-                    value={formData.docType}
-                    onChange={(e) => handleChange("docType", e.target.value)}
-                  >
-                    <option value="Aadhaar">Aadhaar Card</option>
-                    <option value="PAN">PAN Card</option>
-                    <option value="Passport">Passport Details</option>
-                    <option value="Degree Certificate">Graduation Degree</option>
-                    <option value="Relieving Letter">Relieving Letter</option>
-                  </select>
+              <div className="space-y-4 p-4 border border-slate-200 rounded-xl bg-slate-50/50">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="flex flex-col gap-1.5 text-left">
+                    <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Document Type</label>
+                    <select
+                      className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none"
+                      value={formData.docType}
+                      onChange={(e) => handleChange("docType", e.target.value)}
+                    >
+                      <option value="Aadhaar">Aadhaar Card</option>
+                      <option value="PAN">PAN Card</option>
+                      <option value="Passport">Passport Details</option>
+                      <option value="Degree Certificate">Graduation Degree</option>
+                      <option value="Relieving Letter">Relieving Letter</option>
+                    </select>
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <Input
+                      label="Document Code/Number *"
+                      placeholder="Enter document identifier"
+                      value={formData.docNumber}
+                      onChange={(e) => handleChange("docNumber", e.target.value)}
+                    />
+                  </div>
                 </div>
 
-                <div className="sm:col-span-2">
-                  <Input
-                    label="Document Code/Number *"
-                    placeholder="Enter document identifier"
-                    value={formData.docNumber}
-                    onChange={(e) => handleChange("docNumber", e.target.value)}
-                  />
-                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                  <div className="sm:col-span-2 flex flex-col gap-1.5 text-left">
+                    <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Upload File (Optional)</label>
+                    <div className="relative flex items-center justify-between border border-slate-300 bg-white rounded-xl px-3 h-11 hover:border-slate-400 transition-colors">
+                      <span className="text-xs text-slate-500 truncate max-w-[200px]">
+                        {formData.docFileName || "No file selected"}
+                      </span>
+                      <input
+                        type="file"
+                        id="wizardDocFile"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0] || null;
+                          setFormData((p) => ({
+                            ...p,
+                            docFile: file,
+                            docFileName: file ? file.name : "",
+                          }));
+                        }}
+                        className="hidden"
+                      />
+                      <label 
+                        htmlFor="wizardDocFile"
+                        className="text-[10px] font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg px-2.5 py-1.5 cursor-pointer select-none"
+                      >
+                        Choose File
+                      </label>
+                    </div>
+                  </div>
 
-                <div className="flex items-end">
-                  <button
-                    type="button"
-                    onClick={handleDocumentAdd}
-                    className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-                  >
-                    <UploadCloud className="w-4 h-4" />
-                    <span>Attach File</span>
-                  </button>
+                  <div>
+                    <button
+                      type="button"
+                      onClick={handleDocumentAdd}
+                      className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                      <UploadCloud className="w-4 h-4" />
+                      <span>Attach Document</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -1528,12 +1681,12 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
             </div>
           )}
 
-          {/* STEP 6: OTHERS / REMARKS */}
-          {currentStep === 6 && (
+          {/* STEP 5: OTHERS / REMARKS */}
+          {currentStep === 5 && (
             <div className="space-y-4 animate-in fade-in duration-200">
               <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
                 <Users className="w-5 h-5 text-indigo-600" />
-                <span>Step 6: Additional Information</span>
+                <span>Step 5: Additional Information</span>
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1577,7 +1730,7 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
               Previous
             </button>
 
-            {currentStep < 6 || (currentStep === 1 && activeSubTab !== "statutory") ? (
+            {currentStep < 5 || (currentStep === 1 && activeSubTab !== "statutory") ? (
               <button
                 type="button"
                 onClick={nextStep}
