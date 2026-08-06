@@ -33,14 +33,6 @@ model CompanyDetails {
 
   employeeStrength Int? @map("employee_strength")
 
-  addressLine1 String? @map("address_line1")
-  addressLine2 String? @map("address_line2")
-  city         String?
-  state        String?
-  country      String?
-  pincode      String?
-
-  timezone String?
   currency String?
 
   workingHoursPerDay Float? @map("working_hours_per_day")
@@ -49,8 +41,6 @@ model CompanyDetails {
   officeStartTime String? @map("office_start_time")
   officeEndTime   String? @map("office_end_time")
 
-  latitude      Decimal? @db.Decimal(10, 8)
-  longitude     Decimal? @db.Decimal(11, 8)
   allowedRadius Int?     @map("allowed_radius")
 
   status Boolean @default(true)
@@ -58,10 +48,11 @@ model CompanyDetails {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  departments Department[]
-  users       User[]
-  roles       Role[]
-  superAdmin  SuperAdmin?
+  departments    Department[]
+  users          User[]
+  roles          Role[]
+  superAdmin     SuperAdmin?
+  officeLocations OfficeLocation[]
 
   @@map("company_details")
 }
@@ -214,6 +205,7 @@ model User {
   createdDepartments Department[] @relation("DepartmentCreatedBy")
   updatedDepartments Department[] @relation("DepartmentUpdatedBy")
   headedDepartments  Department[] @relation("DepartmentHead")
+  createdLocations   OfficeLocation[] @relation("LocationCreatedBy")
 
   personalInformation PersonalInformation?
   parentsInformation  ParentsInformation?
@@ -527,4 +519,61 @@ enum InsuranceType {
   GROUP_MEDICAL
   GROUP_LIFE
   OTHER
+}
+
+// ==========================
+// Office Location
+// ==========================
+model OfficeLocation {
+  officeLocationId Int @id @default(autoincrement()) @map("office_location_id")
+
+  companyId Int @map("company_id")
+
+  locationCode String @map("location_code")
+
+  locationName String @map("location_name")
+
+  addressLine1 String? @map("address_line1")
+
+  addressLine2 String? @map("address_line2")
+
+  city String?
+
+  state String?
+
+  country String?
+
+  pincode String?
+
+  officePhoneNumber String? @map("office_phone_number")
+
+  mobileNumber String? @map("mobile_number")
+
+  fax String?
+
+  website String?
+
+  timezone String?
+
+  latitude Decimal? @db.Decimal(10, 8)
+
+  longitude Decimal? @db.Decimal(11, 8)
+
+  remarks String?
+
+  status Boolean @default(true)
+
+  createdBy Int? @map("created_by")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  company CompanyDetails @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
+
+  createdUser User? @relation("LocationCreatedBy", fields: [createdBy], references: [userId])
+
+  @@unique([companyId, locationCode])
+
+  @@map("office_locations")
 }
