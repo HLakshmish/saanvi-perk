@@ -27,6 +27,9 @@ app.register(require("./Organisation/company/company.route"), { prefix: "/api/co
 app.register(require("./Organisation/role/role.route"), { prefix: "/api/roles" });
 app.register(require("./Organisation/department/department.route"), { prefix: "/api/departments" });
 app.register(require("./Organisation/Location/location.route"), { prefix: "/api/locations" });
+app.register(require("./Organisation/designation/designation.route"), { prefix: "/api/designations" });
+app.register(require("./Organisation/calendar/calendar.route"), { prefix: "/api/calendars" });
+app.register(require("./Organisation/holiday/holiday.route"), { prefix: "/api/holidays" });
 app.register(require("./UsersDetails/user/user.route"), { prefix: "/api/users" });
 app.register(require("./UsersDetails/personalinfo/personalinfo.route"), {
     prefix: "/api/personal-information"
