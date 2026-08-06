@@ -53,6 +53,9 @@ model CompanyDetails {
   roles          Role[]
   superAdmin     SuperAdmin?
   officeLocations OfficeLocation[]
+  designations   Designation[]
+  calendars      Calendar[]
+  holidays       Holiday[]
 
   @@map("company_details")
 }
@@ -148,6 +151,7 @@ model Department {
   updatedByUser User?          @relation("DepartmentUpdatedBy", fields: [updatedBy], references: [userId])
   headUser      User?          @relation("DepartmentHead", fields: [departmentHead], references: [userId])
   users         User[]         @relation("DepartmentUsers")
+  designations  Designation[]
 
   @@unique([companyId, departmentCode])
   @@map("departments")
@@ -206,6 +210,9 @@ model User {
   updatedDepartments Department[] @relation("DepartmentUpdatedBy")
   headedDepartments  Department[] @relation("DepartmentHead")
   createdLocations   OfficeLocation[] @relation("LocationCreatedBy")
+  createdDesignations Designation[] @relation("DesignationCreatedBy")
+  createdCalendars   Calendar[] @relation("CalendarCreatedBy")
+  createdHolidays    Holiday[]  @relation("HolidayCreatedBy")
 
   personalInformation PersonalInformation?
   parentsInformation  ParentsInformation?
@@ -576,4 +583,82 @@ model OfficeLocation {
   @@unique([companyId, locationCode])
 
   @@map("office_locations")
+}
+
+// ==========================
+// Designation
+// ==========================
+model Designation {
+  designationId   Int      @id @default(autoincrement()) @map("designation_id")
+  companyId       Int      @map("company_id")
+  departmentId    Int      @map("department_id")
+  designationCode String   @map("designation_code")
+  designationName String   @map("designation_name")
+  remarks         String?
+  status          Boolean  @default(true)
+  createdBy       Int?     @map("created_by")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  company    CompanyDetails @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
+  department Department     @relation(fields: [departmentId], references: [departmentId], onDelete: Cascade)
+  createdUser User?         @relation("DesignationCreatedBy", fields: [createdBy], references: [userId])
+
+  @@unique([companyId, designationCode])
+  @@map("designations")
+}
+
+// ==========================
+// Calendar
+// ==========================
+model Calendar {
+  calendarId   Int      @id @default(autoincrement()) @map("calendar_id")
+  companyId    Int      @map("company_id")
+  calendarCode String   @map("calendar_code")
+  calendarName String   @map("calendar_name")
+  remarks      String?
+  status       Boolean  @default(true)
+  createdBy    Int?     @map("created_by")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  company     CompanyDetails @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
+  createdUser User?          @relation("CalendarCreatedBy", fields: [createdBy], references: [userId])
+  holidays    Holiday[]
+
+  @@unique([companyId, calendarCode])
+  @@map("calendars")
+}
+
+// ==========================
+// Holiday
+// ==========================
+model Holiday {
+  holidayId   Int         @id @default(autoincrement()) @map("holiday_id")
+  calendarId  Int         @map("calendar_id")
+  companyId   Int         @map("company_id")
+  holidayCode String      @map("holiday_code")
+  holidayName String      @map("holiday_name")
+  startDate   DateTime    @map("start_date")
+  endDate     DateTime    @map("end_date")
+  holidayType HolidayType @map("holiday_type")
+  isHalfDay   Boolean     @default(false) @map("is_half_day")
+  isOptional  Boolean     @default(false) @map("is_optional")
+  remarks     String?
+  status      Boolean     @default(true)
+  createdBy   Int?        @map("created_by")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  calendar    Calendar       @relation(fields: [calendarId], references: [calendarId], onDelete: Cascade)
+  company     CompanyDetails @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
+  createdUser User?          @relation("HolidayCreatedBy", fields: [createdBy], references: [userId])
+
+  @@unique([companyId, calendarId, holidayCode])
+  @@map("holidays")
+}
+
+enum HolidayType {
+  HOLIDAY
+  WEEK_OFF
 }
