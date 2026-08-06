@@ -56,21 +56,26 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       default:
         return (
           <>
-            {/* Header Bar */}
-            <div className="flex items-center justify-between mb-6">
+            {/* Welcome Greeting Banner */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
               <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+                <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
                   Dashboard
                 </h1>
-                <p className="text-xs text-gray-500 capitalize">
-                  Role View: <span className="font-semibold text-blue-600">{role}</span>
-                </p>
               </div>
 
-              <button className="flex items-center gap-1.5 px-3 py-1.5 border border-blue-400 text-blue-600 rounded-lg text-xs font-semibold hover:bg-blue-50 transition-colors shadow-2xs">
-                <RefreshCw className="w-3.5 h-3.5" />
-                <span>Refresh</span>
-              </button>
+              <div className="flex items-center gap-3">
+                <div className="px-3.5 py-2 bg-white border border-slate-200 rounded-xl shadow-2xs text-center">
+                  <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wide">Today</p>
+                  <p className="text-sm font-bold text-slate-900">
+                    {new Date().toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short", year: "numeric" })}
+                  </p>
+                </div>
+                <button className="flex items-center gap-1.5 px-3.5 py-2.5 border border-slate-200 text-slate-700 rounded-xl text-xs font-semibold hover:bg-slate-50 transition-colors shadow-2xs bg-white">
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Refresh</span>
+                </button>
+              </div>
             </div>
 
             {/* DYNAMIC ROLE-BASED WIDGET GRID */}
@@ -94,19 +99,25 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </div>
             ) : (
               /* ADMIN / SUPERADMIN DASHBOARD */
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-                {/* Row 1 Widgets */}
+              <div className="space-y-4">
+                {/* Row 1: Full-width stats cards */}
                 <EmployeeStatsWidget />
-                <HolidaysWidget />
-                <QuickLinksWidget />
-                {role === "superadmin" || role === "admin" ? (
-                  <PayrollCostWidget />
-                ) : null}
 
-                {/* Row 2 Widgets */}
-                <HRPoliciesWidget />
-                <EmployeeProbationsWidget />
-                <CheersToPeersWidget />
+                {/* Row 2: 3-column widget grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <HolidaysWidget />
+                  <QuickLinksWidget />
+                  {(role === "superadmin" || role === "admin") && (
+                    <PayrollCostWidget />
+                  )}
+                </div>
+
+                {/* Row 3: 3-column widget grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <HRPoliciesWidget />
+                  <EmployeeProbationsWidget />
+                  <CheersToPeersWidget />
+                </div>
               </div>
             )}
           </>
@@ -137,7 +148,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         />
 
         {/* Content View */}
-        <main className="flex-1 p-4 sm:p-6 overflow-y-auto max-w-[1600px] mx-auto w-full">
+        <main className="flex-1 p-3.5 sm:p-5 overflow-y-auto max-w-7xl mx-auto w-full">
           {renderTabContent()}
         </main>
       </div>
