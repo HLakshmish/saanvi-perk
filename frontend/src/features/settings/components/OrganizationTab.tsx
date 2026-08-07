@@ -6,10 +6,6 @@ import {
   MapPin,
   Network,
   Briefcase,
-  LayoutGrid,
-  Share2,
-  UserCheck,
-  Award,
   Calendar,
 } from "lucide-react";
 import { CalendarDetailView } from "./CalendarDetailView";
@@ -17,6 +13,13 @@ import { CalendarDetailView } from "./CalendarDetailView";
 export const OrganizationTab: React.FC = () => {
   const [viewMode, setViewMode] = useState<"cards" | "calendar-detail">("cards");
 
+interface OrganizationTabProps {
+  onSelectDepartment?: () => void;
+}
+
+export const OrganizationTab: React.FC<OrganizationTabProps> = ({
+  onSelectDepartment,
+}) => {
   const organizationCards = [
     {
       id: "org",
@@ -100,7 +103,7 @@ export const OrganizationTab: React.FC = () => {
         </p>
       </div>
 
-      {/* Grid of 9 Cards */}
+      {/* Grid of Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
         {organizationCards.map((card) => {
           const Icon = card.icon;
@@ -108,6 +111,7 @@ export const OrganizationTab: React.FC = () => {
             <div
               key={card.id}
               onClick={() => handleCardClick(card.id)}
+              onClick={card.id === "department" ? onSelectDepartment : undefined}
               className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs hover:shadow-md hover:border-blue-300 transition-all cursor-pointer group flex items-start gap-4"
             >
               {/* Circular Icon Box */}
