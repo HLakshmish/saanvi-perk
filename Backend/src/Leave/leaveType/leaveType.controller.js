@@ -17,7 +17,7 @@ class LeaveTypeController {
             }
 
             leaveTypeData.companyId = targetCompanyId;
-            leaveTypeData.createdBy = request.user.userId;
+            leaveTypeData.createdBy = (request.user.role === 'SUPERADMIN' || request.user.role === 'OWNER') ? null : request.user.userId;
 
             const leaveType = await leaveTypeService.createLeaveType(leaveTypeData);
             reply.code(201).send({ success: true, message: "Leave type created successfully", data: leaveType });

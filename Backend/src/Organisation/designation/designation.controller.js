@@ -6,7 +6,7 @@ class DesignationController {
             const data = {
                 ...request.body,
                 companyId: request.user.companyId,
-                createdBy: request.user.userId
+                createdBy: (request.user.role === 'SUPERADMIN' || request.user.role === 'OWNER') ? null : request.user.userId
             };
             const designation = await designationService.createDesignation(data);
             reply.code(201).send({ success: true, message: "Designation created successfully", data: designation });

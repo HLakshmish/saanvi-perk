@@ -3,7 +3,11 @@ const calendarService = require("./calendar.service");
 class CalendarController {
     async createCalendar(request, reply) {
         try {
-            const data = { ...request.body, companyId: request.user.companyId, createdBy: request.user.userId };
+            const data = { 
+                ...request.body, 
+                companyId: request.user.companyId, 
+                createdBy: (request.user.role === 'SUPERADMIN' || request.user.role === 'OWNER') ? null : request.user.userId 
+            };
             const calendar = await calendarService.createCalendar(data);
             reply.code(201).send({ success: true, message: "Calendar created", data: calendar });
         } catch (error) { reply.code(400).send({ success: false, message: error.message }); }
