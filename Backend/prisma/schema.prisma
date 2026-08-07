@@ -56,6 +56,7 @@ model CompanyDetails {
   designations   Designation[]
   calendars      Calendar[]
   holidays       Holiday[]
+  attendances    Attendance[]
 
   @@map("company_details")
 }
@@ -222,6 +223,7 @@ model User {
   pfDetail            PFDetail?
   esiDetail           ESIDetail?
   insuranceDetail     InsuranceDetail?
+  attendances         Attendance[]
 
   @@map("users")
 }
@@ -661,4 +663,44 @@ model Holiday {
 enum HolidayType {
   HOLIDAY
   WEEK_OFF
+}
+
+// ==========================
+// Attendance
+// ==========================
+model Attendance {
+  attendanceId Int @id @default(autoincrement()) @map("attendance_id")
+  companyId    Int @map("company_id")
+  userId       Int @map("user_id")
+
+  attendanceDate DateTime  @db.Date @map("attendance_date")
+  checkInTime    DateTime? @db.Time @map("check_in_time")
+  checkOutTime   DateTime? @db.Time @map("check_out_time")
+
+  checkInLatitude   Decimal? @db.Decimal(10, 8) @map("check_in_latitude")
+  checkInLongitude  Decimal? @db.Decimal(11, 8) @map("check_in_longitude")
+  checkOutLatitude  Decimal? @db.Decimal(10, 8) @map("check_out_latitude")
+  checkOutLongitude Decimal? @db.Decimal(11, 8) @map("check_out_longitude")
+  workingMinutes       Int? @map("working_minutes")
+  overtimeMinutes      Int? @map("overtime_minutes")
+  earlyCheckoutMinutes Int? @map("early_checkout_minutes")
+
+  attendanceStatus AttendanceStatus @map("attendance_status")
+  remarks          String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  company CompanyDetails @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
+  user    User           @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@map("attendances")
+}
+
+enum AttendanceStatus {
+  PRESENT
+  HALF_DAY
+  ABSENT
+  WEEK_OFF
+  HOLIDAY
 }

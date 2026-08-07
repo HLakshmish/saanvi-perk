@@ -55,5 +55,6 @@ app.register(require("./UsersDetails/insurancedetail/insurancedetail.route"), {
 app.register(require("./UsersDetails/employeedocument/employeedocument.route"), {
     prefix: "/api/employee-documents"
 });
+app.register(require("./Attendance/attendance.route"), { prefix: "/api/attendances" });
 
 module.exports = app;
