@@ -34,8 +34,6 @@ import {
   UploadCloud,
   Check,
   User as UserIcon,
-  Eye,
-  EyeOff,
 } from "lucide-react";
 
 interface AddEmployeeWizardProps {
@@ -55,7 +53,6 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
   const [activeSubTab, setActiveSubTab] = useState<"profile" | "address" | "family" | "statutory">("profile");
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [showPassword, setShowPassword] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
@@ -1393,20 +1390,13 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
                   </label>
                   <div className="relative w-full">
                     <input
-                      type={showPassword ? "text" : "password"}
+                      type="password"
                       placeholder="••••••••"
                       value={formData.password}
                       onChange={(e) => handleChange("password", e.target.value)}
                       required
-                      className="flex w-full rounded-xl border border-slate-300 bg-white pl-4 pr-11 py-2.5 text-sm text-slate-900 shadow-2xs transition-all placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="flex w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-2xs transition-all placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors p-1"
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
                   </div>
                 </div>
 
