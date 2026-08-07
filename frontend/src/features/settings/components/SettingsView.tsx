@@ -4,10 +4,11 @@ import { AccountInfoTab } from "./AccountInfoTab";
 import { AccountInformationDetail } from "./AccountInformationDetail";
 import { OrganizationTab } from "./OrganizationTab";
 import { PlaceholderConfigTab } from "./PlaceholderConfigTab";
+import { DepartmentTab } from "./DepartmentTab";
 
 export const SettingsView: React.FC = () => {
   const [activeSubTab, setActiveSubTab] = useState<SettingsSubTab>("account-info");
-  const [viewMode, setViewMode] = useState<"grid" | "account-detail">("grid");
+  const [viewMode, setViewMode] = useState<"grid" | "account-detail" | "department">("grid");
 
   const handleSubTabChange = (tab: SettingsSubTab) => {
     setActiveSubTab(tab);
@@ -114,6 +115,8 @@ export const SettingsView: React.FC = () => {
         <AccountInformationDetail
           onBackToAccountInfo={() => setViewMode("grid")}
         />
+      ) : viewMode === "department" ? (
+        <DepartmentTab onBack={() => setViewMode("grid")} />
       ) : (
         <>
           {activeSubTab === "account-info" && (
@@ -122,7 +125,9 @@ export const SettingsView: React.FC = () => {
             />
           )}
 
-          {activeSubTab === "organization" && <OrganizationTab />}
+          {activeSubTab === "organization" && (
+            <OrganizationTab onSelectDepartment={() => setViewMode("department")} />
+          )}
 
           {activeSubTab === "payroll" && (
             <PlaceholderConfigTab
