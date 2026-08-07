@@ -4,10 +4,6 @@ import {
   MapPin,
   Network,
   Briefcase,
-  LayoutGrid,
-  Share2,
-  UserCheck,
-  Award,
   Calendar,
 } from "lucide-react";
 
@@ -42,30 +38,6 @@ export const OrganizationTab: React.FC<OrganizationTabProps> = ({
       title: "Designation",
       description: "Add and Manage Designations of your Organization.",
       icon: Briefcase,
-    },
-    {
-      id: "category",
-      title: "Category",
-      description: "Categorise the employees of your Organisation like'Management', 'Trainee', Etc.",
-      icon: LayoutGrid,
-    },
-    {
-      id: "group",
-      title: "Group",
-      description: "Group Employees across multiple Departments, Categories or Designations.",
-      icon: Share2,
-    },
-    {
-      id: "sub-group",
-      title: "Sub Group",
-      description: "Create & Manage Sub Groups.",
-      icon: UserCheck,
-    },
-    {
-      id: "grade",
-      title: "Grade",
-      description: "Create & Manage Grades.",
-      icon: Award,
     },
     {
       id: "calendar",
