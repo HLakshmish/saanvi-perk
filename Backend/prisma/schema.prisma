@@ -129,8 +129,8 @@ model RolePermission {
   roleId       Int @map("role_id")
   permissionId Int @map("permission_id")
 
-  role       Role       @relation(fields: [roleId], references: [roleId])
-  permission Permission @relation(fields: [permissionId], references: [permissionId])
+  role       Role       @relation(fields: [roleId], references: [roleId], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [permissionId], onDelete: Cascade)
 
   @@unique([roleId, permissionId])
   @@map("role_permissions")
