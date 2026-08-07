@@ -3,7 +3,11 @@ const holidayService = require("./holiday.service");
 class HolidayController {
     async createHoliday(request, reply) {
         try {
-            const data = { ...request.body, companyId: request.user.companyId, createdBy: request.user.userId };
+            const data = { 
+                ...request.body, 
+                companyId: request.user.companyId, 
+                createdBy: (request.user.role === 'SUPERADMIN' || request.user.role === 'OWNER') ? null : request.user.userId 
+            };
             const holiday = await holidayService.createHoliday(data);
             reply.code(201).send({ success: true, message: "Holiday created", data: holiday });
         } catch (error) { reply.code(400).send({ success: false, message: error.message }); }
