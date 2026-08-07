@@ -1,47 +1,131 @@
-import React, { useState } from "react";
-import { ChevronRight, ChevronDown, Edit3, Upload, Check, X, ShieldAlert } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { ChevronRight, Edit3, Upload, Check, ShieldAlert, Loader2 } from "lucide-react";
 import { CompanyInfoData } from "../types/settings.types";
+import { fetchCompanyDetails, updateCompanyDetails, fetchLocations, updateLocation } from "../api/settings.api";
 
 interface AccountInformationDetailProps {
   onBackToAccountInfo: () => void;
 }
 
-const INITIAL_COMPANY_DATA: CompanyInfoData = {
-  companyName: "Saanvi Technologies",
-  address1: "No 3/68/2, 1st Floor, Anugraha",
-  address2: "NH 66, Main Road, Saligrama,",
-  city: "Udupi Dist",
-  state: "Karnataka",
-  country: "India",
-  pinCode: "576225",
-  fax: "-",
-  phone: "9900249822",
-  website: "saanvitechin.com",
-  subscriptionExpiry: "30-04-2027",
+const EMPTY_COMPANY_DATA: CompanyInfoData = {
+  companyName: "",
+  address1: "",
+  address2: "",
+  city: "",
+  state: "",
+  country: "",
+  pinCode: "",
+  fax: "",
+  phone: "",
+  website: "",
+  subscriptionExpiry: "",
 };
 
 export const AccountInformationDetail: React.FC<AccountInformationDetailProps> = ({
   onBackToAccountInfo,
 }) => {
-  const [activeSubMenu, setActiveSubMenu] = useState<string>("company-info");
-  const [expandedAccordions, setExpandedAccordions] = useState<Record<string, boolean>>({
-    statutory: false,
-    mail: false,
-    other: false,
-  });
-
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [companyData, setCompanyData] = useState<CompanyInfoData>(INITIAL_COMPANY_DATA);
-  const [formData, setFormData] = useState<CompanyInfoData>(INITIAL_COMPANY_DATA);
+  const [companyData, setCompanyData] = useState<CompanyInfoData>(EMPTY_COMPANY_DATA);
+  const [formData, setFormData] = useState<CompanyInfoData>(EMPTY_COMPANY_DATA);
+  const [activeLocationId, setActiveLocationId] = useState<number | null>(null);
+  const [saveSuccessMsg, setSaveSuccessMsg] = useState("");
 
-  const toggleAccordion = (key: string) => {
-    setExpandedAccordions((prev) => ({ ...prev, [key]: !prev[key] }));
-  };
+  useEffect(() => {
+    const loadCompanyAndLocation = async () => {
+      setIsLoading(true);
 
-  const handleSave = (e: React.FormEvent) => {
+      // Fetch company and location parallelly
+      const [compRes, locRes] = await Promise.all([
+        fetchCompanyDetails(),
+        fetchLocations(),
+      ]);
+
+      let comp = compRes.success ? compRes.data : {};
+      let locList = locRes.success ? locRes.data : [];
+      let primaryLoc = locList.length > 0 ? locList[0] : comp.officeLocations?.[0] || {};
+
+      if (primaryLoc && primaryLoc.officeLocationId) {
+        setActiveLocationId(primaryLoc.officeLocationId);
+      }
+
+      const mapped: CompanyInfoData = {
+        companyName: comp.companyName || "",
+        address1: primaryLoc.addressLine1 || comp.addressLine1 || "",
+        address2: primaryLoc.addressLine2 || comp.addressLine2 || "",
+        city: primaryLoc.city || comp.city || "",
+        state: primaryLoc.state || comp.state || "",
+        country: primaryLoc.country || comp.country || "",
+        pinCode: primaryLoc.pincode || comp.pincode || "",
+        fax: primaryLoc.fax || comp.fax || "",
+        phone: comp.companyPhone || primaryLoc.officePhoneNumber || "",
+        website: comp.website || primaryLoc.website || "",
+        logoUrl: comp.companyLogo || "",
+        subscriptionExpiry: comp.subscriptionExpiry || "",
+      };
+
+      setCompanyData(mapped);
+      setFormData(mapped);
+      setIsLoading(false);
+    };
+
+    loadCompanyAndLocation();
+  }, []);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSaving(true);
+    setSaveSuccessMsg("");
+
+    const companyPayload = {
+      companyName: formData.companyName,
+      companyPhone: formData.phone,
+      website: formData.website,
+      companyLogo: formData.logoUrl,
+    };
+
+    const locationPayload = {
+      addressLine1: formData.address1,
+      addressLine2: formData.address2,
+      city: formData.city,
+      state: formData.state,
+      country: formData.country,
+      pincode: formData.pinCode,
+      fax: formData.fax,
+    };
+
+    // Update Company & Location
+    const updatePromises: Promise<any>[] = [updateCompanyDetails(companyPayload)];
+    if (activeLocationId) {
+      updatePromises.push(updateLocation(activeLocationId, locationPayload));
+    }
+
+    await Promise.all(updatePromises);
+    setIsSaving(false);
+
     setCompanyData(formData);
     setIsEditing(false);
+    setSaveSuccessMsg("Company & Location details updated successfully!");
+    setTimeout(() => setSaveSuccessMsg(""), 4000);
+  };
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64String = reader.result as string;
+      setFormData((prev) => ({ ...prev, logoUrl: base64String }));
+      setCompanyData((prev) => ({ ...prev, logoUrl: base64String }));
+
+      // Save logo directly to backend database
+      await updateCompanyDetails({ companyLogo: base64String });
+      setSaveSuccessMsg("Company logo uploaded and saved successfully!");
+      setTimeout(() => setSaveSuccessMsg(""), 4000);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleCancel = () => {
@@ -65,85 +149,45 @@ export const AccountInformationDetail: React.FC<AccountInformationDetailProps> =
           <span className="text-slate-900 font-bold">Account Information</span>
         </div>
 
-        {/* Expiry Badge */}
-        <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-50 border border-amber-200/80 text-amber-700 text-xs font-bold shadow-2xs">
-          <ShieldAlert className="w-3.5 h-3.5 text-amber-600" />
-          <span>Subscription Expires on {companyData.subscriptionExpiry}</span>
-        </div>
+        {/* Expiry Badge (If Exists) */}
+        {companyData.subscriptionExpiry && (
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-50 border border-amber-200/80 text-amber-700 text-xs font-bold shadow-2xs">
+            <ShieldAlert className="w-3.5 h-3.5 text-amber-600" />
+            <span>Subscription Expires on {companyData.subscriptionExpiry}</span>
+          </div>
+        )}
       </div>
+
+      {saveSuccessMsg && (
+        <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 font-bold text-xs flex items-center gap-2 animate-fade-in">
+          <Check className="w-4 h-4" />
+          <span>{saveSuccessMsg}</span>
+        </div>
+      )}
 
       {/* Main Split Container: Left Sub-Menu Sidebar + Right Form Panel */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
         {/* Left Sub-Sidebar Menu */}
         <div className="bg-white rounded-2xl border border-slate-200/80 p-3 shadow-2xs space-y-1">
-          {/* Item 1: Company Info */}
           <button
-            onClick={() => setActiveSubMenu("company-info")}
-            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              activeSubMenu === "company-info"
-                ? "bg-indigo-50/70 text-indigo-600 border border-indigo-100"
-                : "text-slate-700 hover:bg-slate-50"
-            }`}
+            className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold bg-indigo-50/70 text-indigo-600 border border-indigo-100 cursor-pointer"
           >
             <span>Company info</span>
-            <ChevronRight className={`w-4 h-4 ${activeSubMenu === "company-info" ? "text-indigo-600" : "text-slate-400"}`} />
+            <ChevronRight className="w-4 h-4 text-indigo-600" />
           </button>
-
-          {/* Item 2: Statutory Info */}
-          <div>
-            <button
-              onClick={() => toggleAccordion("statutory")}
-              className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 transition-all cursor-pointer"
-            >
-              <span>Statutory Info</span>
-              <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${expandedAccordions.statutory ? "rotate-180" : ""}`} />
-            </button>
-            {expandedAccordions.statutory && (
-              <div className="pl-6 pr-3 py-2 space-y-1.5 text-xs text-slate-500 font-medium border-l-2 border-slate-200 ml-4 my-1">
-                <div className="hover:text-indigo-600 cursor-pointer py-1">PAN & TAN Details</div>
-                <div className="hover:text-indigo-600 cursor-pointer py-1">GST Registration</div>
-                <div className="hover:text-indigo-600 cursor-pointer py-1">PF & ESI Setup</div>
-              </div>
-            )}
-          </div>
-
-          {/* Item 3: Mail Configuration */}
-          <div>
-            <button
-              onClick={() => toggleAccordion("mail")}
-              className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 transition-all cursor-pointer"
-            >
-              <span>Mail Configuration</span>
-              <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${expandedAccordions.mail ? "rotate-180" : ""}`} />
-            </button>
-            {expandedAccordions.mail && (
-              <div className="pl-6 pr-3 py-2 space-y-1.5 text-xs text-slate-500 font-medium border-l-2 border-slate-200 ml-4 my-1">
-                <div className="hover:text-indigo-600 cursor-pointer py-1">SMTP Server Settings</div>
-                <div className="hover:text-indigo-600 cursor-pointer py-1">Sender Email Templates</div>
-              </div>
-            )}
-          </div>
-
-          {/* Item 4: Other Configuration */}
-          <div>
-            <button
-              onClick={() => toggleAccordion("other")}
-              className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 transition-all cursor-pointer"
-            >
-              <span>Other Configuration</span>
-              <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${expandedAccordions.other ? "rotate-180" : ""}`} />
-            </button>
-            {expandedAccordions.other && (
-              <div className="pl-6 pr-3 py-2 space-y-1.5 text-xs text-slate-500 font-medium border-l-2 border-slate-200 ml-4 my-1">
-                <div className="hover:text-indigo-600 cursor-pointer py-1">System Preferences</div>
-                <div className="hover:text-indigo-600 cursor-pointer py-1">Audit Logs & History</div>
-              </div>
-            )}
-          </div>
         </div>
 
         {/* Right Main Form Content */}
-        <div className="lg:col-span-3 bg-white rounded-2xl border border-slate-200/80 p-6 shadow-2xs space-y-6">
+        <div className="lg:col-span-3 bg-white rounded-2xl border border-slate-200/80 p-6 shadow-2xs space-y-6 relative min-h-[380px]">
+          {isLoading && (
+            <div className="absolute inset-0 bg-white/70 backdrop-blur-xs flex items-center justify-center z-20 rounded-2xl">
+              <div className="flex items-center gap-2 text-indigo-600 font-bold text-xs">
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>Loading Company & Location Data...</span>
+              </div>
+            </div>
+          )}
+
           {/* Card Header & Edit Action */}
           <div className="flex items-center justify-between border-b border-slate-100 pb-4">
             <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
@@ -162,6 +206,7 @@ export const AccountInformationDetail: React.FC<AccountInformationDetailProps> =
                 <button
                   type="button"
                   onClick={handleCancel}
+                  disabled={isSaving}
                   className="px-3 py-1 border border-slate-300 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 cursor-pointer"
                 >
                   Cancel
@@ -169,9 +214,10 @@ export const AccountInformationDetail: React.FC<AccountInformationDetailProps> =
                 <button
                   type="button"
                   onClick={handleSave}
+                  disabled={isSaving}
                   className="px-3.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-2xs cursor-pointer flex items-center gap-1"
                 >
-                  <Check className="w-3.5 h-3.5" />
+                  {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
                   Save
                 </button>
               </div>
@@ -188,10 +234,11 @@ export const AccountInformationDetail: React.FC<AccountInformationDetailProps> =
                   type="text"
                   value={formData.companyName}
                   onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+                  placeholder="Enter company name"
                   className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-bold text-slate-800 focus:outline-none focus:border-indigo-500"
                 />
               ) : (
-                <p className="font-bold text-slate-800 text-sm">{companyData.companyName}</p>
+                <p className="font-bold text-slate-800 text-sm">{companyData.companyName || "-"}</p>
               )}
             </div>
 
@@ -203,10 +250,11 @@ export const AccountInformationDetail: React.FC<AccountInformationDetailProps> =
                   type="text"
                   value={formData.address1}
                   onChange={(e) => setFormData({ ...formData, address1: e.target.value })}
+                  placeholder="Enter address line 1"
                   className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-indigo-500"
                 />
               ) : (
-                <p className="font-semibold text-slate-800">{companyData.address1}</p>
+                <p className="font-semibold text-slate-800">{companyData.address1 || "-"}</p>
               )}
             </div>
 
@@ -218,10 +266,11 @@ export const AccountInformationDetail: React.FC<AccountInformationDetailProps> =
                   type="text"
                   value={formData.address2}
                   onChange={(e) => setFormData({ ...formData, address2: e.target.value })}
+                  placeholder="Enter address line 2"
                   className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-indigo-500"
                 />
               ) : (
-                <p className="font-semibold text-slate-800">{companyData.address2}</p>
+                <p className="font-semibold text-slate-800">{companyData.address2 || "-"}</p>
               )}
             </div>
 
@@ -233,10 +282,11 @@ export const AccountInformationDetail: React.FC<AccountInformationDetailProps> =
                   type="text"
                   value={formData.city}
                   onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  placeholder="Enter city"
                   className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-indigo-500"
                 />
               ) : (
-                <p className="font-semibold text-slate-800">{companyData.city}</p>
+                <p className="font-semibold text-slate-800">{companyData.city || "-"}</p>
               )}
             </div>
 
@@ -248,10 +298,11 @@ export const AccountInformationDetail: React.FC<AccountInformationDetailProps> =
                   type="text"
                   value={formData.state}
                   onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                  placeholder="Enter state"
                   className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-indigo-500"
                 />
               ) : (
-                <p className="font-semibold text-slate-800">{companyData.state}</p>
+                <p className="font-semibold text-slate-800">{companyData.state || "-"}</p>
               )}
             </div>
 
@@ -263,10 +314,11 @@ export const AccountInformationDetail: React.FC<AccountInformationDetailProps> =
                   type="text"
                   value={formData.country}
                   onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                  placeholder="Enter country"
                   className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-indigo-500"
                 />
               ) : (
-                <p className="font-semibold text-slate-800">{companyData.country}</p>
+                <p className="font-semibold text-slate-800">{companyData.country || "-"}</p>
               )}
             </div>
 
@@ -278,10 +330,11 @@ export const AccountInformationDetail: React.FC<AccountInformationDetailProps> =
                   type="text"
                   value={formData.pinCode}
                   onChange={(e) => setFormData({ ...formData, pinCode: e.target.value })}
+                  placeholder="Enter pincode"
                   className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-indigo-500"
                 />
               ) : (
-                <p className="font-semibold text-slate-800">{companyData.pinCode}</p>
+                <p className="font-semibold text-slate-800">{companyData.pinCode || "-"}</p>
               )}
             </div>
 
@@ -293,10 +346,11 @@ export const AccountInformationDetail: React.FC<AccountInformationDetailProps> =
                   type="text"
                   value={formData.fax}
                   onChange={(e) => setFormData({ ...formData, fax: e.target.value })}
+                  placeholder="Enter fax number"
                   className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-indigo-500"
                 />
               ) : (
-                <p className="font-semibold text-slate-800">{companyData.fax}</p>
+                <p className="font-semibold text-slate-800">{companyData.fax || "-"}</p>
               )}
             </div>
 
@@ -308,10 +362,11 @@ export const AccountInformationDetail: React.FC<AccountInformationDetailProps> =
                   type="text"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  placeholder="Enter phone number"
                   className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-indigo-500"
                 />
               ) : (
-                <p className="font-semibold text-slate-800">{companyData.phone}</p>
+                <p className="font-semibold text-slate-800">{companyData.phone || "-"}</p>
               )}
             </div>
 
@@ -323,10 +378,11 @@ export const AccountInformationDetail: React.FC<AccountInformationDetailProps> =
                   type="text"
                   value={formData.website}
                   onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                  placeholder="Enter website URL"
                   className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-indigo-500"
                 />
               ) : (
-                <p className="font-semibold text-indigo-600 hover:underline cursor-pointer">{companyData.website}</p>
+                <p className="font-semibold text-indigo-600 hover:underline cursor-pointer">{companyData.website || "-"}</p>
               )}
             </div>
           </div>
@@ -345,14 +401,18 @@ export const AccountInformationDetail: React.FC<AccountInformationDetailProps> =
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 pt-2">
               {/* Logo Preview Box */}
               <div className="w-64 h-20 border border-slate-200 rounded-xl bg-slate-50/50 flex items-center justify-center p-3 shadow-2xs overflow-hidden">
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-md bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white text-xs font-bold">
-                    S
+                {companyData.logoUrl ? (
+                  <img src={companyData.logoUrl} alt="Company Logo" className="max-h-full max-w-full object-contain" />
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-md bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white text-xs font-bold">
+                      {companyData.companyName ? companyData.companyName.charAt(0).toUpperCase() : "C"}
+                    </div>
+                    <span className="font-bold text-slate-800 text-sm tracking-tight">
+                      {companyData.companyName || "Company Name"}
+                    </span>
                   </div>
-                  <span className="font-bold text-slate-800 text-sm tracking-tight">
-                    {companyData.companyName}
-                  </span>
-                </div>
+                )}
               </div>
 
               {/* Upload Controls & Specs */}
@@ -364,7 +424,12 @@ export const AccountInformationDetail: React.FC<AccountInformationDetailProps> =
                 <label className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-500/20 transition-all cursor-pointer hover:-translate-y-0.5">
                   <Upload className="w-3.5 h-3.5" />
                   <span>Choose File</span>
-                  <input type="file" className="hidden" accept=".png,.jpg,.jpeg" />
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept=".png,.jpg,.jpeg"
+                    onChange={handleLogoUpload}
+                  />
                 </label>
 
                 <p className="text-[10px] text-slate-400 font-medium">

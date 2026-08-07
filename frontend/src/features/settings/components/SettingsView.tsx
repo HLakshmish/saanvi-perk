@@ -3,6 +3,7 @@ import { SettingsSubTab } from "../types/settings.types";
 import { AccountInfoTab } from "./AccountInfoTab";
 import { AccountInformationDetail } from "./AccountInformationDetail";
 import { OrganizationTab } from "./OrganizationTab";
+import { OthersTab } from "./OthersTab";
 import { PlaceholderConfigTab } from "./PlaceholderConfigTab";
 import { DepartmentTab } from "./DepartmentTab";
 
@@ -157,12 +158,7 @@ export const SettingsView: React.FC = () => {
             />
           )}
 
-          {activeSubTab === "others" && (
-            <PlaceholderConfigTab
-              title="Others"
-              description="System backups, API webhooks, role permissions, and integration preferences."
-            />
-          )}
+          {activeSubTab === "others" && <OthersTab />}
         </>
       )}
     </div>
