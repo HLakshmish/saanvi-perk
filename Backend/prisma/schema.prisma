@@ -57,6 +57,8 @@ model CompanyDetails {
   calendars      Calendar[]
   holidays       Holiday[]
   attendances    Attendance[]
+  leaveTypes     LeaveType[]
+  leaveRequests  LeaveRequest[]
 
   @@map("company_details")
 }
@@ -168,6 +170,8 @@ model User {
   companyId    Int  @map("company_id")
   roleId       Int  @map("role_id")
   departmentId Int? @map("department_id")
+  locationId   Int? @map("location_id")
+  designationId Int? @map("designation_id")
 
   firstName String @map("first_name")
   lastName  String @map("last_name")
@@ -197,6 +201,8 @@ model User {
   company    CompanyDetails @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
   role       Role           @relation(fields: [roleId], references: [roleId])
   department Department?    @relation("DepartmentUsers", fields: [departmentId], references: [departmentId])
+  location   OfficeLocation? @relation("LocationUsers", fields: [locationId], references: [officeLocationId])
+  designation Designation?  @relation("DesignationUsers", fields: [designationId], references: [designationId])
 
   manager      User?  @relation("ReportingManager", fields: [reportingToId], references: [userId])
   subordinates User[] @relation("ReportingManager")
@@ -224,6 +230,9 @@ model User {
   esiDetail           ESIDetail?
   insuranceDetail     InsuranceDetail?
   attendances         Attendance[]
+  createdLeaveTypes   LeaveType[] @relation("LeaveTypeCreatedBy")
+  leaveRequests       LeaveRequest[] @relation("LeaveRequestUser")
+  approvedLeaves      LeaveRequest[] @relation("LeaveRequestApprovedBy")
 
   @@map("users")
 }
@@ -581,6 +590,7 @@ model OfficeLocation {
   company CompanyDetails @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
 
   createdUser User? @relation("LocationCreatedBy", fields: [createdBy], references: [userId])
+  users       User[] @relation("LocationUsers")
 
   @@unique([companyId, locationCode])
 
@@ -605,6 +615,7 @@ model Designation {
   company    CompanyDetails @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
   department Department     @relation(fields: [departmentId], references: [departmentId], onDelete: Cascade)
   createdUser User?         @relation("DesignationCreatedBy", fields: [createdBy], references: [userId])
+  users       User[]        @relation("DesignationUsers")
 
   @@unique([companyId, designationCode])
   @@map("designations")
@@ -703,4 +714,65 @@ enum AttendanceStatus {
   ABSENT
   WEEK_OFF
   HOLIDAY
+}
+
+// ==========================
+// Leave Type
+// ==========================
+model LeaveType {
+  leaveTypeId Int @id @default(autoincrement()) @map("leave_type_id")
+  companyId   Int @map("company_id")
+  leaveCode   String @map("leave_code")
+  leaveName   String @map("leave_name")
+  remarks     String?
+  status      Boolean @default(true)
+  createdBy   Int? @map("created_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  company     CompanyDetails @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
+  createdUser User?          @relation("LeaveTypeCreatedBy", fields: [createdBy], references: [userId])
+  leaveRequests LeaveRequest[]
+
+  @@unique([companyId, leaveCode])
+  @@map("leave_types")
+}
+
+// ==========================
+// Leave Request
+// ==========================
+model LeaveRequest {
+  leaveRequestId Int @id @default(autoincrement()) @map("leave_request_id")
+  companyId      Int @map("company_id")
+  userId         Int @map("user_id")
+  leaveTypeId    Int @map("leave_type_id")
+
+  fromDate     DateTime @map("from_date")
+  toDate       DateTime @map("to_date")
+  numberOfDays Float    @map("number_of_days")
+  reason       String
+
+  status LeaveStatus @default(PENDING)
+
+  approvedBy      Int?      @map("approved_by")
+  approvedAt      DateTime? @map("approved_at")
+  rejectionReason String?   @map("rejection_reason")
+  remarks         String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  company     CompanyDetails @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
+  user        User           @relation("LeaveRequestUser", fields: [userId], references: [userId], onDelete: Cascade)
+  leaveType   LeaveType      @relation(fields: [leaveTypeId], references: [leaveTypeId])
+  approvedUser User?         @relation("LeaveRequestApprovedBy", fields: [approvedBy], references: [userId])
+
+  @@map("leave_requests")
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
 }

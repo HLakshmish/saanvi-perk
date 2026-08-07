@@ -6,7 +6,7 @@ class LocationController {
             const data = {
                 ...request.body,
                 companyId: request.user.companyId,
-                createdBy: request.user.userId
+                createdBy: (request.user.role === 'SUPERADMIN' || request.user.role === 'OWNER') ? null : request.user.userId
             };
             const location = await locationService.createLocation(data);
             reply.code(201).send({ success: true, message: "Location created successfully", data: location });
