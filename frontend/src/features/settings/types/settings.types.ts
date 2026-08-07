@@ -18,6 +18,21 @@ export interface CompanyInfoData {
   fax: string;
   phone: string;
   website: string;
-  logoUrl?: string;
   subscriptionExpiry: string;
+  logoUrl?: string;
+}
+
+export interface Permission {
+  id: number;
+  code: string;
+  name: string;
+  assigned: boolean;
+}
+
+export interface RoleItem {
+  id: string | number;
+  code: string;
+  name: string;
+  remarks: string;
+  permissions: Permission[];
 }
