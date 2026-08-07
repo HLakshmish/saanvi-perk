@@ -1,3 +1,12 @@
+export interface Designation {
+  designationId: number;
+  designationCode: string;
+  designationName: string;
+  departmentId: number;
+  description?: string;
+  status: boolean;
+}
+
 export interface Employee {
   id: string;
   employeeCode: string;
@@ -8,6 +17,8 @@ export interface Employee {
   designation: string;
   employeeGroup: string;
   reportsTo?: string; // manager's employeeCode
+  designationId?: number;
+  status?: string;
 }
 
 export interface RoleSelection {
@@ -33,6 +44,8 @@ export interface CreateEmployeeInput {
   joiningDate: string;
   roleId: number | string;
   departmentId?: number | string | null;
+  designationId?: number | string | null;
+  status?: "ACTIVE" | "INACTIVE" | "RESIGNED" | "TERMINATED";
 }
 
 export interface CreatePFDetailInput {
