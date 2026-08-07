@@ -1,4 +1,6 @@
-import React from "react";
+"use client";
+
+import React, { useState } from "react";
 import {
   Building2,
   MapPin,
@@ -10,8 +12,11 @@ import {
   Award,
   Calendar,
 } from "lucide-react";
+import { CalendarDetailView } from "./CalendarDetailView";
 
 export const OrganizationTab: React.FC = () => {
+  const [viewMode, setViewMode] = useState<"cards" | "calendar-detail">("cards");
+
   const organizationCards = [
     {
       id: "org",
@@ -40,7 +45,7 @@ export const OrganizationTab: React.FC = () => {
     {
       id: "category",
       title: "Category",
-      description: "Categorise the employees of your Organisation like'Management', 'Trainee', Etc.",
+      description: "Categorise the employees of your Organisation like 'Management', 'Trainee', etc.",
       icon: LayoutGrid,
     },
     {
@@ -69,6 +74,20 @@ export const OrganizationTab: React.FC = () => {
     },
   ];
 
+  const handleCardClick = (id: string) => {
+    if (id === "calendar") {
+      setViewMode("calendar-detail");
+    }
+  };
+
+  if (viewMode === "calendar-detail") {
+    return (
+      <CalendarDetailView
+        onBackToOrganization={() => setViewMode("cards")}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Section Header */}
@@ -88,6 +107,7 @@ export const OrganizationTab: React.FC = () => {
           return (
             <div
               key={card.id}
+              onClick={() => handleCardClick(card.id)}
               className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs hover:shadow-md hover:border-blue-300 transition-all cursor-pointer group flex items-start gap-4"
             >
               {/* Circular Icon Box */}
@@ -97,7 +117,7 @@ export const OrganizationTab: React.FC = () => {
 
               {/* Text info */}
               <div className="space-y-1">
-                <h3 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                <h3 className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
                   {card.title}
                 </h3>
                 <p className="text-xs text-slate-500 font-medium leading-relaxed">
