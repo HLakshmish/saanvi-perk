@@ -199,10 +199,39 @@ const deleteRoleSchema = {
     }
 };
 
+const getAllPermissionsSchema = {
+    description: 'Get all permissions',
+    tags: ['Role'],
+    summary: 'List all available permissions',
+    response: {
+        200: {
+            description: 'Successful response',
+            type: 'object',
+            properties: {
+                success: { type: 'boolean' },
+                data: {
+                    type: 'array',
+                    items: {
+                        type: 'object',
+                        properties: {
+                            permissionId: { type: 'number' },
+                            permissionName: { type: 'string' },
+                            permissionCode: { type: 'string' },
+                            module: { type: 'string' },
+                            description: { type: 'string', nullable: true }
+                        }
+                    }
+                }
+            }
+        }
+    }
+};
+
 module.exports = {
     createRoleSchema,
     getRoleByIdSchema,
     getAllRolesSchema,
     updateRoleSchema,
-    deleteRoleSchema
+    deleteRoleSchema,
+    getAllPermissionsSchema
 };

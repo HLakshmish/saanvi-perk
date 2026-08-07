@@ -38,6 +38,10 @@ class RoleService {
     async deleteRole(roleId, companyId) {
         return await roleRepository.deleteRole(roleId, companyId);
     }
+
+    async getAllPermissions() {
+        return await roleRepository.getAllPermissions();
+    }
 }
 
 module.exports = new RoleService();

@@ -92,6 +92,14 @@ class RoleRepository {
             where: { roleId }
         });
     }
+
+    async getAllPermissions() {
+        return await prisma.permission.findMany({
+            orderBy: {
+                module: 'asc'
+            }
+        });
+    }
 }
 
 module.exports = new RoleRepository();

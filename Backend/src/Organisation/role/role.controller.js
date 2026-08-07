@@ -91,6 +91,15 @@ class RoleController {
             reply.code(400).send({ success: false, message: error.message });
         }
     }
+
+    async getAllPermissions(request, reply) {
+        try {
+            const permissions = await roleService.getAllPermissions();
+            reply.code(200).send({ success: true, data: permissions });
+        } catch (error) {
+            reply.code(500).send({ success: false, message: error.message });
+        }
+    }
 }
 
 module.exports = new RoleController();
