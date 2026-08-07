@@ -14,6 +14,7 @@ import {
   uploadEmployeeDocument,
   deleteEmployeeDocument,
   downloadEmployeeDocument,
+  getDesignations,
 } from "../api/employees.api";
 
 interface EmployeeDetailsModalProps {
@@ -45,6 +46,7 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
   const [esiDetail, setEsiDetail] = useState<any>(null);
   const [insuranceDetail, setInsuranceDetail] = useState<any>(null);
   const [documents, setDocuments] = useState<any[]>([]);
+  const [designations, setDesignations] = useState<any[]>([]);
 
   // Document Upload Form State
   const [uploadDocType, setUploadDocType] = useState("AADHAAR");
@@ -69,6 +71,7 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
         esiRes,
         insRes,
         docRes,
+        desData,
       ] = await Promise.all([
         getUserById(employeeId),
         getPersonalInfoByUserId(employeeId),
@@ -79,9 +82,11 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
         getESIDetailsByUserId(employeeId),
         getInsuranceDetailsByUserId(employeeId),
         getEmployeeDocumentsByUserId(employeeId),
+        getDesignations(),
       ]);
 
       if (userRes.success) setUserProfile(userRes.data);
+      setDesignations(desData || []);
       if (personalRes.success && personalRes.data && personalRes.data.length > 0) {
         setPersonalInfo(personalRes.data[0]);
       } else {
@@ -278,6 +283,11 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
                       
                       <span className="text-xs font-bold text-slate-500">Department</span>
                       <span className="font-semibold text-slate-900">{userProfile?.department?.departmentName || "General"}</span>
+
+                      <span className="text-xs font-bold text-slate-500">Designation</span>
+                      <span className="font-semibold text-slate-900">
+                        {designations.find((d) => d.designationId === userProfile?.designationId)?.designationName || userProfile?.role?.roleName || "Staff"}
+                      </span>
 
                       <span className="text-xs font-bold text-slate-500">Employment Type</span>
                       <span className="font-semibold text-slate-900">{(userProfile?.employmentType || "FULL_TIME").replace("_", "-")}</span>

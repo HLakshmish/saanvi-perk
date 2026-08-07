@@ -1,4 +1,4 @@
-import { Employee, CreatePFDetailInput, CreateESIDetailInput, CreateInsuranceDetailInput } from "../types/employees.types";
+import { Employee, CreatePFDetailInput, CreateESIDetailInput, CreateInsuranceDetailInput, Designation } from "../types/employees.types";
 import { MOCK_EMPLOYEES } from "../data/employees.data";
 import { getDepartments as getDepartmentsFromApi } from "../../settings/api/department.api";
 
@@ -43,7 +43,31 @@ const mapUserToEmployee = (user: any): Employee => {
     designation: user.role?.roleName || "Staff",
     employeeGroup: (user.employmentType || "FULL_TIME").replace("_", "-"),
     reportsTo: user.reportingToId ? String(user.reportingToId) : undefined,
+    designationId: user.designationId || undefined,
+    status: user.status || "ACTIVE",
   };
+};
+
+/**
+ * Fetch all available designations.
+ */
+export const getDesignations = async (): Promise<Designation[]> => {
+  const token = getAuthToken();
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/designations`, {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    const result = await res.json();
+    if (res.ok && Array.isArray(result.data)) {
+      return result.data;
+    }
+    return [];
+  } catch (error) {
+    console.warn("Backend API error fetching designations:", error);
+    return [];
+  }
 };
 
 /**
@@ -77,11 +101,15 @@ export const getEmployees = async (): Promise<Employee[]> => {
       }
     }
 
-    const res = await fetch(`${API_BASE_URL}/api/users`, {
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-    });
+    // 2. Fetch Users and Designations concurrently
+    const [res, designations] = await Promise.all([
+      fetch(`${API_BASE_URL}/api/users`, {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      }),
+      getDesignations(),
+    ]);
 
     const result = await res.json();
 
@@ -96,6 +124,7 @@ export const getEmployees = async (): Promise<Employee[]> => {
 
       const remoteEmployees: Employee[] = result.data.map((user: any) => {
         const mgrCode = user.reportingToId ? userIdToCodeMap.get(user.reportingToId) : undefined;
+        const matchingDesignation = designations.find((d) => d.designationId === user.designationId);
         return {
           id: String(user.userId),
           employeeCode: user.employeeCode,
@@ -103,9 +132,11 @@ export const getEmployees = async (): Promise<Employee[]> => {
           email: user.officialEmail,
           location: companyLocation,
           department: user.department?.departmentName || "General",
-          designation: user.role?.roleName || "Staff",
+          designation: matchingDesignation?.designationName || user.role?.roleName || "Staff",
           employeeGroup: (user.employmentType || "FULL_TIME").replace("_", "-"),
           reportsTo: mgrCode,
+          designationId: user.designationId || undefined,
+          status: user.status || "ACTIVE",
         };
       });
 

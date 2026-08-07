@@ -17,6 +17,7 @@ import {
   createESIDetail,
   createInsuranceDetail,
   uploadEmployeeDocument,
+  getDesignations,
 } from "../api/employees.api";
 import {
   ChevronLeft,
@@ -60,6 +61,7 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
   const [roles, setRoles] = useState<any[]>([]);
   const [departments, setDepartments] = useState<any[]>([]);
   const [managers, setManagers] = useState<any[]>([]);
+  const [designations, setDesignations] = useState<any[]>([]);
 
   const filteredAdmins = useMemo(() => {
     return managers.filter((m) => m.designation.toLowerCase() === "admin");
@@ -137,10 +139,12 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
     password: "",
     roleId: "",
     departmentId: "",
+    designationId: "",
     employmentType: "FULL_TIME",
     joiningDate: "",
     probationEndDate: "",
     reportingToId: "",
+    status: "ACTIVE",
 
     // Step 3: CTC
     annualCtc: "",
@@ -176,18 +180,25 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
     remarks: "",
   });
 
+  const filteredDesignations = useMemo(() => {
+    if (!formData.departmentId) return designations;
+    return designations.filter((d) => Number(d.departmentId) === Number(formData.departmentId));
+  }, [designations, formData.departmentId]);
+
   // Load Master Data and Draft
   useEffect(() => {
     const loadMasters = async () => {
       try {
-        const [rData, dData, mData] = await Promise.all([
+        const [rData, dData, mData, desData] = await Promise.all([
           getRoles(),
           getDepartments(),
           getEmployees(),
+          getDesignations(),
         ]);
         setRoles(rData);
         setDepartments(dData);
         setManagers(mData);
+        setDesignations(desData);
       } catch (err) {
         console.warn("Failed to load master metadata", err);
       }
@@ -472,6 +483,7 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
         employeeCode: formData.employeeCode,
         roleId: Number(formData.roleId),
         departmentId: formData.departmentId ? Number(formData.departmentId) : null,
+        designationId: formData.designationId ? Number(formData.designationId) : null,
         firstName: formData.firstName,
         lastName: formData.lastName,
         officialEmail: formData.officialEmail,
@@ -481,7 +493,7 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
         joiningDate: new Date(formData.joiningDate).toISOString(),
         probationEndDate: formData.probationEndDate ? new Date(formData.probationEndDate).toISOString() : null,
         reportingToId: formData.reportingToId ? Number(formData.reportingToId) : null,
-        status: "ACTIVE",
+        status: formData.status || "ACTIVE",
       };
 
       const userRes = await createEmployee(baseUserData);
@@ -1455,6 +1467,38 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
                     <option value="PART_TIME">Part-Time</option>
                     <option value="CONTRACT">Contract</option>
                     <option value="INTERN">Intern</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1.5 text-left">
+                  <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Designation</label>
+                  <select
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none"
+                    value={formData.designationId}
+                    onChange={(e) => handleChange("designationId", e.target.value)}
+                  >
+                    <option value="">-- Choose Designation --</option>
+                    {filteredDesignations.map((des) => (
+                      <option key={des.designationId} value={des.designationId}>
+                        {des.designationName} ({des.designationCode})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex flex-col gap-1.5 text-left">
+                  <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Status</label>
+                  <select
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none"
+                    value={formData.status}
+                    onChange={(e) => handleChange("status", e.target.value)}
+                  >
+                    <option value="ACTIVE">Active</option>
+                    <option value="INACTIVE">Inactive</option>
+                    <option value="RESIGNED">Resigned</option>
+                    <option value="TERMINATED">Terminated</option>
                   </select>
                 </div>
               </div>
