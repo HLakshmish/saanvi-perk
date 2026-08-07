@@ -1,4 +1,6 @@
-import React from "react";
+"use client";
+
+import React, { useState } from "react";
 import {
   Building2,
   MapPin,
@@ -6,6 +8,10 @@ import {
   Briefcase,
   Calendar,
 } from "lucide-react";
+import { CalendarDetailView } from "./CalendarDetailView";
+
+export const OrganizationTab: React.FC = () => {
+  const [viewMode, setViewMode] = useState<"cards" | "calendar-detail">("cards");
 
 interface OrganizationTabProps {
   onSelectDepartment?: () => void;
@@ -40,12 +46,50 @@ export const OrganizationTab: React.FC<OrganizationTabProps> = ({
       icon: Briefcase,
     },
     {
+      id: "category",
+      title: "Category",
+      description: "Categorise the employees of your Organisation like 'Management', 'Trainee', etc.",
+      icon: LayoutGrid,
+    },
+    {
+      id: "group",
+      title: "Group",
+      description: "Group Employees across multiple Departments, Categories or Designations.",
+      icon: Share2,
+    },
+    {
+      id: "sub-group",
+      title: "Sub Group",
+      description: "Create & Manage Sub Groups.",
+      icon: UserCheck,
+    },
+    {
+      id: "grade",
+      title: "Grade",
+      description: "Create & Manage Grades.",
+      icon: Award,
+    },
+    {
       id: "calendar",
       title: "Calendar",
       description: "Create custom office calendars.",
       icon: Calendar,
     },
   ];
+
+  const handleCardClick = (id: string) => {
+    if (id === "calendar") {
+      setViewMode("calendar-detail");
+    }
+  };
+
+  if (viewMode === "calendar-detail") {
+    return (
+      <CalendarDetailView
+        onBackToOrganization={() => setViewMode("cards")}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -66,6 +110,7 @@ export const OrganizationTab: React.FC<OrganizationTabProps> = ({
           return (
             <div
               key={card.id}
+              onClick={() => handleCardClick(card.id)}
               onClick={card.id === "department" ? onSelectDepartment : undefined}
               className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs hover:shadow-md hover:border-blue-300 transition-all cursor-pointer group flex items-start gap-4"
             >
@@ -76,7 +121,7 @@ export const OrganizationTab: React.FC<OrganizationTabProps> = ({
 
               {/* Text info */}
               <div className="space-y-1">
-                <h3 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                <h3 className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
                   {card.title}
                 </h3>
                 <p className="text-xs text-slate-500 font-medium leading-relaxed">
