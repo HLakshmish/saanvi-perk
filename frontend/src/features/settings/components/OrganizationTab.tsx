@@ -10,9 +10,6 @@ import {
 } from "lucide-react";
 import { CalendarDetailView } from "./CalendarDetailView";
 
-export const OrganizationTab: React.FC = () => {
-  const [viewMode, setViewMode] = useState<"cards" | "calendar-detail">("cards");
-
 interface OrganizationTabProps {
   onSelectDepartment?: () => void;
 }
@@ -20,6 +17,8 @@ interface OrganizationTabProps {
 export const OrganizationTab: React.FC<OrganizationTabProps> = ({
   onSelectDepartment,
 }) => {
+  const [viewMode, setViewMode] = useState<"cards" | "calendar-detail">("cards");
+
   const organizationCards = [
     {
       id: "org",
@@ -46,30 +45,6 @@ export const OrganizationTab: React.FC<OrganizationTabProps> = ({
       icon: Briefcase,
     },
     {
-      id: "category",
-      title: "Category",
-      description: "Categorise the employees of your Organisation like 'Management', 'Trainee', etc.",
-      icon: LayoutGrid,
-    },
-    {
-      id: "group",
-      title: "Group",
-      description: "Group Employees across multiple Departments, Categories or Designations.",
-      icon: Share2,
-    },
-    {
-      id: "sub-group",
-      title: "Sub Group",
-      description: "Create & Manage Sub Groups.",
-      icon: UserCheck,
-    },
-    {
-      id: "grade",
-      title: "Grade",
-      description: "Create & Manage Grades.",
-      icon: Award,
-    },
-    {
       id: "calendar",
       title: "Calendar",
       description: "Create custom office calendars.",
@@ -80,6 +55,8 @@ export const OrganizationTab: React.FC<OrganizationTabProps> = ({
   const handleCardClick = (id: string) => {
     if (id === "calendar") {
       setViewMode("calendar-detail");
+    } else if (id === "department") {
+      onSelectDepartment?.();
     }
   };
 
@@ -111,7 +88,6 @@ export const OrganizationTab: React.FC<OrganizationTabProps> = ({
             <div
               key={card.id}
               onClick={() => handleCardClick(card.id)}
-              onClick={card.id === "department" ? onSelectDepartment : undefined}
               className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs hover:shadow-md hover:border-blue-300 transition-all cursor-pointer group flex items-start gap-4"
             >
               {/* Circular Icon Box */}
