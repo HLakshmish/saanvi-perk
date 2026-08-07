@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import { CompanyRegistrationForm } from "@/features/company/components/company-registration-form";
 import { getAllCompanies, deleteCompany, getCompanyById } from "@/features/company/api/company.api";
 import { Company } from "@/features/company/types/company.types";
@@ -125,12 +126,16 @@ export default function OwnerDashboardPage() {
                   <ArrowLeft className="w-5 h-5" />
                 </button>
               )}
-              <div className="w-10 h-10 rounded-xl brand-purple-bg flex items-center justify-center text-white text-lg font-extrabold shadow-md shadow-[#4f39f6]/30">
-                S
-              </div>
+              <Image
+                src="/icon1.png"
+                alt="Nexus Logo"
+                width={40}
+                height={40}
+                className="w-10 h-10 object-contain rounded-xl shadow-md shadow-[#4f39f6]/30"
+              />
               <div className="flex items-center gap-2">
                 <span className="font-extrabold text-white text-base sm:text-lg tracking-tight">
-                  Saanvi Perk
+                  Nexus
                 </span>
               </div>
             </div>

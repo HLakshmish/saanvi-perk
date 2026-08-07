@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Saanvi Perk HRMS",
+  title: "Saanvi Technologies | Nexus",
   description: "Enterprise Executive HRMS Portal",
 };
 

@@ -95,13 +95,12 @@ export function LoginForm() {
             {/* Top Brand Header */}
             <div className="flex items-center justify-center w-full mb-5 sm:mb-6">
               <Image
-                src="/images/company_logo.png"
-                alt="Saanvi Perk Logo"
+                src="/icon1.png"
+                alt="Nexus Logo"
                 width={90}
-                height={30}
+                height={90}
+                className="h-16 sm:h-20 w-auto object-contain transition-all hover:scale-105 duration-300"
                 priority
-                style={{ height: "auto" }}
-                className="object-contain mx-auto"
               />
             </div>
 

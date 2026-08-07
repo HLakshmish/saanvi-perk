@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Plus, MinusCircle, ChevronRight, Loader2 } from "lucide-react";
-import { RoleItem } from "../types/leaves.types";
+import { RoleItem } from "../types/settings.types";
 import { fetchRoles, deleteRoleApi } from "../api/settings.api";
 
 interface RolesListProps {
