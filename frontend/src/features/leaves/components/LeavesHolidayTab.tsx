@@ -1,6 +1,9 @@
-import React, { useState } from "react";
+"use client";
+
+import React, { useState, useEffect } from "react";
 import { Search } from "lucide-react";
 import { Holiday } from "../types/leaves.types";
+import { getHolidays } from "@/features/organization/api/calendar.api";
 
 const INITIAL_HOLIDAYS: Holiday[] = [
   { id: "1", name: "Republic Day", startDate: "26-01-2026 Mon", endDate: "26-01-2026 Mon", numberOfHolidays: 1, type: "Holiday" },
@@ -20,8 +23,33 @@ const INITIAL_HOLIDAYS: Holiday[] = [
 export const LeavesHolidayTab: React.FC = () => {
   const [selectedYear, setSelectedYear] = useState("2026");
   const [searchTerm, setSearchTerm] = useState("");
+  const [holidays, setHolidays] = useState<Holiday[]>([]);
 
-  const filteredHolidays = INITIAL_HOLIDAYS.filter(
+  useEffect(() => {
+    fetchRemoteHolidays();
+  }, []);
+
+  const fetchRemoteHolidays = async () => {
+    const res = await getHolidays();
+    if (res.success && res.data && res.data.length > 0) {
+      const sortedResData = [...res.data].sort(
+        (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+      );
+      const mapped: Holiday[] = sortedResData.map((h) => ({
+        id: String(h.holidayId),
+        name: h.holidayName,
+        startDate: new Date(h.startDate).toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric", weekday: "short" }),
+        endDate: new Date(h.endDate).toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric", weekday: "short" }),
+        numberOfHolidays: 1,
+        type: h.holidayType === "WEEK_OFF" ? "Week Off" : "Holiday",
+      }));
+      setHolidays(mapped);
+    } else {
+      setHolidays([]);
+    }
+  };
+
+  const filteredHolidays = holidays.filter(
     (h) =>
       h.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       h.startDate.toLowerCase().includes(searchTerm.toLowerCase())
@@ -88,7 +116,7 @@ export const LeavesHolidayTab: React.FC = () => {
                   <td className="py-3.5 px-4 font-mono text-xs text-slate-700">{holiday.endDate}</td>
                   <td className="py-3.5 px-4 font-bold text-slate-900">{holiday.numberOfHolidays}</td>
                   <td className="py-3.5 px-4">
-                    <span className="inline-flex items-center px-3 py-0.5 rounded-full text-[10px] font-bold border bg-indigo-50 text-indigo-700 border-indigo-200">
+                    <span className="inline-flex items-center px-3 py-0.5 rounded-full text-[10px] font-bold border bg-[#4f39f6]/10 text-[#4f39f6] border-[#4f39f6]/20">
                       {holiday.type}
                     </span>
                   </td>

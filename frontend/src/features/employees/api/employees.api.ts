@@ -1,5 +1,6 @@
 import { Employee, CreatePFDetailInput, CreateESIDetailInput, CreateInsuranceDetailInput } from "../types/employees.types";
 import { MOCK_EMPLOYEES } from "../data/employees.data";
+import { getDepartments as getDepartmentsFromApi } from "../../settings/api/department.api";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 const LOCAL_EMPLOYEES_KEY = "saanvi_local_employees";
@@ -159,31 +160,11 @@ export const getRoles = async (): Promise<any[]> => {
  * Fetch all available departments.
  */
 export const getDepartments = async (): Promise<any[]> => {
-  const token = getAuthToken();
   try {
-    const res = await fetch(`${API_BASE_URL}/api/departments`, {
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-    });
-    const result = await res.json();
-    if (res.ok && Array.isArray(result.data)) {
-      return result.data;
-    }
-    return [
-      { departmentId: 1, departmentName: "Management", departmentCode: "MGMT" },
-      { departmentId: 2, departmentName: "Development and Production", departmentCode: "DEV" },
-      { departmentId: 3, departmentName: "Human Resource Management", departmentCode: "HR" },
-      { departmentId: 4, departmentName: "Accounts and Finance", departmentCode: "FIN" },
-    ];
+    return await getDepartmentsFromApi();
   } catch (error) {
-    console.warn("Backend API error fetching departments, returning mock list:", error);
-    return [
-      { departmentId: 1, departmentName: "Management", departmentCode: "MGMT" },
-      { departmentId: 2, departmentName: "Development and Production", departmentCode: "DEV" },
-      { departmentId: 3, departmentName: "Human Resource Management", departmentCode: "HR" },
-      { departmentId: 4, departmentName: "Accounts and Finance", departmentCode: "FIN" },
-    ];
+    console.warn("Backend API error fetching departments in employee API, returning empty list:", error);
+    return [];
   }
 };
 
