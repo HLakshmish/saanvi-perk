@@ -38,7 +38,7 @@ export const AccountInfoTab: React.FC<AccountInfoTabProps> = ({
               Account Information
             </h3>
             <p className="text-xs text-slate-500 font-medium leading-relaxed">
-              Set up your Company's Profile, Branding, Mail & Statutory configuration among others on to Saanvi PERK.
+              Set up your Company's Profile, Branding, Mail & Statutory configuration among others on to Nexus HRMS.
             </p>
           </div>
         </div>

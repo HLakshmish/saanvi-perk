@@ -22,7 +22,7 @@ export function LoginForm() {
   const bannerSlides = [
     {
       title: "Empowering Workplace Success",
-      description: "Unleash collaboration and performance metrics with Saanvi Perk's next-generation HR environment."
+      description: "Unleash collaboration and performance metrics with Nexus next-generation HR environment."
     },
     {
       title: "Simplified Attendance Tracking",
@@ -54,40 +54,41 @@ export function LoginForm() {
           height: 0 !important;
         }
 
-        /* Force inputs, labels, and placeholders to light mode values */
+        /* Color palette: text/headings #013e37 & background #f4fbf7 */
         .forced-light-theme input {
           background-color: #ffffff !important;
-          color: #0f172a !important;
-          border-color: #e2e8f0 !important;
+          color: #013e37 !important;
+          border-color: rgba(1, 62, 55, 0.2) !important;
         }
         .forced-light-theme input::placeholder {
-          color: #94a3b8 !important;
+          color: rgba(1, 62, 55, 0.45) !important;
         }
         .forced-light-theme input:hover {
-          border-color: #cbd5e1 !important;
+          border-color: rgba(1, 62, 55, 0.4) !important;
         }
         .forced-light-theme input:focus,
         .forced-light-theme input:focus-visible {
-          border-color: #3b82f6 !important;
-          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+          border-color: #013e37 !important;
+          box-shadow: 0 0 0 3px rgba(1, 62, 55, 0.12) !important;
           outline: none !important;
         }
         .forced-light-theme label {
-          color: #374151 !important;
+          color: #013e37 !important;
+          font-weight: 700 !important;
         }
       `}</style>
 
-      {/* Viewport container with soft mint-green backdrop */}
-      <div className="min-h-screen w-full flex items-center justify-center p-3 sm:p-6 bg-[#e8f4ec] transition-colors duration-500 overflow-y-auto relative select-none forced-light-theme">
+      {/* Viewport container with soft mint-tinted neutral background (#f4fbf7) */}
+      <div className="min-h-screen w-full flex items-center justify-center p-3 sm:p-6 bg-[#f4fbf7] transition-colors duration-500 overflow-y-auto relative select-none forced-light-theme font-sans">
         
-        {/* Floating background decorative pill shapes */}
-        <div className="absolute top-[10%] left-[8%] w-24 sm:w-36 h-24 sm:h-36 bg-white/40 rounded-full blur-xs pointer-events-none"></div>
-        <div className="absolute bottom-[12%] left-[5%] w-16 sm:w-24 h-16 sm:h-24 bg-white/30 rounded-2xl sm:rounded-3xl transform rotate-45 pointer-events-none"></div>
-        <div className="absolute top-[15%] right-[6%] w-16 sm:w-20 h-16 sm:h-20 bg-white/40 rounded-xl sm:rounded-2xl transform -rotate-12 pointer-events-none"></div>
-        <div className="absolute bottom-[8%] right-[10%] w-24 sm:w-32 h-8 sm:h-10 bg-white/20 rounded-full transform rotate-12 pointer-events-none"></div>
+        {/* Floating background decorative shapes */}
+        <div className="absolute top-[10%] left-[8%] w-24 sm:w-36 h-24 sm:h-36 bg-[#013e37]/5 rounded-full blur-xs pointer-events-none"></div>
+        <div className="absolute bottom-[12%] left-[5%] w-16 sm:w-24 h-16 sm:h-24 bg-[#013e37]/5 rounded-2xl sm:rounded-3xl transform rotate-45 pointer-events-none"></div>
+        <div className="absolute top-[15%] right-[6%] w-16 sm:w-20 h-16 sm:h-20 bg-[#013e37]/5 rounded-xl sm:rounded-2xl transform -rotate-12 pointer-events-none"></div>
+        <div className="absolute bottom-[8%] right-[10%] w-24 sm:w-32 h-8 sm:h-10 bg-[#013e37]/5 rounded-full transform rotate-12 pointer-events-none"></div>
 
         {/* Centered Split-Screen Responsive Card */}
-        <div className="relative w-full max-w-4xl rounded-2xl sm:rounded-3xl bg-white border border-slate-200/60 shadow-xl overflow-hidden flex flex-col md:flex-row h-auto md:min-h-[540px] md:max-h-[600px] transition-all duration-300 pointer-events-auto select-text">
+        <div className="relative w-full max-w-4xl rounded-2xl sm:rounded-3xl bg-white border border-[#013e37]/15 shadow-xl overflow-hidden flex flex-col md:flex-row h-auto md:min-h-[540px] md:max-h-[600px] transition-all duration-300 pointer-events-auto select-text">
           
           {/* Left Side: Form Panel */}
           <div className="w-full md:w-1/2 flex flex-col justify-between p-6 sm:p-8 md:p-10 overflow-y-auto bg-white">
@@ -107,10 +108,10 @@ export function LoginForm() {
             {/* Mid Form Section */}
             <div className="space-y-5 my-auto">
               <div className="space-y-1 text-center">
-                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-800">
+                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#013e37]">
                   Welcome Back!
                 </h1>
-                <p className="text-xs sm:text-sm text-slate-500">
+                <p className="text-xs sm:text-sm text-[#013e37]/75 font-medium">
                   Please enter your email and password to log in.
                 </p>
               </div>
@@ -126,7 +127,7 @@ export function LoginForm() {
                   onChange={handleChange}
                   error={errors.email}
                   required
-                  className="border-slate-200 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none py-2.5 text-sm rounded-lg transition-all duration-200 shadow-2xs"
+                  className="border-[#013e37]/20 focus:ring-[#013e37]/15 focus:border-[#013e37] focus:outline-none py-2.5 text-sm rounded-lg transition-all duration-200 shadow-2xs text-[#013e37]"
                 />
 
                 <div className="relative">
@@ -139,12 +140,12 @@ export function LoginForm() {
                     onChange={handleChange}
                     error={errors.password}
                     required
-                    className="pr-10 border-slate-200 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none py-2.5 text-sm rounded-lg transition-all duration-200 shadow-2xs"
+                    className="pr-10 border-[#013e37]/20 focus:ring-[#013e37]/15 focus:border-[#013e37] focus:outline-none py-2.5 text-sm rounded-lg transition-all duration-200 shadow-2xs text-[#013e37]"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 bottom-2.5 z-10 p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100/50 transition-colors cursor-pointer focus:outline-none"
+                    className="absolute right-3.5 bottom-2.5 z-10 p-1 rounded-md text-[#013e37]/60 hover:text-[#013e37] hover:bg-[#013e37]/10 transition-colors cursor-pointer focus:outline-none"
                     title={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? (
@@ -160,11 +161,11 @@ export function LoginForm() {
                   </button>
                 </div>
 
-                {/* Submit Button */}
+                {/* Submit Button with #013e37 background & crisp white text */}
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full mt-2 h-10 sm:h-11 text-sm font-semibold text-white bg-black hover:bg-slate-900 active:scale-[0.98] rounded-lg shadow-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
+                  className="w-full mt-2 h-10 sm:h-11 text-sm font-bold text-white bg-[#013e37] hover:bg-[#012d28] active:scale-[0.98] rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
                 >
                   {isLoading ? (
                     <svg
@@ -195,18 +196,18 @@ export function LoginForm() {
             </div>
 
             {/* Bottom Support & Footer */}
-            <div className="mt-6 pt-4 border-t border-slate-100 space-y-1.5 text-center sm:text-left">
-              <div className="text-[11px] sm:text-xs text-slate-500">
+            <div className="mt-6 pt-4 border-t border-[#013e37]/10 space-y-1.5 text-center sm:text-left">
+              <div className="text-[11px] sm:text-xs text-[#013e37]/75 font-medium">
                 <span>Need help? Contact support at </span>
                 <a
                   href="mailto:support@saanviperk.com"
-                  className="text-emerald-600 hover:underline font-semibold"
+                  className="text-[#013e37] hover:underline font-bold"
                 >
                   support@saanviperk.com
                 </a>
               </div>
-              <div className="text-[10px] sm:text-xs text-slate-400">
-                All rights reserved © {new Date().getFullYear()} Saanvi Perk.
+              <div className="text-[10px] sm:text-xs text-[#013e37]/50 font-medium">
+                All rights reserved © {new Date().getFullYear()} Nexus.
               </div>
             </div>
 
@@ -225,11 +226,11 @@ export function LoginForm() {
             />
             
             {/* Frosted Glass Overlay Slide Box */}
-            <div className="absolute bottom-6 inset-x-6 backdrop-blur-md bg-black/40 border border-white/10 rounded-2xl p-5 text-white shadow-md transition-all duration-500">
-              <h3 className="text-base sm:text-lg font-bold leading-snug mb-1 transition-all duration-500">
+            <div className="absolute bottom-6 inset-x-6 backdrop-blur-md bg-[#013e37]/85 border border-white/20 rounded-2xl p-5 text-white shadow-lg transition-all duration-500">
+              <h3 className="text-base sm:text-lg font-bold leading-snug mb-1 transition-all duration-500 text-white">
                 {bannerSlides[activeSlide].title}
               </h3>
-              <p className="text-xs text-white/80 transition-all duration-500">
+              <p className="text-xs text-white/90 transition-all duration-500 font-medium">
                 {bannerSlides[activeSlide].description}
               </p>
             </div>
@@ -238,7 +239,7 @@ export function LoginForm() {
             <button
               type="button"
               onClick={() => setActiveSlide((prev) => (prev + 1) % bannerSlides.length)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/70 hover:bg-black text-white flex items-center justify-center shadow-md transition-all duration-200 focus:outline-none cursor-pointer z-20"
+              className="absolute right-4 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-[#013e37] hover:bg-[#012d28] text-white flex items-center justify-center shadow-lg transition-all duration-200 focus:outline-none cursor-pointer z-20"
               aria-label="Next slide"
             >
               <svg
