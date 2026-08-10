@@ -880,6 +880,9 @@ model AssetHistory {
   user  User?        @relation(fields: [userId], references: [userId])
 
   @@map("asset_history")
+}
+
+// ==========================
 // Reimbursements
 // ==========================
 
