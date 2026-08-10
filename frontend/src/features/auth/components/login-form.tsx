@@ -161,15 +161,15 @@ export function LoginForm() {
                   </button>
                 </div>
 
-                {/* Submit Button with #013e37 background & crisp white text */}
+                {/* Submit Button with #013e37 background & #FFEFB3 text */}
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full mt-2 h-10 sm:h-11 text-sm font-bold text-white bg-[#013e37] hover:bg-[#012d28] active:scale-[0.98] rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
+                  className="w-full mt-2 h-10 sm:h-11 text-sm font-bold text-[#FFEFB3] bg-[#013e37] hover:bg-[#012d28] active:scale-[0.98] rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
                 >
                   {isLoading ? (
                     <svg
-                      className="animate-spin h-4 w-4 text-white"
+                      className="animate-spin h-4 w-4 text-[#FFEFB3]"
                       xmlns="http://www.w3.org/2000/svg"
                       fill="none"
                       viewBox="0 0 24 24"
@@ -226,11 +226,11 @@ export function LoginForm() {
             />
             
             {/* Frosted Glass Overlay Slide Box */}
-            <div className="absolute bottom-6 inset-x-6 backdrop-blur-md bg-[#013e37]/85 border border-white/20 rounded-2xl p-5 text-white shadow-lg transition-all duration-500">
-              <h3 className="text-base sm:text-lg font-bold leading-snug mb-1 transition-all duration-500 text-white">
+            <div className="absolute bottom-6 inset-x-6 backdrop-blur-md bg-[#013e37]/85 border border-[#FFEFB3]/20 rounded-2xl p-5 text-[#FFEFB3] shadow-lg transition-all duration-500">
+              <h3 className="text-base sm:text-lg font-bold leading-snug mb-1 transition-all duration-500 text-[#FFEFB3]">
                 {bannerSlides[activeSlide].title}
               </h3>
-              <p className="text-xs text-white/90 transition-all duration-500 font-medium">
+              <p className="text-xs text-[#FFEFB3]/90 transition-all duration-500 font-medium">
                 {bannerSlides[activeSlide].description}
               </p>
             </div>
@@ -239,7 +239,7 @@ export function LoginForm() {
             <button
               type="button"
               onClick={() => setActiveSlide((prev) => (prev + 1) % bannerSlides.length)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-[#013e37] hover:bg-[#012d28] text-white flex items-center justify-center shadow-lg transition-all duration-200 focus:outline-none cursor-pointer z-20"
+              className="absolute right-4 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-[#013e37] hover:bg-[#012d28] text-[#FFEFB3] flex items-center justify-center shadow-lg transition-all duration-200 focus:outline-none cursor-pointer z-20"
               aria-label="Next slide"
             >
               <svg

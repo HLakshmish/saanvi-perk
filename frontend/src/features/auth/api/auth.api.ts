@@ -72,33 +72,10 @@ export async function loginUser(
       };
     }
   } catch (error) {
-    console.warn("Backend API connection error, falling back to mock authentication:", error);
-
-    // MOCK DEMO FALLBACK (for development/testing when Fastify is offline)
-    let fallbackRole: UserRole = "employee";
-
-    if (email.includes("owner")) {
-      fallbackRole = "owner";
-    } else if (email.includes("super")) {
-      fallbackRole = "superadmin";
-    } else if (email.includes("admin") || email.includes("varsha")) {
-      fallbackRole = "admin";
-    }
-
-    // Set demo cookies
-    document.cookie = `auth_token=demo-token-123; path=/; max-age=86400;`;
-    document.cookie = `user_role=${fallbackRole}; path=/; max-age=86400;`;
-
+    console.error("Backend connection error during login:", error);
     return {
-      success: true,
-      token: "demo-token-123",
-      user: {
-        id: "demo_usr_01",
-        email: email,
-        name: email.split("@")[0],
-        role: fallbackRole,
-        companyId: fallbackRole === "owner" ? null : 101,
-      },
+      success: false,
+      error: "Unable to connect to the server. Please verify backend server is running and try again.",
     };
   }
 }
