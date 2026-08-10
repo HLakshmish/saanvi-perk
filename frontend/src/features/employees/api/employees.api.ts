@@ -1,35 +1,13 @@
 import { Employee, CreatePFDetailInput, CreateESIDetailInput, CreateInsuranceDetailInput, Designation } from "../types/employees.types";
-import { MOCK_EMPLOYEES } from "../data/employees.data";
 import { getDepartments as getDepartmentsFromApi } from "../../settings/api/department.api";
+import { toast } from "sonner";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-const LOCAL_EMPLOYEES_KEY = "saanvi_local_employees";
 
 function getAuthToken(): string | null {
   if (typeof document === "undefined") return null;
   const match = document.cookie.match(/(?:^|; )auth_token=([^;]*)/);
   return match ? match[1] : null;
-}
-
-function getLocalEmployees(): Employee[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(LOCAL_EMPLOYEES_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch (e) {
-    return [];
-  }
-}
-
-function saveLocalEmployee(employee: Employee): void {
-  if (typeof window === "undefined") return;
-  try {
-    const existing = getLocalEmployees();
-    const updated = [employee, ...existing.filter((e) => e.id !== employee.id)];
-    localStorage.setItem(LOCAL_EMPLOYEES_KEY, JSON.stringify(updated));
-  } catch (e) {
-    console.warn("Failed to save local employee:", e);
-  }
 }
 
 const mapUserToEmployee = (user: any): Employee => {
@@ -76,7 +54,6 @@ export const getDesignations = async (): Promise<Designation[]> => {
  */
 export const getEmployees = async (): Promise<Employee[]> => {
   const token = getAuthToken();
-  const localList = getLocalEmployees();
 
   try {
     // 1. Fetch Company details dynamically to get the branch location (city/state)
@@ -140,18 +117,13 @@ export const getEmployees = async (): Promise<Employee[]> => {
         };
       });
 
-      const remoteCodes = new Set(remoteEmployees.map((e: Employee) => e.employeeCode));
-      const combined = [
-        ...remoteEmployees,
-        ...localList.filter((e) => !remoteCodes.has(e.employeeCode)),
-      ];
-      return combined;
+      return remoteEmployees;
     }
 
-    return [...localList];
+    return [];
   } catch (error) {
     console.warn("Backend API error fetching employees:", error);
-    return [...localList];
+    return [];
   }
 };
 
@@ -324,17 +296,7 @@ export const createBankDetails = async (data: any): Promise<{ success: boolean; 
   }
 };
 
-/**
- * Save employee list local helper to synchronize the local state
- */
-export const syncLocalEmployee = (user: any, details: any) => {
-  const mappedEmp = mapUserToEmployee({
-    ...user,
-    role: { roleName: details.roleName || "Staff" },
-    department: { departmentName: details.departmentName || "General" }
-  });
-  saveLocalEmployee(mappedEmp);
-};
+
 
 export const createPFDetail = async (data: CreatePFDetailInput): Promise<{ success: boolean; data?: any; error?: string }> => {
   const token = getAuthToken();
@@ -830,7 +792,7 @@ export const downloadEmployeeDocument = async (id: number): Promise<void> => {
     window.URL.revokeObjectURL(url);
   } catch (error) {
     console.error("Download error:", error);
-    alert("Failed to download document file.");
+    toast.error("Failed to download document file.");
   }
 };
 

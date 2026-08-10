@@ -12,7 +12,6 @@ import {
   createParentInfo,
   createAddressInfo,
   createBankDetails,
-  syncLocalEmployee,
   createPFDetail,
   createESIDetail,
   createInsuranceDetail,
@@ -671,13 +670,7 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
         }
       }
 
-      // Sync local registry for frontend display
-      const selectedRole = roles.find((r) => r.roleId === Number(formData.roleId));
-      const selectedDept = departments.find((d) => d.departmentId === Number(formData.departmentId));
-      syncLocalEmployee(userRes.data, {
-        roleName: selectedRole ? selectedRole.roleName : "Staff",
-        departmentName: selectedDept ? selectedDept.departmentName : "General",
-      });
+
 
       // Clear draft
       if (typeof window !== "undefined") {

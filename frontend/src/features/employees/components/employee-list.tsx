@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { SearchBox } from "@/components/ui/search-box";
+import { toast } from "sonner";
 import { Pagination } from "./pagination";
 import { EmployeeTable } from "./employee-table";
 import { OrganizationChart } from "./organization-chart";
@@ -29,6 +30,8 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
   const fetchEmployees = async () => {
     setIsLoading(true);
@@ -81,20 +84,27 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
     setIsEditOpen(true);
   };
 
-  const handleDelete = async (emp: Employee) => {
-    if (!confirm(`Are you sure you want to delete employee ${emp.name} (${emp.employeeCode})? This will permanently erase their credentials and files.`)) {
-      return;
-    }
+  const handleDelete = (emp: Employee) => {
+    setEmployeeToDelete(emp);
+    setIsDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!employeeToDelete) return;
+    const emp = employeeToDelete;
+    setIsDeleteConfirmOpen(false);
+    setEmployeeToDelete(null);
+
     try {
       const res = await deleteUser(Number(emp.id));
       if (res.success) {
-        alert("Employee deleted successfully.");
+        toast.success("Employee deleted successfully.");
         await fetchEmployees();
       } else {
-        alert(res.error || "Failed to delete employee user profile.");
+        toast.error(res.error || "Failed to delete employee user profile.");
       }
     } catch (err) {
-      alert("Failed to delete employee profile.");
+      toast.error("Failed to delete employee profile.");
     }
   };
 
@@ -213,6 +223,37 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
             employeeName={selectedEmployee.name}
           />
         </>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {isDeleteConfirmOpen && employeeToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fade-in">
+          <div className="bg-white w-full max-w-md rounded-2xl border border-slate-200 p-6 shadow-xl space-y-4">
+            <div className="space-y-2">
+              <h3 className="text-lg font-bold text-slate-900">Delete Employee</h3>
+              <p className="text-sm text-slate-500 font-medium">
+                Are you sure you want to delete employee <span className="font-semibold text-slate-800">{employeeToDelete.name} ({employeeToDelete.employeeCode})</span>? This will permanently erase their credentials and files.
+              </p>
+            </div>
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                onClick={() => {
+                  setIsDeleteConfirmOpen(false);
+                  setEmployeeToDelete(null);
+                }}
+                className="px-4.5 py-2 text-xs font-bold text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-4.5 py-2 text-xs font-bold text-white bg-red-600 hover:bg-red-750 rounded-xl shadow-xs transition-all"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
