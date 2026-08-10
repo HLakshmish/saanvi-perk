@@ -88,9 +88,9 @@ export const DepartmentFormModal: React.FC<DepartmentFormModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl border border-slate-100 overflow-hidden animate-in zoom-in-95 duration-200">
+      <div className="bg-white rounded-3xl w-full max-w-lg max-h-[90vh] flex flex-col shadow-2xl border border-slate-100 overflow-hidden animate-in zoom-in-95 duration-200">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
           <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
             {department ? "Edit Department" : "Add Department"}
           </h3>
@@ -103,7 +103,7 @@ export const DepartmentFormModal: React.FC<DepartmentFormModalProps> = ({
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1">
           <div className="grid grid-cols-2 gap-4">
             {/* Department Name */}
             <div className="col-span-2 space-y-1.5">

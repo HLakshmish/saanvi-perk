@@ -9,6 +9,8 @@ import {
   Calendar,
 } from "lucide-react";
 import { CalendarDetailView } from "./CalendarDetailView";
+import { DesignationTab } from "./DesignationTab";
+import { LocationTab } from "./LocationTab";
 
 interface OrganizationTabProps {
   onSelectDepartment?: () => void;
@@ -17,7 +19,7 @@ interface OrganizationTabProps {
 export const OrganizationTab: React.FC<OrganizationTabProps> = ({
   onSelectDepartment,
 }) => {
-  const [viewMode, setViewMode] = useState<"cards" | "calendar-detail">("cards");
+  const [viewMode, setViewMode] = useState<"cards" | "calendar-detail" | "designation-detail" | "location-detail">("cards");
 
   const organizationCards = [
     {
@@ -55,6 +57,10 @@ export const OrganizationTab: React.FC<OrganizationTabProps> = ({
   const handleCardClick = (id: string) => {
     if (id === "calendar") {
       setViewMode("calendar-detail");
+    } else if (id === "designation") {
+      setViewMode("designation-detail");
+    } else if (id === "location") {
+      setViewMode("location-detail");
     } else if (id === "department") {
       onSelectDepartment?.();
     }
@@ -64,6 +70,22 @@ export const OrganizationTab: React.FC<OrganizationTabProps> = ({
     return (
       <CalendarDetailView
         onBackToOrganization={() => setViewMode("cards")}
+      />
+    );
+  }
+
+  if (viewMode === "designation-detail") {
+    return (
+      <DesignationTab
+        onBack={() => setViewMode("cards")}
+      />
+    );
+  }
+
+  if (viewMode === "location-detail") {
+    return (
+      <LocationTab
+        onBack={() => setViewMode("cards")}
       />
     );
   }
