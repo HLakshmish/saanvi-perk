@@ -58,5 +58,6 @@ app.register(require("./UsersDetails/employeedocument/employeedocument.route"), 
 app.register(require("./Attendance/attendance.route"), { prefix: "/api/attendances" });
 app.register(require("./Leave/leaveType/leaveType.route"), { prefix: "/api/leave-types" });
 app.register(require("./Leave/leaveRequest/leaveRequest.route"), { prefix: "/api/leave-requests" });
+app.register(require("./Organisation/assets/asset.route"), { prefix: "/api/assets" });
 
 module.exports = app;
