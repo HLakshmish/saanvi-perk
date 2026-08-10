@@ -59,6 +59,7 @@ model CompanyDetails {
   attendances    Attendance[]
   leaveTypes     LeaveType[]
   leaveRequests  LeaveRequest[]
+  assets         AssetDetails[]
 
   @@map("company_details")
 }
@@ -233,6 +234,8 @@ model User {
   createdLeaveTypes   LeaveType[] @relation("LeaveTypeCreatedBy")
   leaveRequests       LeaveRequest[] @relation("LeaveRequestUser")
   approvedLeaves      LeaveRequest[] @relation("LeaveRequestApprovedBy")
+  assetAssignments    AssetAssignments[]
+  assetHistory        AssetHistory[]
 
   @@map("users")
 }
@@ -775,4 +778,101 @@ enum LeaveStatus {
   APPROVED
   REJECTED
   CANCELLED
+}
+
+// ==========================
+// Asset Management
+// ==========================
+enum AssetStatus {
+  AVAILABLE
+  ASSIGNED
+  UNDER_REPAIR
+  LOST
+  DAMAGED
+  RETIRED
+}
+
+model AssetDetails {
+  assetId    Int    @id @default(autoincrement()) @map("asset_id")
+  companyId  Int    @map("company_id")
+
+  assetCode  String @map("asset_code")
+  assetName  String @map("asset_name")
+  assetType  String @map("asset_type")
+
+  brand        String? @map("brand")
+  model        String? @map("model")
+  serialNumber String? @unique @map("serial_number")
+
+  purchaseDate  DateTime? @map("purchase_date")
+  purchasePrice Decimal?  @db.Decimal(12, 2) @map("purchase_price")
+  vendorName    String?   @map("vendor_name")
+
+  warrantyStartDate DateTime? @map("warranty_start_date")
+  warrantyEndDate   DateTime? @map("warranty_end_date")
+
+  assetStatus AssetStatus @default(AVAILABLE) @map("asset_status")
+
+  description String?
+
+  createdBy Int? @map("created_by")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt      @map("updated_at")
+
+  company     CompanyDetails     @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
+  assignments AssetAssignments[]
+  history     AssetHistory[]
+
+  @@unique([companyId, assetCode])
+  @@map("asset_details")
+}
+
+model AssetAssignments {
+  assignmentId Int @id @default(autoincrement()) @map("assignment_id")
+
+  assetId Int @map("asset_id")
+  userId  Int @map("user_id")
+
+  assignedDate       DateTime  @map("assigned_date")
+  expectedReturnDate DateTime? @map("expected_return_date")
+  returnedDate       DateTime? @map("returned_date")
+
+  assignmentStatus      String? @map("assignment_status")
+  conditionAtAssignment String? @map("condition_at_assignment")
+  conditionAtReturn     String? @map("condition_at_return")
+
+  assignedBy Int? @map("assigned_by")
+  returnedBy Int? @map("returned_by")
+  remarks    String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt      @map("updated_at")
+
+  asset AssetDetails @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
+  user  User         @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@map("asset_assignments")
+}
+
+model AssetHistory {
+  historyId Int @id @default(autoincrement()) @map("history_id")
+
+  assetId Int  @map("asset_id")
+  userId  Int? @map("user_id")
+
+  action         String
+  previousStatus String? @map("previous_status")
+  newStatus      String? @map("new_status")
+
+  actionDate DateTime @map("action_date")
+  remarks    String?
+  performedBy Int?    @map("performed_by")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  asset AssetDetails @relation(fields: [assetId], references: [assetId], onDelete: Cascade)
+  user  User?        @relation(fields: [userId], references: [userId])
+
+  @@map("asset_history")
 }
