@@ -41,25 +41,26 @@ model CompanyDetails {
   officeStartTime String? @map("office_start_time")
   officeEndTime   String? @map("office_end_time")
 
-  allowedRadius Int?     @map("allowed_radius")
+  allowedRadius Int? @map("allowed_radius")
 
   status Boolean @default(true)
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  departments    Department[]
-  users          User[]
-  roles          Role[]
-  superAdmin     SuperAdmin?
-  officeLocations OfficeLocation[]
-  designations   Designation[]
-  calendars      Calendar[]
-  holidays       Holiday[]
-  attendances    Attendance[]
-  leaveTypes     LeaveType[]
-  leaveRequests  LeaveRequest[]
+  departments         Department[]
+  users               User[]
+  roles               Role[]
+  superAdmin          SuperAdmin?
+  officeLocations     OfficeLocation[]
+  designations        Designation[]
+  calendars           Calendar[]
+  holidays            Holiday[]
+  attendances         Attendance[]
+  leaveTypes          LeaveType[]
+  leaveRequests       LeaveRequest[]
   assets         AssetDetails[]
+  reimbursementClaims ReimbursementClaim[]
 
   @@map("company_details")
 }
@@ -168,10 +169,10 @@ model User {
   userId       Int    @id @default(autoincrement()) @map("user_id")
   employeeCode String @unique @map("employee_code")
 
-  companyId    Int  @map("company_id")
-  roleId       Int  @map("role_id")
-  departmentId Int? @map("department_id")
-  locationId   Int? @map("location_id")
+  companyId     Int  @map("company_id")
+  roleId        Int  @map("role_id")
+  departmentId  Int? @map("department_id")
+  locationId    Int? @map("location_id")
   designationId Int? @map("designation_id")
 
   firstName String @map("first_name")
@@ -199,11 +200,11 @@ model User {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  company    CompanyDetails @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
-  role       Role           @relation(fields: [roleId], references: [roleId])
-  department Department?    @relation("DepartmentUsers", fields: [departmentId], references: [departmentId])
-  location   OfficeLocation? @relation("LocationUsers", fields: [locationId], references: [officeLocationId])
-  designation Designation?  @relation("DesignationUsers", fields: [designationId], references: [designationId])
+  company     CompanyDetails  @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
+  role        Role            @relation(fields: [roleId], references: [roleId])
+  department  Department?     @relation("DepartmentUsers", fields: [departmentId], references: [departmentId])
+  location    OfficeLocation? @relation("LocationUsers", fields: [locationId], references: [officeLocationId])
+  designation Designation?    @relation("DesignationUsers", fields: [designationId], references: [designationId])
 
   manager      User?  @relation("ReportingManager", fields: [reportingToId], references: [userId])
   subordinates User[] @relation("ReportingManager")
@@ -214,13 +215,13 @@ model User {
   updatedByUser User?  @relation("UserUpdatedBy", fields: [updatedBy], references: [userId])
   updatedUsers  User[] @relation("UserUpdatedBy")
 
-  createdDepartments Department[] @relation("DepartmentCreatedBy")
-  updatedDepartments Department[] @relation("DepartmentUpdatedBy")
-  headedDepartments  Department[] @relation("DepartmentHead")
-  createdLocations   OfficeLocation[] @relation("LocationCreatedBy")
-  createdDesignations Designation[] @relation("DesignationCreatedBy")
-  createdCalendars   Calendar[] @relation("CalendarCreatedBy")
-  createdHolidays    Holiday[]  @relation("HolidayCreatedBy")
+  createdDepartments  Department[]     @relation("DepartmentCreatedBy")
+  updatedDepartments  Department[]     @relation("DepartmentUpdatedBy")
+  headedDepartments   Department[]     @relation("DepartmentHead")
+  createdLocations    OfficeLocation[] @relation("LocationCreatedBy")
+  createdDesignations Designation[]    @relation("DesignationCreatedBy")
+  createdCalendars    Calendar[]       @relation("CalendarCreatedBy")
+  createdHolidays     Holiday[]        @relation("HolidayCreatedBy")
 
   personalInformation PersonalInformation?
   parentsInformation  ParentsInformation?
@@ -231,11 +232,16 @@ model User {
   esiDetail           ESIDetail?
   insuranceDetail     InsuranceDetail?
   attendances         Attendance[]
-  createdLeaveTypes   LeaveType[] @relation("LeaveTypeCreatedBy")
-  leaveRequests       LeaveRequest[] @relation("LeaveRequestUser")
-  approvedLeaves      LeaveRequest[] @relation("LeaveRequestApprovedBy")
+  createdLeaveTypes   LeaveType[]          @relation("LeaveTypeCreatedBy")
+  leaveRequests       LeaveRequest[]       @relation("LeaveRequestUser")
+  approvedLeaves      LeaveRequest[]       @relation("LeaveRequestApprovedBy")
+
   assetAssignments    AssetAssignments[]
   assetHistory        AssetHistory[]
+
+  reimbursementClaims    ReimbursementClaim[]
+  approvedReimbursements ReimbursementClaim[]   @relation("ReimbursementApprovedBy")
+  reimbursementHistories ReimbursementHistory[]
 
   @@map("users")
 }
@@ -592,11 +598,10 @@ model OfficeLocation {
 
   company CompanyDetails @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
 
-  createdUser User? @relation("LocationCreatedBy", fields: [createdBy], references: [userId])
+  createdUser User?  @relation("LocationCreatedBy", fields: [createdBy], references: [userId])
   users       User[] @relation("LocationUsers")
 
   @@unique([companyId, locationCode])
-
   @@map("office_locations")
 }
 
@@ -615,10 +620,10 @@ model Designation {
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
-  company    CompanyDetails @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
-  department Department     @relation(fields: [departmentId], references: [departmentId], onDelete: Cascade)
-  createdUser User?         @relation("DesignationCreatedBy", fields: [createdBy], references: [userId])
-  users       User[]        @relation("DesignationUsers")
+  company     CompanyDetails @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
+  department  Department     @relation(fields: [departmentId], references: [departmentId], onDelete: Cascade)
+  createdUser User?          @relation("DesignationCreatedBy", fields: [createdBy], references: [userId])
+  users       User[]         @relation("DesignationUsers")
 
   @@unique([companyId, designationCode])
   @@map("designations")
@@ -687,17 +692,17 @@ model Attendance {
   companyId    Int @map("company_id")
   userId       Int @map("user_id")
 
-  attendanceDate DateTime  @db.Date @map("attendance_date")
-  checkInTime    DateTime? @db.Time @map("check_in_time")
-  checkOutTime   DateTime? @db.Time @map("check_out_time")
+  attendanceDate DateTime  @map("attendance_date") @db.Date
+  checkInTime    DateTime? @map("check_in_time") @db.Time
+  checkOutTime   DateTime? @map("check_out_time") @db.Time
 
-  checkInLatitude   Decimal? @db.Decimal(10, 8) @map("check_in_latitude")
-  checkInLongitude  Decimal? @db.Decimal(11, 8) @map("check_in_longitude")
-  checkOutLatitude  Decimal? @db.Decimal(10, 8) @map("check_out_latitude")
-  checkOutLongitude Decimal? @db.Decimal(11, 8) @map("check_out_longitude")
-  workingMinutes       Int? @map("working_minutes")
-  overtimeMinutes      Int? @map("overtime_minutes")
-  earlyCheckoutMinutes Int? @map("early_checkout_minutes")
+  checkInLatitude      Decimal? @map("check_in_latitude") @db.Decimal(10, 8)
+  checkInLongitude     Decimal? @map("check_in_longitude") @db.Decimal(11, 8)
+  checkOutLatitude     Decimal? @map("check_out_latitude") @db.Decimal(10, 8)
+  checkOutLongitude    Decimal? @map("check_out_longitude") @db.Decimal(11, 8)
+  workingMinutes       Int?     @map("working_minutes")
+  overtimeMinutes      Int?     @map("overtime_minutes")
+  earlyCheckoutMinutes Int?     @map("early_checkout_minutes")
 
   attendanceStatus AttendanceStatus @map("attendance_status")
   remarks          String?
@@ -723,18 +728,18 @@ enum AttendanceStatus {
 // Leave Type
 // ==========================
 model LeaveType {
-  leaveTypeId Int @id @default(autoincrement()) @map("leave_type_id")
-  companyId   Int @map("company_id")
-  leaveCode   String @map("leave_code")
-  leaveName   String @map("leave_name")
+  leaveTypeId Int      @id @default(autoincrement()) @map("leave_type_id")
+  companyId   Int      @map("company_id")
+  leaveCode   String   @map("leave_code")
+  leaveName   String   @map("leave_name")
   remarks     String?
-  status      Boolean @default(true)
-  createdBy   Int? @map("created_by")
+  status      Boolean  @default(true)
+  createdBy   Int?     @map("created_by")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  company     CompanyDetails @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
-  createdUser User?          @relation("LeaveTypeCreatedBy", fields: [createdBy], references: [userId])
+  company       CompanyDetails @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
+  createdUser   User?          @relation("LeaveTypeCreatedBy", fields: [createdBy], references: [userId])
   leaveRequests LeaveRequest[]
 
   @@unique([companyId, leaveCode])
@@ -765,10 +770,10 @@ model LeaveRequest {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  company     CompanyDetails @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
-  user        User           @relation("LeaveRequestUser", fields: [userId], references: [userId], onDelete: Cascade)
-  leaveType   LeaveType      @relation(fields: [leaveTypeId], references: [leaveTypeId])
-  approvedUser User?         @relation("LeaveRequestApprovedBy", fields: [approvedBy], references: [userId])
+  company      CompanyDetails @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
+  user         User           @relation("LeaveRequestUser", fields: [userId], references: [userId], onDelete: Cascade)
+  leaveType    LeaveType      @relation(fields: [leaveTypeId], references: [leaveTypeId])
+  approvedUser User?          @relation("LeaveRequestApprovedBy", fields: [approvedBy], references: [userId])
 
   @@map("leave_requests")
 }
@@ -875,4 +880,81 @@ model AssetHistory {
   user  User?        @relation(fields: [userId], references: [userId])
 
   @@map("asset_history")
+// Reimbursements
+// ==========================
+
+enum ReimbursementStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  PAID
+  CANCELLED
+}
+
+model ReimbursementClaim {
+  claimId           Int                 @id @default(autoincrement()) @map("claim_id")
+  companyId         Int                 @map("company_id")
+  userId            Int                 @map("user_id")
+  claimNumber       String              @map("claim_number")
+  reimbursementType String              @map("reimbursement_type")
+  claimDate         DateTime            @map("claim_date")
+  totalAmount       Decimal             @map("total_amount") @db.Decimal(12, 2)
+  approvedAmount    Decimal?            @map("approved_amount") @db.Decimal(12, 2)
+  description       String?
+  status            ReimbursementStatus @default(DRAFT)
+  submittedAt       DateTime?           @map("submitted_at")
+  approvedBy        Int?                @map("approved_by")
+  approvedAt        DateTime?           @map("approved_at")
+  rejectionReason   String?             @map("rejection_reason")
+  paymentDate       DateTime?           @map("payment_date")
+  remarks           String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  company  CompanyDetails @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
+  user     User           @relation(fields: [userId], references: [userId])
+  approver User?          @relation("ReimbursementApprovedBy", fields: [approvedBy], references: [userId])
+
+  bills   ReimbursementBill[]
+  history ReimbursementHistory[]
+
+  @@unique([companyId, claimNumber])
+  @@map("reimbursement_claims")
+}
+
+model ReimbursementBill {
+  billId     Int       @id @default(autoincrement()) @map("bill_id")
+  claimId    Int       @map("claim_id")
+  billNumber String?   @map("bill_number")
+  billDate   DateTime? @map("bill_date")
+  billAmount Decimal   @map("bill_amount") @db.Decimal(12, 2)
+  vendorName String?   @map("vendor_name")
+  fileName   String    @map("file_name")
+  mimeType   String    @map("mime_type")
+  fileSize   Int       @map("file_size")
+  fileData   Bytes     @map("file_data") @db.ByteA
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  claim ReimbursementClaim @relation(fields: [claimId], references: [claimId], onDelete: Cascade)
+
+  @@map("reimbursement_bills")
+}
+
+model ReimbursementHistory {
+  historyId      Int      @id @default(autoincrement()) @map("history_id")
+  claimId        Int      @map("claim_id")
+  action         String
+  previousStatus String?  @map("previous_status")
+  newStatus      String?  @map("new_status")
+  actionBy       Int      @map("action_by")
+  actionDate     DateTime @default(now()) @map("action_date")
+  remarks        String?
+
+  claim ReimbursementClaim @relation(fields: [claimId], references: [claimId], onDelete: Cascade)
+  user  User               @relation(fields: [actionBy], references: [userId])
+
+  @@map("reimbursement_history")
 }
