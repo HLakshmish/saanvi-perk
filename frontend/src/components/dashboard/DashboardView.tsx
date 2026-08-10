@@ -84,19 +84,19 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             {/* Welcome Greeting Banner */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
               <div>
-                <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+                <h1 className="text-xl sm:text-2xl font-extrabold text-[#013e37] tracking-tight">
                   Dashboard
                 </h1>
               </div>
 
               <div className="flex items-center gap-3">
-                <div className="px-3.5 py-2 bg-white border border-slate-200 rounded-xl shadow-2xs text-center">
-                  <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wide">Today</p>
-                  <p className="text-sm font-bold text-slate-900">
+                <div className="px-3.5 py-2 bg-white border border-[#013e37]/20 rounded-xl shadow-2xs text-center">
+                  <p className="text-[10px] text-[#013e37]/70 font-semibold uppercase tracking-wide">Today</p>
+                  <p className="text-sm font-bold text-[#013e37]">
                     {new Date().toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short", year: "numeric" })}
                   </p>
                 </div>
-                <button className="flex items-center gap-1.5 px-3.5 py-2.5 border border-slate-200 text-slate-700 rounded-xl text-xs font-semibold hover:bg-slate-50 transition-colors shadow-2xs bg-white">
+                <button className="flex items-center gap-1.5 px-3.5 py-2.5 border border-[#013e37]/20 text-[#013e37] rounded-xl text-xs font-bold hover:bg-[#013e37] hover:text-[#ffefb3] transition-colors shadow-2xs bg-white cursor-pointer">
                   <RefreshCw className="w-3.5 h-3.5" />
                   <span>Refresh</span>
                 </button>
@@ -151,7 +151,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
+    <div className="min-h-screen bg-[#f4fbf7] flex flex-col font-sans">
       {/* Top Navbar */}
       <Navbar
         currentRole={role}

@@ -48,7 +48,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <aside
-      className={`bg-slate-900 border-r border-slate-800 flex flex-col py-4 gap-1.5 h-[calc(100vh-3.5rem)] sticky top-14 shadow-lg z-30 transition-all duration-300 select-none ${
+      className={`bg-[#013e37] border-r border-[#013e37]/40 flex flex-col py-4 gap-1.5 h-[calc(100vh-3.5rem)] sticky top-14 shadow-lg z-30 transition-all duration-300 select-none ${
         isSidebarOpen ? "w-60 px-3" : "w-14 sm:w-16 items-center px-1"
       }`}
     >
@@ -64,13 +64,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
               isSidebarOpen
                 ? `w-full px-4 py-3 gap-3.5 ${
                     isActive
-                      ? "text-white bg-indigo-600 shadow-md shadow-indigo-500/30 font-semibold"
-                      : "text-slate-400 hover:text-white hover:bg-slate-800/60 font-medium"
+                      ? "text-[#013e37] bg-[#ffefb3] shadow-md shadow-black/20 font-bold"
+                      : "text-[#ffefb3]/75 hover:text-[#ffefb3] hover:bg-white/10 font-medium"
                   }`
                 : `p-2.5 justify-center ${
                     isActive
-                      ? "text-white bg-indigo-600 shadow-md shadow-indigo-500/30 scale-105"
-                      : "text-slate-400 hover:text-white hover:bg-slate-800/80 hover:scale-105"
+                      ? "text-[#013e37] bg-[#ffefb3] shadow-md shadow-black/20 scale-105"
+                      : "text-[#ffefb3]/75 hover:text-[#ffefb3] hover:bg-white/10 hover:scale-105"
                   }`
             }`}
           >
@@ -85,7 +85,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
             {/* Collapsed sidebar Tooltips */}
             {!isSidebarOpen && (
-              <span className="absolute left-16 bg-slate-950 text-white text-[11px] font-bold px-2.5 py-1.5 rounded-md shadow-xl border border-slate-800 opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-50 whitespace-nowrap">
+              <span className="absolute left-16 bg-[#012d28] text-[#ffefb3] text-[11px] font-bold px-2.5 py-1.5 rounded-md shadow-xl border border-[#ffefb3]/20 opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-50 whitespace-nowrap">
                 {item.label}
               </span>
             )}

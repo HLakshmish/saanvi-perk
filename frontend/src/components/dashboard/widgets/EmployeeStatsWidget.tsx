@@ -47,19 +47,19 @@ export const EmployeeStatsWidget: React.FC<EmployeeStatsProps> = ({
           return (
             <div
               key={stat.label}
-              className="bg-white rounded-xl border border-slate-200/80 p-3.5 sm:p-4 shadow-sm transition-all duration-200 hover:border-[#4f39f6]/40 hover:shadow-md group"
+              className="bg-white rounded-xl border border-[#013e37]/15 p-3.5 sm:p-4 shadow-2xs transition-all duration-200 hover:border-[#013e37]/40 hover:shadow-md group"
             >
               <div className="flex items-center justify-between mb-2">
-                <div className="w-8 h-8 rounded-lg bg-[#4f39f6]/10 flex items-center justify-center text-[#4f39f6] group-hover:bg-[#4f39f6] group-hover:text-white transition-colors">
+                <div className="w-8 h-8 rounded-lg bg-[#013e37]/10 flex items-center justify-center text-[#013e37] group-hover:bg-[#013e37] group-hover:text-[#ffefb3] transition-colors">
                   <Icon className="w-4 h-4" />
                 </div>
               </div>
 
               <div>
-                <p className="text-2xl font-extrabold text-slate-900 tracking-tight leading-none mb-1">
+                <p className="text-2xl font-extrabold text-[#013e37] tracking-tight leading-none mb-1">
                   {stat.value}
                 </p>
-                <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                <p className="text-[11px] font-bold text-[#013e37]/70 uppercase tracking-wider">
                   {stat.label}
                 </p>
               </div>

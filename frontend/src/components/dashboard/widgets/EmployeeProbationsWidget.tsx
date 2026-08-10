@@ -10,18 +10,18 @@ const probationEmployees = [
 
 export const EmployeeProbationsWidget: React.FC = () => {
   return (
-    <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col">
+    <div className="bg-white p-5 rounded-2xl border border-[#013e37]/15 shadow-2xs flex flex-col">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-[#4f39f6]/10 flex items-center justify-center">
-            <UserCheck className="w-4 h-4 text-[#4f39f6]" />
+          <div className="w-8 h-8 rounded-lg bg-[#013e37]/10 flex items-center justify-center">
+            <UserCheck className="w-4 h-4 text-[#013e37]" />
           </div>
           <div>
-            <h3 className="font-bold text-slate-800 text-sm">Probations</h3>
-            <p className="text-[11px] text-slate-500 font-medium">Ending soon</p>
+            <h3 className="font-bold text-[#013e37] text-sm">Probations</h3>
+            <p className="text-[11px] text-[#013e37]/65 font-medium">Ending soon</p>
           </div>
         </div>
-        <span className="text-xs font-bold text-[#4f39f6] bg-[#4f39f6]/10 px-2.5 py-1 rounded-full border border-[#4f39f6]/20">
+        <span className="text-xs font-bold text-[#013e37] bg-[#013e37]/10 px-2.5 py-1 rounded-full border border-[#013e37]/20">
           {probationEmployees.length}
         </span>
       </div>
@@ -38,18 +38,18 @@ export const EmployeeProbationsWidget: React.FC = () => {
           {probationEmployees.map((emp) => (
             <div
               key={emp.id}
-              className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100 transition-all hover:border-[#4f39f6]/30 hover:bg-[#4f39f6]/5 group"
+              className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100 transition-all hover:border-[#013e37]/30 hover:bg-[#013e37]/5 group"
             >
-              <div className="w-9 h-9 rounded-full bg-[#4f39f6] flex items-center justify-center text-white text-xs font-bold shrink-0">
+              <div className="w-9 h-9 rounded-full bg-[#013e37] text-[#ffefb3] flex items-center justify-center text-xs font-extrabold shrink-0 shadow-2xs">
                 {emp.name.charAt(0)}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-slate-900 truncate group-hover:text-[#4f39f6] transition-colors">{emp.name}</p>
+                <p className="text-sm font-bold text-slate-900 truncate group-hover:text-[#013e37] transition-colors">{emp.name}</p>
                 <p className="text-[11px] text-slate-500 font-medium">{emp.department}</p>
               </div>
               <div className="text-right shrink-0">
-                <div className="flex items-center gap-1 text-[11px] font-bold text-[#4f39f6]">
-                  <Clock className="w-3 h-3 text-[#4f39f6]" />
+                <div className="flex items-center gap-1 text-[11px] font-bold text-[#013e37]">
+                  <Clock className="w-3 h-3 text-[#013e37]" />
                   <span>{emp.daysLeft}d left</span>
                 </div>
                 <p className="text-[10px] text-slate-400 font-medium">{emp.endDate}</p>

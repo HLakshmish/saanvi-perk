@@ -19,17 +19,17 @@ export const PayrollCostWidget: React.FC = () => {
   ];
 
   return (
-    <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-sm flex flex-col justify-between overflow-hidden">
+    <div className="bg-white p-4 rounded-xl border border-[#013e37]/15 shadow-2xs flex flex-col justify-between overflow-hidden">
       <div>
         {/* Header */}
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-[#4f39f6]/10 flex items-center justify-center">
-              <IndianRupee className="w-3.5 h-3.5 text-[#4f39f6]" />
+            <div className="w-7 h-7 rounded-lg bg-[#013e37]/10 flex items-center justify-center">
+              <IndianRupee className="w-3.5 h-3.5 text-[#013e37]" />
             </div>
-            <h3 className="font-bold text-slate-800 text-xs sm:text-sm">Payroll Cost</h3>
+            <h3 className="font-bold text-[#013e37] text-xs sm:text-sm">Payroll Cost</h3>
           </div>
-          <div className="flex items-center gap-1 text-[10px] font-bold text-[#4f39f6] bg-[#4f39f6]/10 px-2 py-0.5 rounded-full">
+          <div className="flex items-center gap-1 text-[10px] font-bold text-[#013e37] bg-[#013e37]/10 px-2 py-0.5 rounded-full">
             <TrendingUp className="w-2.5 h-2.5" />
             <span>+8.2%</span>
           </div>
@@ -37,7 +37,7 @@ export const PayrollCostWidget: React.FC = () => {
 
         {/* Cost Summary */}
         <div className="flex items-baseline gap-2 mb-2 ml-9">
-          <span className="text-xl font-extrabold text-slate-900 leading-none">
+          <span className="text-xl font-extrabold text-[#013e37] leading-none">
             {activePoint !== null ? amounts[activePoint] : "₹23.7L"}
           </span>
           <span className="text-[10px] text-slate-400 font-medium">
@@ -62,8 +62,8 @@ export const PayrollCostWidget: React.FC = () => {
         <svg viewBox="0 0 300 65" className="w-full h-auto overflow-hidden">
           <defs>
             <linearGradient id="payrollSmoothGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#4f39f6" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#4f39f6" stopOpacity="0.0" />
+              <stop offset="0%" stopColor="#013e37" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#013e37" stopOpacity="0.0" />
             </linearGradient>
           </defs>
 
@@ -82,7 +82,7 @@ export const PayrollCostWidget: React.FC = () => {
           <path
             d="M 15,32 Q 42.5,44 70,38 T 125,14 T 180,36 T 235,26 T 285,20"
             fill="none"
-            stroke="#4f39f6"
+            stroke="#013e37"
             strokeWidth="2.5"
             strokeLinecap="round"
           />
@@ -96,8 +96,8 @@ export const PayrollCostWidget: React.FC = () => {
                 r={activePoint === pt.idx ? "4.5" : "3"}
                 className={`${
                   activePoint === pt.idx
-                    ? "fill-[#4f39f6] stroke-white stroke-2"
-                    : "fill-white stroke-[#4f39f6] stroke-2"
+                    ? "fill-[#013e37] stroke-white stroke-2"
+                    : "fill-white stroke-[#013e37] stroke-2"
                 } transition-all`}
               />
             </g>
@@ -111,7 +111,7 @@ export const PayrollCostWidget: React.FC = () => {
               key={m}
               onClick={() => setActivePoint(i)}
               className={`cursor-pointer transition-colors ${
-                activePoint === i ? "text-[#4f39f6] font-bold" : "hover:text-slate-600"
+                activePoint === i ? "text-[#013e37] font-extrabold" : "hover:text-slate-600"
               }`}
             >
               {m}
