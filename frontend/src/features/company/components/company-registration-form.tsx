@@ -32,15 +32,11 @@ export function CompanyRegistrationForm({ onSuccess, editCompany }: CompanyRegis
 
   const steps = editCompany
     ? [
-        { number: 1, title: "Identity", icon: Building2 },
-        { number: 2, title: "Workplace", icon: Clock },
-        { number: 3, title: "Tax & Legal", icon: FileCheck2 },
+        { number: 1, title: "Company Profile", icon: Building2 },
       ]
     : [
-        { number: 1, title: "Identity", icon: Building2 },
-        { number: 2, title: "Owner", icon: UserCheck },
-        { number: 3, title: "Workplace", icon: Clock },
-        { number: 4, title: "Tax & Legal", icon: FileCheck2 },
+        { number: 1, title: "Company Profile", icon: Building2 },
+        { number: 2, title: "Owner Account", icon: UserCheck },
       ];
 
   const maxSteps = steps.length;
@@ -52,25 +48,17 @@ export function CompanyRegistrationForm({ onSuccess, editCompany }: CompanyRegis
     companyPhone: "",
     website: "",
     
-    // Address & Tax
-    addressLine1: "",
-    city: "",
-    state: "",
-    country: "India",
-    pincode: "",
+    // Tax & Compliance
     gstNumber: "",
     panNumber: "",
     industryType: "Information Technology",
 
     // Workplace & Attendance Geo-Fencing
-    timezone: "Asia/Kolkata",
     currency: "INR",
     workingHoursPerDay: 8,
     workingDaysPerWeek: 5,
     officeStartTime: "09:00",
     officeEndTime: "18:00",
-    latitude: 12.9716,
-    longitude: 77.5946,
     allowedRadius: 100,
 
     // SuperAdmin Account (Used only when creating new company)
@@ -95,9 +83,6 @@ export function CompanyRegistrationForm({ onSuccess, editCompany }: CompanyRegis
         gstNumber: editCompany.gstNumber || "",
         panNumber: editCompany.panNumber || "",
         industryType: editCompany.industryType || "Information Technology",
-        city: editCompany.city || "",
-        state: editCompany.state || "",
-        pincode: editCompany.pincode || "",
         workingHoursPerDay: editCompany.workingHoursPerDay || 8,
         workingDaysPerWeek: editCompany.workingDaysPerWeek || 5,
         officeStartTime: editCompany.officeStartTime || "09:00",
@@ -384,6 +369,23 @@ export function CompanyRegistrationForm({ onSuccess, editCompany }: CompanyRegis
                   </select>
                 </div>
               </div>
+
+              {/* Tax & Compliance Identification */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
+                <Input
+                  label="GST Number"
+                  placeholder="29AAAAA0000A1Z5"
+                  value={formData.gstNumber || ""}
+                  onChange={(e) => handleChange("gstNumber", e.target.value.toUpperCase())}
+                />
+
+                <Input
+                  label="PAN Number"
+                  placeholder="AAAAA0000A"
+                  value={formData.panNumber || ""}
+                  onChange={(e) => handleChange("panNumber", e.target.value.toUpperCase())}
+                />
+              </div>
             </div>
           )}
 
@@ -429,135 +431,6 @@ export function CompanyRegistrationForm({ onSuccess, editCompany }: CompanyRegis
                   value={formData.superAdmin.password || ""}
                   onChange={(e) => handleSuperAdminChange("password", e.target.value)}
                   required
-                />
-              </div>
-            </div>
-          )}
-
-          {/* WORKPLACE RULES & GEO-FENCING (Step 2 when editing, Step 3 when creating new) */}
-          {((editCompany && currentStep === 2) || (!editCompany && currentStep === 3)) && (
-            <div className="space-y-4 animate-in fade-in duration-200">
-              <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
-                <Clock className="w-5 h-5 text-[#4f39f6]" />
-                <span>Step {editCompany ? 2 : 3}: Workplace Rules & Geo-Fencing</span>
-              </h3>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Input
-                  label="Working Hours Per Day"
-                  type="number"
-                  placeholder="8"
-                  value={formData.workingHoursPerDay || 8}
-                  onChange={(e) => handleChange("workingHoursPerDay", Number(e.target.value))}
-                />
-
-                <Input
-                  label="Working Days Per Week"
-                  type="number"
-                  placeholder="5"
-                  value={formData.workingDaysPerWeek || 5}
-                  onChange={(e) => handleChange("workingDaysPerWeek", Number(e.target.value))}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Input
-                  label="Office Start Time"
-                  type="time"
-                  value={formData.officeStartTime || "09:00"}
-                  onChange={(e) => handleChange("officeStartTime", e.target.value)}
-                />
-
-                <Input
-                  label="Office End Time"
-                  type="time"
-                  value={formData.officeEndTime || "18:00"}
-                  onChange={(e) => handleChange("officeEndTime", e.target.value)}
-                />
-              </div>
-
-              {/* Geo-fencing Attendance Coordinates */}
-              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
-                <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
-                  <MapPin className="w-4 h-4 text-rose-500" />
-                  <span>Geo-Fence Location Radius for Mobile Attendance</span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <Input
-                    label="Latitude"
-                    type="number"
-                    step="any"
-                    placeholder="12.9716"
-                    value={formData.latitude || 12.9716}
-                    onChange={(e) => handleChange("latitude", parseFloat(e.target.value))}
-                  />
-
-                  <Input
-                    label="Longitude"
-                    type="number"
-                    step="any"
-                    placeholder="77.5946"
-                    value={formData.longitude || 77.5946}
-                    onChange={(e) => handleChange("longitude", parseFloat(e.target.value))}
-                  />
-
-                  <Input
-                    label="Allowed Radius (meters)"
-                    type="number"
-                    placeholder="100"
-                    value={formData.allowedRadius || 100}
-                    onChange={(e) => handleChange("allowedRadius", Number(e.target.value))}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* TAX & COMPLIANCE (Step 3 when editing, Step 4 when creating new) */}
-          {((editCompany && currentStep === 3) || (!editCompany && currentStep === 4)) && (
-            <div className="space-y-4 animate-in fade-in duration-200">
-              <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
-                <FileCheck2 className="w-5 h-5 text-[#4f39f6]" />
-                <span>Step {editCompany ? 3 : 4}: Tax & Compliance</span>
-              </h3>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Input
-                  label="GST Number"
-                  placeholder="29AAAAA0000A1Z5"
-                  value={formData.gstNumber || ""}
-                  onChange={(e) => handleChange("gstNumber", e.target.value.toUpperCase())}
-                />
-
-                <Input
-                  label="PAN Number"
-                  placeholder="AAAAA0000A"
-                  value={formData.panNumber || ""}
-                  onChange={(e) => handleChange("panNumber", e.target.value.toUpperCase())}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Input
-                  label="City"
-                  placeholder="Bengaluru"
-                  value={formData.city || ""}
-                  onChange={(e) => handleChange("city", e.target.value)}
-                />
-
-                <Input
-                  label="State"
-                  placeholder="Karnataka"
-                  value={formData.state || ""}
-                  onChange={(e) => handleChange("state", e.target.value)}
-                />
-
-                <Input
-                  label="Pincode"
-                  placeholder="560001"
-                  value={formData.pincode || ""}
-                  onChange={(e) => handleChange("pincode", e.target.value)}
                 />
               </div>
             </div>

@@ -51,13 +51,27 @@ export async function createCompany(
   const token = getAuthToken();
 
   try {
+    // Strip fields not in CompanyDetails Prisma model before sending
+    const {
+      addressLine1,
+      addressLine2,
+      city,
+      state,
+      country,
+      pincode,
+      timezone,
+      latitude,
+      longitude,
+      ...cleanData
+    } = data;
+
     const res = await fetch(`${API_BASE_URL}/api/companies`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify(cleanData),
     });
 
     const result = await res.json();
@@ -207,13 +221,27 @@ export async function updateCompany(
   const token = getAuthToken();
 
   try {
+    // Strip fields not in CompanyDetails Prisma model before sending
+    const {
+      addressLine1,
+      addressLine2,
+      city,
+      state,
+      country,
+      pincode,
+      timezone,
+      latitude,
+      longitude,
+      ...cleanData
+    } = data;
+
     const res = await fetch(`${API_BASE_URL}/api/companies/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify(cleanData),
     });
 
     const result = await res.json();

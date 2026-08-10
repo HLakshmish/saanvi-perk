@@ -3,8 +3,8 @@ import { Metadata } from "next";
 import { CompanyRegistrationForm } from "@/features/company/components/company-registration-form";
 
 export const metadata: Metadata = {
-  title: "Company Setup & Onboarding | Saanvi Perk",
-  description: "Register a new company and configure workplace settings in Saanvi Perk HRMS.",
+  title: "Company Setup & Onboarding | Nexus",
+  description: "Register a new company and configure workplace settings in Nexus HRMS.",
 };
 
 export default function CompanySetupPage() {

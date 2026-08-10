@@ -164,7 +164,7 @@ export default function OwnerDashboardPage() {
                     Company Management
                   </h1>
                   <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-                    Register and manage multi-tenant companies on Saanvi Perk.
+                    Register and manage multi-tenant companies on Saanvi Nexus.
                   </p>
                 </div>
               </div>
@@ -385,7 +385,7 @@ export default function OwnerDashboardPage() {
                   <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-2">
                     <div className="font-bold text-slate-900 flex items-center gap-2 mb-1">
                       <Mail className="w-4 h-4 brand-purple-text" />
-                      <span>Contact Information</span>
+                      <span>Contact & Profile Information</span>
                     </div>
                     <div className="text-slate-600">Email: <span className="text-slate-900 font-semibold">{selectedCompany.companyEmail}</span></div>
                     {selectedCompany.companyPhone && (
@@ -396,32 +396,8 @@ export default function OwnerDashboardPage() {
                     {selectedCompany.website && (
                       <div className="text-slate-600">Website: <span className="brand-purple-text font-semibold">{selectedCompany.website}</span></div>
                     )}
-                  </div>
-
-                  {/* Workplace & Hours */}
-                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-2">
-                    <div className="font-bold text-slate-900 flex items-center gap-2 mb-1">
-                      <Clock className="w-4 h-4 brand-purple-text" />
-                      <span>Workplace Schedule & Geo-Fence</span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3 mb-2">
-                      <div className="bg-white rounded-lg p-2.5 text-center border border-slate-200 shadow-2xs">
-                        <span className="text-lg font-extrabold brand-purple-text block">{selectedCompany.workingHoursPerDay || 8}</span>
-                        <span className="text-[10px] text-slate-400 font-bold uppercase">Hrs / Day</span>
-                      </div>
-                      <div className="bg-white rounded-lg p-2.5 text-center border border-slate-200 shadow-2xs">
-                        <span className="text-lg font-extrabold brand-purple-text block">{selectedCompany.workingDaysPerWeek || 5}</span>
-                        <span className="text-[10px] text-slate-400 font-bold uppercase">Days / Week</span>
-                      </div>
-                    </div>
-                    {selectedCompany.officeStartTime && (
-                      <div className="text-slate-600">Office Hours: <span className="text-slate-900 font-semibold">{selectedCompany.officeStartTime} – {selectedCompany.officeEndTime}</span></div>
-                    )}
-                    {selectedCompany.allowedRadius && (
-                      <div className="flex items-center gap-1.5 text-slate-600 mt-1">
-                        <MapPin className="w-4 h-4 text-rose-500" />
-                        <span>Geo-Fence Radius: <strong className="text-slate-900">{selectedCompany.allowedRadius} meters</strong></span>
-                      </div>
+                    {selectedCompany.industryType && (
+                      <div className="text-slate-600">Industry: <span className="text-slate-900 font-semibold">{selectedCompany.industryType}</span></div>
                     )}
                   </div>
 
@@ -431,8 +407,8 @@ export default function OwnerDashboardPage() {
                       <FileCheck2 className="w-4 h-4 brand-purple-text" />
                       <span>Tax & Compliance</span>
                     </div>
-                    <div className="text-slate-600">GST: <span className="text-slate-900 font-semibold font-mono">{selectedCompany.gstNumber || "N/A"}</span></div>
-                    <div className="text-slate-600">PAN: <span className="text-slate-900 font-semibold font-mono">{selectedCompany.panNumber || "N/A"}</span></div>
+                    <div className="text-slate-600">GST Number: <span className="text-slate-900 font-semibold font-mono">{selectedCompany.gstNumber || "N/A"}</span></div>
+                    <div className="text-slate-600">PAN Number: <span className="text-slate-900 font-semibold font-mono">{selectedCompany.panNumber || "N/A"}</span></div>
                   </div>
 
                   {/* Superadmin Info */}
