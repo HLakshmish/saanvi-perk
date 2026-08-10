@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { X, FileText, Loader2, Download, Trash2, UploadCloud, ShieldAlert, Users, MapPin, Briefcase, User as UserIcon } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   getUserById,
@@ -47,6 +48,8 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
   const [insuranceDetail, setInsuranceDetail] = useState<any>(null);
   const [documents, setDocuments] = useState<any[]>([]);
   const [designations, setDesignations] = useState<any[]>([]);
+  const [docToDelete, setDocToDelete] = useState<{ id: number; type: string } | null>(null);
+  const [isDeleteDocConfirmOpen, setIsDeleteDocConfirmOpen] = useState(false);
 
   // Document Upload Form State
   const [uploadDocType, setUploadDocType] = useState("AADHAAR");
@@ -159,21 +162,29 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
     }
   };
 
-  const handleDeleteDoc = async (docId: number, typeName: string) => {
-    if (!confirm(`Are you sure you want to delete the ${typeName} document?`)) return;
+  const handleDeleteDoc = (docId: number, typeName: string) => {
+    setDocToDelete({ id: docId, type: typeName });
+    setIsDeleteDocConfirmOpen(true);
+  };
+
+  const confirmDeleteDoc = async () => {
+    if (!docToDelete) return;
+    const { id, type } = docToDelete;
+    setIsDeleteDocConfirmOpen(false);
+    setDocToDelete(null);
 
     try {
-      const res = await deleteEmployeeDocument(docId);
+      const res = await deleteEmployeeDocument(id);
       if (res.success) {
-        alert("Document deleted successfully.");
+        toast.success("Document deleted successfully.");
         // Reload documents list
         const docRes = await getEmployeeDocumentsByUserId(employeeId);
         if (docRes.success) setDocuments(docRes.data || []);
       } else {
-        alert(res.error || "Failed to delete document.");
+        toast.error(res.error || "Failed to delete document.");
       }
     } catch (err) {
-      alert("Failed to delete document.");
+      toast.error("Failed to delete document.");
     }
   };
 
@@ -630,6 +641,37 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
           </Button>
         </div>
       </div>
+
+      {/* Delete Document Confirmation Modal */}
+      {isDeleteDocConfirmOpen && docToDelete && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fade-in">
+          <div className="bg-white w-full max-w-md rounded-2xl border border-slate-200 p-6 shadow-xl space-y-4">
+            <div className="space-y-2">
+              <h3 className="text-lg font-bold text-slate-900">Delete Document</h3>
+              <p className="text-sm text-slate-500 font-medium">
+                Are you sure you want to delete the <span className="font-semibold text-slate-800">{docToDelete.type}</span> document? This action cannot be undone.
+              </p>
+            </div>
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                onClick={() => {
+                  setIsDeleteDocConfirmOpen(false);
+                  setDocToDelete(null);
+                }}
+                className="px-4.5 py-2 text-xs font-bold text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteDoc}
+                className="px-4.5 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-755 rounded-xl shadow-xs transition-all"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

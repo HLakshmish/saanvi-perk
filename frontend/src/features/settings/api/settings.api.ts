@@ -123,7 +123,7 @@ export const fetchPermissions = async () => {
 export const fetchRoles = async () => {
   const token = getAuthToken();
   const companyId = getCompanyIdCookie() || 4;
-  const url = `${API_BASE_URL}/api/roles/?companyId=${companyId}`;
+  const url = `${API_BASE_URL}/api/roles?companyId=${companyId}`;
 
   try {
     const res = await fetch(url, {
@@ -174,7 +174,7 @@ export const createRoleApi = async (roleData: Record<string, any>) => {
   };
 
   try {
-    const res = await fetch(`${API_BASE_URL}/api/roles/`, {
+    const res = await fetch(`${API_BASE_URL}/api/roles`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
