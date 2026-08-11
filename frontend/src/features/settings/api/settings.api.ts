@@ -202,7 +202,7 @@ export const updateRoleApi = async (roleId: string | number, roleData: Record<st
   };
 
   try {
-    const res = await fetch(`${API_BASE_URL}/api/roles/${roleId}`, {
+    const res = await fetch(`${API_BASE_URL}/api/roles/${roleId}?companyId=${companyId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -222,11 +222,15 @@ export const updateRoleApi = async (roleId: string | number, roleData: Record<st
 
 export const deleteRoleApi = async (roleId: string | number) => {
   const token = getAuthToken();
+  const companyId = getCompanyIdCookie();
+  const url = companyId
+    ? `${API_BASE_URL}/api/roles/${roleId}?companyId=${companyId}`
+    : `${API_BASE_URL}/api/roles/${roleId}`;
+
   try {
-    const res = await fetch(`${API_BASE_URL}/api/roles/${roleId}`, {
+    const res = await fetch(url, {
       method: "DELETE",
       headers: {
-        "Content-Type": "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
     });

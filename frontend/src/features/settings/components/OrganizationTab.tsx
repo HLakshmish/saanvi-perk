@@ -11,6 +11,7 @@ import {
 import { CalendarDetailView } from "./CalendarDetailView";
 import { DesignationTab } from "./DesignationTab";
 import { LocationTab } from "./LocationTab";
+import { OrganizationDetailView } from "./OrganizationDetailView";
 
 interface OrganizationTabProps {
   onSelectDepartment?: () => void;
@@ -19,7 +20,7 @@ interface OrganizationTabProps {
 export const OrganizationTab: React.FC<OrganizationTabProps> = ({
   onSelectDepartment,
 }) => {
-  const [viewMode, setViewMode] = useState<"cards" | "calendar-detail" | "designation-detail" | "location-detail">("cards");
+  const [viewMode, setViewMode] = useState<"cards" | "calendar-detail" | "designation-detail" | "location-detail" | "organization-detail">("cards");
 
   const organizationCards = [
     {
@@ -55,7 +56,9 @@ export const OrganizationTab: React.FC<OrganizationTabProps> = ({
   ];
 
   const handleCardClick = (id: string) => {
-    if (id === "calendar") {
+    if (id === "org") {
+      setViewMode("organization-detail");
+    } else if (id === "calendar") {
       setViewMode("calendar-detail");
     } else if (id === "designation") {
       setViewMode("designation-detail");
@@ -65,6 +68,14 @@ export const OrganizationTab: React.FC<OrganizationTabProps> = ({
       onSelectDepartment?.();
     }
   };
+
+  if (viewMode === "organization-detail") {
+    return (
+      <OrganizationDetailView
+        onBack={() => setViewMode("cards")}
+      />
+    );
+  }
 
   if (viewMode === "calendar-detail") {
     return (
