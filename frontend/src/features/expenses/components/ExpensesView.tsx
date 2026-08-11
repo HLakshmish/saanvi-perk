@@ -291,8 +291,8 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
         <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full overflow-visible">
           <defs>
             <linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#818cf8" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#c7d2fe" stopOpacity="0.0" />
+              <stop offset="0%" stopColor="#013e37" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#013e37" stopOpacity="0.0" />
             </linearGradient>
           </defs>
 
@@ -305,13 +305,13 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
           {areaData && <path d={areaData} fill="url(#trendGradient)" />}
 
           {/* Path Stroke */}
-          {pathData && <path d={pathData} fill="none" stroke="#6366f1" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />}
+          {pathData && <path d={pathData} fill="none" stroke="#013e37" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />}
 
           {/* Point Circles */}
           {points.map((p, idx) => (
             <g key={idx} className="group/dot cursor-pointer">
-              <circle cx={p.x} cy={p.y} r="3" fill="#6366f1" stroke="#ffffff" strokeWidth="1.5" />
-              <circle cx={p.x} cy={p.y} r="8" fill="#6366f1" fillOpacity="0" className="hover:fill-opacity-10 transition-all" />
+              <circle cx={p.x} cy={p.y} r="3" fill="#013e37" stroke="#ffffff" strokeWidth="1.5" />
+              <circle cx={p.x} cy={p.y} r="8" fill="#013e37" fillOpacity="0" className="hover:fill-opacity-10 transition-all" />
               <title>{`${p.month}: ₹${p.amount.toLocaleString()}`}</title>
             </g>
           ))}
@@ -330,15 +330,15 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+      <div className="flex items-center justify-between border-b border-[#013e37]/15 pb-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Expenses</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-[#013e37] tracking-tight">Expenses</h1>
           <p className="text-xs text-slate-500 font-medium">Reimbursement management dashboard</p>
         </div>
 
         <button
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 text-white font-bold text-xs rounded-xl shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all hover:-translate-y-0.5 cursor-pointer"
+          className="flex items-center gap-2 px-5 py-2.5 bg-[#013e37] hover:bg-[#012d28] text-[#ffefb3] font-bold text-xs rounded-xl shadow-2xs hover:shadow-xs transition-all hover:-translate-y-0.5 cursor-pointer border border-[#013e37]"
         >
           <Plus className="w-4 h-4" />
           <span>New Claim</span>
@@ -354,7 +354,7 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
             <select
               value={cardPeriod}
               onChange={(e) => setCardPeriod(e.target.value)}
-              className="text-[11px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-lg px-2 py-1 focus:outline-none cursor-pointer"
+              className="text-[11px] font-bold text-[#013e37] bg-[#013e37]/10 border border-[#013e37]/20 rounded-lg px-2 py-1 focus:outline-none cursor-pointer"
             >
               <option value="All">All Time</option>
               <option value="This Month">This Month</option>
@@ -409,7 +409,7 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
         <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between min-h-[170px]">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-xs font-extrabold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-              <TrendingUp className="w-3.5 h-3.5 text-indigo-500" />
+              <TrendingUp className="w-3.5 h-3.5 text-[#013e37]" />
               <span>Expense Trend</span>
             </h3>
             
@@ -418,7 +418,7 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
               <button 
                 type="button"
                 onClick={() => setTrendOffset((prev) => prev - 1)}
-                className="hover:text-indigo-600 transition-colors p-0.5 cursor-pointer"
+                className="hover:text-[#013e37] transition-colors p-0.5 cursor-pointer"
                 title="Previous 6 Months"
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
@@ -429,7 +429,7 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
               <button 
                 type="button"
                 onClick={() => setTrendOffset((prev) => Math.min(0, prev + 1))}
-                className="hover:text-indigo-600 transition-colors p-0.5 cursor-pointer"
+                className="hover:text-[#013e37] transition-colors p-0.5 cursor-pointer"
                 title="Next 6 Months"
               >
                 <ChevronRight className="w-3.5 h-3.5" />
@@ -456,17 +456,17 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
                 placeholder="Search by ID, merchant or description..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-800 text-sm placeholder:text-slate-400 shadow-2xs"
+                className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#013e37]/20 focus:border-[#013e37] text-slate-800 text-sm placeholder:text-slate-400 shadow-2xs transition-all"
               />
             </div>
 
             {/* Period Dropdown */}
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 bg-slate-50 border border-[#013e37]/15 rounded-xl px-3.5 py-2 hover:border-[#013e37]/40 transition-colors">
               <span className="text-slate-400">Period:</span>
               <select
                 value={filterPeriod}
                 onChange={(e) => setFilterPeriod(e.target.value)}
-                className="bg-transparent border-none text-slate-700 outline-none font-bold cursor-pointer"
+                className="bg-transparent border-none text-[#013e37] outline-none font-bold cursor-pointer"
               >
                 <option value="All">All</option>
                 <option value="This Month">This Month</option>
@@ -475,12 +475,12 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
             </div>
 
             {/* Status Dropdown */}
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 bg-slate-50 border border-[#013e37]/15 rounded-xl px-3.5 py-2 hover:border-[#013e37]/40 transition-colors">
               <span className="text-slate-400">Status:</span>
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="bg-transparent border-none text-slate-700 outline-none font-bold cursor-pointer"
+                className="bg-transparent border-none text-[#013e37] outline-none font-bold cursor-pointer"
               >
                 <option value="All">All</option>
                 <option value="Pending">Pending</option>
@@ -490,12 +490,12 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
             </div>
 
             {/* Category Dropdown */}
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 bg-slate-50 border border-[#013e37]/15 rounded-xl px-3.5 py-2 hover:border-[#013e37]/40 transition-colors">
               <span className="text-slate-400">Category:</span>
               <select
                 value={filterCategory}
                 onChange={(e) => setFilterCategory(e.target.value)}
-                className="bg-transparent border-none text-slate-700 outline-none font-bold cursor-pointer"
+                className="bg-transparent border-none text-[#013e37] outline-none font-bold cursor-pointer"
               >
                 <option value="All">All</option>
                 <option value="Travel">Travel</option>
@@ -590,7 +590,7 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
                         </span>
                       </td>
                       <td className="py-4 px-4 text-right">
-                        <button className="p-1 rounded-lg text-slate-400 group-hover:text-indigo-600 group-hover:bg-indigo-50 transition-all">
+                        <button className="p-1 rounded-lg text-slate-400 group-hover:text-[#013e37] group-hover:bg-[#013e37]/10 transition-all">
                           <Eye className="w-4 h-4" />
                         </button>
                       </td>
@@ -608,9 +608,9 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/80 w-full max-w-[500px] overflow-hidden flex flex-col relative animate-in fade-in zoom-in duration-200">
             {/* Modal Header */}
-            <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+            <div className="p-6 border-b border-[#013e37]/15 bg-slate-50/50 flex justify-between items-center">
               <div>
-                <h3 className="text-base font-black text-slate-900">Expense details ({selectedExpense.id})</h3>
+                <h3 className="text-base font-bold text-[#013e37]">Expense details ({selectedExpense.id})</h3>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Submitted by {selectedExpense.employeeName}</p>
               </div>
               <button
@@ -618,7 +618,7 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
                   setSelectedExpense(null);
                   setActionComments("");
                 }}
-                className="p-1.5 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-all cursor-pointer"
+                className="p-1.5 rounded-full text-slate-400 hover:bg-slate-100 hover:text-[#013e37] transition-all cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -641,7 +641,7 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
                 </div>
                 <div>
                   <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Amount</span>
-                  <span className="text-base font-black text-slate-900">₹{selectedExpense.amount.toLocaleString()}</span>
+                  <span className="text-base font-bold text-[#013e37]">₹{selectedExpense.amount.toLocaleString()}</span>
                 </div>
               </div>
 
@@ -653,12 +653,12 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
               </div>
 
               {selectedExpense.receiptUrl && (
-                <div className="flex items-center gap-2 p-3 bg-indigo-50/50 border border-indigo-100 rounded-xl">
-                  <FileText className="w-4 h-4 text-indigo-500" />
-                  <span className="text-xs font-bold text-indigo-700 flex-1 truncate">{selectedExpense.receiptUrl}</span>
+                <div className="flex items-center gap-2 p-3 bg-[#013e37]/5 border border-[#013e37]/10 rounded-xl">
+                  <FileText className="w-4 h-4 text-[#013e37]" />
+                  <span className="text-xs font-bold text-[#013e37] flex-1 truncate">{selectedExpense.receiptUrl}</span>
                   <button
                     onClick={() => handleDownloadBill(selectedExpense)}
-                    className="text-[10px] font-bold text-indigo-600 bg-white border border-indigo-200 rounded-md px-2 py-1 hover:bg-indigo-50 cursor-pointer"
+                    className="text-[10px] font-bold text-[#013e37] bg-white border border-[#013e37]/20 rounded-md px-2 py-1 hover:bg-[#013e37]/10 transition-all cursor-pointer"
                   >
                     View Bill
                   </button>
@@ -694,7 +694,7 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
                 /* Admin approval rules input fields */
                 !isEmployee && (
                   <div className="space-y-3 pt-2">
-                    <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider block">
+                    <label className="text-[10px] font-extrabold text-[#013e37] uppercase tracking-wider block">
                       Approver / Review Comments *
                     </label>
                     <textarea
@@ -702,7 +702,7 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
                       value={actionComments}
                       onChange={(e) => setActionComments(e.target.value)}
                       rows={3}
-                      className="w-full text-xs text-slate-800 border border-slate-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 placeholder:text-slate-400"
+                      className="w-full text-xs text-slate-800 border border-slate-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-[#013e37]/20 focus:border-[#013e37] placeholder:text-slate-400"
                     />
 
                     <div className="grid grid-cols-2 gap-3 pt-2">
@@ -737,9 +737,9 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/80 w-full max-w-[500px] overflow-hidden flex flex-col relative animate-in fade-in zoom-in duration-200">
             {/* Header */}
-            <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+            <div className="p-6 border-b border-[#013e37]/15 bg-slate-50/50 flex justify-between items-center">
               <div>
-                <h3 className="text-base font-black text-slate-900 font-sans">Submit Expense Claim</h3>
+                <h3 className="text-base font-bold text-[#013e37] font-sans">Submit Expense Claim</h3>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Enter reimbursement details</p>
               </div>
               <button
@@ -770,22 +770,22 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5 col-span-2 sm:col-span-1">
-                  <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Amount (₹) *</label>
+                  <label className="text-[10px] font-extrabold text-[#013e37] uppercase tracking-wider">Amount (₹) *</label>
                   <input
                     type="number"
                     placeholder="Enter claim amount"
                     value={formData.amount}
                     onChange={(e) => setFormData((p) => ({ ...p, amount: e.target.value }))}
-                    className="w-full text-xs font-bold text-slate-800 border border-slate-300 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-2xs placeholder:text-slate-400"
+                    className="w-full text-xs font-bold text-slate-800 border border-slate-300 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#013e37]/20 focus:border-[#013e37] shadow-2xs placeholder:text-slate-400 transition-all"
                   />
                 </div>
 
                 <div className="flex flex-col gap-1.5 col-span-2 sm:col-span-1">
-                  <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Category *</label>
+                  <label className="text-[10px] font-extrabold text-[#013e37] uppercase tracking-wider">Category *</label>
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData((p) => ({ ...p, category: e.target.value }))}
-                    className="w-full text-xs font-bold text-slate-800 border border-slate-300 rounded-xl px-3.5 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-2xs"
+                    className="w-full text-xs font-bold text-slate-800 border border-slate-300 rounded-xl px-3.5 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-[#013e37]/20 focus:border-[#013e37] shadow-2xs transition-all"
                   >
                     <option value="Travel">Travel</option>
                     <option value="Food & Meals">Food & Meals</option>
@@ -796,40 +796,40 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
                 </div>
 
                 <div className="flex flex-col gap-1.5 col-span-2 sm:col-span-1">
-                  <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Merchant / Vendor *</label>
+                  <label className="text-[10px] font-extrabold text-[#013e37] uppercase tracking-wider">Merchant / Vendor *</label>
                   <input
                     type="text"
                     placeholder="e.g. Uber, Amazon"
                     value={formData.merchant}
                     onChange={(e) => setFormData((p) => ({ ...p, merchant: e.target.value }))}
-                    className="w-full text-xs font-bold text-slate-800 border border-slate-300 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-2xs placeholder:text-slate-400"
+                    className="w-full text-xs font-bold text-slate-800 border border-slate-300 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#013e37]/20 focus:border-[#013e37] shadow-2xs placeholder:text-slate-400 transition-all"
                   />
                 </div>
 
                 <div className="flex flex-col gap-1.5 col-span-2 sm:col-span-1">
-                  <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Expense Date *</label>
+                  <label className="text-[10px] font-extrabold text-[#013e37] uppercase tracking-wider">Expense Date *</label>
                   <input
                     type="date"
                     value={formData.submittedDate}
                     onChange={(e) => setFormData((p) => ({ ...p, submittedDate: e.target.value }))}
-                    className="w-full text-xs font-bold text-slate-800 border border-slate-300 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-2xs"
+                    className="w-full text-xs font-bold text-slate-800 border border-slate-300 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#013e37]/20 focus:border-[#013e37] shadow-2xs transition-all"
                   />
                 </div>
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Description / Business Purpose *</label>
+                <label className="text-[10px] font-extrabold text-[#013e37] uppercase tracking-wider">Description / Business Purpose *</label>
                 <textarea
                   placeholder="Explain why this expense was incurred..."
                   value={formData.description}
                   onChange={(e) => setFormData((p) => ({ ...p, description: e.target.value }))}
                   rows={3}
-                  className="w-full text-xs text-slate-800 border border-slate-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-2xs placeholder:text-slate-400"
+                  className="w-full text-xs text-slate-800 border border-slate-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-[#013e37]/20 focus:border-[#013e37] shadow-2xs placeholder:text-slate-400 transition-all"
                 />
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Receipt Bill / Attachment (Optional)</label>
+                <label className="text-[10px] font-extrabold text-[#013e37] uppercase tracking-wider">Receipt Bill / Attachment (Optional)</label>
                 <div className="relative border-2 border-dashed border-slate-300 rounded-2xl p-4 text-center hover:bg-slate-50/50 transition-colors">
                   <input
                     type="file"
@@ -846,7 +846,7 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
                   />
                   <label htmlFor="receiptUpload" className="cursor-pointer block">
                     <UploadCloud className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                    <span className="text-xs font-bold text-indigo-600 hover:underline">Click to upload bill receipt</span>
+                    <span className="text-xs font-bold text-[#013e37] hover:underline">Click to upload bill receipt</span>
                     <p className="text-[10px] text-slate-400 mt-1">PDF, JPG, PNG (Max 5MB)</p>
                   </label>
                   {formData.receiptFileName && (
@@ -869,7 +869,7 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all hover:-translate-y-0.5 cursor-pointer disabled:opacity-50"
+                  className="px-5 py-2.5 bg-[#013e37] hover:bg-[#012d28] text-[#ffefb3] font-bold text-xs rounded-xl shadow-2xs hover:shadow-xs transition-all hover:-translate-y-0.5 cursor-pointer disabled:opacity-50"
                 >
                   {isSubmitting ? "Submitting..." : "Submit Claim"}
                 </button>
