@@ -160,11 +160,11 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
 
           let cellClass = "py-1 select-none cursor-pointer hover:bg-slate-100 rounded-md transition-colors";
           if (isStart) {
-            cellClass = "flex justify-center items-center bg-indigo-600 text-white font-bold rounded-l-xl py-1 select-none cursor-pointer";
+            cellClass = "flex justify-center items-center bg-[#013e37] text-[#ffefb3] font-bold rounded-l-xl py-1 select-none cursor-pointer shadow-2xs";
           } else if (isEnd) {
-            cellClass = "flex justify-center items-center bg-indigo-600 text-white font-bold rounded-r-xl py-1 select-none cursor-pointer";
+            cellClass = "flex justify-center items-center bg-[#013e37] text-[#ffefb3] font-bold rounded-r-xl py-1 select-none cursor-pointer shadow-2xs";
           } else if (inRange) {
-            cellClass = "py-1 bg-indigo-50 text-indigo-700 font-bold border-y border-indigo-100/30 select-none cursor-pointer";
+            cellClass = "py-1 bg-[#013e37]/15 text-[#013e37] font-bold border-y border-[#013e37]/20 select-none cursor-pointer";
           }
 
           return (
@@ -203,7 +203,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
                 value={startInputVal}
                 onChange={(e) => handleStartInputChange(e.target.value)}
                 placeholder="DD-MM-YYYY"
-                className="w-full text-xs font-bold text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 pl-3.5 pr-8 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-2xs"
+                className="w-full text-xs font-bold text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 pl-3.5 pr-8 focus:outline-none focus:ring-2 focus:ring-[#013e37]/20 focus:border-[#013e37] shadow-2xs"
               />
               <CalendarIcon className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
             </div>
@@ -217,7 +217,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
                 value={endInputVal}
                 onChange={(e) => handleEndInputChange(e.target.value)}
                 placeholder="DD-MM-YYYY"
-                className="w-full text-xs font-bold text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 pl-3.5 pr-8 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-2xs"
+                className="w-full text-xs font-bold text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 pl-3.5 pr-8 focus:outline-none focus:ring-2 focus:ring-[#013e37]/20 focus:border-[#013e37] shadow-2xs"
               />
               <CalendarIcon className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
             </div>
@@ -231,11 +231,11 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
             <div className="flex items-center justify-between mb-4">
               <button
                 onClick={handlePrevMonth}
-                className="p-1 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+                className="p-1 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-[#013e37] transition-colors cursor-pointer"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              <span className="text-xs font-bold text-slate-900">
+              <span className="text-xs font-bold text-[#013e37]">
                 {getMonthName(leftCalendarMonth)}
               </span>
               <div className="w-6" /> {/* Placeholder spacing */}
@@ -258,12 +258,12 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
           <div className="flex-1">
             <div className="flex items-center justify-between mb-4">
               <div className="w-6" /> {/* Placeholder spacing */}
-              <span className="text-xs font-bold text-slate-900">
+              <span className="text-xs font-bold text-[#013e37]">
                 {getMonthName(rightCalendarMonth)}
               </span>
               <button
                 onClick={handleNextMonth}
-                className="p-1 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+                className="p-1 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-[#013e37] transition-colors cursor-pointer"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -293,7 +293,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
           </button>
           <button
             onClick={handleApplyClick}
-            className="px-6 py-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 text-white font-bold text-sm rounded-xl shadow-md shadow-indigo-500/20 transition-all hover:-translate-y-0.5 cursor-pointer"
+            className="px-6 py-2 bg-[#013e37] hover:bg-[#012d28] text-[#ffefb3] font-bold text-sm rounded-xl shadow-2xs transition-all hover:shadow-xs cursor-pointer"
           >
             Apply
           </button>

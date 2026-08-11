@@ -69,7 +69,7 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({ employees, onView,
                 </td>
 
                 {/* Email */}
-                <td className="py-3.5 px-4 text-slate-500 hover:text-indigo-600 transition-colors font-medium select-all">
+                <td className="py-3.5 px-4 text-slate-500 hover:text-[#013e37] transition-colors font-medium select-all">
                   <a href={`mailto:${employee.email}`}>{employee.email}</a>
                 </td>
 
@@ -115,7 +115,7 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({ employees, onView,
                         e.stopPropagation();
                         onView(employee);
                       }}
-                      className="p-1 hover:bg-slate-100 text-indigo-600 rounded-lg transition-colors cursor-pointer"
+                      className="p-1 hover:bg-[#013e37]/10 text-[#013e37] rounded-lg transition-colors cursor-pointer"
                       title="View Details"
                     >
                       <Eye className="w-4 h-4" />
@@ -125,7 +125,7 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({ employees, onView,
                         e.stopPropagation();
                         onEdit(employee);
                       }}
-                      className="p-1 hover:bg-slate-100 text-emerald-600 rounded-lg transition-colors cursor-pointer"
+                      className="p-1 hover:bg-emerald-50 text-emerald-700 rounded-lg transition-colors cursor-pointer"
                       title="Edit Profile"
                     >
                       <Pencil className="w-4 h-4" />

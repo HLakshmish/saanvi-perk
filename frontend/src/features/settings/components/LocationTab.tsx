@@ -235,7 +235,7 @@ export const LocationTab: React.FC<LocationTabProps> = ({ onBack }) => {
                               setIsFormOpen(true);
                             }}
                             title="Edit"
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-slate-100 transition-colors cursor-pointer"
+                            className="p-1.5 rounded-lg text-slate-500 hover:text-[#013e37] hover:bg-slate-100 transition-colors cursor-pointer"
                           >
                             <Pencil className="w-4 h-4" />
                           </button>

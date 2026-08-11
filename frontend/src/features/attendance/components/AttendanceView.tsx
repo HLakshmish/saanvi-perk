@@ -13,10 +13,10 @@ export const AttendanceView: React.FC = () => {
         {/* Card 1: Log Attendance */}
         <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-2xs flex flex-col justify-between min-h-[220px]">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-gray-900">Log Attendance</h2>
+            <h2 className="text-base font-bold text-[#013e37]">Log Attendance</h2>
             <a
               href="#request-time-off"
-              className="text-xs font-semibold text-blue-600 hover:underline"
+              className="text-xs font-bold text-[#013e37] hover:underline"
             >
               Request Time Off
             </a>
@@ -31,7 +31,7 @@ export const AttendanceView: React.FC = () => {
 
         {/* Card 2: Assigned Shift */}
         <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-2xs flex flex-col justify-between min-h-[220px]">
-          <h2 className="text-base font-bold text-gray-900 mb-3">Assigned Shift</h2>
+          <h2 className="text-base font-bold text-[#013e37] mb-3">Assigned Shift</h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-auto">
             {/* Today's Shift */}
@@ -68,10 +68,10 @@ export const AttendanceView: React.FC = () => {
         {/* Card 3: Hours Summary Bar Chart */}
         <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-2xs flex flex-col justify-between">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-bold text-gray-900">Hours Summary</h2>
+            <h2 className="text-base font-bold text-[#013e37]">Hours Summary</h2>
             <div className="flex items-center gap-4 text-xs font-medium text-gray-600">
-              <span className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-blue-600 inline-block" />
+              <span className="flex items-center gap-1.5 font-semibold text-[#013e37]">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#013e37] inline-block" />
                 Me
               </span>
               <span className="flex items-center gap-1.5">
@@ -97,7 +97,7 @@ export const AttendanceView: React.FC = () => {
               <div className="ml-8 flex-1 grid grid-cols-6 items-end h-full gap-2 px-2">
                 {/* Worked Column */}
                 <div className="flex items-end justify-center gap-1.5 h-full">
-                  <div className="w-3.5 sm:w-4 bg-blue-600 rounded-t-xs h-[95%]" title="Worked (Me): 9 hrs" />
+                  <div className="w-3.5 sm:w-4 bg-[#013e37] rounded-t-xs h-[95%]" title="Worked (Me): 9 hrs" />
                   <div className="w-3.5 sm:w-4 bg-gray-500 rounded-t-xs h-[55%]" title="Worked (My Team): 5 hrs" />
                 </div>
                 {/* Late In Column */}
@@ -138,7 +138,7 @@ export const AttendanceView: React.FC = () => {
         {/* Card 4: Calendar */}
         <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-2xs flex flex-col justify-between">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-bold text-gray-900">Calender</h2>
+            <h2 className="text-base font-bold text-[#013e37]">Calendar</h2>
             <button className="flex items-center gap-1 text-xs border border-gray-200 rounded px-2 py-1 text-gray-600 bg-gray-50 hover:bg-gray-100">
               <span>{selectedMonth}</span>
               <ChevronDown className="w-3 h-3 text-gray-500" />

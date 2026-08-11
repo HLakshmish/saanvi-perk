@@ -153,12 +153,12 @@ export const RoleForm: React.FC<RoleFormProps> = ({
       <div className="flex items-center gap-2 border-b border-slate-200/80 pb-4">
         <button
           onClick={onBackToRolesList}
-          className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+          className="p-1 rounded-lg text-slate-400 hover:text-[#013e37] hover:bg-slate-100 transition-colors cursor-pointer"
           title="Back"
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
-        <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+        <h2 className="text-xl font-bold text-[#013e37] tracking-tight">
           {isEditMode ? "Edit Role" : "New Role"}
         </h2>
       </div>
@@ -184,7 +184,7 @@ export const RoleForm: React.FC<RoleFormProps> = ({
               onChange={(e) => setRoleCode(e.target.value)}
               placeholder="e.g. TEST1"
               required
-              className="w-full text-xs font-bold text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-2xs transition-all"
+              className="w-full text-xs font-bold text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-[#013e37]/20 focus:border-[#013e37] shadow-2xs transition-all"
             />
           </div>
 
@@ -199,7 +199,7 @@ export const RoleForm: React.FC<RoleFormProps> = ({
               onChange={(e) => setRoleName(e.target.value)}
               placeholder="e.g. Testing role"
               required
-              className="w-full text-xs font-bold text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-2xs transition-all"
+              className="w-full text-xs font-bold text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-[#013e37]/20 focus:border-[#013e37] shadow-2xs transition-all"
             />
           </div>
 
@@ -213,7 +213,7 @@ export const RoleForm: React.FC<RoleFormProps> = ({
               value={remarks}
               onChange={(e) => setRemarks(e.target.value)}
               placeholder="this is for testing description"
-              className="w-full text-xs font-medium text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-2xs transition-all"
+              className="w-full text-xs font-medium text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-[#013e37]/20 focus:border-[#013e37] shadow-2xs transition-all"
             />
           </div>
         </div>
@@ -227,8 +227,8 @@ export const RoleForm: React.FC<RoleFormProps> = ({
           </h3>
 
           {isLoadingPermissions ? (
-            <div className="p-6 text-center text-xs font-bold text-blue-600 flex items-center justify-center gap-2">
-              <Loader2 className="w-4 h-4 animate-spin" />
+            <div className="p-6 text-center text-xs font-bold text-[#013e37] flex items-center justify-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin text-[#013e37]" />
               <span>Loading Backend Permissions...</span>
             </div>
           ) : (
@@ -241,7 +241,7 @@ export const RoleForm: React.FC<RoleFormProps> = ({
                       key={perm.permissionId}
                       className={`flex items-start gap-2.5 p-3 rounded-xl border transition-all cursor-pointer select-none ${
                         isChecked
-                          ? "bg-blue-50/70 border-blue-300 text-blue-900 shadow-2xs"
+                          ? "bg-[#013e37]/10 border-[#013e37]/30 text-[#013e37] shadow-2xs"
                           : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
                       }`}
                     >
@@ -249,11 +249,11 @@ export const RoleForm: React.FC<RoleFormProps> = ({
                         type="checkbox"
                         checked={isChecked}
                         onChange={() => togglePermission(perm.permissionId)}
-                        className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/20 cursor-pointer mt-0.5"
+                        className="w-4 h-4 rounded border-slate-300 text-[#013e37] focus:ring-[#013e37]/20 cursor-pointer mt-0.5"
                       />
                       <div>
                         <span className="block font-bold text-slate-900">{perm.permissionName}</span>
-                        <span className="block text-[10px] font-mono text-blue-600 mt-0.5">{perm.permissionCode}</span>
+                        <span className="block text-[10px] font-mono text-[#013e37] mt-0.5">{perm.permissionCode}</span>
                       </div>
                     </label>
                   );
@@ -275,9 +275,9 @@ export const RoleForm: React.FC<RoleFormProps> = ({
           <button
             type="submit"
             disabled={isSubmitting}
-            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-500/20 transition-all hover:-translate-y-0.5 cursor-pointer flex items-center gap-1.5"
+            className="px-6 py-2 bg-[#013e37] hover:bg-[#012d28] text-[#ffefb3] font-bold text-xs rounded-xl shadow-2xs transition-all hover:shadow-xs cursor-pointer flex items-center gap-1.5"
           >
-            {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+            {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin text-[#ffefb3]" />}
             <span>Submit</span>
           </button>
         </div>

@@ -716,8 +716,8 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
         .wizard-theme input:focus-visible,
         .wizard-theme select:focus,
         .wizard-theme select:focus-visible {
-          border-color: #6366f1 !important;
-          box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2) !important;
+          border-color: #013e37 !important;
+          box-shadow: 0 0 0 3px rgba(1, 62, 55, 0.15) !important;
           outline: none !important;
         }
         .wizard-theme label {
@@ -732,16 +732,16 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
           <div className="flex items-center gap-2.5">
             <button
               onClick={onCancel}
-              className="p-2 hover:bg-slate-50 text-slate-500 hover:text-slate-800 border border-slate-200 rounded-xl transition-all shadow-2xs"
+              className="p-2 hover:bg-slate-50 text-slate-500 hover:text-[#013e37] border border-slate-200 rounded-xl transition-all shadow-2xs cursor-pointer"
               title="Return to Directory"
             >
               <Undo2 className="w-4 h-4" />
             </button>
             <div>
-              <h2 className="text-lg font-bold text-slate-900 leading-tight">
+              <h2 className="text-lg font-bold text-[#013e37] leading-tight">
                 Add New Employee
               </h2>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 font-medium">
                 Enter details to add an employee to your organization.
               </p>
             </div>
@@ -767,17 +767,17 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
                   <div
                     className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                       isDone
-                        ? "bg-emerald-500 text-white"
+                        ? "bg-[#013e37] text-[#ffefb3]"
                         : isActive
-                        ? "bg-indigo-600 text-white ring-4 ring-indigo-500/20"
+                        ? "bg-[#013e37] text-[#ffefb3] ring-4 ring-[#013e37]/20"
                         : "bg-slate-100 text-slate-400 border border-slate-200"
                     }`}
                   >
-                    {isDone ? <CheckCircle2 className="w-4 h-4" /> : step.number}
+                    {isDone ? <CheckCircle2 className="w-4 h-4 text-[#ffefb3]" /> : step.number}
                   </div>
                   <span
                     className={`text-xs font-bold hidden sm:inline ${
-                      isActive ? "text-indigo-600" : isDone ? "text-emerald-600" : "text-slate-400"
+                      isActive ? "text-[#013e37]" : isDone ? "text-[#013e37]" : "text-slate-400"
                     }`}
                   >
                     {step.title}
@@ -827,8 +827,8 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
                     onClick={() => setActiveSubTab(tab.id as any)}
                     className={`px-4 py-2 text-xs font-bold border-b-2 transition-all transition-colors duration-150 cursor-pointer ${
                       activeSubTab === tab.id
-                        ? "border-indigo-600 text-indigo-600 font-extrabold"
-                        : "border-transparent text-slate-500 hover:text-slate-700"
+                        ? "border-[#013e37] text-[#013e37] font-extrabold"
+                        : "border-transparent text-slate-500 hover:text-[#013e37]"
                     }`}
                   >
                     {tab.label}
@@ -1761,10 +1761,10 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
               <button
                 type="button"
                 onClick={nextStep}
-                className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-bold flex items-center gap-1.5 shadow-md transition-colors cursor-pointer active:scale-[0.98]"
+                className="px-5 py-2.5 rounded-xl bg-[#013e37] hover:bg-[#012d28] text-[#ffefb3] text-xs sm:text-sm font-bold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer active:scale-[0.98]"
               >
                 Next
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-4 h-4 text-[#ffefb3]" />
               </button>
             ) : (
               <Button
