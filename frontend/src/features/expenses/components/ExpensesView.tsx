@@ -6,7 +6,10 @@ import {
   createExpense,
   updateExpenseStatus,
   getExpenseStats,
+  getCurrentUserId,
+  downloadBill,
 } from "../api/expenses.api";
+import { toast } from "sonner";
 import { Expense, ExpenseStats, ExpenseStatus } from "../types/expenses.types";
 import {
   Search,
@@ -38,9 +41,13 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
   currentRole = "employee",
   currentUserName = "Sharanya",
 }) => {
-  // Authentication states (mocked for frontend demo stability)
+  // Authentication states
   const isEmployee = currentRole === "employee";
-  const currentUserId = 1;
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+
+  useEffect(() => {
+    setCurrentUserId(getCurrentUserId());
+  }, []);
 
   // Data states
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -98,7 +105,7 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
       ]);
 
       // If user is employee, filter table lists to show only their claims
-      const listData = isEmployee
+      const listData = isEmployee && currentUserId
         ? listRes.filter((e) => e.userId === currentUserId)
         : listRes;
 
@@ -113,12 +120,12 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
 
   useEffect(() => {
     loadData();
-  }, [searchQuery, filterPeriod, filterStatus, filterCategory, cardPeriod, trendOffset, currentRole]);
+  }, [searchQuery, filterPeriod, filterStatus, filterCategory, cardPeriod, trendOffset, currentRole, currentUserId]);
 
   // Handle Approve/Reject Actions
   const handleStatusUpdate = async (expenseId: string, status: ExpenseStatus) => {
     if (!actionComments.trim()) {
-      alert("Please provide comments before updating the claim status.");
+      toast.error("Please provide comments before updating the claim status.");
       return;
     }
 
@@ -128,18 +135,19 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
         expenseId,
         status,
         actionComments.trim(),
-        "CHINMAYA BAIRY" // Admin approver name
+        currentUserName
       );
 
       if (res.success) {
+        toast.success(`Claim ${status.toLowerCase()} successfully!`);
         setSelectedExpense(null);
         setActionComments("");
         loadData();
       } else {
-        alert(res.error || "Failed to update status.");
+        toast.error(res.error || "Failed to update status.");
       }
     } catch (err) {
-      alert("An unexpected error occurred.");
+      toast.error("An unexpected error occurred.");
     } finally {
       setIsActioning(false);
     }
@@ -174,9 +182,9 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
           merchant: formData.merchant.trim(),
           submittedDate: formData.submittedDate,
           description: formData.description.trim(),
-          receiptUrl: formData.receiptFileName ? formData.receiptFileName : null,
+          receiptFile: formData.receiptFile,
         },
-        { userId: currentUserId, name: currentUserName }
+        { userId: currentUserId || 1, name: currentUserName }
       );
 
       if (res.success) {
@@ -198,10 +206,30 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
       } else {
         setFormError(res.error || "Submission failed.");
       }
-    } catch (err: any) {
-      setFormError(err.message || "An unexpected error occurred.");
+    } catch (err) {
+      setFormError("Failed to submit claim.");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDownloadBill = async (expense: Expense) => {
+    if (!expense.billId) {
+      toast.error("No bill attachment ID found for this claim.");
+      return;
+    }
+    try {
+      const blob = await downloadBill(expense.billId);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = expense.receiptUrl || `bill_${expense.billId}.bin`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to download bill receipt file.");
     }
   };
 
@@ -628,13 +656,12 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
                 <div className="flex items-center gap-2 p-3 bg-indigo-50/50 border border-indigo-100 rounded-xl">
                   <FileText className="w-4 h-4 text-indigo-500" />
                   <span className="text-xs font-bold text-indigo-700 flex-1 truncate">{selectedExpense.receiptUrl}</span>
-                  <a
-                    href="#"
-                    onClick={(e) => e.preventDefault()}
-                    className="text-[10px] font-bold text-indigo-600 bg-white border border-indigo-200 rounded-md px-2 py-1 hover:bg-indigo-50"
+                  <button
+                    onClick={() => handleDownloadBill(selectedExpense)}
+                    className="text-[10px] font-bold text-indigo-600 bg-white border border-indigo-200 rounded-md px-2 py-1 hover:bg-indigo-50 cursor-pointer"
                   >
                     View Bill
-                  </a>
+                  </button>
                 </div>
               )}
 

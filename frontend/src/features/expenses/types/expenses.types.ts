@@ -14,6 +14,7 @@ export interface Expense {
   approvedBy: string | null;
   approvedDate: string | null;
   comments: string | null;
+  billId?: number | null;
 }
 
 export interface CreateExpenseInput {
