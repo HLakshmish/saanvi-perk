@@ -54,12 +54,12 @@ export const RoleDetail: React.FC<RoleDetailProps> = ({
         <div className="flex items-center gap-2">
           <button
             onClick={onBackToRolesList}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            className="p-1 rounded-lg text-slate-400 hover:text-[#013e37] hover:bg-slate-100 transition-colors cursor-pointer"
             title="Back to Roles List"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+          <h2 className="text-xl font-bold text-[#013e37] tracking-tight">
             {currentRole.name}
           </h2>
         </div>
@@ -67,7 +67,7 @@ export const RoleDetail: React.FC<RoleDetailProps> = ({
         {/* Edit Details Action Link */}
         <button
           onClick={() => onEditRole(currentRole)}
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-700 transition-colors cursor-pointer"
+          className="inline-flex items-center gap-1.5 text-xs font-bold text-[#013e37] hover:text-[#012d28] transition-colors cursor-pointer"
         >
           <Edit3 className="w-3.5 h-3.5" />
           <span>Edit Details</span>
@@ -78,7 +78,7 @@ export const RoleDetail: React.FC<RoleDetailProps> = ({
       <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-2xs space-y-6 relative min-h-[300px]">
         {isLoading && (
           <div className="absolute inset-0 bg-white/70 backdrop-blur-xs flex items-center justify-center z-20 rounded-2xl">
-            <div className="flex items-center gap-2 text-blue-600 font-bold text-xs">
+            <div className="flex items-center gap-2 text-[#013e37] font-bold text-xs">
               <Loader2 className="w-5 h-5 animate-spin" />
               <span>Loading Role Details...</span>
             </div>
@@ -116,12 +116,12 @@ export const RoleDetail: React.FC<RoleDetailProps> = ({
               {currentRole.permissions && currentRole.permissions.length > 0 ? (
                 currentRole.permissions.map((perm) => (
                   <div key={perm.id} className="flex items-center gap-2.5 p-2 bg-white border border-slate-200 rounded-xl shadow-2xs">
-                    <div className="w-5 h-5 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                    <div className="w-5 h-5 rounded-full bg-[#013e37]/10 text-[#013e37] flex items-center justify-center shrink-0">
+                      <Check className="w-3.5 h-3.5 stroke-[3] text-[#013e37]" />
                     </div>
                     <div>
                       <span className="block font-bold text-slate-900">{perm.name}</span>
-                      <span className="block text-[10px] font-mono text-blue-600">{perm.code}</span>
+                      <span className="block text-[10px] font-mono text-[#013e37]">{perm.code}</span>
                     </div>
                   </div>
                 ))

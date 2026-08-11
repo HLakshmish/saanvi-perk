@@ -183,7 +183,7 @@ export const OthersTab: React.FC = () => {
         <div className="space-y-6 animate-fade-in">
           {/* Header */}
           <div>
-            <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+            <h2 className="text-xl font-bold text-[#013e37] tracking-tight">
               Other
             </h2>
             <p className="text-xs text-slate-500 font-semibold mt-1">
@@ -200,15 +200,15 @@ export const OthersTab: React.FC = () => {
                   key={card.id}
                   onClick={() => handleCardClick(card.id)}
                   className={`bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs hover:shadow-md transition-all cursor-pointer group flex items-start gap-4 ${
-                    card.highlight ? "hover:border-blue-500 ring-2 ring-blue-500/10" : "hover:border-blue-300"
+                    card.highlight ? "hover:border-[#013e37] ring-2 ring-[#013e37]/10" : "hover:border-[#013e37]/40"
                   }`}
                 >
                   {/* Icon Box */}
                   <div
                     className={`w-12 h-12 rounded-2xl border flex items-center justify-center shrink-0 group-hover:scale-105 transition-all ${
                       card.highlight
-                        ? "bg-blue-50 border-blue-200 text-blue-600 group-hover:bg-blue-600 group-hover:text-white"
-                        : "bg-slate-50 border-slate-200/80 text-slate-600 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600"
+                        ? "bg-[#013e37]/10 border-[#013e37]/20 text-[#013e37] group-hover:bg-[#013e37] group-hover:text-[#ffefb3]"
+                        : "bg-slate-50 border-slate-200/80 text-[#013e37] group-hover:bg-[#013e37] group-hover:text-[#ffefb3] group-hover:border-[#013e37]"
                     }`}
                   >
                     <Icon className="w-5 h-5" />
@@ -216,7 +216,7 @@ export const OthersTab: React.FC = () => {
 
                   {/* Card Description */}
                   <div className="space-y-1">
-                    <h3 className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                    <h3 className="text-sm font-bold text-slate-900 group-hover:text-[#013e37] transition-colors">
                       {card.title}
                     </h3>
                     <p className="text-xs text-slate-500 font-medium leading-relaxed">

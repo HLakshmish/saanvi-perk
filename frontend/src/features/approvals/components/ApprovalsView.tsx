@@ -25,8 +25,8 @@ export const ApprovalsView: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header & Sub-tabs */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200 pb-3">
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#013e37]/15 pb-3">
+        <h1 className="text-xl sm:text-2xl font-bold text-[#013e37] tracking-tight">
           Approval Request
         </h1>
 
@@ -34,30 +34,30 @@ export const ApprovalsView: React.FC = () => {
         <div className="flex items-center gap-6 text-sm">
           <button
             onClick={() => setActiveTab("insights")}
-            className={`pb-2.5 font-semibold transition-colors relative cursor-pointer ${
+            className={`pb-2.5 font-bold transition-colors relative cursor-pointer ${
               activeTab === "insights"
-                ? "text-blue-600 border-b-2 border-blue-600"
-                : "text-gray-500 hover:text-gray-800"
+                ? "text-[#013e37] border-b-2 border-[#013e37]"
+                : "text-slate-500 hover:text-[#013e37]"
             }`}
           >
             Insights
           </button>
           <button
             onClick={() => setActiveTab("pending")}
-            className={`pb-2.5 font-medium transition-colors relative cursor-pointer ${
+            className={`pb-2.5 font-semibold transition-colors relative cursor-pointer ${
               activeTab === "pending"
-                ? "text-blue-600 border-b-2 border-blue-600 font-semibold"
-                : "text-gray-500 hover:text-gray-800"
+                ? "text-[#013e37] border-b-2 border-[#013e37]"
+                : "text-slate-500 hover:text-[#013e37]"
             }`}
           >
             Pending
           </button>
           <button
             onClick={() => setActiveTab("completed")}
-            className={`pb-2.5 font-medium transition-colors relative cursor-pointer ${
+            className={`pb-2.5 font-semibold transition-colors relative cursor-pointer ${
               activeTab === "completed"
-                ? "text-blue-600 border-b-2 border-blue-600 font-semibold"
-                : "text-gray-500 hover:text-gray-800"
+                ? "text-[#013e37] border-b-2 border-[#013e37]"
+                : "text-slate-500 hover:text-[#013e37]"
             }`}
           >
             Completed

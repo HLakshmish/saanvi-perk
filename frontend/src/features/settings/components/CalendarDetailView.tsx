@@ -299,7 +299,7 @@ export const CalendarDetailView: React.FC<CalendarDetailViewProps> = ({
         <div className="flex items-center gap-2 text-sm font-semibold text-slate-600">
           <button
             onClick={onBackToOrganization}
-            className="text-slate-900 font-bold hover:text-blue-600 transition-colors cursor-pointer"
+            className="text-slate-900 font-bold hover:text-[#013e37] transition-colors cursor-pointer"
           >
             Organization Masters
           </button>
@@ -316,7 +316,7 @@ export const CalendarDetailView: React.FC<CalendarDetailViewProps> = ({
               setCalRemarks("");
               setMode("add-calendar");
             }}
-            className="px-4 py-2 rounded-xl bg-[#0066ff] hover:bg-[#0052cc] text-white text-xs sm:text-sm font-bold flex items-center gap-2 shadow-xs transition-all cursor-pointer self-start sm:self-auto"
+            className="px-4 py-2 rounded-xl bg-[#013e37] hover:bg-[#012d28] text-[#ffefb3] text-xs sm:text-sm font-bold flex items-center gap-2 shadow-xs transition-all cursor-pointer self-start sm:self-auto"
           >
             <Plus className="w-4 h-4" />
             <span>Add Calendar</span>
@@ -337,7 +337,7 @@ export const CalendarDetailView: React.FC<CalendarDetailViewProps> = ({
                 placeholder="Search items"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 border border-slate-200 rounded-lg text-xs bg-white text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-blue-500"
+                className="w-full pl-8 pr-3 py-1.5 border border-slate-200 rounded-lg text-xs bg-white text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#013e37]"
               />
             </div>
           </div>
@@ -345,7 +345,7 @@ export const CalendarDetailView: React.FC<CalendarDetailViewProps> = ({
           <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
             {isLoading ? (
               <div className="p-6 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
-                <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                <Loader2 className="w-4 h-4 animate-spin text-[#013e37]" />
                 <span>Loading...</span>
               </div>
             ) : filteredCalendars.length === 0 ? (
@@ -361,12 +361,12 @@ export const CalendarDetailView: React.FC<CalendarDetailViewProps> = ({
                     onClick={() => handleSelectCalendar(cal)}
                     className={`w-full p-4 flex items-center justify-between text-left text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
                       isSelected
-                        ? "bg-blue-50/50 text-blue-600 border-l-4 border-blue-600 pl-3 font-bold"
+                        ? "bg-[#013e37]/10 text-[#013e37] border-l-4 border-[#013e37] pl-3 font-bold"
                         : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
                     }`}
                   >
                     <span>{cal.calendarName}</span>
-                    <ChevronRight className={`w-4 h-4 ${isSelected ? "text-blue-600" : "text-slate-400"}`} />
+                    <ChevronRight className={`w-4 h-4 ${isSelected ? "text-[#013e37]" : "text-slate-400"}`} />
                   </button>
                 );
               })
@@ -387,7 +387,7 @@ export const CalendarDetailView: React.FC<CalendarDetailViewProps> = ({
           {mode === "add-calendar" ? (
             <form onSubmit={handleCreateCalendar} className="space-y-6 animate-fade-in">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h2 className="text-sm font-extrabold text-slate-900 uppercase tracking-wider">
+                <h2 className="text-sm font-extrabold text-[#013e37] uppercase tracking-wider">
                   Add New Calendar
                 </h2>
                 <div className="flex items-center gap-2">
@@ -400,7 +400,7 @@ export const CalendarDetailView: React.FC<CalendarDetailViewProps> = ({
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-1.5 rounded-lg bg-[#0066ff] hover:bg-[#0052cc] text-white text-xs font-bold shadow-xs"
+                    className="px-4 py-1.5 rounded-lg bg-[#013e37] hover:bg-[#012d28] text-[#ffefb3] text-xs font-bold shadow-xs"
                   >
                     Save Calendar
                   </button>
@@ -415,7 +415,7 @@ export const CalendarDetailView: React.FC<CalendarDetailViewProps> = ({
                     placeholder="e.g. IND"
                     value={calCode}
                     onChange={(e) => setCalCode(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs text-slate-900 focus:outline-none focus:border-blue-600"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs text-slate-900 focus:outline-none focus:border-[#013e37]"
                     required
                   />
                 </div>
@@ -426,7 +426,7 @@ export const CalendarDetailView: React.FC<CalendarDetailViewProps> = ({
                     placeholder="e.g. India"
                     value={calName}
                     onChange={(e) => setCalName(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs text-slate-900 focus:outline-none focus:border-blue-600"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs text-slate-900 focus:outline-none focus:border-[#013e37]"
                     required
                   />
                 </div>
@@ -439,7 +439,7 @@ export const CalendarDetailView: React.FC<CalendarDetailViewProps> = ({
                   placeholder="Optional description"
                   value={calRemarks}
                   onChange={(e) => setCalRemarks(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs text-slate-900 focus:outline-none focus:border-blue-600"
+                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs text-slate-900 focus:outline-none focus:border-[#013e37]"
                 />
               </div>
             </form>
@@ -448,7 +448,7 @@ export const CalendarDetailView: React.FC<CalendarDetailViewProps> = ({
             <div className="space-y-6">
               {/* Header: NAME / UPPERCASE TITLE & Edit Details */}
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h2 className="text-sm font-extrabold text-slate-900 uppercase tracking-wider">
+                <h2 className="text-sm font-extrabold text-[#013e37] uppercase tracking-wider">
                   {mode === "edit-calendar" ? selectedCalendar.calendarName : "NAME"}
                 </h2>
 
@@ -460,7 +460,7 @@ export const CalendarDetailView: React.FC<CalendarDetailViewProps> = ({
                       setCalRemarks(selectedCalendar.remarks || "");
                       setMode("edit-calendar");
                     }}
-                    className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1.5 transition-colors cursor-pointer"
+                    className="text-xs font-semibold text-[#013e37] hover:text-[#012d28] flex items-center gap-1.5 transition-colors cursor-pointer"
                   >
                     <Pencil className="w-3.5 h-3.5" />
                     <span>Edit Details</span>
@@ -480,7 +480,7 @@ export const CalendarDetailView: React.FC<CalendarDetailViewProps> = ({
                         type="text"
                         value={calCode}
                         onChange={(e) => setCalCode(e.target.value)}
-                        className="w-full border-b border-slate-300 focus:border-blue-600 bg-transparent py-1 text-sm font-semibold text-slate-900 focus:outline-none transition-colors"
+                        className="w-full border-b border-slate-300 focus:border-[#013e37] bg-transparent py-1 text-sm font-semibold text-slate-900 focus:outline-none transition-colors"
                         required
                       />
                     </div>
@@ -492,7 +492,7 @@ export const CalendarDetailView: React.FC<CalendarDetailViewProps> = ({
                         type="text"
                         value={calName}
                         onChange={(e) => setCalName(e.target.value)}
-                        className="w-full border-b border-slate-300 focus:border-blue-600 bg-transparent py-1 text-sm font-semibold text-slate-900 focus:outline-none transition-colors"
+                        className="w-full border-b border-slate-300 focus:border-[#013e37] bg-transparent py-1 text-sm font-semibold text-slate-900 focus:outline-none transition-colors"
                         required
                       />
                     </div>
@@ -504,7 +504,7 @@ export const CalendarDetailView: React.FC<CalendarDetailViewProps> = ({
                       type="text"
                       value={calRemarks}
                       onChange={(e) => setCalRemarks(e.target.value)}
-                      className="w-full border-b border-slate-300 focus:border-blue-600 bg-transparent py-1 text-xs text-slate-900 focus:outline-none transition-colors"
+                      className="w-full border-b border-slate-300 focus:border-[#013e37] bg-transparent py-1 text-xs text-slate-900 focus:outline-none transition-colors"
                     />
                   </div>
 
@@ -520,14 +520,14 @@ export const CalendarDetailView: React.FC<CalendarDetailViewProps> = ({
                     <button
                       type="button"
                       onClick={() => setMode("view")}
-                      className="px-5 py-1.5 rounded-lg border border-blue-500 text-blue-500 hover:bg-blue-50 text-xs font-semibold transition-colors cursor-pointer"
+                      className="px-5 py-1.5 rounded-lg border border-[#013e37] text-[#013e37] hover:bg-[#013e37]/10 text-xs font-semibold transition-colors cursor-pointer"
                     >
                       Cancel
                     </button>
                     <button
                       type="button"
                       onClick={() => handleUpdateCalendar()}
-                      className="px-6 py-1.5 rounded-lg bg-[#0066ff] hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer"
+                      className="px-6 py-1.5 rounded-lg bg-[#013e37] hover:bg-[#012d28] text-[#ffefb3] text-xs font-bold shadow-xs transition-colors cursor-pointer"
                     >
                       Save
                     </button>
@@ -571,7 +571,7 @@ export const CalendarDetailView: React.FC<CalendarDetailViewProps> = ({
                         setHolidayRows([{ id: "1", holidayName: "", startDate: "", endDate: "" }]);
                         setShowInlineAddHoliday(!showInlineAddHoliday);
                       }}
-                      className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 transition-colors cursor-pointer"
+                      className="text-xs font-bold text-[#013e37] hover:text-[#012d28] flex items-center gap-1 transition-colors cursor-pointer"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       <span>Add New</span>
@@ -586,7 +586,7 @@ export const CalendarDetailView: React.FC<CalendarDetailViewProps> = ({
                         <button
                           type="button"
                           onClick={handleAddHolidayRow}
-                          className="text-xs font-bold text-[#0066ff] hover:text-blue-700 flex items-center gap-1 cursor-pointer"
+                          className="text-xs font-bold text-[#013e37] hover:text-[#012d28] flex items-center gap-1 cursor-pointer"
                         >
                           <Plus className="w-3.5 h-3.5" />
                           <span>Add Row</span>
@@ -603,7 +603,7 @@ export const CalendarDetailView: React.FC<CalendarDetailViewProps> = ({
                                 placeholder={`e.g. ${idx === 0 ? "Republic Day" : "Good Friday"}`}
                                 value={row.holidayName}
                                 onChange={(e) => handleHolidayRowChange(row.id, "holidayName", e.target.value)}
-                                className="w-full mt-1 px-2.5 py-1.5 rounded border border-slate-300 text-xs text-slate-900 focus:outline-none focus:border-blue-600"
+                                className="w-full mt-1 px-2.5 py-1.5 rounded border border-slate-300 text-xs text-slate-900 focus:outline-none focus:border-[#013e37]"
                                 required
                               />
                             </div>
@@ -652,7 +652,7 @@ export const CalendarDetailView: React.FC<CalendarDetailViewProps> = ({
                         </button>
                         <button
                           type="submit"
-                          className="px-4 py-1.5 rounded-lg bg-[#0066ff] hover:bg-[#0052cc] text-white text-xs font-bold shadow-xs"
+                          className="px-4 py-1.5 rounded-lg bg-[#013e37] hover:bg-[#012d28] text-[#ffefb3] text-xs font-bold shadow-xs"
                         >
                           Save All Holidays ({holidayRows.length})
                         </button>
@@ -676,7 +676,7 @@ export const CalendarDetailView: React.FC<CalendarDetailViewProps> = ({
                         {holidays.map((h) => {
                           const isEditingThis = editingHolidayId === h.holidayId;
                           return isEditingThis ? (
-                            <tr key={h.holidayId} className="bg-blue-50/40 border-b border-blue-200">
+                            <tr key={h.holidayId} className="bg-[#013e37]/10 border-b border-[#013e37]/20">
                               <td className="py-2.5 px-3">
                                 <input
                                   type="text"
@@ -731,7 +731,7 @@ export const CalendarDetailView: React.FC<CalendarDetailViewProps> = ({
                                 <div className="flex items-center justify-end gap-1">
                                   <button
                                     onClick={() => handleStartEditHoliday(h)}
-                                    className="text-slate-400 hover:text-blue-600 transition-colors p-1"
+                                    className="text-slate-400 hover:text-[#013e37] transition-colors p-1"
                                     title="Edit Holiday"
                                   >
                                     <Pencil className="w-3.5 h-3.5" />

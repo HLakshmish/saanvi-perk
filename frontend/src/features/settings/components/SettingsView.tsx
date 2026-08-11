@@ -19,8 +19,8 @@ export const SettingsView: React.FC = () => {
   return (
     <div className="w-full space-y-6">
       {/* Top Header Row with Title & Right-Aligned Sub Navigation Tabs */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200/80 pb-3">
-        <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#013e37]/15 pb-3">
+        <h1 className="text-xl sm:text-2xl font-bold text-[#013e37] tracking-tight">
           Configuration
         </h1>
 
@@ -30,8 +30,8 @@ export const SettingsView: React.FC = () => {
             onClick={() => handleSubTabChange("account-info")}
             className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
               activeSubTab === "account-info"
-                ? "bg-white text-blue-600 font-bold shadow-2xs border border-slate-200/60"
-                : "hover:text-slate-900"
+                ? "bg-[#013e37] text-[#ffefb3] font-bold shadow-2xs border border-[#013e37]"
+                : "hover:text-[#013e37]"
             }`}
           >
             Account Info
@@ -42,8 +42,8 @@ export const SettingsView: React.FC = () => {
             onClick={() => handleSubTabChange("organization")}
             className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
               activeSubTab === "organization"
-                ? "bg-white text-blue-600 font-bold shadow-2xs border border-slate-200/60"
-                : "hover:text-slate-900"
+                ? "bg-[#013e37] text-[#ffefb3] font-bold shadow-2xs border border-[#013e37]"
+                : "hover:text-[#013e37]"
             }`}
           >
             Organization
@@ -54,8 +54,8 @@ export const SettingsView: React.FC = () => {
             onClick={() => handleSubTabChange("payroll")}
             className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
               activeSubTab === "payroll"
-                ? "bg-white text-blue-600 font-bold shadow-2xs border border-slate-200/60"
-                : "hover:text-slate-900"
+                ? "bg-[#013e37] text-[#ffefb3] font-bold shadow-2xs border border-[#013e37]"
+                : "hover:text-[#013e37]"
             }`}
           >
             Payroll
@@ -66,8 +66,8 @@ export const SettingsView: React.FC = () => {
             onClick={() => handleSubTabChange("attendance")}
             className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
               activeSubTab === "attendance"
-                ? "bg-white text-blue-600 font-bold shadow-2xs border border-slate-200/60"
-                : "hover:text-slate-900"
+                ? "bg-[#013e37] text-[#ffefb3] font-bold shadow-2xs border border-[#013e37]"
+                : "hover:text-[#013e37]"
             }`}
           >
             Attendance
@@ -78,8 +78,8 @@ export const SettingsView: React.FC = () => {
             onClick={() => handleSubTabChange("leave")}
             className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
               activeSubTab === "leave"
-                ? "bg-white text-blue-600 font-bold shadow-2xs border border-slate-200/60"
-                : "hover:text-slate-900"
+                ? "bg-[#013e37] text-[#ffefb3] font-bold shadow-2xs border border-[#013e37]"
+                : "hover:text-[#013e37]"
             }`}
           >
             Leave
@@ -90,8 +90,8 @@ export const SettingsView: React.FC = () => {
             onClick={() => handleSubTabChange("training")}
             className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
               activeSubTab === "training"
-                ? "bg-white text-blue-600 font-bold shadow-2xs border border-slate-200/60"
-                : "hover:text-slate-900"
+                ? "bg-[#013e37] text-[#ffefb3] font-bold shadow-2xs border border-[#013e37]"
+                : "hover:text-[#013e37]"
             }`}
           >
             Training
@@ -102,8 +102,8 @@ export const SettingsView: React.FC = () => {
             onClick={() => handleSubTabChange("others")}
             className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
               activeSubTab === "others"
-                ? "bg-white text-blue-600 font-bold shadow-2xs border border-slate-200/60"
-                : "hover:text-slate-900"
+                ? "bg-[#013e37] text-[#ffefb3] font-bold shadow-2xs border border-[#013e37]"
+                : "hover:text-[#013e37]"
             }`}
           >
             Others

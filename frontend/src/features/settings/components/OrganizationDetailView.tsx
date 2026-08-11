@@ -220,7 +220,7 @@ export const OrganizationDetailView: React.FC<OrganizationDetailViewProps> = ({ 
         <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold">
           <button
             onClick={onBack}
-            className="inline-flex items-center gap-1 text-slate-500 hover:text-blue-600 font-bold transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1 text-slate-500 hover:text-[#013e37] font-bold transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Organization Management</span>
@@ -269,7 +269,7 @@ export const OrganizationDetailView: React.FC<OrganizationDetailViewProps> = ({ 
               placeholder="Search Items"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-500 transition-all"
+              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-[#013e37] transition-all"
             />
           </div>
 
@@ -277,7 +277,7 @@ export const OrganizationDetailView: React.FC<OrganizationDetailViewProps> = ({ 
           <div className="space-y-1.5 max-h-[350px] overflow-y-auto">
             {isLoadingList ? (
               <div className="flex items-center justify-center py-8 text-xs font-bold text-slate-500 gap-1.5">
-                <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                <Loader2 className="w-4 h-4 animate-spin text-[#013e37]" />
                 <span>Loading...</span>
               </div>
             ) : filteredCompanies.length === 0 ? (
@@ -294,12 +294,12 @@ export const OrganizationDetailView: React.FC<OrganizationDetailViewProps> = ({ 
                     onClick={() => setSelectedCompany(company)}
                     className={`w-full text-left px-3.5 py-3 rounded-xl text-xs font-bold flex items-center justify-between border transition-all ${
                       isSelected
-                        ? "bg-blue-50/70 text-blue-600 border-blue-200"
+                        ? "bg-[#013e37]/10 text-[#013e37] border-[#013e37]/20"
                         : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200/80 hover:border-slate-300"
                     } ${isEditing ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
                   >
                     <span>{company.companyName}</span>
-                    <ChevronRight className={`w-4 h-4 shrink-0 transition-transform ${isSelected ? "text-blue-600 translate-x-0.5" : "text-slate-400"}`} />
+                    <ChevronRight className={`w-4 h-4 shrink-0 transition-transform ${isSelected ? "text-[#013e37] translate-x-0.5" : "text-slate-400"}`} />
                   </button>
                 );
               })
@@ -311,7 +311,7 @@ export const OrganizationDetailView: React.FC<OrganizationDetailViewProps> = ({ 
         <div className="lg:col-span-3 bg-white rounded-2xl border border-slate-200/80 p-6 shadow-2xs space-y-6 relative min-h-[400px]">
           {isLoadingDetails && (
             <div className="absolute inset-0 bg-white/70 backdrop-blur-xs flex items-center justify-center z-20 rounded-2xl">
-              <div className="flex items-center gap-2 text-blue-600 font-bold text-xs">
+              <div className="flex items-center gap-2 text-[#013e37] font-bold text-xs">
                 <Loader2 className="w-5 h-5 animate-spin" />
                 <span>Loading Details...</span>
               </div>
@@ -337,12 +337,12 @@ export const OrganizationDetailView: React.FC<OrganizationDetailViewProps> = ({ 
                   type="button"
                   onClick={handleSave}
                   disabled={isSaving}
-                  className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-2xs cursor-pointer flex items-center gap-1 transition-colors"
+                  className="px-4 py-1.5 bg-[#013e37] hover:bg-[#012d28] text-[#ffefb3] rounded-lg text-xs font-bold shadow-2xs cursor-pointer flex items-center gap-1 transition-colors"
                 >
                   {isSaving ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-[#ffefb3]" />
                   ) : (
-                    <Check className="w-3.5 h-3.5" />
+                    <Check className="w-3.5 h-3.5 text-[#ffefb3]" />
                   )}
                   Save
                 </button>
@@ -370,7 +370,7 @@ export const OrganizationDetailView: React.FC<OrganizationDetailViewProps> = ({ 
                         value={formData.companyCode}
                         onChange={(e) => setFormData({ ...formData, companyCode: e.target.value })}
                         placeholder="Enter company code"
-                        className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-blue-500"
+                        className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-[#013e37]"
                       />
                     ) : (
                       <p className="font-bold text-slate-800">{orgData.companyCode || "-"}</p>
@@ -388,7 +388,7 @@ export const OrganizationDetailView: React.FC<OrganizationDetailViewProps> = ({ 
                         value={formData.companyName}
                         onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
                         placeholder="Enter company name"
-                        className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-blue-500"
+                        className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-[#013e37]"
                       />
                     ) : (
                       <p className="font-bold text-slate-800">{orgData.companyName || "-"}</p>
@@ -406,7 +406,7 @@ export const OrganizationDetailView: React.FC<OrganizationDetailViewProps> = ({ 
                         value={formData.address1}
                         onChange={(e) => setFormData({ ...formData, address1: e.target.value })}
                         placeholder="Enter address line 1"
-                        className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-blue-500"
+                        className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-[#013e37]"
                       />
                     ) : (
                       <p className="font-semibold text-slate-800">{orgData.address1 || "-"}</p>
@@ -424,7 +424,7 @@ export const OrganizationDetailView: React.FC<OrganizationDetailViewProps> = ({ 
                         value={formData.address2}
                         onChange={(e) => setFormData({ ...formData, address2: e.target.value })}
                         placeholder="Enter address line 2"
-                        className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-blue-500"
+                        className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-[#013e37]"
                       />
                     ) : (
                       <p className="font-semibold text-slate-800">{orgData.address2 || "-"}</p>
@@ -442,7 +442,7 @@ export const OrganizationDetailView: React.FC<OrganizationDetailViewProps> = ({ 
                         value={formData.city}
                         onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                         placeholder="Enter city"
-                        className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-blue-500"
+                        className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-[#013e37]"
                       />
                     ) : (
                       <p className="font-semibold text-slate-800">{orgData.city || "-"}</p>
@@ -460,7 +460,7 @@ export const OrganizationDetailView: React.FC<OrganizationDetailViewProps> = ({ 
                         value={formData.state}
                         onChange={(e) => setFormData({ ...formData, state: e.target.value })}
                         placeholder="Enter state"
-                        className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-blue-500"
+                        className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-[#013e37]"
                       />
                     ) : (
                       <p className="font-semibold text-slate-800">{orgData.state || "-"}</p>
@@ -478,7 +478,7 @@ export const OrganizationDetailView: React.FC<OrganizationDetailViewProps> = ({ 
                         value={formData.country}
                         onChange={(e) => setFormData({ ...formData, country: e.target.value })}
                         placeholder="Enter country"
-                        className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-blue-500"
+                        className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-[#013e37]"
                       />
                     ) : (
                       <p className="font-semibold text-slate-800">{orgData.country || "-"}</p>
@@ -496,7 +496,7 @@ export const OrganizationDetailView: React.FC<OrganizationDetailViewProps> = ({ 
                         value={formData.pinCode}
                         onChange={(e) => setFormData({ ...formData, pinCode: e.target.value })}
                         placeholder="Enter pincode"
-                        className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-blue-500"
+                        className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-[#013e37]"
                       />
                     ) : (
                       <p className="font-semibold text-slate-800">{orgData.pinCode || "-"}</p>
@@ -514,7 +514,7 @@ export const OrganizationDetailView: React.FC<OrganizationDetailViewProps> = ({ 
                         value={formData.fax}
                         onChange={(e) => setFormData({ ...formData, fax: e.target.value })}
                         placeholder="Enter fax number"
-                        className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-blue-500"
+                        className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-[#013e37]"
                       />
                     ) : (
                       <p className="font-semibold text-slate-800">{orgData.fax || "-"}</p>
@@ -532,7 +532,7 @@ export const OrganizationDetailView: React.FC<OrganizationDetailViewProps> = ({ 
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                         placeholder="Enter phone number"
-                        className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-blue-500"
+                        className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-[#013e37]"
                       />
                     ) : (
                       <p className="font-semibold text-slate-800">{orgData.phone || "-"}</p>
@@ -550,7 +550,7 @@ export const OrganizationDetailView: React.FC<OrganizationDetailViewProps> = ({ 
                         value={formData.website}
                         onChange={(e) => setFormData({ ...formData, website: e.target.value })}
                         placeholder="Enter website URL"
-                        className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-blue-500"
+                        className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-[#013e37]"
                       />
                     ) : (
                       orgData.website ? (
@@ -558,7 +558,7 @@ export const OrganizationDetailView: React.FC<OrganizationDetailViewProps> = ({ 
                           href={orgData.website.startsWith("http") ? orgData.website : `https://${orgData.website}`}
                           target="_blank"
                           rel="noreferrer"
-                          className="font-semibold text-blue-600 hover:underline inline-block cursor-pointer"
+                          className="font-semibold text-[#013e37] hover:underline inline-block cursor-pointer"
                         >
                           {orgData.website}
                         </a>
@@ -595,7 +595,7 @@ export const OrganizationDetailView: React.FC<OrganizationDetailViewProps> = ({ 
                       </div>
                     ) : (
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-md bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white text-xs font-bold">
+                        <div className="w-8 h-8 rounded-md bg-[#013e37] text-[#ffefb3] flex items-center justify-center text-xs font-bold">
                           {orgData.companyName ? orgData.companyName.charAt(0).toUpperCase() : "C"}
                         </div>
                         <span className="font-bold text-slate-800 text-sm tracking-tight">
@@ -612,8 +612,8 @@ export const OrganizationDetailView: React.FC<OrganizationDetailViewProps> = ({ 
                         Preferred Image Size: 120 x 40 pixels, Maximum 100 KB
                       </p>
 
-                      <label className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-500/20 transition-all cursor-pointer hover:-translate-y-0.5">
-                        <Upload className="w-3.5 h-3.5" />
+                      <label className="inline-flex items-center gap-2 px-4 py-2 bg-[#013e37] hover:bg-[#012d28] text-[#ffefb3] font-bold text-xs rounded-xl shadow-2xs transition-all cursor-pointer hover:shadow-xs">
+                        <Upload className="w-3.5 h-3.5 text-[#ffefb3]" />
                         <span>Choose File</span>
                         <input
                           type="file"

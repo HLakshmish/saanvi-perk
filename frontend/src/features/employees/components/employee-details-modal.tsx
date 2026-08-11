@@ -225,11 +225,11 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
 
         {/* Modal Header */}
         <div className="p-6 pb-4 border-b border-slate-100 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
-            <UserIcon className="w-5 h-5" />
+          <div className="w-10 h-10 rounded-full bg-[#013e37] text-[#ffefb3] flex items-center justify-center font-bold shadow-2xs">
+            <UserIcon className="w-5 h-5 text-[#ffefb3]" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-slate-900 tracking-tight">
+            <h3 className="text-lg font-bold text-[#013e37] tracking-tight">
               {employeeName}
             </h3>
             <p className="text-xs text-slate-500 font-medium mt-0.5">
@@ -254,8 +254,8 @@ export const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
                 onClick={() => setActiveTab(tab.id as TabType)}
                 className={`flex items-center gap-1.5 px-4 py-3 text-xs font-bold border-b-2 transition-colors cursor-pointer ${
                   activeTab === tab.id
-                    ? "border-indigo-600 text-indigo-600 font-extrabold"
-                    : "border-transparent text-slate-500 hover:text-slate-800"
+                    ? "border-[#013e37] text-[#013e37] font-extrabold"
+                    : "border-transparent text-slate-500 hover:text-[#013e37]"
                 }`}
               >
                 <Icon className="w-3.5 h-3.5" />

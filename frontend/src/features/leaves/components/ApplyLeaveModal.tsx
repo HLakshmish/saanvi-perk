@@ -50,7 +50,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
 
         {/* Modal Header */}
         <div className="p-6 pb-4 border-b border-slate-100">
-          <h3 className="text-lg font-bold text-slate-900 tracking-tight">
+          <h3 className="text-lg font-bold text-[#013e37] tracking-tight">
             Apply Leave
           </h3>
           <p className="text-xs text-slate-500 font-medium mt-1">
@@ -71,7 +71,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
                 <select
                   value={leaveType}
                   onChange={(e) => setLeaveType(e.target.value)}
-                  className="w-full text-xs font-semibold text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-2xs transition-all cursor-pointer"
+                  className="w-full text-xs font-semibold text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 px-3 focus:outline-none focus:ring-2 focus:ring-[#013e37]/20 focus:border-[#013e37] shadow-2xs transition-all cursor-pointer"
                 >
                   <option value="Sick Leave / Casual Leave">
                     Sick Leave / Casual Leave
@@ -89,7 +89,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
                   id="halfDay"
                   checked={isHalfDay}
                   onChange={(e) => setIsHalfDay(e.target.checked)}
-                  className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500/20 cursor-pointer"
+                  className="w-4 h-4 rounded border-slate-300 text-[#013e37] focus:ring-[#013e37]/20 cursor-pointer"
                 />
                 <label
                   htmlFor="halfDay"
@@ -109,7 +109,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
                     type="text"
                     value={fromDate}
                     onChange={(e) => setFromDate(e.target.value)}
-                    className="w-full text-xs font-bold text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 pl-3.5 pr-10 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-2xs transition-all"
+                    className="w-full text-xs font-bold text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 pl-3.5 pr-10 focus:outline-none focus:ring-2 focus:ring-[#013e37]/20 focus:border-[#013e37] shadow-2xs transition-all"
                   />
                   <CalendarIcon className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
@@ -126,7 +126,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
                     value={notifyOthers}
                     onChange={(e) => setNotifyOthers(e.target.value)}
                     placeholder="Search name..."
-                    className="w-full text-xs font-medium text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 pl-3.5 pr-10 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-2xs transition-all placeholder:text-slate-400"
+                    className="w-full text-xs font-medium text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 pl-3.5 pr-10 focus:outline-none focus:ring-2 focus:ring-[#013e37]/20 focus:border-[#013e37] shadow-2xs transition-all placeholder:text-slate-400"
                   />
                   <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
@@ -145,7 +145,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   placeholder="Enter leave reason..."
-                  className="w-full text-xs font-medium text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-2xs transition-all placeholder:text-slate-400"
+                  className="w-full text-xs font-medium text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-[#013e37]/20 focus:border-[#013e37] shadow-2xs transition-all placeholder:text-slate-400"
                 />
               </div>
 
@@ -162,7 +162,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
                     type="text"
                     value={toDate}
                     onChange={(e) => setToDate(e.target.value)}
-                    className="w-full text-xs font-bold text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 pl-3.5 pr-10 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-2xs transition-all"
+                    className="w-full text-xs font-bold text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 pl-3.5 pr-10 focus:outline-none focus:ring-2 focus:ring-[#013e37]/20 focus:border-[#013e37] shadow-2xs transition-all"
                   />
                   <CalendarIcon className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
@@ -179,7 +179,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
                     value={reliever}
                     onChange={(e) => setReliever(e.target.value)}
                     placeholder="Search reliever..."
-                    className="w-full text-xs font-medium text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 pl-3.5 pr-10 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-2xs transition-all placeholder:text-slate-400"
+                    className="w-full text-xs font-medium text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 pl-3.5 pr-10 focus:outline-none focus:ring-2 focus:ring-[#013e37]/20 focus:border-[#013e37] shadow-2xs transition-all placeholder:text-slate-400"
                   />
                   <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
@@ -198,7 +198,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
             </button>
             <button
               type="submit"
-              className="px-6 py-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 text-white font-bold text-xs rounded-xl shadow-md shadow-indigo-500/20 transition-all hover:-translate-y-0.5 cursor-pointer"
+              className="px-6 py-2 bg-[#013e37] hover:bg-[#012d28] text-[#ffefb3] font-bold text-xs rounded-xl shadow-2xs transition-all hover:shadow-xs cursor-pointer"
             >
               Submit
             </button>

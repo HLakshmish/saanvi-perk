@@ -23,15 +23,15 @@ export const EmployeeCard: React.FC<EmployeeCardProps> = ({
         className
       )}
     >
-      {/* Left: Silhouette Avatar in Grey Circle */}
-      <div className="w-10 h-10 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center shrink-0">
-        <User className="w-5 h-5 fill-slate-400 text-slate-400" />
+      {/* Left: Avatar Circle */}
+      <div className="w-10 h-10 rounded-full bg-[#013e37] text-[#ffefb3] flex items-center justify-center shrink-0 shadow-2xs">
+        <User className="w-5 h-5 text-[#ffefb3]" />
       </div>
 
       {/* Right: Left-Aligned Detail Lines */}
       <div className="flex flex-col min-w-0 leading-tight">
         {/* Name (Uppercase Bold) */}
-        <h4 className="font-bold text-gray-800 text-sm truncate uppercase mb-1">
+        <h4 className="font-extrabold text-[#013e37] text-sm truncate uppercase mb-1">
           {employee.name}
         </h4>
         

@@ -82,8 +82,8 @@ export const LeavesView: React.FC = () => {
             onClick={() => setActiveTab("summary")}
             className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 cursor-pointer ${
               activeTab === "summary"
-                ? "bg-white text-indigo-600 shadow-2xs border border-slate-200/40"
-                : "text-slate-500 hover:text-slate-800"
+                ? "bg-[#013e37] text-[#ffefb3] shadow-2xs border border-[#013e37]"
+                : "text-slate-500 hover:text-[#013e37]"
             }`}
           >
             Summary
@@ -92,8 +92,8 @@ export const LeavesView: React.FC = () => {
             onClick={() => setActiveTab("request")}
             className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 cursor-pointer ${
               activeTab === "request"
-                ? "bg-white text-indigo-600 shadow-2xs border border-slate-200/40"
-                : "text-slate-500 hover:text-slate-800"
+                ? "bg-[#013e37] text-[#ffefb3] shadow-2xs border border-[#013e37]"
+                : "text-slate-500 hover:text-[#013e37]"
             }`}
           >
             Request
@@ -102,8 +102,8 @@ export const LeavesView: React.FC = () => {
             onClick={() => setActiveTab("holiday")}
             className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 cursor-pointer ${
               activeTab === "holiday"
-                ? "bg-white text-indigo-600 shadow-2xs border border-slate-200/40"
-                : "text-slate-500 hover:text-slate-800"
+                ? "bg-[#013e37] text-[#ffefb3] shadow-2xs border border-[#013e37]"
+                : "text-slate-500 hover:text-[#013e37]"
             }`}
           >
             Holiday

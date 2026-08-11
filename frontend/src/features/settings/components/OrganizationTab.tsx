@@ -105,7 +105,7 @@ export const OrganizationTab: React.FC<OrganizationTabProps> = ({
     <div className="space-y-6 animate-fade-in">
       {/* Section Header */}
       <div>
-        <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+        <h2 className="text-xl font-bold text-[#013e37] tracking-tight">
           Organization
         </h2>
         <p className="text-xs text-slate-500 font-semibold mt-1">
@@ -121,16 +121,16 @@ export const OrganizationTab: React.FC<OrganizationTabProps> = ({
             <div
               key={card.id}
               onClick={() => handleCardClick(card.id)}
-              className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs hover:shadow-md hover:border-blue-300 transition-all cursor-pointer group flex items-start gap-4"
+              className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs hover:shadow-md hover:border-[#013e37]/40 transition-all cursor-pointer group flex items-start gap-4"
             >
               {/* Circular Icon Box */}
-              <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-center text-slate-600 shrink-0 group-hover:scale-105 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all">
+              <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-center text-[#013e37] shrink-0 group-hover:scale-105 group-hover:bg-[#013e37] group-hover:text-[#ffefb3] group-hover:border-[#013e37] transition-all">
                 <Icon className="w-5 h-5" />
               </div>
 
               {/* Text info */}
               <div className="space-y-1">
-                <h3 className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                <h3 className="text-sm font-bold text-slate-900 group-hover:text-[#013e37] transition-colors">
                   {card.title}
                 </h3>
                 <p className="text-xs text-slate-500 font-medium leading-relaxed">
