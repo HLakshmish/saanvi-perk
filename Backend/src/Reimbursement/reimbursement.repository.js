@@ -127,8 +127,21 @@ class ReimbursementRepository {
     }
 
     async addHistory(data) {
+        const createData = {
+            claimId: data.claimId,
+            action: data.action,
+            previousStatus: data.previousStatus,
+            newStatus: data.newStatus,
+            remarks: data.remarks
+        };
+
+        // Note: actionBy is optional for SUPERADMIN / OWNER actions
+        if (data.actionBy) {
+            createData.actionBy = data.actionBy;
+        }
+
         return await prisma.reimbursementHistory.create({
-            data
+            data: createData
         });
     }
 }

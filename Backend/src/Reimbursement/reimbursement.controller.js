@@ -11,7 +11,7 @@ class ReimbursementController {
             // Support applying on behalf of someone else
             const userId = data.userId || request.user.userId;
 
-            const claim = await reimbursementService.createClaim(data, request.user.userId);
+            const claim = await reimbursementService.createClaim(data, request.user);
             
             reply.code(201).send({
                 success: true,
@@ -70,7 +70,7 @@ class ReimbursementController {
             const data = request.body;
             const companyId = request.user.companyId || request.query.companyId;
 
-            const claim = await reimbursementService.updateClaim(Number(id), companyId, data, request.user.userId);
+            const claim = await reimbursementService.updateClaim(Number(id), companyId, data, request.user);
             
             reply.code(200).send({
                 success: true,
@@ -91,7 +91,7 @@ class ReimbursementController {
             const data = request.body;
             const companyId = request.user.companyId || request.query.companyId;
 
-            const claim = await reimbursementService.updateClaimStatus(Number(id), companyId, data, request.user.userId);
+            const claim = await reimbursementService.updateClaimStatus(Number(id), companyId, data, request.user);
             
             reply.code(200).send({
                 success: true,
@@ -155,7 +155,7 @@ class ReimbursementController {
                 fileData: fileBuffer
             };
 
-            const createdBill = await reimbursementService.uploadBill(billData, request.user.userId);
+            const createdBill = await reimbursementService.uploadBill(billData, request.user);
             
             delete createdBill.fileData;
 
@@ -209,7 +209,7 @@ class ReimbursementController {
     async deleteBill(request, reply) {
         try {
             const { id } = request.params;
-            const result = await reimbursementService.deleteBill(Number(id), request.user.userId);
+            const result = await reimbursementService.deleteBill(Number(id), request.user);
             
             reply.code(200).send({
                 success: true,
