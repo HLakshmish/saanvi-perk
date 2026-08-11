@@ -1,13 +1,13 @@
 const reimbursementRepository = require("./reimbursement.repository");
 
 class ReimbursementService {
-    async createClaim(data, userId) {
+    async createClaim(data, user) {
         // Generating a unique claim number
         const claimNumber = `CLM-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
         
         const claimData = {
             ...data,
-            userId,
+            userId: data.userId || user.userId,
             claimNumber,
             claimDate: data.claimDate ? new Date(data.claimDate) : new Date(),
             status: data.status || 'DRAFT',
@@ -15,12 +15,14 @@ class ReimbursementService {
 
         const claim = await reimbursementRepository.createClaim(claimData);
 
+        const actionBy = ['SUPERADMIN', 'OWNER'].includes(user.role) ? null : user.userId;
+
         // Add history
         await reimbursementRepository.addHistory({
             claimId: claim.claimId,
             action: 'CREATED',
             newStatus: claim.status,
-            actionBy: userId,
+            actionBy,
             remarks: 'Claim created'
         });
 
@@ -39,7 +41,7 @@ class ReimbursementService {
         return await reimbursementRepository.getAllClaims(companyId, userId);
     }
 
-    async updateClaim(claimId, companyId, data, userId) {
+    async updateClaim(claimId, companyId, data, user) {
         const existingClaim = await this.getClaimById(claimId, companyId);
         
         const previousStatus = existingClaim.status;
@@ -50,12 +52,13 @@ class ReimbursementService {
         const updatedClaim = await reimbursementRepository.updateClaim(claimId, companyId, data);
 
         if (previousStatus !== newStatus) {
+            const actionBy = ['SUPERADMIN', 'OWNER'].includes(user.role) ? null : user.userId;
             await reimbursementRepository.addHistory({
                 claimId,
                 action: 'STATUS_UPDATED',
                 previousStatus,
                 newStatus,
-                actionBy: userId,
+                actionBy,
                 remarks: `Status updated to ${newStatus}`
             });
         }
@@ -63,7 +66,7 @@ class ReimbursementService {
         return updatedClaim;
     }
 
-    async updateClaimStatus(claimId, companyId, data, userId) {
+    async updateClaimStatus(claimId, companyId, data, user) {
         const existingClaim = await this.getClaimById(claimId, companyId);
         
         const previousStatus = existingClaim.status;
@@ -75,8 +78,10 @@ class ReimbursementService {
             remarks: data.remarks || existingClaim.remarks
         };
 
+        const actionBy = ['SUPERADMIN', 'OWNER'].includes(user.role) ? null : user.userId;
+
         if (newStatus === 'APPROVED') {
-            updateData.approvedBy = userId;
+            updateData.approvedBy = actionBy;
             updateData.approvedAt = new Date();
             if (data.approvedAmount) {
                 updateData.approvedAmount = data.approvedAmount;
@@ -96,7 +101,7 @@ class ReimbursementService {
             action: 'STATUS_UPDATED',
             previousStatus,
             newStatus,
-            actionBy: userId,
+            actionBy,
             remarks: data.remarks || `Status updated to ${newStatus}`
         });
 
@@ -107,7 +112,7 @@ class ReimbursementService {
         return await reimbursementRepository.deleteClaim(claimId, companyId);
     }
 
-    async uploadBill(billData, userId) {
+    async uploadBill(billData, user) {
         const existingClaim = await this.getClaimById(billData.claimId, billData.companyId);
         
         if (!existingClaim) {
@@ -126,10 +131,12 @@ class ReimbursementService {
             fileData: billData.fileData
         });
 
+        const actionBy = ['SUPERADMIN', 'OWNER'].includes(user.role) ? null : user.userId;
+
         await reimbursementRepository.addHistory({
             claimId: billData.claimId,
             action: 'BILL_UPLOADED',
-            actionBy: userId,
+            actionBy,
             remarks: `Bill uploaded: ${billData.fileName}`
         });
 
@@ -144,15 +151,17 @@ class ReimbursementService {
         return bill;
     }
 
-    async deleteBill(billId, userId) {
+    async deleteBill(billId, user) {
         const bill = await this.getBillById(billId);
         
         await reimbursementRepository.deleteBill(billId);
 
+        const actionBy = ['SUPERADMIN', 'OWNER'].includes(user.role) ? null : user.userId;
+
         await reimbursementRepository.addHistory({
             claimId: bill.claimId,
             action: 'BILL_DELETED',
-            actionBy: userId,
+            actionBy,
             remarks: `Bill deleted: ${bill.fileName}`
         });
 
