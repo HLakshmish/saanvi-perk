@@ -243,3 +243,130 @@ export const deleteRoleApi = async (roleId: string | number) => {
     return { success: false, error: error.message };
   }
 };
+
+export const fetchLeaveTypes = async () => {
+  const token = getAuthToken();
+  const companyId = getCompanyIdCookie();
+  const url = companyId
+    ? `${API_BASE_URL}/api/leave-types?companyId=${companyId}`
+    : `${API_BASE_URL}/api/leave-types`;
+
+  try {
+    const res = await fetch(url, {
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    const result = await res.json();
+    if (res.ok && result.success && Array.isArray(result.data)) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, data: [] };
+  } catch (error: any) {
+    return { success: false, data: [], error: error.message };
+  }
+};
+
+export const fetchLeaveTypeById = async (id: string | number) => {
+  const token = getAuthToken();
+  const companyId = getCompanyIdCookie();
+  const url = companyId
+    ? `${API_BASE_URL}/api/leave-types/${id}?companyId=${companyId}`
+    : `${API_BASE_URL}/api/leave-types/${id}`;
+
+  try {
+    const res = await fetch(url, {
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    const result = await res.json();
+    if (res.ok && result.success && result.data) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, error: result.message || "Failed to fetch leave type details" };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const createLeaveTypeApi = async (leaveData: Record<string, any>) => {
+  const token = getAuthToken();
+  const companyId = getCompanyIdCookie() || 4;
+  const payload = {
+    status: true,
+    companyId: Number(companyId),
+    ...leaveData,
+  };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/leave-types`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(payload),
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, error: result.message || "Failed to create leave type" };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const updateLeaveTypeApi = async (id: string | number, leaveData: Record<string, any>) => {
+  const token = getAuthToken();
+  const companyId = getCompanyIdCookie() || 4;
+  const payload = {
+    status: true,
+    ...leaveData,
+  };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/leave-types/${id}?companyId=${companyId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(payload),
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, error: result.message || "Failed to update leave type" };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const deleteLeaveTypeApi = async (id: string | number) => {
+  const token = getAuthToken();
+  const companyId = getCompanyIdCookie();
+  const url = companyId
+    ? `${API_BASE_URL}/api/leave-types/${id}?companyId=${companyId}`
+    : `${API_BASE_URL}/api/leave-types/${id}`;
+
+  try {
+    const res = await fetch(url, {
+      method: "DELETE",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true };
+    }
+    return { success: false, error: result.message || "Failed to delete leave type" };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
