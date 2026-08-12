@@ -2,7 +2,7 @@ const userResponseProperties = {
     userId: { type: 'number' },
     employeeCode: { type: 'string' },
     companyId: { type: 'number' },
-    roleId: { type: 'number' },
+    roleIds: { type: 'array', items: { type: 'number' } },
     departmentId: { type: 'number', nullable: true },
     firstName: { type: 'string' },
     lastName: { type: 'string' },
@@ -41,10 +41,10 @@ const createUserSchema = {
     summary: 'Create a user',
     body: {
         type: 'object',
-        required: ['employeeCode', 'roleId', 'firstName', 'lastName', 'officialEmail', 'password', 'employmentType', 'joiningDate'],
+        required: ['employeeCode', 'roleIds', 'firstName', 'lastName', 'officialEmail', 'password', 'employmentType', 'joiningDate'],
         properties: {
             employeeCode: { type: 'string' },
-            roleId: { type: 'number' },
+            roleIds: { type: 'array', items: { type: 'number' } },
             departmentId: { type: 'number', nullable: true },
             firstName: { type: 'string' },
             lastName: { type: 'string' },
@@ -157,7 +157,7 @@ const updateUserSchema = {
         type: 'object',
         properties: {
             employeeCode: { type: 'string' },
-            roleId: { type: 'number' },
+            roleIds: { type: 'array', items: { type: 'number' } },
             departmentId: { type: 'number', nullable: true },
             firstName: { type: 'string' },
             lastName: { type: 'string' },

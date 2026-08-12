@@ -2,10 +2,18 @@ const prisma = require("../../config/prisma");
 
 class UserRepository {
     async createUser(data) {
+        const { roleIds, ...userData } = data;
+        const createData = { ...userData };
+        if (roleIds && roleIds.length > 0) {
+            createData.userRoles = {
+                create: roleIds.map(id => ({ roleId: id }))
+            };
+        }
+
         return await prisma.user.create({ 
-            data,
+            data: createData,
             include: {
-                role: { select: { roleName: true } },
+                userRoles: { select: { role: { select: { roleName: true, roleCode: true } } } },
                 department: { select: { departmentName: true } }
             }
         });
@@ -18,7 +26,7 @@ class UserRepository {
         return await prisma.user.findFirst({
             where: whereClause,
             include: {
-                role: { select: { roleName: true } },
+                userRoles: { select: { role: { select: { roleName: true, roleCode: true } } } },
                 department: { select: { departmentName: true } },
                 manager: { select: { firstName: true, lastName: true, officialEmail: true } }
             }
@@ -32,7 +40,7 @@ class UserRepository {
         return await prisma.user.findMany({
             where: whereClause,
             include: {
-                role: { select: { roleName: true } },
+                userRoles: { select: { role: { select: { roleName: true, roleCode: true } } } },
                 department: { select: { departmentName: true } }
             }
         });
@@ -45,11 +53,20 @@ class UserRepository {
         const exists = await prisma.user.findFirst({ where: whereClause });
         if (!exists) throw new Error("User not found or does not belong to this company");
 
+        const { roleIds, ...updateData } = data;
+        
+        if (roleIds) {
+            updateData.userRoles = {
+                deleteMany: {},
+                create: roleIds.map(id => ({ roleId: id }))
+            };
+        }
+
         return await prisma.user.update({
             where: { userId },
-            data,
+            data: updateData,
             include: {
-                role: { select: { roleName: true } },
+                userRoles: { select: { role: { select: { roleName: true, roleCode: true } } } },
                 department: { select: { departmentName: true } }
             }
         });

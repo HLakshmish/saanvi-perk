@@ -44,11 +44,15 @@ class AuthService {
         const regularUser = await prisma.user.findUnique({
             where: { officialEmail: email },
             include: {
-                role: {
+                userRoles: {
                     include: {
-                        rolePermissions: {
+                        role: {
                             include: {
-                                permission: true
+                                rolePermissions: {
+                                    include: {
+                                        permission: true
+                                    }
+                                }
                             }
                         }
                     }
@@ -69,7 +73,15 @@ class AuthService {
                     data: { lastLogin: new Date() }
                 });
 
-                const permissions = regularUser.role.rolePermissions.map(rp => rp.permission.permissionCode);
+                const permissionsSet = new Set();
+                regularUser.userRoles.forEach(ur => {
+                    if (ur.role && ur.role.rolePermissions) {
+                        ur.role.rolePermissions.forEach(rp => {
+                            if (rp.permission) permissionsSet.add(rp.permission.permissionCode);
+                        });
+                    }
+                });
+                const permissions = Array.from(permissionsSet);
 
                 return {
                     userId: regularUser.userId,
