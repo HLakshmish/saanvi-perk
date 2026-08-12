@@ -101,7 +101,7 @@ model Role {
   status      Boolean @default(true)
 
   rolePermissions RolePermission[]
-  users           User[]
+  userRoles       UserRole[]
 
   company CompanyDetails @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
 
@@ -138,6 +138,19 @@ model RolePermission {
   @@map("role_permissions")
 }
 
+model UserRole {
+  id Int @id @default(autoincrement())
+
+  userId Int @map("user_id")
+  roleId Int @map("role_id")
+
+  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [roleId], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@map("user_roles")
+}
+
 model Department {
   departmentId   Int      @id @default(autoincrement()) @map("department_id")
   companyId      Int      @map("company_id")
@@ -170,7 +183,6 @@ model User {
   employeeCode String @unique @map("employee_code")
 
   companyId     Int  @map("company_id")
-  roleId        Int  @map("role_id")
   departmentId  Int? @map("department_id")
   locationId    Int? @map("location_id")
   designationId Int? @map("designation_id")
@@ -201,7 +213,6 @@ model User {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   company     CompanyDetails  @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
-  role        Role            @relation(fields: [roleId], references: [roleId])
   department  Department?     @relation("DepartmentUsers", fields: [departmentId], references: [departmentId])
   location    OfficeLocation? @relation("LocationUsers", fields: [locationId], references: [officeLocationId])
   designation Designation?    @relation("DesignationUsers", fields: [designationId], references: [designationId])
@@ -242,6 +253,8 @@ model User {
   reimbursementClaims    ReimbursementClaim[]
   approvedReimbursements ReimbursementClaim[]   @relation("ReimbursementApprovedBy")
   reimbursementHistories ReimbursementHistory[]
+
+  userRoles UserRole[]
 
   @@map("users")
 }
