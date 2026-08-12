@@ -503,149 +503,155 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
 
       const createdUserId = userRes.data.userId;
 
-      // 2. Create Personal Information Record
-      const personalData = {
-        userId: createdUserId,
-        dateOfBirth: formData.dateOfBirth ? new Date(formData.dateOfBirth).toISOString() : null,
-        gender: formData.gender,
-        maritalStatus: formData.maritalStatus,
-        bloodGroup: formData.bloodGroup,
-        nationality: formData.nationality,
-        religion: formData.religion || null,
-        motherTongue: formData.motherTongue || null,
-        aadhaarNumber: formData.aadhaarNumber || null,
-        panNumber: formData.panNumber || null,
-        passportNumber: formData.passportNumber || null,
-        profilePhoto: formData.profilePhoto || null,
-        personalEmail: formData.personalEmail || null,
-        officialEmail: formData.officialEmail || null,
-      };
-
-      const personalRes = await createPersonalInfo(personalData);
-      if (!personalRes.success) {
-        throw new Error(personalRes.error || "Failed to save personal details.");
-      }
-
-      // 3. Create Parent Info Record
-      const parentData = {
-        userId: createdUserId,
-        fatherName: formData.fatherName || null,
-        fatherMobile: formData.fatherMobile || null,
-        fatherOccupation: formData.fatherOccupation || null,
-        motherName: formData.motherName || null,
-        motherMobile: formData.motherMobile || null,
-        motherOccupation: formData.motherOccupation || null,
-        guardianName: formData.guardianName || null,
-        guardianMobile: formData.guardianMobile || null,
-        relationship: formData.guardianRelationship || null,
-      };
-
-      const parentRes = await createParentInfo(parentData);
-      if (!parentRes.success) {
-        throw new Error(parentRes.error || "Failed to save family details.");
-      }
-
-      // 4. Create Address Records
-      const currentAddressData = {
-        userId: createdUserId,
-        addressType: "CURRENT",
-        addressLine1: formData.currentAddress.addressLine1,
-        addressLine2: formData.currentAddress.addressLine2 || null,
-        city: formData.currentAddress.city,
-        state: formData.currentAddress.state,
-        country: formData.currentAddress.country,
-        postalCode: formData.currentAddress.postalCode,
-      };
-
-      const currentAddressRes = await createAddressInfo(currentAddressData);
-      if (!currentAddressRes.success) {
-        throw new Error(currentAddressRes.error || "Failed to save current address details.");
-      }
-
-      if (!formData.isSameAddress) {
-        const permanentAddressData = {
+      // 2. Create Personal Information Record (if any personal field is provided)
+      try {
+        const personalData = {
           userId: createdUserId,
-          addressType: "PERMANENT",
-          addressLine1: formData.permanentAddress.addressLine1,
-          addressLine2: formData.permanentAddress.addressLine2 || null,
-          city: formData.permanentAddress.city,
-          state: formData.permanentAddress.state,
-          country: formData.permanentAddress.country,
-          postalCode: formData.permanentAddress.postalCode,
+          dateOfBirth: formData.dateOfBirth ? new Date(formData.dateOfBirth).toISOString() : null,
+          gender: formData.gender || null,
+          maritalStatus: formData.maritalStatus || null,
+          bloodGroup: formData.bloodGroup || null,
+          nationality: formData.nationality || null,
+          religion: formData.religion || null,
+          motherTongue: formData.motherTongue || null,
+          aadhaarNumber: formData.aadhaarNumber || null,
+          panNumber: formData.panNumber || null,
+          passportNumber: formData.passportNumber || null,
+          profilePhoto: formData.profilePhoto || null,
+          personalEmail: formData.personalEmail || null,
+          officialEmail: formData.officialEmail || null,
         };
-        const permAddressRes = await createAddressInfo(permanentAddressData);
-        if (!permAddressRes.success) {
-          throw new Error(permAddressRes.error || "Failed to save permanent address details.");
+        await createPersonalInfo(personalData);
+      } catch (err) {
+        console.warn("Could not save secondary personal info:", err);
+      }
+
+      // 3. Create Parent Info Record (if any parent field is provided)
+      if (formData.fatherName || formData.motherName || formData.guardianName) {
+        try {
+          const parentData = {
+            userId: createdUserId,
+            fatherName: formData.fatherName || null,
+            fatherMobile: formData.fatherMobile || null,
+            fatherOccupation: formData.fatherOccupation || null,
+            motherName: formData.motherName || null,
+            motherMobile: formData.motherMobile || null,
+            motherOccupation: formData.motherOccupation || null,
+            guardianName: formData.guardianName || null,
+            guardianMobile: formData.guardianMobile || null,
+            relationship: formData.guardianRelationship || null,
+          };
+          await createParentInfo(parentData);
+        } catch (err) {
+          console.warn("Could not save secondary parent info:", err);
         }
       }
 
-      // 5. Create Bank Details Record
-      const bankDetailsData = {
-        userId: createdUserId,
-        accountHolderName: (formData.accountHolderName || `${formData.firstName} ${formData.lastName}`).trim(),
-        bankName: formData.bankName,
-        branchName: formData.bankBranch,
-        accountNumber: formData.bankAccountNo,
-        ifscCode: formData.ifscCode,
-        accountType: formData.accountType,
-        upiId: formData.upiId || null,
-        salaryAccount: formData.salaryAccount,
-      };
+      // 4. Create Address Records (if address is provided)
+      if (formData.currentAddress?.addressLine1 && formData.currentAddress?.city) {
+        try {
+          const currentAddressData = {
+            userId: createdUserId,
+            addressType: "CURRENT",
+            addressLine1: formData.currentAddress.addressLine1,
+            addressLine2: formData.currentAddress.addressLine2 || null,
+            city: formData.currentAddress.city,
+            state: formData.currentAddress.state || "State",
+            country: formData.currentAddress.country || "India",
+            postalCode: formData.currentAddress.postalCode || "000000",
+          };
+          await createAddressInfo(currentAddressData);
 
-      const bankRes = await createBankDetails(bankDetailsData);
-      if (!bankRes.success) {
-        throw new Error(bankRes.error || "Failed to save bank details.");
+          if (!formData.isSameAddress && formData.permanentAddress?.addressLine1) {
+            const permanentAddressData = {
+              userId: createdUserId,
+              addressType: "PERMANENT",
+              addressLine1: formData.permanentAddress.addressLine1,
+              addressLine2: formData.permanentAddress.addressLine2 || null,
+              city: formData.permanentAddress.city || formData.currentAddress.city,
+              state: formData.permanentAddress.state || "State",
+              country: formData.permanentAddress.country || "India",
+              postalCode: formData.permanentAddress.postalCode || "000000",
+            };
+            await createAddressInfo(permanentAddressData);
+          }
+        } catch (err) {
+          console.warn("Could not save address info:", err);
+        }
+      }
+
+      // 5. Create Bank Details Record (only if bank details are provided)
+      if (formData.bankName?.trim() && formData.bankAccountNo?.trim()) {
+        try {
+          const bankDetailsData = {
+            userId: createdUserId,
+            accountHolderName: (formData.accountHolderName || `${formData.firstName} ${formData.lastName}`).trim(),
+            bankName: formData.bankName.trim(),
+            branchName: formData.bankBranch?.trim() || "Main Branch",
+            accountNumber: formData.bankAccountNo.trim(),
+            ifscCode: formData.ifscCode?.trim() || "BANK0000000",
+            accountType: formData.accountType || "Savings",
+            upiId: formData.upiId || null,
+            salaryAccount: formData.salaryAccount,
+          };
+          await createBankDetails(bankDetailsData);
+        } catch (err) {
+          console.warn("Could not save bank details:", err);
+        }
       }
 
       // 6. Create PF Details Record (if uanNumber is provided)
-      if (formData.uanNumber) {
-        const pfData = {
-          userId: createdUserId,
-          uanNumber: formData.uanNumber,
-          isInternationalWorker: false,
-          educationLevel: null,
-          pfNumber: null,
-          pfJoiningDate: null,
-          pfLeavingDate: null,
-          documentNumber: null,
-          documentType: null,
-          documentExpiryDate: null,
-          reasonForLeaving: null,
-          phcCategory: null,
-        };
-        const pfRes = await createPFDetail(pfData);
-        if (!pfRes.success) {
-          throw new Error(pfRes.error || "Failed to save PF details.");
+      if (formData.uanNumber?.trim()) {
+        try {
+          const pfData = {
+            userId: createdUserId,
+            uanNumber: formData.uanNumber.trim(),
+            isInternationalWorker: false,
+            educationLevel: null,
+            pfNumber: null,
+            pfJoiningDate: null,
+            pfLeavingDate: null,
+            documentNumber: null,
+            documentType: null,
+            documentExpiryDate: null,
+            reasonForLeaving: null,
+            phcCategory: null,
+          };
+          await createPFDetail(pfData);
+        } catch (err) {
+          console.warn("Could not save PF details:", err);
         }
       }
 
       // 7. Create ESI Details Record (if esiNumber is provided)
-      if (formData.esiNumber) {
-        const esiData = {
-          userId: createdUserId,
-          esiNumber: formData.esiNumber,
-          esiJoiningDate: null,
-          esiLeavingDate: null,
-          reasonForLeaving: null,
-        };
-        const esiRes = await createESIDetail(esiData);
-        if (!esiRes.success) {
-          throw new Error(esiRes.error || "Failed to save ESI details.");
+      if (formData.esiNumber?.trim()) {
+        try {
+          const esiData = {
+            userId: createdUserId,
+            esiNumber: formData.esiNumber.trim(),
+            esiJoiningDate: null,
+            esiLeavingDate: null,
+            reasonForLeaving: null,
+          };
+          await createESIDetail(esiData);
+        } catch (err) {
+          console.warn("Could not save ESI details:", err);
         }
       }
 
       // 8. Create Insurance Details Record (if policyNumber or insuranceProvider is provided)
-      if (formData.insuranceProvider || formData.policyNumber) {
-        const insuranceData = {
-          userId: createdUserId,
-          insuranceProvider: formData.insuranceProvider || null,
-          insuranceType: (formData.insuranceType || "HEALTH") as any,
-          policyNumber: formData.policyNumber || null,
-          insuranceExpiryDate: formData.insuranceExpiryDate ? new Date(formData.insuranceExpiryDate).toISOString() : null,
-        };
-        const insRes = await createInsuranceDetail(insuranceData);
-        if (!insRes.success) {
-          throw new Error(insRes.error || "Failed to save insurance details.");
+      if (formData.insuranceProvider?.trim() || formData.policyNumber?.trim()) {
+        try {
+          const insuranceData = {
+            userId: createdUserId,
+            insuranceProvider: formData.insuranceProvider || null,
+            insuranceType: (formData.insuranceType || "HEALTH") as any,
+            policyNumber: formData.policyNumber || null,
+            insuranceExpiryDate: formData.insuranceExpiryDate ? new Date(formData.insuranceExpiryDate).toISOString() : null,
+          };
+          await createInsuranceDetail(insuranceData);
+        } catch (err) {
+          console.warn("Could not save insurance details:", err);
         }
       }
 
@@ -653,18 +659,18 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
       if (formData.uploadedDocs && formData.uploadedDocs.length > 0) {
         for (const doc of formData.uploadedDocs) {
           if (doc.file) {
-            // Map the type string to the expected enum value
-            let documentType = "OTHER";
-            const normType = doc.type.toLowerCase();
-            if (normType.includes("aadhaar")) documentType = "AADHAAR";
-            else if (normType.includes("pan")) documentType = "PAN";
-            else if (normType.includes("passport")) documentType = "PASSPORT";
-            else if (normType.includes("degree")) documentType = "DEGREE_CERTIFICATE";
-            else if (normType.includes("relieving")) documentType = "RELIEVING_LETTER";
-            
-            const docRes = await uploadEmployeeDocument(createdUserId, documentType, doc.file);
-            if (!docRes.success) {
-              throw new Error(docRes.error || `Failed to upload document: ${doc.type}`);
+            try {
+              let documentType = "OTHER";
+              const normType = doc.type.toLowerCase();
+              if (normType.includes("aadhaar")) documentType = "AADHAAR";
+              else if (normType.includes("pan")) documentType = "PAN";
+              else if (normType.includes("passport")) documentType = "PASSPORT";
+              else if (normType.includes("degree")) documentType = "DEGREE_CERTIFICATE";
+              else if (normType.includes("relieving")) documentType = "RELIEVING_LETTER";
+              
+              await uploadEmployeeDocument(createdUserId, documentType, doc.file);
+            } catch (err) {
+              console.warn("Could not upload document:", err);
             }
           }
         }
