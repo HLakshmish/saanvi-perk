@@ -11,6 +11,7 @@ import {
   Umbrella,
   Banknote,
   Receipt,
+  Laptop,
   TrendingUp,
   ShieldAlert,
   Settings,
@@ -39,6 +40,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: "holidays-leaves", label: "Leaves", icon: Umbrella, roles: ["superadmin", "admin", "employee"] },
     { id: "payroll", label: "Payroll", icon: Banknote, roles: ["superadmin", "admin", "employee"] },
     { id: "expenses", label: "Expenses", icon: Receipt, roles: ["superadmin", "admin", "employee"] },
+    { id: "assets", label: "Assets", icon: Laptop, roles: ["superadmin", "admin", "employee"] },
     { id: "analytics", label: "Analytics", icon: TrendingUp, roles: ["superadmin", "admin"] },
     { id: "tenant-settings", label: "Superadmin Control", icon: ShieldAlert, roles: ["superadmin"] },
     { id: "settings", label: "Settings", icon: Settings, roles: ["superadmin", "admin", "employee"] },
@@ -48,50 +50,78 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <aside
-      className={`bg-[#013e37] border-r border-[#013e37]/40 flex flex-col py-4 gap-1.5 h-[calc(100vh-3.5rem)] sticky top-14 shadow-lg z-30 transition-all duration-300 select-none ${
-        isSidebarOpen ? "w-60 px-3" : "w-14 sm:w-16 items-center px-1"
+      className={`bg-[#013e37] border-r border-[#013e37]/40 flex flex-col h-[calc(100vh-3.5rem)] sticky top-14 shadow-lg z-30 transition-all duration-300 select-none ${
+        isSidebarOpen ? "w-60" : "w-14 sm:w-16 items-center"
       }`}
     >
-      {visibleItems.map((item) => {
-        const Icon = item.icon;
-        const isActive = activeTab === item.id;
-        return (
-          <button
-            key={item.id}
-            onClick={() => onTabChange(item.id)}
-            title={isSidebarOpen ? undefined : item.label}
-            className={`rounded-xl transition-all duration-200 group relative flex items-center cursor-pointer ${
-              isSidebarOpen
-                ? `w-full px-4 py-3 gap-3.5 ${
-                    isActive
-                      ? "text-[#013e37] bg-[#ffefb3] shadow-md shadow-black/20 font-bold"
-                      : "text-[#ffefb3]/75 hover:text-[#ffefb3] hover:bg-white/10 font-medium"
-                  }`
-                : `p-2.5 justify-center ${
-                    isActive
-                      ? "text-[#013e37] bg-[#ffefb3] shadow-md shadow-black/20 scale-105"
-                      : "text-[#ffefb3]/75 hover:text-[#ffefb3] hover:bg-white/10 hover:scale-105"
-                  }`
-            }`}
-          >
-            <Icon className="w-5 h-5 shrink-0" />
-            
-            {/* Expanded sidebar labels */}
-            {isSidebarOpen && (
-              <span className="text-xs tracking-wide animate-fade-in truncate">
-                {item.label}
-              </span>
-            )}
+      {/* Scrollable nav container — slim custom scrollbar, all items always visible */}
+      <nav
+        className={`flex-1 flex flex-col gap-1 py-4 overflow-y-auto sidebar-scroll ${
+          isSidebarOpen ? "px-3" : "px-1"
+        }`}
+      >
+        {visibleItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = activeTab === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => onTabChange(item.id)}
+              title={isSidebarOpen ? undefined : item.label}
+              className={`rounded-xl transition-all duration-200 group relative flex items-center cursor-pointer shrink-0 ${
+                isSidebarOpen
+                  ? `w-full px-4 py-3 gap-3.5 ${
+                      isActive
+                        ? "text-[#013e37] bg-[#ffefb3] shadow-md shadow-black/20 font-bold"
+                        : "text-[#ffefb3]/75 hover:text-[#ffefb3] hover:bg-white/10 font-medium"
+                    }`
+                  : `p-2.5 justify-center ${
+                      isActive
+                        ? "text-[#013e37] bg-[#ffefb3] shadow-md shadow-black/20 scale-105"
+                        : "text-[#ffefb3]/75 hover:text-[#ffefb3] hover:bg-white/10 hover:scale-105"
+                    }`
+              }`}
+            >
+              <Icon className="w-5 h-5 shrink-0" />
+              
+              {/* Expanded sidebar labels */}
+              {isSidebarOpen && (
+                <span className="text-xs tracking-wide animate-fade-in truncate">
+                  {item.label}
+                </span>
+              )}
 
-            {/* Collapsed sidebar Tooltips */}
-            {!isSidebarOpen && (
-              <span className="absolute left-16 bg-[#012d28] text-[#ffefb3] text-[11px] font-bold px-2.5 py-1.5 rounded-md shadow-xl border border-[#ffefb3]/20 opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-50 whitespace-nowrap">
-                {item.label}
-              </span>
-            )}
-          </button>
-        );
-      })}
+              {/* Collapsed sidebar Tooltips */}
+              {!isSidebarOpen && (
+                <span className="absolute left-16 bg-[#012d28] text-[#ffefb3] text-[11px] font-bold px-2.5 py-1.5 rounded-md shadow-xl border border-[#ffefb3]/20 opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-50 whitespace-nowrap">
+                  {item.label}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </nav>
+
+      {/* Slim custom scrollbar styles */}
+      <style jsx>{`
+        .sidebar-scroll {
+          scrollbar-width: thin;
+          scrollbar-color: rgba(255, 239, 179, 0.2) transparent;
+        }
+        .sidebar-scroll::-webkit-scrollbar {
+          width: 4px;
+        }
+        .sidebar-scroll::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .sidebar-scroll::-webkit-scrollbar-thumb {
+          background: rgba(255, 239, 179, 0.2);
+          border-radius: 999px;
+        }
+        .sidebar-scroll::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 239, 179, 0.4);
+        }
+      `}</style>
     </aside>
   );
 };

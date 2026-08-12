@@ -90,28 +90,28 @@ export default function OwnerDashboardPage() {
   return (
     <>
       <style>{`
-        .sidebar-header-bg { background-color: #0f172a; }
-        .brand-purple-bg { background-color: #4f39f6; }
-        .brand-purple-text { color: #4f39f6; }
-        .brand-purple-border { border-color: #4f39f6; }
+        .sidebar-header-bg { background-color: #013e37; }
+        .brand-purple-bg { background-color: #013e37; color: #ffefb3; }
+        .brand-purple-text { color: #013e37; }
+        .brand-purple-border { border-color: #013e37; }
         .brand-btn-primary { 
-          background-color: #4f39f6; 
-          color: #ffffff; 
+          background-color: #013e37; 
+          color: #ffefb3; 
           font-weight: 700;
         }
         .brand-btn-primary:hover { 
-          background-color: #4330db; 
-          box-shadow: 0 4px 14px rgba(79, 57, 246, 0.35);
+          background-color: #012d28; 
+          box-shadow: 0 4px 14px rgba(1, 62, 55, 0.35);
         }
         .brand-badge { 
-          background-color: rgba(79, 57, 246, 0.12); 
-          color: #4f39f6; 
+          background-color: rgba(1, 62, 55, 0.12); 
+          color: #013e37; 
         }
       `}</style>
 
       <div className="min-h-screen bg-slate-50 font-sans text-slate-800">
         {/* ─── Top Header Bar ─── */}
-        <header className="sidebar-header-bg border-b border-slate-800 sticky top-0 z-40 shadow-md">
+        <header className="sidebar-header-bg border-b border-[#012d28] sticky top-0 z-40 shadow-md">
           <div className="max-w-6xl mx-auto flex items-center justify-between px-4 sm:px-8 h-16">
             <div className="flex items-center gap-3">
               {showRegistrationForm && (
@@ -120,7 +120,7 @@ export default function OwnerDashboardPage() {
                     setShowRegistrationForm(false);
                     setEditingCompany(null);
                   }}
-                  className="p-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer mr-1"
+                  className="p-2 rounded-xl text-[#ffefb3] hover:text-white hover:bg-white/10 transition-colors cursor-pointer mr-1"
                   title="Back to Companies List"
                 >
                   <ArrowLeft className="w-5 h-5" />
@@ -131,10 +131,10 @@ export default function OwnerDashboardPage() {
                 alt="Nexus Logo"
                 width={40}
                 height={40}
-                className="w-10 h-10 object-contain rounded-xl shadow-md shadow-[#4f39f6]/30"
+                className="w-10 h-10 object-contain rounded-xl shadow-md shadow-[#013e37]/30"
               />
               <div className="flex items-center gap-2">
-                <span className="font-extrabold text-white text-base sm:text-lg tracking-tight">
+                <span className="font-extrabold text-[#ffefb3] text-base sm:text-lg tracking-tight">
                   Nexus
                 </span>
               </div>
@@ -142,9 +142,9 @@ export default function OwnerDashboardPage() {
 
             <button
               onClick={handleLogout}
-              className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-all cursor-pointer border border-transparent hover:border-slate-700"
+              className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-[#ffefb3] hover:text-white hover:bg-white/10 rounded-xl transition-all cursor-pointer border border-transparent hover:border-[#012d28]"
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-4 h-4 text-[#ffefb3]" />
               <span className="hidden sm:inline">Logout</span>
             </button>
           </div>
@@ -160,7 +160,7 @@ export default function OwnerDashboardPage() {
                   <LayoutGrid className="w-5 h-5 brand-purple-text" />
                 </div>
                 <div>
-                  <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                  <h1 className="text-2xl sm:text-3xl font-extrabold text-[#013e37] tracking-tight">
                     Company Management
                   </h1>
                   <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
@@ -175,7 +175,7 @@ export default function OwnerDashboardPage() {
                   <button
                     onClick={() => setViewMode("grid")}
                     className={`p-1.5 rounded-lg transition-all ${
-                      viewMode === "grid" ? "bg-[#4f39f6]/10 text-[#4f39f6]" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+                      viewMode === "grid" ? "bg-[#013e37] text-[#ffefb3]" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
                     }`}
                     title="Grid View"
                   >
@@ -184,7 +184,7 @@ export default function OwnerDashboardPage() {
                   <button
                     onClick={() => setViewMode("list")}
                     className={`p-1.5 rounded-lg transition-all ${
-                      viewMode === "list" ? "bg-[#4f39f6]/10 text-[#4f39f6]" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+                      viewMode === "list" ? "bg-[#013e37] text-[#ffefb3]" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
                     }`}
                     title="List View"
                   >
@@ -206,9 +206,9 @@ export default function OwnerDashboardPage() {
                     setEditingCompany(null);
                     setSelectedCompany(null);
                   }}
-                  className="brand-btn-primary flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-xs shadow-[#4f39f6]/20"
+                  className="brand-btn-primary flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-2xs hover:shadow-xs"
                 >
-                  <Plus className="w-4 h-4" />
+                  <Plus className="w-4 h-4 text-[#ffefb3]" />
                   <span className="hidden sm:inline">Register New Company</span>
                   <span className="sm:hidden">New</span>
                 </button>
@@ -230,16 +230,16 @@ export default function OwnerDashboardPage() {
             <>
               {isLoading ? (
                 <div className="text-center py-20 bg-white rounded-2xl border border-slate-200 shadow-xs">
-                  <div className="w-10 h-10 border-4 border-slate-200 border-t-[#4f39f6] rounded-full animate-spin mx-auto mb-4" />
+                  <div className="w-10 h-10 border-4 border-slate-200 border-t-[#013e37] rounded-full animate-spin mx-auto mb-4" />
                   <p className="text-sm font-medium text-slate-500">Loading registered companies...</p>
                 </div>
               ) : companies.length === 0 ? (
                 /* ── Empty State ── */
                 <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-12 sm:p-20 text-center">
-                  <div className="w-20 h-20 rounded-2xl bg-[#4f39f6]/10 border border-[#4f39f6]/20 flex items-center justify-center mx-auto mb-6">
+                  <div className="w-20 h-20 rounded-2xl bg-[#013e37]/10 border border-[#013e37]/20 flex items-center justify-center mx-auto mb-6">
                     <Building2 className="w-10 h-10 brand-purple-text" />
                   </div>
-                  <h2 className="text-xl font-bold text-slate-900 mb-2">
+                  <h2 className="text-xl font-bold text-[#013e37] mb-2">
                     No Companies Registered Yet
                   </h2>
                   <p className="text-sm text-slate-500 max-w-md mx-auto mb-8">
@@ -250,9 +250,9 @@ export default function OwnerDashboardPage() {
                       setEditingCompany(null);
                       setShowRegistrationForm(true);
                     }}
-                    className="brand-btn-primary px-6 py-3 rounded-xl text-sm font-bold shadow-md shadow-[#4f39f6]/20 inline-flex items-center gap-2 cursor-pointer transition-all hover:shadow-lg"
+                    className="brand-btn-primary px-6 py-3 rounded-xl text-sm font-bold shadow-2xs inline-flex items-center gap-2 cursor-pointer transition-all hover:shadow-xs"
                   >
-                    <Plus className="w-4 h-4" />
+                    <Plus className="w-4 h-4 text-[#ffefb3]" />
                     Register Your First Company
                   </button>
                 </div>
@@ -262,7 +262,7 @@ export default function OwnerDashboardPage() {
                   {companies.map((company) => (
                     <div
                       key={company.companyId}
-                      className={`bg-white rounded-2xl border border-slate-200 shadow-xs hover:shadow-md hover:border-[#4f39f6]/40 transition-all p-6 group ${
+                      className={`bg-white rounded-2xl border border-slate-200 shadow-xs hover:shadow-md hover:border-[#013e37]/40 transition-all p-6 group ${
                         viewMode === "list" ? "flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6" : "flex flex-col justify-between"
                       }`}
                     >
@@ -270,7 +270,7 @@ export default function OwnerDashboardPage() {
                         {/* Company Header */}
                         <div className={`flex items-start justify-between mb-4 ${viewMode === "list" ? "md:mb-0 md:min-w-[250px]" : ""}`}>
                           <div className="flex items-center gap-3.5">
-                            <div className="w-12 h-12 rounded-xl brand-purple-bg flex items-center justify-center text-white text-lg font-extrabold shrink-0 shadow-xs">
+                            <div className="w-12 h-12 rounded-xl brand-purple-bg flex items-center justify-center text-[#ffefb3] text-lg font-extrabold shrink-0 shadow-xs">
                               {company.companyName?.charAt(0)?.toUpperCase() || "C"}
                             </div>
                             <div>
@@ -288,12 +288,12 @@ export default function OwnerDashboardPage() {
                         {/* Company Details (Clean, no date field) */}
                         <div className={`space-y-2 text-xs text-slate-600 mb-5 bg-slate-50/70 p-3.5 rounded-xl border border-slate-100 ${viewMode === "list" ? "mb-0 md:flex-1 w-full md:w-auto" : ""}`}>
                           <div className="flex items-center gap-2.5">
-                            <Mail className="w-3.5 h-3.5 text-[#4f39f6]" />
+                            <Mail className="w-3.5 h-3.5 text-[#013e37]" />
                             <span className="font-medium text-slate-700">{company.companyEmail}</span>
                           </div>
                           {company.website && (
                             <div className="flex items-center gap-2.5">
-                              <Globe className="w-3.5 h-3.5 text-[#4f39f6]" />
+                              <Globe className="w-3.5 h-3.5 text-[#013e37]" />
                               <span className="font-medium text-slate-700">{company.website}</span>
                             </div>
                           )}
@@ -301,16 +301,16 @@ export default function OwnerDashboardPage() {
 
                         {/* SuperAdmin Info */}
                         {company.superAdmin && (
-                          <div className={`bg-[#4f39f6]/10 border border-[#4f39f6]/20 rounded-xl p-3 flex items-center gap-3 mb-4 ${viewMode === "list" ? "mb-0 md:min-w-[200px]" : ""}`}>
-                            <div className="w-8 h-8 rounded-full brand-purple-bg flex items-center justify-center text-white">
-                              <Users className="w-4 h-4" />
+                          <div className={`bg-[#013e37]/10 border border-[#013e37]/20 rounded-xl p-3 flex items-center gap-3 mb-4 ${viewMode === "list" ? "mb-0 md:min-w-[200px]" : ""}`}>
+                            <div className="w-8 h-8 rounded-full brand-purple-bg flex items-center justify-center text-[#ffefb3]">
+                              <Users className="w-4 h-4 text-[#ffefb3]" />
                             </div>
                             <div className="text-xs">
                               <span className="font-bold text-slate-900">
                                 {company.superAdmin.firstName}{" "}
                                 {company.superAdmin.lastName || ""}
                               </span>
-                              <span className="text-[#4f39f6] ml-1.5 text-[10px] font-extrabold uppercase">
+                              <span className="text-[#013e37] ml-1.5 text-[10px] font-extrabold uppercase">
                                 • SuperAdmin
                               </span>
                               <p className="text-[11px] text-slate-500">{company.superAdmin.email}</p>
@@ -326,15 +326,15 @@ export default function OwnerDashboardPage() {
                             onClick={() => handleViewCompany(company.companyId)}
                             className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border border-slate-200"
                           >
-                            <Eye className="w-3.5 h-3.5 text-[#4f39f6]" />
+                            <Eye className="w-3.5 h-3.5 text-[#013e37]" />
                             <span>View</span>
                           </button>
 
                           <button
                             onClick={() => handleEditCompany(company)}
-                            className="px-3 py-1.5 rounded-xl bg-[#4f39f6]/10 hover:bg-[#4f39f6]/20 text-[#4f39f6] text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border border-[#4f39f6]/30"
+                            className="px-3 py-1.5 rounded-xl bg-[#013e37]/10 hover:bg-[#013e37]/20 text-[#013e37] text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border border-[#013e37]/30"
                           >
-                            <Pencil className="w-3.5 h-3.5" />
+                            <Pencil className="w-3.5 h-3.5 text-[#013e37]" />
                             <span>Edit</span>
                           </button>
                         </div>
@@ -367,11 +367,11 @@ export default function OwnerDashboardPage() {
 
                 {/* Modal Header */}
                 <div className="flex items-center gap-3.5 mb-6 pb-5 border-b border-slate-100">
-                  <div className="w-14 h-14 rounded-xl brand-purple-bg flex items-center justify-center text-white font-extrabold text-xl shadow-md">
+                  <div className="w-14 h-14 rounded-xl brand-purple-bg flex items-center justify-center text-[#ffefb3] font-extrabold text-xl shadow-md">
                     {selectedCompany.companyName.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-slate-900 leading-tight">
+                    <h2 className="text-xl font-bold text-[#013e37] leading-tight">
                       {selectedCompany.companyName}
                     </h2>
                     <span className="brand-badge text-[11px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider inline-block mt-1">
@@ -383,8 +383,8 @@ export default function OwnerDashboardPage() {
                 <div className="space-y-4 text-xs sm:text-sm">
                   {/* Contact Info */}
                   <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-2">
-                    <div className="font-bold text-slate-900 flex items-center gap-2 mb-1">
-                      <Mail className="w-4 h-4 brand-purple-text" />
+                    <div className="font-bold text-[#013e37] flex items-center gap-2 mb-1">
+                      <Mail className="w-4 h-4 text-[#013e37]" />
                       <span>Contact & Profile Information</span>
                     </div>
                     <div className="text-slate-600">Email: <span className="text-slate-900 font-semibold">{selectedCompany.companyEmail}</span></div>
@@ -394,7 +394,7 @@ export default function OwnerDashboardPage() {
                       </div>
                     )}
                     {selectedCompany.website && (
-                      <div className="text-slate-600">Website: <span className="brand-purple-text font-semibold">{selectedCompany.website}</span></div>
+                      <div className="text-slate-600">Website: <span className="text-[#013e37] font-semibold">{selectedCompany.website}</span></div>
                     )}
                     {selectedCompany.industryType && (
                       <div className="text-slate-600">Industry: <span className="text-slate-900 font-semibold">{selectedCompany.industryType}</span></div>
@@ -403,8 +403,8 @@ export default function OwnerDashboardPage() {
 
                   {/* Tax & Compliance */}
                   <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-2">
-                    <div className="font-bold text-slate-900 flex items-center gap-2 mb-1">
-                      <FileCheck2 className="w-4 h-4 brand-purple-text" />
+                    <div className="font-bold text-[#013e37] flex items-center gap-2 mb-1">
+                      <FileCheck2 className="w-4 h-4 text-[#013e37]" />
                       <span>Tax & Compliance</span>
                     </div>
                     <div className="text-slate-600">GST Number: <span className="text-slate-900 font-semibold font-mono">{selectedCompany.gstNumber || "N/A"}</span></div>
@@ -413,9 +413,9 @@ export default function OwnerDashboardPage() {
 
                   {/* Superadmin Info */}
                   {selectedCompany.superAdmin && (
-                    <div className="p-4 rounded-xl bg-[#4f39f6]/10 border border-[#4f39f6]/25 space-y-1.5">
-                      <div className="font-bold text-slate-900 flex items-center gap-2 mb-1">
-                        <Users className="w-4 h-4 brand-purple-text" />
+                    <div className="p-4 rounded-xl bg-[#013e37]/10 border border-[#013e37]/25 space-y-1.5">
+                      <div className="font-bold text-[#013e37] flex items-center gap-2 mb-1">
+                        <Users className="w-4 h-4 text-[#013e37]" />
                         <span>Assigned SuperAdmin</span>
                       </div>
                       <div className="text-slate-600">Name: <span className="text-slate-900 font-bold">{selectedCompany.superAdmin.firstName} {selectedCompany.superAdmin.lastName || ""}</span></div>
@@ -427,9 +427,9 @@ export default function OwnerDashboardPage() {
                 <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
                   <button
                     onClick={() => handleEditCompany(selectedCompany)}
-                    className="px-4 py-2 bg-[#4f39f6] text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-xs hover:bg-[#4330db] transition-colors cursor-pointer"
+                    className="px-4 py-2 bg-[#013e37] text-[#ffefb3] font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-2xs hover:bg-[#012d28] transition-colors cursor-pointer"
                   >
-                    <Pencil className="w-3.5 h-3.5" />
+                    <Pencil className="w-3.5 h-3.5 text-[#ffefb3]" />
                     <span>Edit Company Details</span>
                   </button>
 

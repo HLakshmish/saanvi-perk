@@ -20,6 +20,7 @@ import { EmployeeListPage } from "@/features/employees";
 import { ExpensesView } from "@/features/expenses";
 import { LeavesView } from "@/features/leaves";
 import { SettingsView } from "@/features/settings";
+import { AssetsView } from "@/features/assets";
 import { RefreshCw, HelpCircle } from "lucide-react";
 
 interface DashboardViewProps {
@@ -75,6 +76,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         return <ExpensesView currentRole={role} currentUserName={userName} />;
       case "holidays-leaves":
         return <LeavesView />;
+      case "assets":
+        return <AssetsView currentRole={role} />;
       case "settings":
         return <SettingsView />;
       case "dashboard":

@@ -200,10 +200,10 @@ export function LoginForm() {
               <div className="text-[11px] sm:text-xs text-[#013e37]/75 font-medium">
                 <span>Need help? Contact support at </span>
                 <a
-                  href="mailto:support@saanviperk.com"
+                  href="mailto:support@saanvinexus.com"
                   className="text-[#013e37] hover:underline font-bold"
                 >
-                  support@saanviperk.com
+                  support@saanvinexus.com
                 </a>
               </div>
               <div className="text-[10px] sm:text-xs text-[#013e37]/50 font-medium">
