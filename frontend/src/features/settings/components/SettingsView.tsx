@@ -6,6 +6,7 @@ import { OrganizationTab } from "./OrganizationTab";
 import { OthersTab } from "./OthersTab";
 import { PlaceholderConfigTab } from "./PlaceholderConfigTab";
 import { DepartmentTab } from "./DepartmentTab";
+import { LeaveTab } from "./LeaveTab";
 
 export const SettingsView: React.FC = () => {
   const [activeSubTab, setActiveSubTab] = useState<SettingsSubTab>("account-info");
@@ -145,10 +146,7 @@ export const SettingsView: React.FC = () => {
           )}
 
           {activeSubTab === "leave" && (
-            <PlaceholderConfigTab
-              title="Leave"
-              description="Manage leave accrual policies, carry-forward rules, and holiday lists."
-            />
+            <LeaveTab />
           )}
 
           {activeSubTab === "training" && (
