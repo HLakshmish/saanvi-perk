@@ -18,7 +18,7 @@ const mapUserToEmployee = (user: any): Employee => {
     email: user.officialEmail,
     location: "Saligrama", // default placeholder or company branch
     department: user.department?.departmentName || "General",
-    designation: user.role?.roleName || "Staff",
+    designation: user.userRoles?.[0]?.role?.roleName || user.role?.roleName || "Staff",
     employeeGroup: (user.employmentType || "FULL_TIME").replace("_", "-"),
     reportsTo: user.reportingToId ? String(user.reportingToId) : undefined,
     designationId: user.designationId || undefined,
@@ -109,7 +109,7 @@ export const getEmployees = async (): Promise<Employee[]> => {
           email: user.officialEmail,
           location: companyLocation,
           department: user.department?.departmentName || "General",
-          designation: matchingDesignation?.designationName || user.role?.roleName || "Staff",
+          designation: matchingDesignation?.designationName || user.userRoles?.[0]?.role?.roleName || user.role?.roleName || "Staff",
           employeeGroup: (user.employmentType || "FULL_TIME").replace("_", "-"),
           reportsTo: mgrCode,
           designationId: user.designationId || undefined,
@@ -177,13 +177,18 @@ export const getDepartments = async (): Promise<any[]> => {
 export const createEmployee = async (data: any): Promise<{ success: boolean; data?: any; error?: string; message?: string }> => {
   const token = getAuthToken();
   try {
+    const { roleId, ...rest } = data;
+    const payload = {
+      ...rest,
+      roleIds: roleId !== undefined && roleId !== null ? [Number(roleId)] : [],
+    };
     const res = await fetch(`${API_BASE_URL}/api/users`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
     });
     const result = await res.json();
     if (res.ok && result.success) {
@@ -416,13 +421,20 @@ export const getUserById = async (userId: number): Promise<{ success: boolean; d
 export const updateUser = async (userId: number, data: any): Promise<{ success: boolean; data?: any; error?: string }> => {
   const token = getAuthToken();
   try {
+    const { roleId, ...rest } = data;
+    const payload: any = {
+      ...rest,
+    };
+    if (roleId !== undefined && roleId !== null) {
+      payload.roleIds = [Number(roleId)];
+    }
     const res = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
     });
     const result = await res.json();
     if (res.ok && result.success) {

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { X, Loader2, ShieldAlert, CheckCircle2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -54,6 +55,12 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
 
   // Master Data
   const [roles, setRoles] = useState<any[]>([]);
@@ -263,7 +270,7 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
         employeeCode: u.employeeCode || "",
         officialEmail: u.officialEmail || "",
         password: "", // Keep blank, will only update if filled
-        roleId: u.roleId ? String(u.roleId) : "",
+        roleId: u.userRoles?.[0]?.roleId ? String(u.userRoles[0].roleId) : (u.roleId ? String(u.roleId) : ""),
         departmentId: u.departmentId ? String(u.departmentId) : "",
         designationId: u.designationId ? String(u.designationId) : "",
         employmentType: u.employmentType || "FULL_TIME",
@@ -561,9 +568,9 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
       <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/80 w-full max-w-[850px] overflow-hidden flex flex-col relative animate-in zoom-in-95 duration-200 max-h-[90vh] force-light">
         <style>{`
@@ -1222,6 +1229,7 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

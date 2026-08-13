@@ -1,9 +1,9 @@
-import { Eye, Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { Employee } from "../types/employees.types";
 
 interface EmployeeTableProps {
   employees: Employee[];
-  onView: (employee: Employee) => void;
+  onRowClick: (employee: Employee) => void;
   onEdit: (employee: Employee) => void;
   onDelete: (employee: Employee) => void;
 }
@@ -23,7 +23,7 @@ const getGroupBadgeStyles = (group: string): string => {
   return "bg-slate-50 text-slate-700 border-slate-200";
 };
 
-export const EmployeeTable: React.FC<EmployeeTableProps> = ({ employees, onView, onEdit, onDelete }) => {
+export const EmployeeTable: React.FC<EmployeeTableProps> = ({ employees, onRowClick, onEdit, onDelete }) => {
   if (employees.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-12 border border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
@@ -56,6 +56,7 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({ employees, onView,
             {employees.map((employee) => (
               <tr
                 key={employee.id}
+                onClick={() => onRowClick(employee)}
                 className="hover:bg-slate-50/70 transition-colors cursor-pointer group"
               >
                 {/* Employee Code */}
@@ -70,7 +71,7 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({ employees, onView,
 
                 {/* Email */}
                 <td className="py-3.5 px-4 text-slate-500 hover:text-[#013e37] transition-colors font-medium select-all">
-                  <a href={`mailto:${employee.email}`}>{employee.email}</a>
+                  <a href={`mailto:${employee.email}`} onClick={(e) => e.stopPropagation()}>{employee.email}</a>
                 </td>
 
                 {/* Location */}
@@ -107,19 +108,8 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({ employees, onView,
                   </span>
                 </td>
 
-                {/* Actions */}
-                <td className="py-3.5 px-4 text-right">
+                 <td className="py-3.5 px-4 text-right">
                   <div className="flex items-center justify-end gap-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onView(employee);
-                      }}
-                      className="p-1 hover:bg-[#013e37]/10 text-[#013e37] rounded-lg transition-colors cursor-pointer"
-                      title="View Details"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </button>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
