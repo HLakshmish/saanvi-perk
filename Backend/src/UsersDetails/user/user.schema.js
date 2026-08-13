@@ -4,6 +4,7 @@ const userResponseProperties = {
     companyId: { type: 'number' },
     roleIds: { type: 'array', items: { type: 'number' } },
     departmentId: { type: 'number', nullable: true },
+    designationId: { type: 'number', nullable: true },
     firstName: { type: 'string' },
     lastName: { type: 'string' },
     officialEmail: { type: 'string' },
@@ -32,6 +33,13 @@ const userResponseProperties = {
         properties: {
             departmentName: { type: 'string' }
         }
+    },
+    designation: {
+        type: 'object',
+        nullable: true,
+        properties: {
+            designationName: { type: 'string' }
+        }
     }
 };
 
@@ -46,6 +54,7 @@ const createUserSchema = {
             employeeCode: { type: 'string' },
             roleIds: { type: 'array', items: { type: 'number' } },
             departmentId: { type: 'number', nullable: true },
+            designationId: { type: 'number', nullable: true },
             firstName: { type: 'string' },
             lastName: { type: 'string' },
             officialEmail: { type: 'string' },
@@ -159,6 +168,7 @@ const updateUserSchema = {
             employeeCode: { type: 'string' },
             roleIds: { type: 'array', items: { type: 'number' } },
             departmentId: { type: 'number', nullable: true },
+            designationId: { type: 'number', nullable: true },
             firstName: { type: 'string' },
             lastName: { type: 'string' },
             officialEmail: { type: 'string' },
