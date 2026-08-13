@@ -20,6 +20,7 @@ class UserController {
 
             // Handle falsy IDs
             if (!userData.departmentId) userData.departmentId = null;
+            if (!userData.designationId) userData.designationId = null;
             if (!userData.reportingToId) userData.reportingToId = null;
             if (!userData.shiftId) userData.shiftId = null;
 
@@ -87,6 +88,7 @@ class UserController {
             data.updatedBy = request.user.role === 'USER' ? request.user.userId : null;
 
             if (data.departmentId === 0 || data.departmentId === "") data.departmentId = null;
+            if (data.designationId === 0 || data.designationId === "") data.designationId = null;
             if (data.reportingToId === 0 || data.reportingToId === "") data.reportingToId = null;
             if (data.shiftId === 0 || data.shiftId === "") data.shiftId = null;
             

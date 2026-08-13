@@ -14,7 +14,8 @@ class UserRepository {
             data: createData,
             include: {
                 userRoles: { select: { role: { select: { roleName: true, roleCode: true } } } },
-                department: { select: { departmentName: true } }
+                department: { select: { departmentName: true } },
+                designation: { select: { designationName: true } }
             }
         });
     }
@@ -28,6 +29,7 @@ class UserRepository {
             include: {
                 userRoles: { select: { role: { select: { roleName: true, roleCode: true } } } },
                 department: { select: { departmentName: true } },
+                designation: { select: { designationName: true } },
                 manager: { select: { firstName: true, lastName: true, officialEmail: true } }
             }
         });
@@ -41,7 +43,8 @@ class UserRepository {
             where: whereClause,
             include: {
                 userRoles: { select: { role: { select: { roleName: true, roleCode: true } } } },
-                department: { select: { departmentName: true } }
+                department: { select: { departmentName: true } },
+                designation: { select: { designationName: true } }
             }
         });
     }
@@ -67,7 +70,8 @@ class UserRepository {
             data: updateData,
             include: {
                 userRoles: { select: { role: { select: { roleName: true, roleCode: true } } } },
-                department: { select: { departmentName: true } }
+                department: { select: { departmentName: true } },
+                designation: { select: { designationName: true } }
             }
         });
     }
