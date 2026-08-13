@@ -57,11 +57,11 @@ export const Pagination: React.FC<PaginationProps> = ({
 
   // Base styling for paginator buttons to ignore system dark theme
   const btnBaseClass =
-    "h-8 w-8 flex items-center justify-center rounded-lg border text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:opacity-40 disabled:pointer-events-none cursor-pointer";
+    "h-8 w-8 flex items-center justify-center rounded-lg border text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-[#013e37]/20 disabled:opacity-40 disabled:pointer-events-none cursor-pointer";
   const btnOutlineClass =
     "bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-300";
   const btnPrimaryClass =
-    "bg-blue-600 border-blue-600 text-white shadow-xs hover:bg-blue-700";
+    "bg-[#013e37] border-[#013e37] text-[#ffefb3] shadow-xs hover:bg-[#012d28] hover:border-[#012d28]";
 
   return (
     <div
@@ -77,7 +77,7 @@ export const Pagination: React.FC<PaginationProps> = ({
           <select
             value={pageSize}
             onChange={(e) => onPageSizeChange(Number(e.target.value))}
-            className="px-2 py-1 pr-6 border border-gray-300 rounded-md bg-white text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+            className="px-2 py-1 pr-6 border border-gray-300 rounded-md bg-white text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#013e37] cursor-pointer"
           >
             {pageSizeOptions.map((option) => (
               <option key={option} value={option}>

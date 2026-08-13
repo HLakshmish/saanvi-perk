@@ -62,6 +62,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     loadCompanyMetadata();
   }, [role]);
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get("tab");
+      if (tabParam) {
+        setActiveTab(tabParam);
+      }
+    }
+  }, []);
+
   const renderTabContent = () => {
     switch (activeTab) {
       case "employees":

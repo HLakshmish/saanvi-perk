@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { SearchBox } from "@/components/ui/search-box";
 import { toast } from "sonner";
 import { Pagination } from "./pagination";
@@ -7,7 +8,6 @@ import { OrganizationChart } from "./organization-chart";
 import { Employee } from "../types/employees.types";
 import { getEmployees, deleteUser } from "../api/employees.api";
 import { LayoutGrid, List, Loader2 } from "lucide-react";
-import { EmployeeDetailsModal } from "./employee-details-modal";
 import { EmployeeEditModal } from "./employee-edit-modal";
 
 interface EmployeeListProps {
@@ -19,6 +19,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
   currentUserName,
   currentCompanyName,
 }) => {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"list" | "chart">("list");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -28,7 +29,6 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
 
   // Modal triggers
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
-  const [isViewOpen, setIsViewOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
@@ -74,9 +74,8 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
   }, [filteredEmployees, currentPage, pageSize]);
 
   // Action handlers
-  const handleView = (emp: Employee) => {
-    setSelectedEmployee(emp);
-    setIsViewOpen(true);
+  const handleRowClick = (emp: Employee) => {
+    router.push(`/employee/${emp.id}`);
   };
 
   const handleEdit = (emp: Employee) => {
@@ -169,7 +168,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
             {/* Table Component */}
             <EmployeeTable
               employees={paginatedEmployees}
-              onView={handleView}
+              onRowClick={handleRowClick}
               onEdit={handleEdit}
               onDelete={handleDelete}
             />
@@ -202,27 +201,16 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
 
       {/* Modals */}
       {selectedEmployee && (
-        <>
-          <EmployeeDetailsModal
-            isOpen={isViewOpen}
-            onClose={() => {
-              setIsViewOpen(false);
-              setSelectedEmployee(null);
-            }}
-            employeeId={Number(selectedEmployee.id)}
-            employeeName={selectedEmployee.name}
-          />
-          <EmployeeEditModal
-            isOpen={isEditOpen}
-            onClose={() => {
-              setIsEditOpen(false);
-              setSelectedEmployee(null);
-            }}
-            onSuccess={handleEditSuccess}
-            employeeId={Number(selectedEmployee.id)}
-            employeeName={selectedEmployee.name}
-          />
-        </>
+        <EmployeeEditModal
+          isOpen={isEditOpen}
+          onClose={() => {
+            setIsEditOpen(false);
+            setSelectedEmployee(null);
+          }}
+          onSuccess={handleEditSuccess}
+          employeeId={Number(selectedEmployee.id)}
+          employeeName={selectedEmployee.name}
+        />
       )}
 
       {/* Delete Confirmation Modal */}
