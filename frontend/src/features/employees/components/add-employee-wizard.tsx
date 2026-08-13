@@ -372,11 +372,6 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
       const isRoleAdmin = selectedRole?.roleName.toLowerCase() === "admin";
       const isRoleEmployee = selectedRole?.roleName.toLowerCase() === "employee" || selectedRole?.roleName.toLowerCase() === "staff";
 
-      if (isRoleEmployee && !formData.reportingToId) {
-        setErrorMsg("Reporting Manager (Admin) is required for employees under the hierarchy.");
-        return false;
-      }
-
       if (!formData.joiningDate) {
         setErrorMsg("Joining Date is required.");
         return false;
