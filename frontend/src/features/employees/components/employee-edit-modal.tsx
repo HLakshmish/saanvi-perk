@@ -360,10 +360,6 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
       const isRoleAdmin = selectedRole?.roleName.toLowerCase() === "admin";
       const isRoleEmployee = selectedRole?.roleName.toLowerCase() === "employee" || selectedRole?.roleName.toLowerCase() === "staff";
 
-      if (isRoleEmployee && !formData.reportingToId) {
-        throw new Error("Reporting Manager (Admin) is required for employees under the hierarchy.");
-      }
-
       // 1. Update Corporate User profile
       const userPayload: any = {
         employeeCode: formData.employeeCode,
