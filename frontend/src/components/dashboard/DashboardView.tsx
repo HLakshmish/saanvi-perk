@@ -2,7 +2,11 @@
 
 import React, { useState, useEffect } from "react";
 import { UserRole } from "@/types/dashboard";
-import { getCompanySuperAdmin } from "@/features/employees/api/employees.api";
+import { getCompanySuperAdmin, getUserById } from "@/features/employees/api/employees.api";
+import { getCurrentUserId } from "@/features/expenses/api/expenses.api";
+import { EmployeeDashboard } from "@/components/employee-dashboard/EmployeeDashboard";
+import { EmployeeProfile } from "@/features/employees/components/employee-profile";
+import { EmployeeEditModal } from "@/features/employees/components/employee-edit-modal";
 import { Navbar } from "./Navbar";
 import { Sidebar } from "./Sidebar";
 import { EmployeeStatsWidget } from "./widgets/EmployeeStatsWidget";
@@ -37,6 +41,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const [role, setRole] = useState<UserRole>(initialRole);
   const [activeTab, setActiveTab] = useState<string>("dashboard");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [profileEditOpen, setProfileEditOpen] = useState(false);
 
   const [resolvedCompanyName, setResolvedCompanyName] = useState(companyName);
   const [resolvedUserName, setResolvedUserName] = useState(userName);
@@ -53,6 +58,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           if (comp.superAdmin && role === "superadmin") {
             const sa = comp.superAdmin;
             setResolvedUserName(`${sa.firstName} ${sa.lastName || ""}`.trim());
+          } else if (role === "employee") {
+            const loggedInUserId = getCurrentUserId();
+            if (loggedInUserId) {
+              const userRes = await getUserById(loggedInUserId);
+              if (userRes.success && userRes.data) {
+                const u = userRes.data;
+                setResolvedUserName(`${u.firstName} ${u.lastName || ""}`.trim());
+              }
+            }
           }
         }
       } catch (err) {
@@ -89,9 +103,36 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       case "assets":
         return <AssetsView currentRole={role} />;
       case "settings":
+        if (role === "employee") {
+          return <div className="text-sm font-semibold text-slate-500">Access Denied.</div>;
+        }
         return <SettingsView />;
+      case "profile":
+        const loggedInUserId = getCurrentUserId();
+        if (loggedInUserId) {
+          return (
+            <div className="bg-white rounded-3xl border border-slate-200/80 p-5 shadow-xs">
+              <EmployeeProfile
+                employeeId={loggedInUserId}
+                onEditClick={() => {
+                  setProfileEditOpen(true);
+                }}
+              />
+            </div>
+          );
+        }
+        return <div className="text-sm font-semibold text-slate-500">Please log in again.</div>;
       case "dashboard":
       default:
+        if (role === "employee") {
+          return (
+            <EmployeeDashboard
+              userName={resolvedUserName}
+              companyName={resolvedCompanyName}
+              onTabChange={setActiveTab}
+            />
+          );
+        }
         return (
           <>
             {/* Welcome Greeting Banner */}
@@ -116,48 +157,27 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </div>
             </div>
 
-            {/* DYNAMIC ROLE-BASED WIDGET GRID */}
-            {role === "employee" ? (
-              /* EMPLOYEE ROLE DASHBOARD */
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-                {/* Primary Interactive Widget: Attendance Check In/Out */}
-                <AttendanceCheckInWidget />
+            {/* ADMIN / SUPERADMIN DASHBOARD */}
+            <div className="space-y-4">
+              {/* Row 1: Full-width stats cards */}
+              <EmployeeStatsWidget />
 
-                {/* Holidays Widget */}
+              {/* Row 2: 3-column widget grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <HolidaysWidget />
-
-                {/* Cheers to Peers (Peer Birthday Wishes) */}
-                <CheersToPeersWidget />
-
-                {/* Quick Links */}
                 <QuickLinksWidget />
+                {(role === "superadmin" || role === "admin") && (
+                  <PayrollCostWidget />
+                )}
+              </div>
 
-                {/* HR Policies */}
+              {/* Row 3: 3-column widget grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <HRPoliciesWidget />
+                <EmployeeProbationsWidget />
+                <CheersToPeersWidget />
               </div>
-            ) : (
-              /* ADMIN / SUPERADMIN DASHBOARD */
-              <div className="space-y-4">
-                {/* Row 1: Full-width stats cards */}
-                <EmployeeStatsWidget />
-
-                {/* Row 2: 3-column widget grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <HolidaysWidget />
-                  <QuickLinksWidget />
-                  {(role === "superadmin" || role === "admin") && (
-                    <PayrollCostWidget />
-                  )}
-                </div>
-
-                {/* Row 3: 3-column widget grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <HRPoliciesWidget />
-                  <EmployeeProbationsWidget />
-                  <CheersToPeersWidget />
-                </div>
-              </div>
-            )}
+            </div>
           </>
         );
     }
@@ -190,6 +210,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           {renderTabContent()}
         </main>
       </div>
+
+      {profileEditOpen && role === "employee" && (
+        <EmployeeEditModal
+          isOpen={profileEditOpen}
+          onClose={() => setProfileEditOpen(false)}
+          onSuccess={() => {
+            setProfileEditOpen(false);
+          }}
+          employeeId={getCurrentUserId() || 0}
+          employeeName=""
+        />
+      )}
 
       {/* Floating Help Button (Bottom Right) */}
       <button className="fixed bottom-5 right-5 bg-orange-500 hover:bg-orange-600 text-white font-semibold text-xs px-4 py-2.5 rounded-full shadow-lg flex items-center gap-2 transition-transform hover:scale-105 z-40">

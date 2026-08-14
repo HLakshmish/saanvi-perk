@@ -17,6 +17,7 @@ import {
   createInsuranceDetail,
   uploadEmployeeDocument,
   getDesignations,
+  getOfficeLocations,
 } from "../api/employees.api";
 import {
   ChevronLeft,
@@ -61,6 +62,7 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
   const [departments, setDepartments] = useState<any[]>([]);
   const [managers, setManagers] = useState<any[]>([]);
   const [designations, setDesignations] = useState<any[]>([]);
+  const [locations, setLocations] = useState<any[]>([]);
 
   const filteredAdmins = useMemo(() => {
     return managers.filter((m) => m.designation.toLowerCase() === "admin");
@@ -144,6 +146,7 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
     probationEndDate: "",
     reportingToId: "",
     status: "ACTIVE",
+    locationId: "",
 
     // Step 3: CTC
     annualCtc: "",
@@ -188,16 +191,18 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
   useEffect(() => {
     const loadMasters = async () => {
       try {
-        const [rData, dData, mData, desData] = await Promise.all([
+        const [rData, dData, mData, desData, locData] = await Promise.all([
           getRoles(),
           getDepartments(),
           getEmployees(),
           getDesignations(),
+          getOfficeLocations(),
         ]);
         setRoles(rData);
         setDepartments(dData);
         setManagers(mData);
         setDesignations(desData);
+        setLocations(locData);
       } catch (err) {
         console.warn("Failed to load master metadata", err);
       }
@@ -488,6 +493,7 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
         probationEndDate: formData.probationEndDate ? new Date(formData.probationEndDate).toISOString() : null,
         reportingToId: formData.reportingToId ? Number(formData.reportingToId) : null,
         status: formData.status || "ACTIVE",
+        locationId: formData.locationId ? Number(formData.locationId) : null,
       };
 
       const userRes = await createEmployee(baseUserData);
@@ -1465,7 +1471,7 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="flex flex-col gap-1.5 text-left">
                   <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Designation</label>
                   <select
@@ -1477,6 +1483,22 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
                     {filteredDesignations.map((des) => (
                       <option key={des.designationId} value={des.designationId}>
                         {des.designationName} ({des.designationCode})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex flex-col gap-1.5 text-left">
+                  <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Office Location</label>
+                  <select
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none"
+                    value={formData.locationId}
+                    onChange={(e) => handleChange("locationId", e.target.value)}
+                  >
+                    <option value="">-- Choose Location --</option>
+                    {locations.map((loc) => (
+                      <option key={loc.officeLocationId} value={loc.officeLocationId}>
+                        {loc.locationName} ({loc.city || "N/A"})
                       </option>
                     ))}
                   </select>

@@ -107,7 +107,7 @@ export const getEmployees = async (): Promise<Employee[]> => {
           employeeCode: user.employeeCode,
           name: `${user.firstName} ${user.lastName || ""}`.trim(),
           email: user.officialEmail,
-          location: companyLocation,
+          location: user.location?.locationName || user.location?.city || companyLocation,
           department: user.department?.departmentName || "General",
           designation: matchingDesignation?.designationName || user.userRoles?.[0]?.role?.roleName || user.role?.roleName || "Staff",
           employeeGroup: (user.employmentType || "FULL_TIME").replace("_", "-"),
@@ -832,6 +832,31 @@ export const getCompanySuperAdmin = async (): Promise<{ success: boolean; data?:
     return { success: false, error: "Company details not found" };
   } catch (error: any) {
     return { success: false, error: error.message };
+  }
+};
+
+export const getOfficeLocations = async (): Promise<any[]> => {
+  const token = getAuthToken();
+  const companyId = getCompanyIdCookie();
+  try {
+    const url = companyId
+      ? `${API_BASE_URL}/api/locations?companyId=${companyId}`
+      : `${API_BASE_URL}/api/locations`;
+
+    const res = await fetch(url, {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    if (!res.ok) throw new Error("Failed to fetch locations");
+    const result = await res.json();
+    if (result.success && Array.isArray(result.data)) {
+      return result.data;
+    }
+    return [];
+  } catch (error) {
+    console.error("API error fetching locations:", error);
+    return [];
   }
 };
 

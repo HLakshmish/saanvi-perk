@@ -55,6 +55,7 @@ type TabType = "profile" | "address" | "family" | "statutory" | "others" | "docu
 
 export const EmployeeProfile: React.FC<EmployeeProfileProps> = ({ employeeId, onEditClick }) => {
   const router = useRouter();
+  const role = getUserRoleCookie();
   const [activeTab, setActiveTab] = useState<TabType>("profile");
   const [isLoading, setIsLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -279,16 +280,18 @@ export const EmployeeProfile: React.FC<EmployeeProfileProps> = ({ employeeId, on
       `}</style>
 
       {/* Header Path Info */}
-      <div className="flex items-center gap-2 text-slate-400 text-xs font-semibold pb-2">
-        <button
-          onClick={handleBack}
-          className="hover:text-[#013e37] cursor-pointer transition-colors"
-        >
-          Employee List
-        </button>
-        <ChevronRight className="w-3.5 h-3.5 select-none" />
-        <span className="text-[#013e37] select-none">{fullName}</span>
-      </div>
+      {role !== "employee" && (
+        <div className="flex items-center gap-2 text-slate-400 text-xs font-semibold pb-2">
+          <button
+            onClick={handleBack}
+            className="hover:text-[#013e37] cursor-pointer transition-colors"
+          >
+            Employee List
+          </button>
+          <ChevronRight className="w-3.5 h-3.5 select-none" />
+          <span className="text-[#013e37] select-none">{fullName}</span>
+        </div>
+      )}
 
       {/* Two Column Dashboard Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -386,14 +389,16 @@ export const EmployeeProfile: React.FC<EmployeeProfileProps> = ({ employeeId, on
                   <p className="text-[11px] text-slate-500 font-medium mt-0.5">Corporate HR & Statutory Records</p>
                 </div>
                 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onEditClick}
-                  className="px-5 border-slate-300 text-slate-700 hover:bg-slate-50 cursor-pointer font-bold rounded-xl shadow-2xs h-9 text-xs"
-                >
-                  Edit Details
-                </Button>
+                {role !== "employee" && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onEditClick}
+                    className="px-5 border-slate-300 text-slate-700 hover:bg-slate-50 cursor-pointer font-bold rounded-xl shadow-2xs h-9 text-xs"
+                  >
+                    Edit Details
+                  </Button>
+                )}
               </div>
 
               {/* TAB 1: MY PROFILE */}
