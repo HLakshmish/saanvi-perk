@@ -31,6 +31,7 @@ import {
   createInsuranceDetail,
   updateInsuranceDetail,
   getDesignations,
+  getOfficeLocations,
 } from "../api/employees.api";
 
 interface EmployeeEditModalProps {
@@ -67,6 +68,7 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
   const [departments, setDepartments] = useState<any[]>([]);
   const [managers, setManagers] = useState<any[]>([]);
   const [designations, setDesignations] = useState<any[]>([]);
+  const [locations, setLocations] = useState<any[]>([]);
 
   const filteredAdmins = useMemo(() => {
     return managers.filter((m) => m.designation.toLowerCase() === "admin");
@@ -96,6 +98,7 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
     probationEndDate: "",
     reportingToId: "",
     status: "ACTIVE",
+    locationId: "",
 
     // Personal Info
     dateOfBirth: "",
@@ -209,16 +212,18 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
     setErrorMsg(null);
     try {
       // 1. Fetch Masters
-      const [rData, dData, mData, desData] = await Promise.all([
+      const [rData, dData, mData, desData, locData] = await Promise.all([
         getRoles(),
         getDepartments(),
         getEmployees(),
         getDesignations(),
+        getOfficeLocations(),
       ]);
       setRoles(rData || []);
       setDepartments(dData || []);
       setManagers(mData || []);
       setDesignations(desData || []);
+      setLocations(locData || []);
 
       // 2. Fetch Employee Details
       const [
@@ -278,6 +283,7 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
         probationEndDate: u.probationEndDate ? u.probationEndDate.split("T")[0] : "",
         reportingToId: u.reportingToId ? String(u.reportingToId) : "",
         status: u.status || "ACTIVE",
+        locationId: u.locationId ? String(u.locationId) : "",
 
         dateOfBirth: pi?.dateOfBirth ? pi.dateOfBirth.split("T")[0] : "",
         gender: pi?.gender || "Male",
@@ -373,6 +379,7 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
         probationEndDate: formData.probationEndDate ? new Date(formData.probationEndDate).toISOString() : null,
         reportingToId: formData.reportingToId ? Number(formData.reportingToId) : null,
         status: formData.status,
+        locationId: formData.locationId ? Number(formData.locationId) : null,
       };
       if (formData.password) {
         userPayload.password = formData.password;
@@ -744,7 +751,7 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className="flex flex-col gap-1.5 text-left">
                       <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Designation</label>
                       <select
@@ -756,6 +763,22 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
                         {filteredDesignations.map((des) => (
                           <option key={des.designationId} value={des.designationId}>
                             {des.designationName} ({des.designationCode})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="flex flex-col gap-1.5 text-left">
+                      <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Office Location</label>
+                      <select
+                        className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none"
+                        value={formData.locationId}
+                        onChange={(e) => handleChange("locationId", e.target.value)}
+                      >
+                        <option value="">-- Choose Location --</option>
+                        {locations.map((loc) => (
+                          <option key={loc.officeLocationId} value={loc.officeLocationId}>
+                            {loc.locationName} ({loc.city || "N/A"})
                           </option>
                         ))}
                       </select>

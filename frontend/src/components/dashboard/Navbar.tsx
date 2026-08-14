@@ -3,6 +3,7 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { UserRole } from "@/types/dashboard";
+import { getCurrentUserId } from "@/features/expenses/api/expenses.api";
 import { Menu, Bell, Headset, ChevronDown, User as UserIcon, LogOut, Lock, CircleUser, Activity } from "lucide-react";
 
 interface NavbarProps {
@@ -175,7 +176,20 @@ export const Navbar: React.FC<NavbarProps> = ({
                 onClick={() => setIsProfileOpen(false)}
               />
               <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-200/90 overflow-hidden z-50 py-1.5 animate-in fade-in slide-in-from-top-2 duration-200">
-                <button className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 text-slate-700 hover:text-[#013e37] text-sm transition-colors text-left font-medium cursor-pointer">
+                <button 
+                  onClick={() => {
+                    if (currentRole === "employee") {
+                      onTabChange?.("profile");
+                    } else {
+                      const userId = getCurrentUserId();
+                      if (userId) {
+                        router.push(`/employee/${userId}`);
+                      }
+                    }
+                    setIsProfileOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 text-slate-700 hover:text-[#013e37] text-sm transition-colors text-left font-medium cursor-pointer"
+                >
                   <CircleUser className="w-4 h-4 shrink-0 text-slate-400" />
                   <span>View My Profile</span>
                 </button>
