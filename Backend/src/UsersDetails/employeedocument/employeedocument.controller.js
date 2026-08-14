@@ -17,10 +17,14 @@ class EmployeeDocumentController {
                 throw new Error("Missing required fields: userId, documentType");
             }
 
+            const base64String = fileBuffer.toString('base64');
+
             const docData = {
                 userId: Number(fields.userId.value),
                 documentType: fields.documentType.value,
-                document: fileBuffer
+                document: base64String,
+                fileName: data.filename,
+                mimeType: data.mimetype
             };
 
             const createdDocument = await documentService.uploadDocument(docData);
@@ -46,7 +50,8 @@ class EmployeeDocumentController {
             const { id } = request.params;
             const doc = await documentService.getDocumentById(Number(id));
             
-            delete doc.document;
+            // Include base64 document in response so frontend can render it directly
+            // delete doc.document;
 
             reply.code(200).send({
                 success: true,
@@ -65,9 +70,13 @@ class EmployeeDocumentController {
             const { id } = request.params;
             const doc = await documentService.getDocumentById(Number(id));
             
-            reply.header('Content-Disposition', `attachment; filename="document_${id}.bin"`);
-            reply.type('application/octet-stream');
-            reply.send(doc.document);
+            const fileBuffer = Buffer.from(doc.document, 'base64');
+            const fileName = doc.fileName || `document_${id}.bin`;
+            const mimeType = doc.mimeType || 'application/octet-stream';
+            
+            reply.header('Content-Disposition', `attachment; filename="${fileName}"`);
+            reply.type(mimeType);
+            reply.send(fileBuffer);
         } catch (error) {
             reply.code(404).send({
                 success: false,

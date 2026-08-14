@@ -379,7 +379,10 @@ model EmployeeDocument {
 
   documentType DocumentType @map("document_type")
 
-  document Bytes @map("document") @db.ByteA
+  document String @map("document") @db.Text
+
+  fileName String? @map("file_name")
+  mimeType String? @map("mime_type")
 
   status Boolean @default(true)
 

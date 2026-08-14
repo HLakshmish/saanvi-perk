@@ -55,6 +55,112 @@ async function main() {
       permissionCode: 'MANAGE_USERS',
       module: 'User Management',
       description: 'Allows creating, updating, and deleting users'
+    },
+    // Attendance
+    {
+      permissionName: 'View Attendance',
+      permissionCode: 'VIEW_ATTENDANCE',
+      module: 'Attendance Management',
+      description: 'Allows viewing attendance records'
+    },
+    {
+      permissionName: 'Manage Attendance',
+      permissionCode: 'MANAGE_ATTENDANCE',
+      module: 'Attendance Management',
+      description: 'Allows managing attendance records'
+    },
+    // Leave Management
+    {
+      permissionName: 'Apply Leave',
+      permissionCode: 'APPLY_LEAVE',
+      module: 'Leave Management',
+      description: 'Allows applying for leaves'
+    },
+    {
+      permissionName: 'View Leaves',
+      permissionCode: 'VIEW_LEAVES',
+      module: 'Leave Management',
+      description: 'Allows viewing leave requests'
+    },
+    {
+      permissionName: 'Manage Leaves',
+      permissionCode: 'MANAGE_LEAVES',
+      module: 'Leave Management',
+      description: 'Allows managing and approving leave requests'
+    },
+    {
+      permissionName: 'Manage Leave Types',
+      permissionCode: 'MANAGE_LEAVE_TYPES',
+      module: 'Leave Management',
+      description: 'Allows managing leave types'
+    },
+    // Organisation
+    {
+      permissionName: 'View Locations',
+      permissionCode: 'VIEW_LOCATIONS',
+      module: 'Organisation Management',
+      description: 'Allows viewing office locations'
+    },
+    {
+      permissionName: 'Manage Locations',
+      permissionCode: 'MANAGE_LOCATIONS',
+      module: 'Organisation Management',
+      description: 'Allows managing office locations'
+    },
+    {
+      permissionName: 'View Designations',
+      permissionCode: 'VIEW_DESIGNATIONS',
+      module: 'Organisation Management',
+      description: 'Allows viewing designations'
+    },
+    {
+      permissionName: 'Manage Designations',
+      permissionCode: 'MANAGE_DESIGNATIONS',
+      module: 'Organisation Management',
+      description: 'Allows managing designations'
+    },
+    {
+      permissionName: 'View Calendars',
+      permissionCode: 'VIEW_CALENDARS',
+      module: 'Organisation Management',
+      description: 'Allows viewing calendars'
+    },
+    {
+      permissionName: 'Manage Calendars',
+      permissionCode: 'MANAGE_CALENDARS',
+      module: 'Organisation Management',
+      description: 'Allows managing calendars'
+    },
+    {
+      permissionName: 'View Holidays',
+      permissionCode: 'VIEW_HOLIDAYS',
+      module: 'Organisation Management',
+      description: 'Allows viewing holidays'
+    },
+    {
+      permissionName: 'Manage Holidays',
+      permissionCode: 'MANAGE_HOLIDAYS',
+      module: 'Organisation Management',
+      description: 'Allows managing holidays'
+    },
+    // Reimbursement
+    {
+      permissionName: 'Apply Reimbursement',
+      permissionCode: 'APPLY_REIMBURSEMENT',
+      module: 'Reimbursement Management',
+      description: 'Allows applying for reimbursement claims'
+    },
+    {
+      permissionName: 'View Reimbursements',
+      permissionCode: 'VIEW_REIMBURSEMENT',
+      module: 'Reimbursement Management',
+      description: 'Allows viewing reimbursement claims'
+    },
+    {
+      permissionName: 'Manage Reimbursements',
+      permissionCode: 'MANAGE_REIMBURSEMENTS',
+      module: 'Reimbursement Management',
+      description: 'Allows managing and approving reimbursement claims'
     }
   ];
 
