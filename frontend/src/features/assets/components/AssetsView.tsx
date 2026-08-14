@@ -34,6 +34,8 @@ import {
   Layers,
 } from "lucide-react";
 
+import { getCurrentUserId } from "@/features/expenses/api/expenses.api";
+
 interface AssetsViewProps {
   currentRole?: UserRole;
 }
@@ -119,8 +121,30 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ currentRole = "admin" })
     setIsReturnModalOpen(true);
   };
 
+  const currentUserId = getCurrentUserId();
+
+  // Helper to check if an asset is assigned to the current employee
+  const isAssignedToCurrentEmployee = (asset: AssetDetails) => {
+    if (!currentUserId) return false;
+    // Check main assignments
+    const hasActiveAssignment = assignments.some(
+      (a) => a.assetId === asset.assetId && (a.userId === currentUserId || a.user?.userId === currentUserId) && !a.returnedDate
+    );
+    if (hasActiveAssignment) return true;
+    // Check asset nested assignments
+    if (asset.assignments && Array.isArray(asset.assignments)) {
+      return asset.assignments.some(
+        (a) => (a.userId === currentUserId || a.user?.userId === currentUserId) && !a.returnedDate
+      );
+    }
+    return false;
+  };
+
   // Filtered Assets
   const filteredAssets = assets.filter((asset) => {
+    if (currentRole === "employee" && !isAssignedToCurrentEmployee(asset)) {
+      return false;
+    }
     const matchesSearch =
       asset.assetName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       asset.assetCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -135,6 +159,9 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ currentRole = "admin" })
 
   // Filtered Assignments
   const filteredAssignments = assignments.filter((assign) => {
+    if (currentRole === "employee" && assign.userId !== currentUserId && assign.user?.userId !== currentUserId) {
+      return false;
+    }
     const assetName = assign.asset?.assetName || "";
     const assetCode = assign.asset?.assetCode || "";
     const userName = `${assign.user?.firstName || ""} ${assign.user?.lastName || ""}`;
@@ -147,7 +174,16 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ currentRole = "admin" })
   });
 
   // Filtered History
+  const userAssignedAssetIds = new Set(
+    assignments
+      .filter((a) => (a.userId === currentUserId || a.user?.userId === currentUserId))
+      .map((a) => a.assetId)
+  );
+
   const filteredHistory = historyLogs.filter((log) => {
+    if (currentRole === "employee" && log.userId !== currentUserId && !userAssignedAssetIds.has(log.assetId)) {
+      return false;
+    }
     const assetName = log.asset?.assetName || "";
     const assetCode = log.asset?.assetCode || "";
     const action = log.action || "";
@@ -243,7 +279,9 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ currentRole = "admin" })
               Asset Management
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-              Track hardware inventory, employee assignments, returns, and warranty records.
+              {currentRole === "employee"
+                ? "View details and status of hardware equipment assigned to your profile."
+                : "Track hardware inventory, employee assignments, returns, and warranty records."}
             </p>
           </div>
         </div>
@@ -264,46 +302,54 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ currentRole = "admin" })
       </div>
 
       {/* Summary KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className={`grid gap-4 ${currentRole === "employee" ? "grid-cols-1 max-w-xs" : "grid-cols-2 lg:grid-cols-4"}`}>
         <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500">Total Assets</span>
+            <span className="text-xs font-semibold text-slate-500">
+              {currentRole === "employee" ? "Your Assigned Assets" : "Total Assets"}
+            </span>
             <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-slate-700">
               <Box className="w-4 h-4" />
             </div>
           </div>
-          <p className="text-2xl font-extrabold text-slate-900 mt-2">{totalAssetsCount}</p>
+          <p className="text-2xl font-extrabold text-slate-900 mt-2">
+            {currentRole === "employee" ? filteredAssets.length : totalAssetsCount}
+          </p>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-emerald-700">Available</span>
-            <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
-              <CheckCircle2 className="w-4 h-4" />
+        {currentRole !== "employee" && (
+          <>
+            <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-emerald-700">Available</span>
+                <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+                  <CheckCircle2 className="w-4 h-4" />
+                </div>
+              </div>
+              <p className="text-2xl font-extrabold text-emerald-700 mt-2">{availableCount}</p>
             </div>
-          </div>
-          <p className="text-2xl font-extrabold text-emerald-700 mt-2">{availableCount}</p>
-        </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-[#013e37]">Assigned</span>
-            <div className="w-8 h-8 rounded-xl bg-[#013e37]/10 flex items-center justify-center text-[#013e37]">
-              <UserCheck className="w-4 h-4" />
+            <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-[#013e37]">Assigned</span>
+                <div className="w-8 h-8 rounded-xl bg-[#013e37]/10 flex items-center justify-center text-[#013e37]">
+                  <UserCheck className="w-4 h-4" />
+                </div>
+              </div>
+              <p className="text-2xl font-extrabold text-[#013e37] mt-2">{assignedCount}</p>
             </div>
-          </div>
-          <p className="text-2xl font-extrabold text-[#013e37] mt-2">{assignedCount}</p>
-        </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-amber-700">Repair / Other</span>
-            <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
-              <AlertTriangle className="w-4 h-4" />
+            <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-amber-700">Repair / Other</span>
+                <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
+                  <AlertTriangle className="w-4 h-4" />
+                </div>
+              </div>
+              <p className="text-2xl font-extrabold text-amber-700 mt-2">{otherCount}</p>
             </div>
-          </div>
-          <p className="text-2xl font-extrabold text-amber-700 mt-2">{otherCount}</p>
-        </div>
+          </>
+        )}
       </div>
 
       {/* Subtab Navigation & Filters Header */}
@@ -331,16 +377,18 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ currentRole = "admin" })
             >
               Assignments & Returns
             </button>
-            <button
-              onClick={() => setActiveTab("history")}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                activeTab === "history"
-                  ? "bg-[#013e37] text-[#ffefb3] shadow-xs"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              Audit History
-            </button>
+            {currentRole !== "employee" && (
+              <button
+                onClick={() => setActiveTab("history")}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  activeTab === "history"
+                    ? "bg-[#013e37] text-[#ffefb3] shadow-xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                Audit History
+              </button>
+            )}
           </div>
 
           {/* Search Box */}
@@ -356,8 +404,8 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ currentRole = "admin" })
           </div>
         </div>
 
-        {/* Dropdown Filters (Only for Inventory tab) */}
-        {activeTab === "inventory" && (
+        {/* Dropdown Filters (Only for Inventory tab and non-employees) */}
+        {activeTab === "inventory" && currentRole !== "employee" && (
           <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-slate-600">
             <div className="flex items-center gap-1.5">
               <Filter className="w-3.5 h-3.5 text-slate-400" />
@@ -415,16 +463,20 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ currentRole = "admin" })
                   <th className="py-3.5 px-4">Name & Specs</th>
                   <th className="py-3.5 px-4">Type</th>
                   <th className="py-3.5 px-4">Serial No.</th>
-                  <th className="py-3.5 px-4">Status</th>
-                  <th className="py-3.5 px-4">Assigned To</th>
-                  <th className="py-3.5 px-4 text-right">Actions</th>
+                  <th className="py-3.5 px-4 font-semibold text-slate-800">Status</th>
+                  <th className="py-3.5 px-4 font-semibold text-slate-800">Assigned To</th>
+                  {currentRole !== "employee" && (
+                    <th className="py-3.5 px-4 text-right">Actions</th>
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white">
                 {filteredAssets.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-12 text-center text-slate-400 font-semibold">
-                      No assets found matching criteria. Click "+ Add New Asset" to create one.
+                    <td colSpan={currentRole === "employee" ? 6 : 7} className="py-12 text-center text-slate-400 font-semibold">
+                      {currentRole === "employee"
+                        ? "No assets currently assigned to you."
+                        : 'No assets found matching criteria. Click "+ Add New Asset" to create one.'}
                     </td>
                   </tr>
                 ) : (
@@ -480,45 +532,43 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ currentRole = "admin" })
                         </td>
 
                         {/* Actions */}
-                        <td className="py-4 px-4 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
-                            {asset.assetStatus === "AVAILABLE" && currentRole !== "employee" && (
-                              <button
-                                onClick={() => {
-                                  setAssetToAssign(asset);
-                                  setIsAssignModalOpen(true);
-                                }}
-                                title="Assign to Employee"
-                                className="px-2.5 py-1 rounded-lg bg-[#013e37]/10 hover:bg-[#013e37]/20 text-[#013e37] font-bold text-xs transition-colors cursor-pointer flex items-center gap-1"
-                              >
-                                <UserCheck className="w-3.5 h-3.5" />
-                                <span>Assign</span>
-                              </button>
-                            )}
-
-                            {currentRole !== "employee" && (
-                              <>
+                        {currentRole !== "employee" && (
+                          <td className="py-4 px-4 text-right">
+                            <div className="flex items-center justify-end gap-1.5">
+                              {asset.assetStatus === "AVAILABLE" && (
                                 <button
                                   onClick={() => {
-                                    setAssetToEdit(asset);
-                                    setIsCreateModalOpen(true);
+                                    setAssetToAssign(asset);
+                                    setIsAssignModalOpen(true);
                                   }}
-                                  title="Edit Asset"
-                                  className="p-1.5 rounded-lg text-slate-400 hover:text-[#013e37] hover:bg-slate-100 transition-colors cursor-pointer"
+                                  title="Assign to Employee"
+                                  className="px-2.5 py-1 rounded-lg bg-[#013e37]/10 hover:bg-[#013e37]/20 text-[#013e37] font-bold text-xs transition-colors cursor-pointer flex items-center gap-1"
                                 >
-                                  <Pencil className="w-4 h-4" />
+                                  <UserCheck className="w-3.5 h-3.5" />
+                                  <span>Assign</span>
                                 </button>
-                                <button
-                                  onClick={() => handleDeleteAsset(asset.assetId, asset.assetName)}
-                                  title="Delete Asset"
-                                  className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        </td>
+                              )}
+
+                              <button
+                                onClick={() => {
+                                  setAssetToEdit(asset);
+                                  setIsCreateModalOpen(true);
+                                }}
+                                title="Edit Asset"
+                                className="p-1.5 rounded-lg text-slate-400 hover:text-[#013e37] hover:bg-slate-100 transition-colors cursor-pointer"
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteAsset(asset.assetId, asset.assetName)}
+                                title="Delete Asset"
+                                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        )}
                       </tr>
                     );
                   })
@@ -539,13 +589,15 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ currentRole = "admin" })
                   <th className="py-3.5 px-4">Assigned Date</th>
                   <th className="py-3.5 px-4">Expected Return</th>
                   <th className="py-3.5 px-4">Returned Date</th>
-                  <th className="py-3.5 px-4 text-right">Actions</th>
+                  {currentRole !== "employee" && (
+                    <th className="py-3.5 px-4 text-right">Actions</th>
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white">
                 {filteredAssignments.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-12 text-center text-slate-400 font-semibold">
+                    <td colSpan={currentRole === "employee" ? 5 : 6} className="py-12 text-center text-slate-400 font-semibold">
                       No assignment records found.
                     </td>
                   </tr>
@@ -601,17 +653,19 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ currentRole = "admin" })
                       </td>
 
                       {/* Actions */}
-                      <td className="py-4 px-4 text-right">
-                        {!assign.returnedDate && currentRole !== "employee" && (
-                          <button
-                            onClick={() => handleReturnAsset(assign)}
-                            className="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs transition-colors cursor-pointer flex items-center gap-1.5 ml-auto shadow-2xs"
-                          >
-                            <RotateCcw className="w-3.5 h-3.5" />
-                            <span>Return Asset</span>
-                          </button>
-                        )}
-                      </td>
+                      {currentRole !== "employee" && (
+                        <td className="py-4 px-4 text-right">
+                          {!assign.returnedDate && (
+                            <button
+                              onClick={() => handleReturnAsset(assign)}
+                              className="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs transition-colors cursor-pointer flex items-center gap-1.5 ml-auto shadow-2xs"
+                            >
+                              <RotateCcw className="w-3.5 h-3.5" />
+                              <span>Return Asset</span>
+                            </button>
+                          )}
+                        </td>
+                      )}
                     </tr>
                   ))
                 )}

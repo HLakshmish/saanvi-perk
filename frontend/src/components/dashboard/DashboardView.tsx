@@ -97,6 +97,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       case "attendance":
         return <AttendanceView />;
       case "expenses":
+        if (role === "employee") {
+          return (
+            <EmployeeDashboard
+              userName={resolvedUserName}
+              companyName={resolvedCompanyName}
+              onTabChange={setActiveTab}
+            />
+          );
+        }
         return <ExpensesView currentRole={role} currentUserName={userName} />;
       case "holidays-leaves":
         return <LeavesView />;

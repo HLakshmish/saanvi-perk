@@ -177,10 +177,16 @@ export const getDepartments = async (): Promise<any[]> => {
 export const createEmployee = async (data: any): Promise<{ success: boolean; data?: any; error?: string; message?: string }> => {
   const token = getAuthToken();
   try {
-    const { roleId, ...rest } = data;
+    const { roleId, roleIds, ...rest } = data;
+    const resolvedRoleIds = Array.isArray(roleIds)
+      ? roleIds.map(Number)
+      : roleId !== undefined && roleId !== null && roleId !== ""
+      ? [Number(roleId)]
+      : [];
+
     const payload = {
       ...rest,
-      roleIds: roleId !== undefined && roleId !== null ? [Number(roleId)] : [],
+      roleIds: resolvedRoleIds,
     };
     const res = await fetch(`${API_BASE_URL}/api/users`, {
       method: "POST",

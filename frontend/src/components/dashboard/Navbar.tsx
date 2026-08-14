@@ -4,6 +4,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { UserRole } from "@/types/dashboard";
 import { getCurrentUserId } from "@/features/expenses/api/expenses.api";
+import { getUserById } from "@/features/employees/api/employees.api";
 import { Menu, Bell, Headset, ChevronDown, User as UserIcon, LogOut, Lock, CircleUser, Activity } from "lucide-react";
 
 interface NavbarProps {
@@ -25,6 +26,39 @@ export const Navbar: React.FC<NavbarProps> = ({
   const router = useRouter();
   const [isProfileOpen, setIsProfileOpen] = React.useState(false);
   const [isQuickActionsOpen, setIsQuickActionsOpen] = React.useState(false);
+  const [assignedRoles, setAssignedRoles] = React.useState<UserRole[]>([currentRole]);
+
+  React.useEffect(() => {
+    const fetchUserRoles = async () => {
+      try {
+        const userId = getCurrentUserId();
+        if (userId) {
+          const res = await getUserById(userId);
+          if (res.success && res.data && Array.isArray(res.data.userRoles) && res.data.userRoles.length > 0) {
+            const roles: UserRole[] = res.data.userRoles
+              .map((ur: any) => {
+                const code = (ur.role?.roleCode || ur.role?.roleName || "").toUpperCase();
+                if (code === "SUPERADMIN") return "superadmin";
+                if (code === "ADMIN") return "admin";
+                if (code === "EMPLOYEE") return "employee";
+                return null;
+              })
+              .filter((r: UserRole | null): r is UserRole => r !== null);
+
+            if (roles.length > 0) {
+              if (!roles.includes(currentRole)) {
+                roles.push(currentRole);
+              }
+              setAssignedRoles(roles);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("Could not fetch assigned roles for header dropdown:", err);
+      }
+    };
+    fetchUserRoles();
+  }, [currentRole]);
 
   const handleLogout = () => {
     document.cookie = "auth_token=; path=/; max-age=0;";
@@ -146,9 +180,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             onChange={(e) => handleRoleSwitch(e.target.value as UserRole)}
             className="appearance-none px-3 py-1.5 pr-7 border border-slate-200/90 rounded-xl text-[#013e37] bg-slate-50 hover:bg-slate-100 font-bold text-xs focus:ring-2 focus:ring-[#013e37]/20 focus:outline-none cursor-pointer capitalize shadow-2xs"
           >
-            <option value="superadmin" className="bg-white text-slate-800">Superadmin</option>
-            <option value="admin" className="bg-white text-slate-800">Admin</option>
-            <option value="employee" className="bg-white text-slate-800">Employee</option>
+            {assignedRoles.map((r) => (
+              <option key={r} value={r} className="bg-white text-slate-800 capitalize">
+                {r === "superadmin" ? "Superadmin" : r === "admin" ? "Admin" : "Employee"}
+              </option>
+            ))}
           </select>
           <ChevronDown className="w-3.5 h-3.5 text-slate-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>

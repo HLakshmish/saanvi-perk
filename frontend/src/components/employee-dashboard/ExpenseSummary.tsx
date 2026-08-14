@@ -26,6 +26,10 @@ export const ExpenseSummary: React.FC<ExpenseSummaryProps> = ({
   onViewExpenses,
   onSubmitExpense,
 }) => {
+  if (hasError) {
+    return null;
+  }
+
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case "Approved":
@@ -44,33 +48,19 @@ export const ExpenseSummary: React.FC<ExpenseSummaryProps> = ({
           <h3 className="font-bold text-[#013e37] text-xs sm:text-sm">Expenses / Reimbursements</h3>
           <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Live claim totals for your profile</p>
         </div>
-        {!hasError && (
-          <button 
-            onClick={onViewExpenses}
-            className="text-[10px] font-bold text-[#013e37] hover:underline flex items-center gap-0.5 cursor-pointer"
-          >
-            <span>View Expenses</span>
-            <ChevronRight className="w-3 h-3" />
-          </button>
-        )}
+        <button 
+          onClick={onViewExpenses}
+          className="text-[10px] font-bold text-[#013e37] hover:underline flex items-center gap-0.5 cursor-pointer"
+        >
+          <span>View Expenses</span>
+          <ChevronRight className="w-3 h-3" />
+        </button>
       </div>
 
       {isLoading ? (
         <div className="py-12 flex flex-col items-center justify-center gap-2">
           <Loader2 className="w-6 h-6 text-[#013e37] animate-spin" />
           <span className="text-[11px] text-slate-400 font-semibold">Loading stats...</span>
-        </div>
-      ) : hasError ? (
-        <div className="py-8 px-4 border border-amber-100 rounded-xl bg-amber-50/45 text-center flex flex-col items-center justify-center space-y-3">
-          <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-600">
-            <ShieldAlert className="w-5 h-5" />
-          </div>
-          <div className="space-y-1">
-            <h4 className="text-xs font-bold text-slate-800">Reimbursements Restricted</h4>
-            <p className="text-[10px] text-slate-500 max-w-[280px] leading-relaxed">
-              Your account permissions do not permit viewing reimbursement summaries (missing `VIEW_REIMBURSEMENT`). Other dashboard features remain fully functional.
-            </p>
-          </div>
         </div>
       ) : (
         <>

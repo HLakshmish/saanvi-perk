@@ -139,6 +139,7 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
     officialEmail: "",
     password: "",
     roleId: "",
+    roleIds: [] as number[],
     departmentId: "",
     designationId: "",
     employmentType: "FULL_TIME",
@@ -156,11 +157,6 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
     professionalTax: "200",
     employerPf: "",
     employeePf: "",
-
-    // Step 4: Approval Rules
-    leaveApprovalRule: "MANAGER_ONLY",
-    expenseClaimRule: "FINANCE_ONLY",
-    attendanceRegularization: "MANAGER_ONLY",
 
     // Step 5: Documents
     docType: "Aadhaar",
@@ -368,20 +364,18 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
         setErrorMsg("Login Password is required and must be at least 6 characters.");
         return false;
       }
-      if (!formData.roleId) {
-        setErrorMsg("User Role assignment is required.");
-        return false;
+      if (!formData.roleIds || formData.roleIds.length === 0) {
+        if (!formData.roleId) {
+          setErrorMsg("At least one User Role assignment is required.");
+          return false;
+        }
       }
-
-      const selectedRole = roles.find((r) => String(r.roleId) === String(formData.roleId));
-      const isRoleAdmin = selectedRole?.roleName.toLowerCase() === "admin";
-      const isRoleEmployee = selectedRole?.roleName.toLowerCase() === "employee" || selectedRole?.roleName.toLowerCase() === "staff";
 
       if (!formData.joiningDate) {
         setErrorMsg("Joining Date is required.");
         return false;
       }
-    } else if (step === 4) {
+    } else if (step === 3) {
       // Documents section can proceed without strict uploads unless added.
     }
 
@@ -402,7 +396,7 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
         setCurrentStep(2);
       }
     } else {
-      setCurrentStep((prev) => Math.min(prev + 1, 5));
+      setCurrentStep((prev) => Math.min(prev + 1, 4));
     }
   };
 
@@ -465,7 +459,7 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (currentStep < 5) {
+    if (currentStep < 4) {
       nextStep();
       return;
     }
@@ -480,7 +474,7 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
       // 1. Create Base User Profile
       const baseUserData = {
         employeeCode: formData.employeeCode,
-        roleId: Number(formData.roleId),
+        roleIds: formData.roleIds.length > 0 ? formData.roleIds : (formData.roleId ? [Number(formData.roleId)] : []),
         departmentId: formData.departmentId ? Number(formData.departmentId) : null,
         designationId: formData.designationId ? Number(formData.designationId) : null,
         firstName: formData.firstName,
@@ -698,9 +692,8 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
   const steps = [
     { number: 1, title: "Profile Info", icon: UserIcon },
     { number: 2, title: "User Account", icon: Briefcase },
-    { number: 3, title: "Approval Rules", icon: ShieldAlert },
-    { number: 4, title: "Documents", icon: FileText },
-    { number: 5, title: "Others", icon: Users },
+    { number: 3, title: "Documents", icon: FileText },
+    { number: 4, title: "Others", icon: Users },
   ];
 
   return (
@@ -1412,30 +1405,58 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-1.5 text-left">
-                  <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Assigned Role *</label>
-                  <select
-                    className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none"
-                    value={formData.roleId}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      const selRole = roles.find((r) => String(r.roleId) === String(val));
-                      const isAdm = selRole?.roleName.toLowerCase() === "admin";
-                      setFormData((prev) => ({
-                        ...prev,
-                        roleId: val,
-                        reportingToId: isAdm ? "" : prev.reportingToId,
-                      }));
-                    }}
-                    required
-                  >
-                    <option value="">-- Choose Role --</option>
-                    {roles.map((r) => (
-                      <option key={r.roleId} value={r.roleId}>
-                        {r.roleName}
-                      </option>
-                    ))}
-                  </select>
+                <div className="flex flex-col gap-1.5 text-left sm:col-span-2">
+                  <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                    Assigned Roles <span className="text-rose-500">*</span>{" "}
+                    <span className="text-[10px] text-slate-400 font-normal lowercase">(select one or more)</span>
+                  </label>
+                  <div className="flex flex-wrap gap-2 p-3 border border-slate-300 rounded-xl bg-slate-50/50 min-h-[48px] items-center">
+                    {roles.length === 0 ? (
+                      <span className="text-xs text-slate-400 italic">No roles configured</span>
+                    ) : (
+                      roles.map((r) => {
+                        const currentList = formData.roleIds || (formData.roleId ? [Number(formData.roleId)] : []);
+                        const isSelected = currentList.includes(r.roleId);
+                        return (
+                          <button
+                            key={r.roleId}
+                            type="button"
+                            onClick={() => {
+                              const updated = isSelected
+                                ? currentList.filter((id) => id !== r.roleId)
+                                : [...currentList, r.roleId];
+                              
+                              const isAdm = roles.some((role) => updated.includes(role.roleId) && role.roleName.toLowerCase() === "admin");
+
+                              setFormData((prev) => ({
+                                ...prev,
+                                roleIds: updated,
+                                roleId: updated.length > 0 ? String(updated[0]) : "",
+                                reportingToId: isAdm ? "" : prev.reportingToId,
+                              }));
+                            }}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border ${
+                              isSelected
+                                ? "bg-[#013e37] text-[#ffefb3] border-[#013e37] shadow-2xs"
+                                : "bg-white text-slate-700 border-slate-300 hover:border-slate-400 hover:bg-slate-100"
+                            }`}
+                          >
+                            <span
+                              className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center text-[9px] ${
+                                isSelected ? "border-[#ffefb3] bg-[#ffefb3] text-[#013e37] font-extrabold" : "border-slate-400"
+                              }`}
+                            >
+                              {isSelected && "✓"}
+                            </span>
+                            <span>{r.roleName}</span>
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+                  {(!formData.roleIds || formData.roleIds.length === 0) && (
+                    <p className="text-[10px] text-slate-400 font-semibold">Select at least one role to grant system access.</p>
+                  )}
                 </div>
               </div>
 
@@ -1564,66 +1585,12 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
             </div>
           )}
 
-          {/* STEP 3: APPROVAL RULES */}
+          {/* STEP 3: DOCUMENTS UPLOADS */}
           {currentStep === 3 && (
             <div className="space-y-4 animate-in fade-in duration-200">
               <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                <ShieldAlert className="w-5 h-5 text-indigo-600" />
-                <span>Step 3: Role Permissions & Approval Hierarchies</span>
-              </h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="flex flex-col gap-1.5 text-left border border-slate-200 p-4 rounded-xl bg-white shadow-2xs">
-                  <span className="text-xs font-bold text-slate-700">Leave Approval Policy</span>
-                  <p className="text-[10px] text-slate-400 mb-2">Specifies leaf validation approvals.</p>
-                  <select
-                    className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-sm text-slate-900 focus:outline-none"
-                    value={formData.leaveApprovalRule}
-                    onChange={(e) => handleChange("leaveApprovalRule", e.target.value)}
-                  >
-                    <option value="MANAGER_ONLY">Reporting Manager only</option>
-                    <option value="HR_ONLY">HR department only</option>
-                    <option value="MANAGER_AND_HR">Manager then HR approval</option>
-                  </select>
-                </div>
-
-                <div className="flex flex-col gap-1.5 text-left border border-slate-200 p-4 rounded-xl bg-white shadow-2xs">
-                  <span className="text-xs font-bold text-slate-700">Expense Claim Approvals</span>
-                  <p className="text-[10px] text-slate-400 mb-2">Specifies reimbursement claim validation.</p>
-                  <select
-                    className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-sm text-slate-900 focus:outline-none"
-                    value={formData.expenseClaimRule}
-                    onChange={(e) => handleChange("expenseClaimRule", e.target.value)}
-                  >
-                    <option value="FINANCE_ONLY">Accounts Team only</option>
-                    <option value="MANAGER_THEN_FINANCE">Manager then Accounts</option>
-                    <option value="DIRECT_ADMIN">Admin pre-authorized</option>
-                  </select>
-                </div>
-
-                <div className="flex flex-col gap-1.5 text-left border border-slate-200 p-4 rounded-xl bg-white shadow-2xs">
-                  <span className="text-xs font-bold text-slate-700">Attendance Regularization</span>
-                  <p className="text-[10px] text-slate-400 mb-2">Specifies geo-fence override approvals.</p>
-                  <select
-                    className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-sm text-slate-900 focus:outline-none"
-                    value={formData.attendanceRegularization}
-                    onChange={(e) => handleChange("attendanceRegularization", e.target.value)}
-                  >
-                    <option value="MANAGER_ONLY">Manager approval required</option>
-                    <option value="AUTO_APPROVE">Auto-approve settings</option>
-                    <option value="ADMIN_OVERRIDE">Admin override only</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* STEP 4: DOCUMENTS UPLOADS */}
-          {currentStep === 4 && (
-            <div className="space-y-4 animate-in fade-in duration-200">
-              <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
                 <FileText className="w-5 h-5 text-indigo-600" />
-                <span>Step 4: KYC Verification & Document Vault</span>
+                <span>Step 3: KYC Verification & Document Vault</span>
               </h3>
 
               {/* Upload Input form */}
@@ -1731,12 +1698,12 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
             </div>
           )}
 
-          {/* STEP 5: OTHERS / REMARKS */}
-          {currentStep === 5 && (
+          {/* STEP 4: OTHERS / REMARKS */}
+          {currentStep === 4 && (
             <div className="space-y-4 animate-in fade-in duration-200">
               <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
                 <Users className="w-5 h-5 text-indigo-600" />
-                <span>Step 5: Additional Information</span>
+                <span>Step 4: Additional Information</span>
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1780,7 +1747,7 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
               Previous
             </button>
 
-            {currentStep < 5 || (currentStep === 1 && activeSubTab !== "statutory") ? (
+            {currentStep < 4 || (currentStep === 1 && activeSubTab !== "statutory") ? (
               <button
                 type="button"
                 onClick={nextStep}

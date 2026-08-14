@@ -88,18 +88,6 @@ export const SettingsView: React.FC = () => {
           <span className="text-slate-300">|</span>
 
           <button
-            onClick={() => handleSubTabChange("training")}
-            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-              activeSubTab === "training"
-                ? "bg-[#013e37] text-[#ffefb3] font-bold shadow-2xs border border-[#013e37]"
-                : "hover:text-[#013e37]"
-            }`}
-          >
-            Training
-          </button>
-          <span className="text-slate-300">|</span>
-
-          <button
             onClick={() => handleSubTabChange("others")}
             className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
               activeSubTab === "others"
@@ -147,13 +135,6 @@ export const SettingsView: React.FC = () => {
 
           {activeSubTab === "leave" && (
             <LeaveTab />
-          )}
-
-          {activeSubTab === "training" && (
-            <PlaceholderConfigTab
-              title="Training"
-              description="Configure employee skill matrices, course modules, and certifications."
-            />
           )}
 
           {activeSubTab === "others" && <OthersTab />}
