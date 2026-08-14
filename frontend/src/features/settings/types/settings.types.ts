@@ -4,7 +4,6 @@ export type SettingsSubTab =
   | "payroll"
   | "attendance"
   | "leave"
-  | "training"
   | "others";
 
 export interface CompanyInfoData {

@@ -109,8 +109,14 @@ export const getExpenses = async (filters?: {
     });
 
     const result = await res.json();
+
+    // Handle 403 Forbidden (missing permission) gracefully — return empty list instead of throwing
+    if (res.status === 403) {
+      return [];
+    }
+
     if (!res.ok || !result.success || !Array.isArray(result.data)) {
-      throw new Error(result.message || "Failed to fetch claims from server.");
+      return [];
     }
 
     const list: Expense[] = result.data.map(mapClaimToExpense);
@@ -327,8 +333,15 @@ export const getExpenseStats = async (period?: string, trendOffset: number = 0):
     });
 
     const result = await res.json();
-    if (!res.ok || !result.success || !Array.isArray(result.data)) {
-      throw new Error("Failed to fetch claims for statistics.");
+    if (res.status === 403 || !res.ok || !result.success || !Array.isArray(result.data)) {
+      return {
+        totalAmount: 0,
+        submittedCount: 0,
+        pendingCount: 0,
+        approvedCount: 0,
+        rejectedCount: 0,
+        monthlyTrend: [],
+      };
     }
 
     const list: Expense[] = result.data.map(mapClaimToExpense);

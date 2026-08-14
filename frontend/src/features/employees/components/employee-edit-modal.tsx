@@ -91,6 +91,7 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
     officialEmail: "",
     password: "", // Optional
     roleId: "",
+    roleIds: [] as number[],
     departmentId: "",
     designationId: "",
     employmentType: "FULL_TIME",
@@ -270,12 +271,17 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
       if (curAddr) setCurrentAddressExists(true);
       if (permAddr) setPermanentAddressExists(true);
 
+      const assignedRoleIds = Array.isArray(u.userRoles) && u.userRoles.length > 0
+        ? u.userRoles.map((ur: any) => Number(ur.roleId || ur.role?.roleId)).filter(Boolean)
+        : (u.roleId ? [Number(u.roleId)] : []);
+
       // Populate Form State
       setFormData({
         employeeCode: u.employeeCode || "",
         officialEmail: u.officialEmail || "",
         password: "", // Keep blank, will only update if filled
-        roleId: u.userRoles?.[0]?.roleId ? String(u.userRoles[0].roleId) : (u.roleId ? String(u.roleId) : ""),
+        roleId: assignedRoleIds.length > 0 ? String(assignedRoleIds[0]) : "",
+        roleIds: assignedRoleIds,
         departmentId: u.departmentId ? String(u.departmentId) : "",
         designationId: u.designationId ? String(u.designationId) : "",
         employmentType: u.employmentType || "FULL_TIME",
@@ -366,10 +372,9 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
       const isRoleAdmin = selectedRole?.roleName.toLowerCase() === "admin";
       const isRoleEmployee = selectedRole?.roleName.toLowerCase() === "employee" || selectedRole?.roleName.toLowerCase() === "staff";
 
-      // 1. Update Corporate User profile
       const userPayload: any = {
         employeeCode: formData.employeeCode,
-        roleId: Number(formData.roleId),
+        roleIds: formData.roleIds.length > 0 ? formData.roleIds : (formData.roleId ? [Number(formData.roleId)] : []),
         departmentId: formData.departmentId ? Number(formData.departmentId) : null,
         designationId: formData.designationId ? Number(formData.designationId) : null,
         officialEmail: formData.officialEmail,
@@ -692,30 +697,58 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
                       onChange={(e) => handleChange("password", e.target.value)}
                     />
 
-                    <div className="flex flex-col gap-1.5 text-left">
-                      <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Assigned Role *</label>
-                      <select
-                        className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none"
-                        value={formData.roleId}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          const selRole = roles.find((r) => String(r.roleId) === String(val));
-                          const isAdm = selRole?.roleName.toLowerCase() === "admin";
-                          setFormData((prev) => ({
-                            ...prev,
-                            roleId: val,
-                            reportingToId: isAdm ? "" : prev.reportingToId,
-                          }));
-                        }}
-                        required
-                      >
-                        <option value="">-- Choose Role --</option>
-                        {roles.map((r) => (
-                          <option key={r.roleId} value={r.roleId}>
-                            {r.roleName}
-                          </option>
-                        ))}
-                      </select>
+                    <div className="flex flex-col gap-1.5 text-left sm:col-span-2">
+                      <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                        Assigned Roles <span className="text-rose-500">*</span>{" "}
+                        <span className="text-[10px] text-slate-400 font-normal lowercase">(select one or more)</span>
+                      </label>
+                      <div className="flex flex-wrap gap-2 p-3 border border-slate-300 rounded-xl bg-slate-50/50 min-h-[48px] items-center">
+                        {roles.length === 0 ? (
+                          <span className="text-xs text-slate-400 italic">No roles configured</span>
+                        ) : (
+                          roles.map((r) => {
+                            const currentList = formData.roleIds || (formData.roleId ? [Number(formData.roleId)] : []);
+                            const isSelected = currentList.includes(r.roleId);
+                            return (
+                              <button
+                                key={r.roleId}
+                                type="button"
+                                onClick={() => {
+                                  const updated = isSelected
+                                    ? currentList.filter((id) => id !== r.roleId)
+                                    : [...currentList, r.roleId];
+                                  
+                                  const isAdm = roles.some((role) => updated.includes(role.roleId) && role.roleName.toLowerCase() === "admin");
+
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    roleIds: updated,
+                                    roleId: updated.length > 0 ? String(updated[0]) : "",
+                                    reportingToId: isAdm ? "" : prev.reportingToId,
+                                  }));
+                                }}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border ${
+                                  isSelected
+                                    ? "bg-[#013e37] text-[#ffefb3] border-[#013e37] shadow-2xs"
+                                    : "bg-white text-slate-700 border-slate-300 hover:border-slate-400 hover:bg-slate-100"
+                                }`}
+                              >
+                                <span
+                                  className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center text-[9px] ${
+                                    isSelected ? "border-[#ffefb3] bg-[#ffefb3] text-[#013e37] font-extrabold" : "border-slate-400"
+                                  }`}
+                                >
+                                  {isSelected && "✓"}
+                                </span>
+                                <span>{r.roleName}</span>
+                              </button>
+                            );
+                          })
+                        )}
+                      </div>
+                      {(!formData.roleIds || formData.roleIds.length === 0) && (
+                        <p className="text-[10px] text-slate-400 font-semibold">Select at least one role for this employee.</p>
+                      )}
                     </div>
                   </div>
 

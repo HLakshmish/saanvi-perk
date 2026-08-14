@@ -30,6 +30,7 @@ import {
   UploadCloud,
   ChevronLeft,
   ChevronRight,
+  ShieldAlert,
 } from "lucide-react";
 
 interface ExpensesViewProps {
@@ -326,6 +327,33 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
       </div>
     );
   };
+
+  // Check if this is a permission restriction error
+  const isForbidden = errorMsg?.includes("Forbidden") || errorMsg?.includes("permission");
+
+  if (isForbidden) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between border-b border-[#013e37]/15 pb-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-[#013e37] tracking-tight">Expenses</h1>
+            <p className="text-xs text-slate-500 font-medium">Reimbursement management dashboard</p>
+          </div>
+        </div>
+        <div className="py-16 flex flex-col items-center justify-center gap-4 bg-white border border-amber-200/60 rounded-2xl shadow-2xs">
+          <div className="w-14 h-14 rounded-full bg-amber-100 flex items-center justify-center">
+            <ShieldAlert className="w-7 h-7 text-amber-600" />
+          </div>
+          <div className="text-center space-y-1.5 max-w-sm">
+            <h2 className="text-sm font-bold text-slate-800">Access Restricted</h2>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Your current role does not include the <span className="font-bold text-slate-700">VIEW_REIMBURSEMENT</span> permission required to access expense records. Please contact your administrator to request access.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

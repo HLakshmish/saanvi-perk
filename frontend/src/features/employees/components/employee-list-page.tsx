@@ -59,9 +59,6 @@ export const EmployeeListPage: React.FC<EmployeeListPageProps> = ({
         {/* Hide Add Employee button unless role is Admin or Super Admin */}
         {(currentRole === "admin" || currentRole === "superadmin") && (
           <div className="flex items-center gap-2 shrink-0">
-            <Button variant="outline" size="sm" className="h-9 text-xs border-[#013e37]/20 text-[#013e37] hover:bg-[#013e37]/5 font-bold rounded-xl">
-              Export List
-            </Button>
             <Button
               variant="primary"
               size="sm"

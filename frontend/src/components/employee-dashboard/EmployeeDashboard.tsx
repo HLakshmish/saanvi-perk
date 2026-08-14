@@ -289,14 +289,16 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
           </div>
 
           {/* Live Expenses Section */}
-          <ExpenseSummary 
-            isLoading={isLoadingExpenses}
-            hasError={hasExpenseError}
-            expensesStats={expensesStats}
-            expenses={expenses}
-            onViewExpenses={handleSubmitExpenseTab}
-            onSubmitExpense={handleSubmitExpenseTab}
-          />
+          {!hasExpenseError && (
+            <ExpenseSummary 
+              isLoading={isLoadingExpenses}
+              hasError={hasExpenseError}
+              expensesStats={expensesStats}
+              expenses={expenses}
+              onViewExpenses={handleSubmitExpenseTab}
+              onSubmitExpense={handleSubmitExpenseTab}
+            />
+          )}
 
           {/* Bottom Grid: Holidays and Activities */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
