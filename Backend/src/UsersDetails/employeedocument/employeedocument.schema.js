@@ -2,7 +2,10 @@ const documentResponseProperties = {
     documentId: { type: 'number' },
     userId: { type: 'number' },
     documentType: { type: 'string' },
+    fileName: { type: 'string', nullable: true },
+    mimeType: { type: 'string', nullable: true },
     status: { type: 'boolean' },
+    document: { type: 'string' },
     uploadedAt: { type: 'string', format: 'date-time' },
     updatedAt: { type: 'string', format: 'date-time' }
 };
