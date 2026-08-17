@@ -209,6 +209,8 @@ model User {
   createdBy Int? @map("created_by")
   updatedBy Int? @map("updated_by")
 
+  profilePic String? @map("profile_pic") @db.Text
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
