@@ -49,22 +49,36 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   useEffect(() => {
     const loadCompanyMetadata = async () => {
       try {
+        // 1. Always use the logged-in user's name from localStorage (set at login time)
+        if (typeof window !== "undefined") {
+          const storedName = localStorage.getItem("user_name");
+          if (storedName) {
+            setResolvedUserName(storedName);
+          }
+        }
+
+        // 2. Fetch company name
         const res = await getCompanySuperAdmin();
         if (res.success && res.data) {
           const comp = res.data;
           if (comp.companyName) {
             setResolvedCompanyName(comp.companyName);
           }
-          if (comp.superAdmin && role === "superadmin") {
-            const sa = comp.superAdmin;
-            setResolvedUserName(`${sa.firstName} ${sa.lastName || ""}`.trim());
-          } else {
-            const loggedInUserId = getCurrentUserId();
-            if (loggedInUserId) {
-              const userRes = await getUserById(loggedInUserId);
-              if (userRes.success && userRes.data) {
-                const u = userRes.data;
-                setResolvedUserName(`${u.firstName} ${u.lastName || ""}`.trim());
+
+          // 3. If no name was found in localStorage, fallback to API-based resolution
+          const storedName = typeof window !== "undefined" ? localStorage.getItem("user_name") : null;
+          if (!storedName) {
+            if (comp.superAdmin && role === "superadmin") {
+              const sa = comp.superAdmin;
+              setResolvedUserName(`${sa.firstName} ${sa.lastName || ""}`.trim());
+            } else {
+              const loggedInUserId = getCurrentUserId();
+              if (loggedInUserId) {
+                const userRes = await getUserById(loggedInUserId);
+                if (userRes.success && userRes.data) {
+                  const u = userRes.data;
+                  setResolvedUserName(`${u.firstName} ${u.lastName || ""}`.trim());
+                }
               }
             }
           }

@@ -64,6 +64,13 @@ export const Navbar: React.FC<NavbarProps> = ({
     document.cookie = "auth_token=; path=/; max-age=0;";
     document.cookie = "user_role=; path=/; max-age=0;";
     document.cookie = "company_id=; path=/; max-age=0;";
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("token");
+      localStorage.removeItem("auth_token");
+      localStorage.removeItem("user_role");
+      localStorage.removeItem("user_name");
+      localStorage.removeItem("company_id");
+    }
     window.location.href = "/";
   };
 
@@ -173,15 +180,18 @@ export const Navbar: React.FC<NavbarProps> = ({
           )}
         </div>
 
-        {/* Role Selector Dropdown (Hidden for employees or users with only 1 assigned role) */}
-        {currentRole !== "employee" && assignedRoles.length > 1 && (
+        {/* Role Selector Dropdown (Hidden for employees) */}
+        {currentRole !== "employee" && (
           <div className="relative">
             <select
               value={currentRole}
               onChange={(e) => handleRoleSwitch(e.target.value as UserRole)}
               className="appearance-none px-3 py-1.5 pr-7 border border-slate-200/90 rounded-xl text-[#013e37] bg-slate-50 hover:bg-slate-100 font-bold text-xs focus:ring-2 focus:ring-[#013e37]/20 focus:outline-none cursor-pointer capitalize shadow-2xs"
             >
-              {assignedRoles.map((r) => (
+              {(currentRole === "superadmin"
+                ? (["superadmin", "admin", "employee"] as UserRole[])
+                : assignedRoles
+              ).map((r) => (
                 <option key={r} value={r} className="bg-white text-slate-800 capitalize">
                   {r === "superadmin" ? "Superadmin" : r === "admin" ? "Admin" : "Employee"}
                 </option>

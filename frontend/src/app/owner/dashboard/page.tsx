@@ -84,6 +84,13 @@ export default function OwnerDashboardPage() {
     document.cookie = "auth_token=; path=/; max-age=0;";
     document.cookie = "user_role=; path=/; max-age=0;";
     document.cookie = "company_id=; path=/; max-age=0;";
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("token");
+      localStorage.removeItem("auth_token");
+      localStorage.removeItem("user_role");
+      localStorage.removeItem("user_name");
+      localStorage.removeItem("company_id");
+    }
     window.location.href = "/";
   };
 

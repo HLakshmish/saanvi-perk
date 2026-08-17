@@ -54,6 +54,17 @@ export async function loginUser(
         document.cookie = `company_id=${companyId}; path=/; max-age=86400;`;
       }
 
+      // Set localStorage for client-side API calls & local debugging
+      if (typeof window !== "undefined") {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("auth_token", data.token);
+        localStorage.setItem("user_role", role);
+        localStorage.setItem("user_name", name);
+        if (companyId) {
+          localStorage.setItem("company_id", String(companyId));
+        }
+      }
+
       return {
         success: true,
         token: data.token,
