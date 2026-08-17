@@ -298,10 +298,14 @@ export const EmployeeProfile: React.FC<EmployeeProfileProps> = ({ employeeId, on
         
         {/* Left Column: Employee summary card */}
         <div className="lg:col-span-4 bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs flex flex-col items-center text-center space-y-5">
-          <div className="w-24 h-24 rounded-full bg-[#013e37]/5 border border-[#013e37]/10 flex items-center justify-center shadow-inner relative group select-none">
-            <span className="text-[#013e37] text-3xl font-extrabold tracking-tight">
-              {userProfile.firstName.charAt(0).toUpperCase()}
-            </span>
+          <div className="w-24 h-24 rounded-full overflow-hidden bg-[#013e37]/5 border border-[#013e37]/10 flex items-center justify-center shadow-inner relative group select-none">
+            {personalInfo?.profilePhoto ? (
+              <img src={personalInfo.profilePhoto} alt={fullName} className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-[#013e37] text-3xl font-extrabold tracking-tight">
+                {userProfile.firstName.charAt(0).toUpperCase()}
+              </span>
+            )}
           </div>
 
           <div className="space-y-1">
@@ -555,6 +559,52 @@ export const EmployeeProfile: React.FC<EmployeeProfileProps> = ({ employeeId, on
                           <span className="text-[10px] font-bold text-slate-400 block">PF Number</span>
                           <span className="font-mono text-xs font-bold text-slate-900 select-all">{pfDetail?.pfNumber || "N/A"}</span>
                         </div>
+                        {pfDetail?.pfJoiningDate && (
+                          <div>
+                            <span className="text-[10px] font-bold text-slate-400 block">PF Joining Date</span>
+                            <span className="text-xs font-semibold text-slate-900">{new Date(pfDetail.pfJoiningDate).toLocaleDateString("en-IN")}</span>
+                          </div>
+                        )}
+                        {pfDetail?.pfLeavingDate && (
+                          <div>
+                            <span className="text-[10px] font-bold text-slate-400 block">PF Leaving Date</span>
+                            <span className="text-xs font-semibold text-slate-900">{new Date(pfDetail.pfLeavingDate).toLocaleDateString("en-IN")}</span>
+                          </div>
+                        )}
+                        <div>
+                          <span className="text-[10px] font-bold text-slate-400 block">International Worker</span>
+                          <span className="text-xs font-semibold text-slate-900">{pfDetail?.isInternationalWorker ? "Yes" : "No"}</span>
+                        </div>
+                        {pfDetail?.educationLevel && (
+                          <div>
+                            <span className="text-[10px] font-bold text-slate-400 block">Education Level</span>
+                            <span className="text-xs font-semibold text-slate-900">{pfDetail.educationLevel}</span>
+                          </div>
+                        )}
+                        {pfDetail?.phcCategory && (
+                          <div>
+                            <span className="text-[10px] font-bold text-slate-400 block">PHC Category</span>
+                            <span className="text-xs font-semibold text-slate-900">{pfDetail.phcCategory}</span>
+                          </div>
+                        )}
+                        {pfDetail?.reasonForLeaving && (
+                          <div>
+                            <span className="text-[10px] font-bold text-slate-400 block">Reason for Leaving</span>
+                            <span className="text-xs font-semibold text-slate-900">{pfDetail.reasonForLeaving}</span>
+                          </div>
+                        )}
+                        {pfDetail?.documentNumber && (
+                          <div>
+                            <span className="text-[10px] font-bold text-slate-400 block">Doc Number ({pfDetail.documentType || "Other"})</span>
+                            <span className="font-mono text-xs font-bold text-slate-900 select-all">{pfDetail.documentNumber}</span>
+                          </div>
+                        )}
+                        {pfDetail?.documentExpiryDate && (
+                          <div>
+                            <span className="text-[10px] font-bold text-slate-400 block">Doc Expiry Date</span>
+                            <span className="text-xs font-semibold text-slate-900">{new Date(pfDetail.documentExpiryDate).toLocaleDateString("en-IN")}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -566,6 +616,24 @@ export const EmployeeProfile: React.FC<EmployeeProfileProps> = ({ employeeId, on
                           <span className="text-[10px] font-bold text-slate-400 block">ESI Account No</span>
                           <span className="font-mono text-xs font-bold text-slate-900 select-all">{esiDetail?.esiNumber || "Not Provided"}</span>
                         </div>
+                        {esiDetail?.esiJoiningDate && (
+                          <div>
+                            <span className="text-[10px] font-bold text-slate-400 block">ESI Joining Date</span>
+                            <span className="text-xs font-semibold text-slate-900">{new Date(esiDetail.esiJoiningDate).toLocaleDateString("en-IN")}</span>
+                          </div>
+                        )}
+                        {esiDetail?.esiLeavingDate && (
+                          <div>
+                            <span className="text-[10px] font-bold text-slate-400 block">ESI Leaving Date</span>
+                            <span className="text-xs font-semibold text-slate-900">{new Date(esiDetail.esiLeavingDate).toLocaleDateString("en-IN")}</span>
+                          </div>
+                        )}
+                        {esiDetail?.reasonForLeaving && (
+                          <div>
+                            <span className="text-[10px] font-bold text-slate-400 block">Reason for Leaving</span>
+                            <span className="text-xs font-semibold text-slate-900">{esiDetail.reasonForLeaving}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
 

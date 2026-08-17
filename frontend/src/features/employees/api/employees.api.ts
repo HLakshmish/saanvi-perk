@@ -10,6 +10,64 @@ function getAuthToken(): string | null {
   return match ? match[1] : null;
 }
 
+const pendingRequests = new Map<string, Promise<Response>>();
+export function formatBackendError(errorMsg: string): string {
+  if (!errorMsg) return "An unexpected error occurred.";
+  const lowerMsg = errorMsg.toLowerCase();
+  if (lowerMsg.includes("unique constraint failed")) {
+    if (lowerMsg.includes("pan_number") || lowerMsg.includes("pannumber")) {
+      return "The PAN Number entered is already registered to another employee. Please enter a unique PAN.";
+    }
+    if (lowerMsg.includes("aadhaar_number") || lowerMsg.includes("aadhaarnumber")) {
+      return "The Aadhaar Number entered is already registered to another employee. Please enter a unique Aadhaar.";
+    }
+    if (lowerMsg.includes("official_email") || lowerMsg.includes("officialemail")) {
+      return "The Official Email entered is already in use by another user. Please use a unique email.";
+    }
+    if (lowerMsg.includes("personal_email") || lowerMsg.includes("personalemail")) {
+      return "The Personal Email entered is already registered. Please use a unique email.";
+    }
+    return "A record with these details already exists. Please check unique fields (PAN, Aadhaar, Email, etc.).";
+  }
+  return errorMsg;
+}
+
+function getErrorMsg(result: any, fallback: string): string {
+  const msg = result?.message || result?.error || fallback;
+  return formatBackendError(msg);
+}
+
+
+async function fetchDeduplicated(url: string, options?: RequestInit): Promise<Response> {
+  const method = options?.method || "GET";
+  if (method !== "GET") {
+    return fetch(url, options);
+  }
+
+  const cacheKey = `${url}_${JSON.stringify(options?.headers || {})}`;
+  if (pendingRequests.has(cacheKey)) {
+    const cachedResponse = await pendingRequests.get(cacheKey);
+    if (cachedResponse) {
+      return cachedResponse.clone();
+    }
+  }
+
+  const promise = (async () => {
+    try {
+      const response = await fetch(url, options);
+      return response;
+    } finally {
+      setTimeout(() => {
+        pendingRequests.delete(cacheKey);
+      }, 300);
+    }
+  })();
+
+  pendingRequests.set(cacheKey, promise);
+  const response = await promise;
+  return response.clone();
+}
+
 const mapUserToEmployee = (user: any): Employee => {
   return {
     id: String(user.userId),
@@ -32,7 +90,7 @@ const mapUserToEmployee = (user: any): Employee => {
 export const getDesignations = async (): Promise<Designation[]> => {
   const token = getAuthToken();
   try {
-    const res = await fetch(`${API_BASE_URL}/api/designations`, {
+    const res = await fetchDeduplicated(`${API_BASE_URL}/api/designations`, {
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
@@ -61,7 +119,7 @@ export const getEmployees = async (): Promise<Employee[]> => {
     const companyId = getCompanyIdCookie();
     if (companyId) {
       try {
-        const compRes = await fetch(`${API_BASE_URL}/api/companies/${companyId}`, {
+        const compRes = await fetchDeduplicated(`${API_BASE_URL}/api/companies/${companyId}`, {
           headers: {
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
@@ -80,7 +138,7 @@ export const getEmployees = async (): Promise<Employee[]> => {
 
     // 2. Fetch Users and Designations concurrently
     const [res, designations] = await Promise.all([
-      fetch(`${API_BASE_URL}/api/users`, {
+      fetchDeduplicated(`${API_BASE_URL}/api/users`, {
         headers: {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
@@ -133,7 +191,7 @@ export const getEmployees = async (): Promise<Employee[]> => {
 export const getRoles = async (): Promise<any[]> => {
   const token = getAuthToken();
   try {
-    const res = await fetch(`${API_BASE_URL}/api/roles`, {
+    const res = await fetchDeduplicated(`${API_BASE_URL}/api/roles`, {
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
@@ -188,7 +246,7 @@ export const createEmployee = async (data: any): Promise<{ success: boolean; dat
       ...rest,
       roleIds: resolvedRoleIds,
     };
-    const res = await fetch(`${API_BASE_URL}/api/users`, {
+    const res = await fetchDeduplicated(`${API_BASE_URL}/api/users`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -200,10 +258,10 @@ export const createEmployee = async (data: any): Promise<{ success: boolean; dat
     if (res.ok && result.success) {
       return { success: true, data: result.data, message: result.message };
     }
-    return { success: false, error: result.message || "Failed to create user account" };
+    return { success: false, error: getErrorMsg(result, "Failed to create user account") };
   } catch (error: any) {
     console.error("Backend API error creating employee user:", error);
-    return { success: false, error: error.message || "Failed to create user account" };
+    return { success: false, error: formatBackendError(error.message || "Failed to create user account") };
   }
 };
 
@@ -213,7 +271,7 @@ export const createEmployee = async (data: any): Promise<{ success: boolean; dat
 export const createPersonalInfo = async (data: any): Promise<{ success: boolean; data?: any; error?: string }> => {
   const token = getAuthToken();
   try {
-    const res = await fetch(`${API_BASE_URL}/api/personal-information`, {
+    const res = await fetchDeduplicated(`${API_BASE_URL}/api/personal-information`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -225,10 +283,10 @@ export const createPersonalInfo = async (data: any): Promise<{ success: boolean;
     if (res.ok && result.success) {
       return { success: true, data: result.data };
     }
-    return { success: false, error: result.message || "Failed to save personal details" };
+    return { success: false, error: getErrorMsg(result, "Failed to save personal details") };
   } catch (error: any) {
     console.error("Backend API error saving personal info:", error);
-    return { success: false, error: error.message || "Failed to save personal details" };
+    return { success: false, error: formatBackendError(error.message || "Failed to save personal details") };
   }
 };
 
@@ -238,7 +296,7 @@ export const createPersonalInfo = async (data: any): Promise<{ success: boolean;
 export const createParentInfo = async (data: any): Promise<{ success: boolean; data?: any; error?: string }> => {
   const token = getAuthToken();
   try {
-    const res = await fetch(`${API_BASE_URL}/api/parent-info`, {
+    const res = await fetchDeduplicated(`${API_BASE_URL}/api/parent-info`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -250,10 +308,10 @@ export const createParentInfo = async (data: any): Promise<{ success: boolean; d
     if (res.ok && result.success) {
       return { success: true, data: result.data };
     }
-    return { success: false, error: result.message || "Failed to save family details" };
+    return { success: false, error: getErrorMsg(result, "Failed to save family details") };
   } catch (error: any) {
     console.error("Backend API error saving family info:", error);
-    return { success: false, error: error.message || "Failed to save family details" };
+    return { success: false, error: formatBackendError(error.message || "Failed to save family details") };
   }
 };
 
@@ -263,7 +321,7 @@ export const createParentInfo = async (data: any): Promise<{ success: boolean; d
 export const createAddressInfo = async (data: any): Promise<{ success: boolean; data?: any; error?: string }> => {
   const token = getAuthToken();
   try {
-    const res = await fetch(`${API_BASE_URL}/api/address-info`, {
+    const res = await fetchDeduplicated(`${API_BASE_URL}/api/address-info`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -275,10 +333,10 @@ export const createAddressInfo = async (data: any): Promise<{ success: boolean; 
     if (res.ok && result.success) {
       return { success: true, data: result.data };
     }
-    return { success: false, error: result.message || "Failed to save address details" };
+    return { success: false, error: getErrorMsg(result, "Failed to save address details") };
   } catch (error: any) {
     console.error("Backend API error saving address info:", error);
-    return { success: false, error: error.message || "Failed to save address details" };
+    return { success: false, error: formatBackendError(error.message || "Failed to save address details") };
   }
 };
 
@@ -288,7 +346,7 @@ export const createAddressInfo = async (data: any): Promise<{ success: boolean; 
 export const createBankDetails = async (data: any): Promise<{ success: boolean; data?: any; error?: string }> => {
   const token = getAuthToken();
   try {
-    const res = await fetch(`${API_BASE_URL}/api/bank-details`, {
+    const res = await fetchDeduplicated(`${API_BASE_URL}/api/bank-details`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -300,10 +358,10 @@ export const createBankDetails = async (data: any): Promise<{ success: boolean; 
     if (res.ok && result.success) {
       return { success: true, data: result.data };
     }
-    return { success: false, error: result.message || "Failed to save bank details" };
+    return { success: false, error: getErrorMsg(result, "Failed to save bank details") };
   } catch (error: any) {
     console.error("Backend API error saving bank details:", error);
-    return { success: false, error: error.message || "Failed to save bank details" };
+    return { success: false, error: formatBackendError(error.message || "Failed to save bank details") };
   }
 };
 
@@ -312,7 +370,7 @@ export const createBankDetails = async (data: any): Promise<{ success: boolean; 
 export const createPFDetail = async (data: CreatePFDetailInput): Promise<{ success: boolean; data?: any; error?: string }> => {
   const token = getAuthToken();
   try {
-    const res = await fetch(`${API_BASE_URL}/api/pf-details`, {
+    const res = await fetchDeduplicated(`${API_BASE_URL}/api/pf-details`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -324,17 +382,17 @@ export const createPFDetail = async (data: CreatePFDetailInput): Promise<{ succe
     if (res.ok && result.success) {
       return { success: true, data: result.data };
     }
-    return { success: false, error: result.message || "Failed to save PF details" };
+    return { success: false, error: getErrorMsg(result, "Failed to save PF details") };
   } catch (error: any) {
     console.error("API error saving PF details:", error);
-    return { success: false, error: error.message || "Failed to save PF details" };
+    return { success: false, error: formatBackendError(error.message || "Failed to save PF details") };
   }
 };
 
 export const createESIDetail = async (data: CreateESIDetailInput): Promise<{ success: boolean; data?: any; error?: string }> => {
   const token = getAuthToken();
   try {
-    const res = await fetch(`${API_BASE_URL}/api/esi-details`, {
+    const res = await fetchDeduplicated(`${API_BASE_URL}/api/esi-details`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -346,17 +404,17 @@ export const createESIDetail = async (data: CreateESIDetailInput): Promise<{ suc
     if (res.ok && result.success) {
       return { success: true, data: result.data };
     }
-    return { success: false, error: result.message || "Failed to save ESI details" };
+    return { success: false, error: getErrorMsg(result, "Failed to save ESI details") };
   } catch (error: any) {
     console.error("API error saving ESI details:", error);
-    return { success: false, error: error.message || "Failed to save ESI details" };
+    return { success: false, error: formatBackendError(error.message || "Failed to save ESI details") };
   }
 };
 
 export const createInsuranceDetail = async (data: CreateInsuranceDetailInput): Promise<{ success: boolean; data?: any; error?: string }> => {
   const token = getAuthToken();
   try {
-    const res = await fetch(`${API_BASE_URL}/api/insurance-details`, {
+    const res = await fetchDeduplicated(`${API_BASE_URL}/api/insurance-details`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -368,10 +426,10 @@ export const createInsuranceDetail = async (data: CreateInsuranceDetailInput): P
     if (res.ok && result.success) {
       return { success: true, data: result.data };
     }
-    return { success: false, error: result.message || "Failed to save insurance details" };
+    return { success: false, error: getErrorMsg(result, "Failed to save insurance details") };
   } catch (error: any) {
     console.error("API error saving insurance details:", error);
-    return { success: false, error: error.message || "Failed to save insurance details" };
+    return { success: false, error: formatBackendError(error.message || "Failed to save insurance details") };
   }
 };
 
@@ -387,7 +445,7 @@ export const uploadEmployeeDocument = async (
     formData.append("documentType", documentType);
     formData.append("file", file);
 
-    const res = await fetch(`${API_BASE_URL}/api/employee-documents`, {
+    const res = await fetchDeduplicated(`${API_BASE_URL}/api/employee-documents`, {
       method: "POST",
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -398,17 +456,17 @@ export const uploadEmployeeDocument = async (
     if (res.ok && result.success) {
       return { success: true, data: result.data };
     }
-    return { success: false, error: result.message || "Failed to upload document" };
+    return { success: false, error: getErrorMsg(result, "Failed to upload document") };
   } catch (error: any) {
     console.error("API error uploading document:", error);
-    return { success: false, error: error.message || "Failed to upload document" };
+    return { success: false, error: formatBackendError(error.message || "Failed to upload document") };
   }
 };
 
 export const getUserById = async (userId: number): Promise<{ success: boolean; data?: any; error?: string }> => {
   const token = getAuthToken();
   try {
-    const res = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
+    const res = await fetchDeduplicated(`${API_BASE_URL}/api/users/${userId}`, {
       method: "GET",
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -418,9 +476,9 @@ export const getUserById = async (userId: number): Promise<{ success: boolean; d
     if (res.ok && result.success) {
       return { success: true, data: result.data };
     }
-    return { success: false, error: result.message || "Failed to fetch user profile" };
+    return { success: false, error: getErrorMsg(result, "Failed to fetch user profile") };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: formatBackendError(error.message) };
   }
 };
 
@@ -434,7 +492,7 @@ export const updateUser = async (userId: number, data: any): Promise<{ success: 
     if (roleId !== undefined && roleId !== null) {
       payload.roleIds = [Number(roleId)];
     }
-    const res = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
+    const res = await fetchDeduplicated(`${API_BASE_URL}/api/users/${userId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -446,16 +504,16 @@ export const updateUser = async (userId: number, data: any): Promise<{ success: 
     if (res.ok && result.success) {
       return { success: true, data: result.data };
     }
-    return { success: false, error: result.message || "Failed to update user profile" };
+    return { success: false, error: getErrorMsg(result, "Failed to update user profile") };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: formatBackendError(error.message) };
   }
 };
 
 export const deleteUser = async (userId: number): Promise<{ success: boolean; error?: string }> => {
   const token = getAuthToken();
   try {
-    const res = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
+    const res = await fetchDeduplicated(`${API_BASE_URL}/api/users/${userId}`, {
       method: "DELETE",
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -465,16 +523,16 @@ export const deleteUser = async (userId: number): Promise<{ success: boolean; er
     if (res.ok && result.success) {
       return { success: true };
     }
-    return { success: false, error: result.message || "Failed to delete user profile" };
+    return { success: false, error: getErrorMsg(result, "Failed to delete user profile") };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: formatBackendError(error.message) };
   }
 };
 
 export const getPersonalInfoByUserId = async (userId: number): Promise<{ success: boolean; data?: any; error?: string }> => {
   const token = getAuthToken();
   try {
-    const res = await fetch(`${API_BASE_URL}/api/personal-information?userId=${userId}`, {
+    const res = await fetchDeduplicated(`${API_BASE_URL}/api/personal-information?userId=${userId}`, {
       method: "GET",
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -484,16 +542,16 @@ export const getPersonalInfoByUserId = async (userId: number): Promise<{ success
     if (res.ok && result.success) {
       return { success: true, data: result.data };
     }
-    return { success: false, error: result.message || "Failed to fetch personal info" };
+    return { success: false, error: getErrorMsg(result, "Failed to fetch personal info") };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: formatBackendError(error.message) };
   }
 };
 
 export const updatePersonalInfo = async (id: number, data: any): Promise<{ success: boolean; data?: any; error?: string }> => {
   const token = getAuthToken();
   try {
-    const res = await fetch(`${API_BASE_URL}/api/personal-information/${id}`, {
+    const res = await fetchDeduplicated(`${API_BASE_URL}/api/personal-information/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -505,16 +563,16 @@ export const updatePersonalInfo = async (id: number, data: any): Promise<{ succe
     if (res.ok && result.success) {
       return { success: true, data: result.data };
     }
-    return { success: false, error: result.message || "Failed to update personal info" };
+    return { success: false, error: getErrorMsg(result, "Failed to update personal info") };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: formatBackendError(error.message) };
   }
 };
 
 export const getParentInfoByUserId = async (userId: number): Promise<{ success: boolean; data?: any; error?: string }> => {
   const token = getAuthToken();
   try {
-    const res = await fetch(`${API_BASE_URL}/api/parent-info/user/${userId}`, {
+    const res = await fetchDeduplicated(`${API_BASE_URL}/api/parent-info/user/${userId}`, {
       method: "GET",
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -524,16 +582,16 @@ export const getParentInfoByUserId = async (userId: number): Promise<{ success: 
     if (res.ok && result.success) {
       return { success: true, data: result.data };
     }
-    return { success: false, error: result.message || "Failed to fetch parent info" };
+    return { success: false, error: getErrorMsg(result, "Failed to fetch parent info") };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: formatBackendError(error.message) };
   }
 };
 
 export const updateParentInfo = async (userId: number, data: any): Promise<{ success: boolean; data?: any; error?: string }> => {
   const token = getAuthToken();
   try {
-    const res = await fetch(`${API_BASE_URL}/api/parent-info/user/${userId}`, {
+    const res = await fetchDeduplicated(`${API_BASE_URL}/api/parent-info/user/${userId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -545,16 +603,16 @@ export const updateParentInfo = async (userId: number, data: any): Promise<{ suc
     if (res.ok && result.success) {
       return { success: true, data: result.data };
     }
-    return { success: false, error: result.message || "Failed to update parent info" };
+    return { success: false, error: getErrorMsg(result, "Failed to update parent info") };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: formatBackendError(error.message) };
   }
 };
 
 export const getAddressInfoByUserId = async (userId: number): Promise<{ success: boolean; data?: any; error?: string }> => {
   const token = getAuthToken();
   try {
-    const res = await fetch(`${API_BASE_URL}/api/address-info/user/${userId}`, {
+    const res = await fetchDeduplicated(`${API_BASE_URL}/api/address-info/user/${userId}`, {
       method: "GET",
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -564,16 +622,16 @@ export const getAddressInfoByUserId = async (userId: number): Promise<{ success:
     if (res.ok && result.success) {
       return { success: true, data: result.data };
     }
-    return { success: false, error: result.message || "Failed to fetch address info" };
+    return { success: false, error: getErrorMsg(result, "Failed to fetch address info") };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: formatBackendError(error.message) };
   }
 };
 
 export const updateAddressInfo = async (userId: number, addressType: string, data: any): Promise<{ success: boolean; data?: any; error?: string }> => {
   const token = getAuthToken();
   try {
-    const res = await fetch(`${API_BASE_URL}/api/address-info/user/${userId}/${addressType}`, {
+    const res = await fetchDeduplicated(`${API_BASE_URL}/api/address-info/user/${userId}/${addressType}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -585,16 +643,16 @@ export const updateAddressInfo = async (userId: number, addressType: string, dat
     if (res.ok && result.success) {
       return { success: true, data: result.data };
     }
-    return { success: false, error: result.message || "Failed to update address details" };
+    return { success: false, error: getErrorMsg(result, "Failed to update address details") };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: formatBackendError(error.message) };
   }
 };
 
 export const getBankDetailsByUserId = async (userId: number): Promise<{ success: boolean; data?: any; error?: string }> => {
   const token = getAuthToken();
   try {
-    const res = await fetch(`${API_BASE_URL}/api/bank-details?userId=${userId}`, {
+    const res = await fetchDeduplicated(`${API_BASE_URL}/api/bank-details?userId=${userId}`, {
       method: "GET",
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -604,16 +662,16 @@ export const getBankDetailsByUserId = async (userId: number): Promise<{ success:
     if (res.ok && result.success) {
       return { success: true, data: result.data };
     }
-    return { success: false, error: result.message || "Failed to fetch bank details" };
+    return { success: false, error: getErrorMsg(result, "Failed to fetch bank details") };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: formatBackendError(error.message) };
   }
 };
 
 export const updateBankDetails = async (id: number, data: any): Promise<{ success: boolean; data?: any; error?: string }> => {
   const token = getAuthToken();
   try {
-    const res = await fetch(`${API_BASE_URL}/api/bank-details/${id}`, {
+    const res = await fetchDeduplicated(`${API_BASE_URL}/api/bank-details/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -625,16 +683,16 @@ export const updateBankDetails = async (id: number, data: any): Promise<{ succes
     if (res.ok && result.success) {
       return { success: true, data: result.data };
     }
-    return { success: false, error: result.message || "Failed to update bank details" };
+    return { success: false, error: getErrorMsg(result, "Failed to update bank details") };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: formatBackendError(error.message) };
   }
 };
 
 export const getPFDetailsByUserId = async (userId: number): Promise<{ success: boolean; data?: any; error?: string }> => {
   const token = getAuthToken();
   try {
-    const res = await fetch(`${API_BASE_URL}/api/pf-details?userId=${userId}`, {
+    const res = await fetchDeduplicated(`${API_BASE_URL}/api/pf-details?userId=${userId}`, {
       method: "GET",
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -644,16 +702,16 @@ export const getPFDetailsByUserId = async (userId: number): Promise<{ success: b
     if (res.ok && result.success) {
       return { success: true, data: result.data };
     }
-    return { success: false, error: result.message || "Failed to fetch PF details" };
+    return { success: false, error: getErrorMsg(result, "Failed to fetch PF details") };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: formatBackendError(error.message) };
   }
 };
 
 export const updatePFDetail = async (id: number, data: any): Promise<{ success: boolean; data?: any; error?: string }> => {
   const token = getAuthToken();
   try {
-    const res = await fetch(`${API_BASE_URL}/api/pf-details/${id}`, {
+    const res = await fetchDeduplicated(`${API_BASE_URL}/api/pf-details/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -665,16 +723,16 @@ export const updatePFDetail = async (id: number, data: any): Promise<{ success: 
     if (res.ok && result.success) {
       return { success: true, data: result.data };
     }
-    return { success: false, error: result.message || "Failed to update PF details" };
+    return { success: false, error: getErrorMsg(result, "Failed to update PF details") };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: formatBackendError(error.message) };
   }
 };
 
 export const getESIDetailsByUserId = async (userId: number): Promise<{ success: boolean; data?: any; error?: string }> => {
   const token = getAuthToken();
   try {
-    const res = await fetch(`${API_BASE_URL}/api/esi-details?userId=${userId}`, {
+    const res = await fetchDeduplicated(`${API_BASE_URL}/api/esi-details?userId=${userId}`, {
       method: "GET",
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -684,16 +742,16 @@ export const getESIDetailsByUserId = async (userId: number): Promise<{ success: 
     if (res.ok && result.success) {
       return { success: true, data: result.data };
     }
-    return { success: false, error: result.message || "Failed to fetch ESI details" };
+    return { success: false, error: getErrorMsg(result, "Failed to fetch ESI details") };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: formatBackendError(error.message) };
   }
 };
 
 export const updateESIDetail = async (id: number, data: any): Promise<{ success: boolean; data?: any; error?: string }> => {
   const token = getAuthToken();
   try {
-    const res = await fetch(`${API_BASE_URL}/api/esi-details/${id}`, {
+    const res = await fetchDeduplicated(`${API_BASE_URL}/api/esi-details/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -705,16 +763,16 @@ export const updateESIDetail = async (id: number, data: any): Promise<{ success:
     if (res.ok && result.success) {
       return { success: true, data: result.data };
     }
-    return { success: false, error: result.message || "Failed to update ESI details" };
+    return { success: false, error: getErrorMsg(result, "Failed to update ESI details") };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: formatBackendError(error.message) };
   }
 };
 
 export const getInsuranceDetailsByUserId = async (userId: number): Promise<{ success: boolean; data?: any; error?: string }> => {
   const token = getAuthToken();
   try {
-    const res = await fetch(`${API_BASE_URL}/api/insurance-details?userId=${userId}`, {
+    const res = await fetchDeduplicated(`${API_BASE_URL}/api/insurance-details?userId=${userId}`, {
       method: "GET",
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -724,16 +782,16 @@ export const getInsuranceDetailsByUserId = async (userId: number): Promise<{ suc
     if (res.ok && result.success) {
       return { success: true, data: result.data };
     }
-    return { success: false, error: result.message || "Failed to fetch insurance details" };
+    return { success: false, error: getErrorMsg(result, "Failed to fetch insurance details") };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: formatBackendError(error.message) };
   }
 };
 
 export const updateInsuranceDetail = async (id: number, data: any): Promise<{ success: boolean; data?: any; error?: string }> => {
   const token = getAuthToken();
   try {
-    const res = await fetch(`${API_BASE_URL}/api/insurance-details/${id}`, {
+    const res = await fetchDeduplicated(`${API_BASE_URL}/api/insurance-details/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -745,16 +803,16 @@ export const updateInsuranceDetail = async (id: number, data: any): Promise<{ su
     if (res.ok && result.success) {
       return { success: true, data: result.data };
     }
-    return { success: false, error: result.message || "Failed to update insurance details" };
+    return { success: false, error: getErrorMsg(result, "Failed to update insurance details") };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: formatBackendError(error.message) };
   }
 };
 
 export const getEmployeeDocumentsByUserId = async (userId: number): Promise<{ success: boolean; data?: any; error?: string }> => {
   const token = getAuthToken();
   try {
-    const res = await fetch(`${API_BASE_URL}/api/employee-documents?userId=${userId}`, {
+    const res = await fetchDeduplicated(`${API_BASE_URL}/api/employee-documents?userId=${userId}`, {
       method: "GET",
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -764,16 +822,16 @@ export const getEmployeeDocumentsByUserId = async (userId: number): Promise<{ su
     if (res.ok && result.success) {
       return { success: true, data: result.data };
     }
-    return { success: false, error: result.message || "Failed to fetch employee documents" };
+    return { success: false, error: getErrorMsg(result, "Failed to fetch employee documents") };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: formatBackendError(error.message) };
   }
 };
 
 export const deleteEmployeeDocument = async (id: number): Promise<{ success: boolean; error?: string }> => {
   const token = getAuthToken();
   try {
-    const res = await fetch(`${API_BASE_URL}/api/employee-documents/${id}`, {
+    const res = await fetchDeduplicated(`${API_BASE_URL}/api/employee-documents/${id}`, {
       method: "DELETE",
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -783,16 +841,16 @@ export const deleteEmployeeDocument = async (id: number): Promise<{ success: boo
     if (res.ok && result.success) {
       return { success: true };
     }
-    return { success: false, error: result.message || "Failed to delete document" };
+    return { success: false, error: getErrorMsg(result, "Failed to delete document") };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: formatBackendError(error.message) };
   }
 };
 
 export const downloadEmployeeDocument = async (id: number): Promise<void> => {
   const token = getAuthToken();
   try {
-    const res = await fetch(`${API_BASE_URL}/api/employee-documents/${id}/download`, {
+    const res = await fetchDeduplicated(`${API_BASE_URL}/api/employee-documents/${id}/download`, {
       method: "GET",
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -826,7 +884,7 @@ export const getCompanySuperAdmin = async (): Promise<{ success: boolean; data?:
   if (!companyId) return { success: false, error: "No company ID cookie found" };
 
   try {
-    const res = await fetch(`${API_BASE_URL}/api/companies/${companyId}`, {
+    const res = await fetchDeduplicated(`${API_BASE_URL}/api/companies/${companyId}`, {
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
@@ -837,7 +895,7 @@ export const getCompanySuperAdmin = async (): Promise<{ success: boolean; data?:
     }
     return { success: false, error: "Company details not found" };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: formatBackendError(error.message) };
   }
 };
 
@@ -849,7 +907,7 @@ export const getOfficeLocations = async (): Promise<any[]> => {
       ? `${API_BASE_URL}/api/locations?companyId=${companyId}`
       : `${API_BASE_URL}/api/locations`;
 
-    const res = await fetch(url, {
+    const res = await fetchDeduplicated(url, {
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },

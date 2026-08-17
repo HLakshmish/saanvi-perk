@@ -18,6 +18,7 @@ import {
   uploadEmployeeDocument,
   getDesignations,
   getOfficeLocations,
+  deleteUser,
 } from "../api/employees.api";
 import {
   ChevronLeft,
@@ -118,14 +119,26 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
     aadhaarNumber: "",
     panNumber: "",
     passportNumber: "",
-    passportExpiryDate: "",
     bankName: "",
     bankAccountNo: "",
     ifscCode: "",
     bankBranch: "",
     accountType: "Savings",
     uanNumber: "",
+    pfNumber: "",
+    pfJoiningDate: "",
+    pfLeavingDate: "",
+    isInternationalWorker: false,
+    educationLevel: "",
+    pfDocumentNumber: "",
+    pfDocumentType: "",
+    pfDocumentExpiryDate: "",
+    pfReasonForLeaving: "",
+    pfPhcCategory: "",
     esiNumber: "",
+    esiJoiningDate: "",
+    esiLeavingDate: "",
+    esiReasonForLeaving: "",
     insuranceProvider: "",
     insuranceType: "HEALTH",
     policyNumber: "",
@@ -470,6 +483,8 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
     setErrorMsg(null);
     setSuccessMsg(null);
 
+    let createdUserId: number | null = null;
+
     try {
       // 1. Create Base User Profile
       const baseUserData = {
@@ -496,157 +511,155 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
         throw new Error(userRes.error || "Failed to register corporate user account.");
       }
 
-      const createdUserId = userRes.data.userId;
+      createdUserId = userRes.data.userId;
+      const targetUserId = userRes.data.userId;
 
       // 2. Create Personal Information Record (if any personal field is provided)
-      try {
-        const personalData = {
-          userId: createdUserId,
-          dateOfBirth: formData.dateOfBirth ? new Date(formData.dateOfBirth).toISOString() : null,
-          gender: formData.gender || null,
-          maritalStatus: formData.maritalStatus || null,
-          bloodGroup: formData.bloodGroup || null,
-          nationality: formData.nationality || null,
-          religion: formData.religion || null,
-          motherTongue: formData.motherTongue || null,
-          aadhaarNumber: formData.aadhaarNumber || null,
-          panNumber: formData.panNumber || null,
-          passportNumber: formData.passportNumber || null,
-          profilePhoto: formData.profilePhoto || null,
-          personalEmail: formData.personalEmail || null,
-          officialEmail: formData.officialEmail || null,
-        };
-        await createPersonalInfo(personalData);
-      } catch (err) {
-        console.warn("Could not save secondary personal info:", err);
+      const personalData = {
+        userId: targetUserId,
+        dateOfBirth: formData.dateOfBirth ? new Date(formData.dateOfBirth).toISOString() : null,
+        gender: formData.gender || null,
+        maritalStatus: formData.maritalStatus || null,
+        bloodGroup: formData.bloodGroup || null,
+        nationality: formData.nationality || null,
+        religion: formData.religion || null,
+        motherTongue: formData.motherTongue || null,
+        aadhaarNumber: formData.aadhaarNumber || null,
+        panNumber: formData.panNumber || null,
+        passportNumber: formData.passportNumber || null,
+        profilePhoto: formData.profilePhoto || null,
+        personalEmail: formData.personalEmail || null,
+        officialEmail: formData.officialEmail || null,
+      };
+      const personalRes = await createPersonalInfo(personalData);
+      if (!personalRes.success) {
+        throw new Error(personalRes.error || "Failed to save personal details.");
       }
 
       // 3. Create Parent Info Record (if any parent field is provided)
       if (formData.fatherName || formData.motherName || formData.guardianName) {
-        try {
-          const parentData = {
-            userId: createdUserId,
-            fatherName: formData.fatherName || null,
-            fatherMobile: formData.fatherMobile || null,
-            fatherOccupation: formData.fatherOccupation || null,
-            motherName: formData.motherName || null,
-            motherMobile: formData.motherMobile || null,
-            motherOccupation: formData.motherOccupation || null,
-            guardianName: formData.guardianName || null,
-            guardianMobile: formData.guardianMobile || null,
-            relationship: formData.guardianRelationship || null,
-          };
-          await createParentInfo(parentData);
-        } catch (err) {
-          console.warn("Could not save secondary parent info:", err);
+        const parentData = {
+          userId: targetUserId,
+          fatherName: formData.fatherName || null,
+          fatherMobile: formData.fatherMobile || null,
+          fatherOccupation: formData.fatherOccupation || null,
+          motherName: formData.motherName || null,
+          motherMobile: formData.motherMobile || null,
+          motherOccupation: formData.motherOccupation || null,
+          guardianName: formData.guardianName || null,
+          guardianMobile: formData.guardianMobile || null,
+          relationship: formData.guardianRelationship || null,
+        };
+        const parentRes = await createParentInfo(parentData);
+        if (!parentRes.success) {
+          throw new Error(parentRes.error || "Failed to save parent details.");
         }
       }
 
       // 4. Create Address Records (if address is provided)
       if (formData.currentAddress?.addressLine1 && formData.currentAddress?.city) {
-        try {
-          const currentAddressData = {
-            userId: createdUserId,
-            addressType: "CURRENT",
-            addressLine1: formData.currentAddress.addressLine1,
-            addressLine2: formData.currentAddress.addressLine2 || null,
-            city: formData.currentAddress.city,
-            state: formData.currentAddress.state || "State",
-            country: formData.currentAddress.country || "India",
-            postalCode: formData.currentAddress.postalCode || "000000",
-          };
-          await createAddressInfo(currentAddressData);
+        const currentAddressData = {
+          userId: targetUserId,
+          addressType: "CURRENT",
+          addressLine1: formData.currentAddress.addressLine1,
+          addressLine2: formData.currentAddress.addressLine2 || null,
+          city: formData.currentAddress.city,
+          state: formData.currentAddress.state || "State",
+          country: formData.currentAddress.country || "India",
+          postalCode: formData.currentAddress.postalCode || "000000",
+        };
+        const currentRes = await createAddressInfo(currentAddressData);
+        if (!currentRes.success) {
+          throw new Error(currentRes.error || "Failed to save current address details.");
+        }
 
-          if (!formData.isSameAddress && formData.permanentAddress?.addressLine1) {
-            const permanentAddressData = {
-              userId: createdUserId,
-              addressType: "PERMANENT",
-              addressLine1: formData.permanentAddress.addressLine1,
-              addressLine2: formData.permanentAddress.addressLine2 || null,
-              city: formData.permanentAddress.city || formData.currentAddress.city,
-              state: formData.permanentAddress.state || "State",
-              country: formData.permanentAddress.country || "India",
-              postalCode: formData.permanentAddress.postalCode || "000000",
-            };
-            await createAddressInfo(permanentAddressData);
+        const permanentAddressData = {
+          userId: targetUserId,
+          addressType: "PERMANENT",
+          addressLine1: formData.isSameAddress ? formData.currentAddress.addressLine1 : formData.permanentAddress.addressLine1,
+          addressLine2: formData.isSameAddress ? (formData.currentAddress.addressLine2 || null) : (formData.permanentAddress.addressLine2 || null),
+          city: formData.isSameAddress ? formData.currentAddress.city : (formData.permanentAddress.city || formData.currentAddress.city),
+          state: formData.isSameAddress ? (formData.currentAddress.state || "State") : (formData.permanentAddress.state || "State"),
+          country: formData.isSameAddress ? (formData.currentAddress.country || "India") : (formData.permanentAddress.country || "India"),
+          postalCode: formData.isSameAddress ? (formData.currentAddress.postalCode || "000000") : (formData.permanentAddress.postalCode || "000000"),
+        };
+
+        if (formData.isSameAddress || formData.permanentAddress?.addressLine1) {
+          const permRes = await createAddressInfo(permanentAddressData);
+          if (!permRes.success) {
+            throw new Error(permRes.error || "Failed to save permanent address details.");
           }
-        } catch (err) {
-          console.warn("Could not save address info:", err);
         }
       }
 
       // 5. Create Bank Details Record (only if bank details are provided)
       if (formData.bankName?.trim() && formData.bankAccountNo?.trim()) {
-        try {
-          const bankDetailsData = {
-            userId: createdUserId,
-            accountHolderName: (formData.accountHolderName || `${formData.firstName} ${formData.lastName}`).trim(),
-            bankName: formData.bankName.trim(),
-            branchName: formData.bankBranch?.trim() || "Main Branch",
-            accountNumber: formData.bankAccountNo.trim(),
-            ifscCode: formData.ifscCode?.trim() || "BANK0000000",
-            accountType: formData.accountType || "Savings",
-            upiId: formData.upiId || null,
-            salaryAccount: formData.salaryAccount,
-          };
-          await createBankDetails(bankDetailsData);
-        } catch (err) {
-          console.warn("Could not save bank details:", err);
+        const bankDetailsData = {
+          userId: targetUserId,
+          accountHolderName: (formData.accountHolderName || `${formData.firstName} ${formData.lastName}`).trim(),
+          bankName: formData.bankName.trim(),
+          branchName: formData.bankBranch?.trim() || "Main Branch",
+          accountNumber: formData.bankAccountNo.trim(),
+          ifscCode: formData.ifscCode?.trim() || "BANK0000000",
+          accountType: formData.accountType || "Savings",
+          upiId: formData.upiId || null,
+          salaryAccount: formData.salaryAccount,
+        };
+        const bankRes = await createBankDetails(bankDetailsData);
+        if (!bankRes.success) {
+          throw new Error(bankRes.error || "Failed to save bank details.");
         }
       }
 
-      // 6. Create PF Details Record (if uanNumber is provided)
-      if (formData.uanNumber?.trim()) {
-        try {
-          const pfData = {
-            userId: createdUserId,
-            uanNumber: formData.uanNumber.trim(),
-            isInternationalWorker: false,
-            educationLevel: null,
-            pfNumber: null,
-            pfJoiningDate: null,
-            pfLeavingDate: null,
-            documentNumber: null,
-            documentType: null,
-            documentExpiryDate: null,
-            reasonForLeaving: null,
-            phcCategory: null,
-          };
-          await createPFDetail(pfData);
-        } catch (err) {
-          console.warn("Could not save PF details:", err);
+      // 6. Create PF Details Record (if uanNumber or pfNumber is provided)
+      if (formData.uanNumber?.trim() || formData.pfNumber?.trim()) {
+        const pfData = {
+          userId: targetUserId,
+          uanNumber: formData.uanNumber.trim() || null,
+          pfNumber: formData.pfNumber.trim() || null,
+          isInternationalWorker: formData.isInternationalWorker,
+          educationLevel: (formData.educationLevel || null) as any,
+          pfJoiningDate: formData.pfJoiningDate ? new Date(formData.pfJoiningDate).toISOString() : null,
+          pfLeavingDate: formData.pfLeavingDate ? new Date(formData.pfLeavingDate).toISOString() : null,
+          documentNumber: formData.pfDocumentNumber || null,
+          documentType: (formData.pfDocumentType || null) as any,
+          documentExpiryDate: formData.pfDocumentExpiryDate ? new Date(formData.pfDocumentExpiryDate).toISOString() : null,
+          reasonForLeaving: (formData.pfReasonForLeaving || null) as any,
+          phcCategory: (formData.pfPhcCategory || null) as any,
+        };
+        const pfRes = await createPFDetail(pfData);
+        if (!pfRes.success) {
+          throw new Error(pfRes.error || "Failed to save PF details.");
         }
       }
 
       // 7. Create ESI Details Record (if esiNumber is provided)
       if (formData.esiNumber?.trim()) {
-        try {
-          const esiData = {
-            userId: createdUserId,
-            esiNumber: formData.esiNumber.trim(),
-            esiJoiningDate: null,
-            esiLeavingDate: null,
-            reasonForLeaving: null,
-          };
-          await createESIDetail(esiData);
-        } catch (err) {
-          console.warn("Could not save ESI details:", err);
+        const esiData = {
+          userId: targetUserId,
+          esiNumber: formData.esiNumber.trim(),
+          esiJoiningDate: formData.esiJoiningDate ? new Date(formData.esiJoiningDate).toISOString() : null,
+          esiLeavingDate: formData.esiLeavingDate ? new Date(formData.esiLeavingDate).toISOString() : null,
+          reasonForLeaving: (formData.esiReasonForLeaving || null) as any,
+        };
+        const esiRes = await createESIDetail(esiData);
+        if (!esiRes.success) {
+          throw new Error(esiRes.error || "Failed to save ESI details.");
         }
       }
 
       // 8. Create Insurance Details Record (if policyNumber or insuranceProvider is provided)
       if (formData.insuranceProvider?.trim() || formData.policyNumber?.trim()) {
-        try {
-          const insuranceData = {
-            userId: createdUserId,
-            insuranceProvider: formData.insuranceProvider || null,
-            insuranceType: (formData.insuranceType || "HEALTH") as any,
-            policyNumber: formData.policyNumber || null,
-            insuranceExpiryDate: formData.insuranceExpiryDate ? new Date(formData.insuranceExpiryDate).toISOString() : null,
-          };
-          await createInsuranceDetail(insuranceData);
-        } catch (err) {
-          console.warn("Could not save insurance details:", err);
+        const insuranceData = {
+          userId: targetUserId,
+          insuranceProvider: formData.insuranceProvider || null,
+          insuranceType: (formData.insuranceType || "HEALTH") as any,
+          policyNumber: formData.policyNumber || null,
+          insuranceExpiryDate: formData.insuranceExpiryDate ? new Date(formData.insuranceExpiryDate).toISOString() : null,
+        };
+        const insRes = await createInsuranceDetail(insuranceData);
+        if (!insRes.success) {
+          throw new Error(insRes.error || "Failed to save insurance details.");
         }
       }
 
@@ -654,24 +667,21 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
       if (formData.uploadedDocs && formData.uploadedDocs.length > 0) {
         for (const doc of formData.uploadedDocs) {
           if (doc.file) {
-            try {
-              let documentType = "OTHER";
-              const normType = doc.type.toLowerCase();
-              if (normType.includes("aadhaar")) documentType = "AADHAAR";
-              else if (normType.includes("pan")) documentType = "PAN";
-              else if (normType.includes("passport")) documentType = "PASSPORT";
-              else if (normType.includes("degree")) documentType = "DEGREE_CERTIFICATE";
-              else if (normType.includes("relieving")) documentType = "RELIEVING_LETTER";
-              
-              await uploadEmployeeDocument(createdUserId, documentType, doc.file);
-            } catch (err) {
-              console.warn("Could not upload document:", err);
+            let documentType = "OTHER";
+            const normType = doc.type.toLowerCase();
+            if (normType.includes("aadhaar")) documentType = "AADHAAR";
+            else if (normType.includes("pan")) documentType = "PAN";
+            else if (normType.includes("passport")) documentType = "PASSPORT";
+            else if (normType.includes("degree")) documentType = "DEGREE_CERTIFICATE";
+            else if (normType.includes("relieving")) documentType = "RELIEVING_LETTER";
+            
+            const docRes = await uploadEmployeeDocument(targetUserId, documentType, doc.file);
+            if (!docRes.success) {
+              throw new Error(docRes.error || "Failed to upload attached document.");
             }
           }
         }
       }
-
-
 
       // Clear draft
       if (typeof window !== "undefined") {
@@ -683,6 +693,13 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
         onSuccess();
       }, 1500);
     } catch (err: any) {
+      if (createdUserId) {
+        try {
+          await deleteUser(createdUserId);
+        } catch (cleanupErr) {
+          console.error("Cleanup error deleting partial user:", cleanupErr);
+        }
+      }
       setErrorMsg(err.message || "An unexpected error occurred during submission.");
     } finally {
       setIsLoading(false);
@@ -1278,39 +1295,179 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
                         value={formData.passportNumber}
                         onChange={(e) => handleChange("passportNumber", e.target.value)}
                       />
-
-                      <Input
-                        label="Passport Expiry Date"
-                        type="date"
-                        value={formData.passportExpiryDate}
-                        onChange={(e) => handleChange("passportExpiryDate", e.target.value)}
-                      />
                     </div>
                   </div>
 
                   {/* PF Details */}
                   <div className="space-y-4 pt-4 border-t border-slate-100">
                     <h3 className="text-xs font-extrabold text-slate-700 tracking-wide uppercase">PF Details</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                       <Input
                         label="UAN No"
                         placeholder="PF Universal Account Number"
                         value={formData.uanNumber}
                         onChange={(e) => handleChange("uanNumber", e.target.value)}
                       />
+                      <Input
+                        label="PF Number"
+                        placeholder="PF Account Number"
+                        value={formData.pfNumber}
+                        onChange={(e) => handleChange("pfNumber", e.target.value)}
+                      />
+                      <Input
+                        label="PF Joining Date"
+                        type="date"
+                        value={formData.pfJoiningDate}
+                        onChange={(e) => handleChange("pfJoiningDate", e.target.value)}
+                      />
+                      <Input
+                        label="PF Leaving Date"
+                        type="date"
+                        value={formData.pfLeavingDate}
+                        onChange={(e) => handleChange("pfLeavingDate", e.target.value)}
+                      />
+                      <div className="flex flex-col gap-1.5 text-left">
+                        <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider font-semibold">Education Level</label>
+                        <select
+                          className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none"
+                          value={formData.educationLevel}
+                          onChange={(e) => handleChange("educationLevel", e.target.value)}
+                        >
+                          <option value="">Select Education Level</option>
+                          <option value="BELOW_10TH">Below 10th</option>
+                          <option value="SSLC">SSLC</option>
+                          <option value="PUC">PUC</option>
+                          <option value="DIPLOMA">Diploma</option>
+                          <option value="GRADUATE">Graduate</option>
+                          <option value="POST_GRADUATE">Post Graduate</option>
+                          <option value="DOCTORATE">Doctorate</option>
+                          <option value="OTHER">Other</option>
+                        </select>
+                      </div>
+
+                      <div className="flex flex-col gap-1.5 text-left">
+                        <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider font-semibold">PHC Category</label>
+                        <select
+                          className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none"
+                          value={formData.pfPhcCategory}
+                          onChange={(e) => handleChange("pfPhcCategory", e.target.value)}
+                        >
+                          <option value="">Select PHC Category</option>
+                          <option value="GENERAL">General</option>
+                          <option value="PH">PH (Physically Handicapped)</option>
+                          <option value="EXEMPT">Exempt</option>
+                        </select>
+                      </div>
+
+                      <div className="flex flex-col gap-1.5 text-left">
+                        <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider font-semibold">PF Reason for Leaving</label>
+                        <select
+                          className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none"
+                          value={formData.pfReasonForLeaving}
+                          onChange={(e) => handleChange("pfReasonForLeaving", e.target.value)}
+                        >
+                          <option value="">Select Reason</option>
+                          <option value="RESIGNED">Resigned</option>
+                          <option value="TERMINATED">Terminated</option>
+                          <option value="RETIRED">Retired</option>
+                          <option value="TRANSFERRED">Transferred</option>
+                          <option value="CONTRACT_COMPLETED">Contract Completed</option>
+                          <option value="DECEASED">Deceased</option>
+                          <option value="OTHER">Other</option>
+                        </select>
+                      </div>
+
+                      <Input
+                        label="PF Document Number"
+                        placeholder="Supporting Doc No"
+                        value={formData.pfDocumentNumber}
+                        onChange={(e) => handleChange("pfDocumentNumber", e.target.value)}
+                      />
+
+                      <div className="flex flex-col gap-1.5 text-left">
+                        <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider font-semibold">PF Document Type</label>
+                        <select
+                          className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none"
+                          value={formData.pfDocumentType}
+                          onChange={(e) => handleChange("pfDocumentType", e.target.value)}
+                        >
+                          <option value="">Select Document Type</option>
+                          <option value="AADHAAR">Aadhaar</option>
+                          <option value="PAN">PAN</option>
+                          <option value="PASSPORT">Passport</option>
+                          <option value="DRIVING_LICENSE">Driving License</option>
+                          <option value="VOTER_ID">Voter ID</option>
+                          <option value="PHOTO">Photo</option>
+                          <option value="RESUME">Resume</option>
+                          <option value="OFFER_LETTER">Offer Letter</option>
+                          <option value="EXPERIENCE_CERTIFICATE">Experience Certificate</option>
+                          <option value="DEGREE_CERTIFICATE">Degree Certificate</option>
+                          <option value="SALARY_SLIP">Salary Slip</option>
+                          <option value="RELIEVING_LETTER">Relieving Letter</option>
+                          <option value="OTHER">Other</option>
+                        </select>
+                      </div>
+
+                      <Input
+                        label="PF Document Expiry"
+                        type="date"
+                        value={formData.pfDocumentExpiryDate}
+                        onChange={(e) => handleChange("pfDocumentExpiryDate", e.target.value)}
+                      />
+                      <div className="flex items-center gap-2 py-2 sm:col-span-2 md:col-span-3">
+                        <input
+                          type="checkbox"
+                          id="isInternationalWorker"
+                          checked={formData.isInternationalWorker}
+                          onChange={(e) => handleChange("isInternationalWorker", e.target.checked)}
+                          className="w-4 h-4 rounded text-[#013e37] border-slate-300 focus:ring-[#013e37]"
+                        />
+                        <label htmlFor="isInternationalWorker" className="text-xs font-semibold text-slate-700 cursor-pointer select-none">
+                          Is International Worker?
+                        </label>
+                      </div>
                     </div>
                   </div>
 
                   {/* ESI Details */}
                   <div className="space-y-4 pt-4 border-t border-slate-100">
                     <h3 className="text-xs font-extrabold text-slate-700 tracking-wide uppercase">ESI Details</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                       <Input
                         label="ESI Number"
                         placeholder="ESI Account Number"
                         value={formData.esiNumber}
                         onChange={(e) => handleChange("esiNumber", e.target.value)}
                       />
+                      <Input
+                        label="ESI Joining Date"
+                        type="date"
+                        value={formData.esiJoiningDate}
+                        onChange={(e) => handleChange("esiJoiningDate", e.target.value)}
+                      />
+                      <Input
+                        label="ESI Leaving Date"
+                        type="date"
+                        value={formData.esiLeavingDate}
+                        onChange={(e) => handleChange("esiLeavingDate", e.target.value)}
+                      />
+                      <div className="flex flex-col gap-1.5 text-left">
+                        <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider font-semibold">ESI Reason for Leaving</label>
+                        <select
+                          className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none"
+                          value={formData.esiReasonForLeaving}
+                          onChange={(e) => handleChange("esiReasonForLeaving", e.target.value)}
+                        >
+                          <option value="">Select Reason</option>
+                          <option value="RESIGNED">Resigned</option>
+                          <option value="TERMINATED">Terminated</option>
+                          <option value="RETIRED">Retired</option>
+                          <option value="CONTRACT_COMPLETED">Contract Completed</option>
+                          <option value="TRANSFERRED">Transferred</option>
+                          <option value="DECEASED">Deceased</option>
+                          <option value="OTHER">Other</option>
+                        </select>
+                      </div>
                     </div>
                   </div>
 
