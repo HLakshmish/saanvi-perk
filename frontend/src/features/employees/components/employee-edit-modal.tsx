@@ -71,7 +71,13 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
   const [locations, setLocations] = useState<any[]>([]);
 
   const filteredAdmins = useMemo(() => {
-    return managers.filter((m) => m.designation.toLowerCase() === "admin");
+    const explicitAdmins = managers.filter((m) =>
+      m.designation?.toLowerCase().includes("admin") ||
+      m.roleName?.toLowerCase().includes("admin") ||
+      m.designation?.toLowerCase().includes("manager") ||
+      m.roleName?.toLowerCase().includes("manager")
+    );
+    return explicitAdmins.length > 0 ? explicitAdmins : managers;
   }, [managers]);
 
   // Existing Record IDs (to decide between POST and PUT)

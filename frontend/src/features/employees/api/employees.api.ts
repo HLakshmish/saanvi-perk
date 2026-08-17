@@ -160,6 +160,7 @@ export const getEmployees = async (): Promise<Employee[]> => {
       const remoteEmployees: Employee[] = result.data.map((user: any) => {
         const mgrCode = user.reportingToId ? userIdToCodeMap.get(user.reportingToId) : undefined;
         const matchingDesignation = designations.find((d) => d.designationId === user.designationId);
+        const userRoleName = user.userRoles?.[0]?.role?.roleName || user.role?.roleName || "";
         return {
           id: String(user.userId),
           employeeCode: user.employeeCode,
@@ -167,9 +168,12 @@ export const getEmployees = async (): Promise<Employee[]> => {
           email: user.officialEmail,
           location: user.location?.locationName || user.location?.city || companyLocation,
           department: user.department?.departmentName || "General",
-          designation: matchingDesignation?.designationName || user.userRoles?.[0]?.role?.roleName || user.role?.roleName || "Staff",
+          designation: matchingDesignation?.designationName || userRoleName || "Staff",
           employeeGroup: (user.employmentType || "FULL_TIME").replace("_", "-"),
           reportsTo: mgrCode,
+          reportingToId: user.reportingToId || undefined,
+          roleName: userRoleName,
+          profilePic: user.profilePic || user.profilePhoto || undefined,
           designationId: user.designationId || undefined,
           status: user.status || "ACTIVE",
         };

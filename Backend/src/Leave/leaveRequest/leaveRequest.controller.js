@@ -1,5 +1,5 @@
 const leaveRequestService = require("./leaveRequest.service");
-
+// Triggering server restart for new prisma client
 class LeaveRequestController {
     async createLeaveRequest(request, reply) {
         try {
@@ -99,7 +99,13 @@ class LeaveRequestController {
             };
 
             if (['APPROVED', 'REJECTED'].includes(status)) {
-                statusData.approvedBy = request.user.userId;
+                // SUPERADMIN and OWNER exist in separate tables, not User. 
+                // Assigning their ID to approvedBy causes a Foreign Key constraint error.
+                if (request.user.role !== 'SUPERADMIN' && request.user.role !== 'OWNER') {
+                    statusData.approvedBy = request.user.userId;
+                } else {
+                    statusData.approvedBy = null;
+                }
                 statusData.approvedAt = new Date();
             }
 

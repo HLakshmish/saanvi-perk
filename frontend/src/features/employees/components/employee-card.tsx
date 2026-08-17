@@ -6,54 +6,87 @@ import { cn } from "@/lib/utils";
 interface EmployeeCardProps {
   employee: Employee;
   className?: string;
+  isRoot?: boolean;
+  childCount?: number;
+  isExpanded?: boolean;
+  onToggleExpand?: () => void;
   onClick?: () => void;
 }
 
 export const EmployeeCard: React.FC<EmployeeCardProps> = ({
   employee,
   className,
+  isRoot = false,
+  childCount = 0,
+  isExpanded = true,
+  onToggleExpand,
   onClick,
 }) => {
+  const handleCardClick = (e: React.MouseEvent) => {
+    if (onToggleExpand) {
+      onToggleExpand();
+    } else if (onClick) {
+      onClick();
+    }
+  };
+
   return (
     <div
-      onClick={onClick}
+      onClick={handleCardClick}
       className={cn(
-        "flex gap-4 p-4 w-72 bg-slate-50 border border-slate-200 rounded-lg select-none text-left align-top transition-all duration-200",
-        onClick && "cursor-pointer hover:bg-slate-100 hover:border-slate-300 hover:shadow-xs",
+        "group relative flex flex-col items-center w-48 sm:w-52 select-none cursor-pointer transition-all duration-300",
         className
       )}
     >
-      {/* Left: Avatar Circle */}
-      <div className="w-10 h-10 rounded-full bg-[#013e37] text-[#ffefb3] flex items-center justify-center shrink-0 shadow-2xs">
-        <User className="w-5 h-5 text-[#ffefb3]" />
+      {/* Top Floating DP / Profile Picture */}
+      <div
+        className="w-16 h-16 sm:w-18 sm:h-18 rounded-full border-[3.5px] border-[#013e37] bg-white shadow-md flex items-center justify-center -mb-5 z-20 overflow-hidden transition-transform duration-300 group-hover:scale-105"
+      >
+        {employee.profilePic ? (
+          <img
+            src={employee.profilePic}
+            alt={employee.name}
+            className="w-full h-full object-cover rounded-full"
+            onError={(e) => {
+              // fallback if image link fails to load
+              (e.target as HTMLElement).style.display = "none";
+            }}
+          />
+        ) : (
+          <div className="w-full h-full bg-[#013e37]/5 text-[#013e37] flex items-center justify-center">
+            <User className="w-8 h-8 text-[#013e37]" />
+          </div>
+        )}
       </div>
 
-      {/* Right: Left-Aligned Detail Lines */}
-      <div className="flex flex-col min-w-0 leading-tight">
-        {/* Name (Uppercase Bold) */}
-        <h4 className="font-extrabold text-[#013e37] text-sm truncate uppercase mb-1">
-          {employee.name}
-        </h4>
+      {/* Main Card Box */}
+      <div className="w-full rounded-2xl overflow-hidden shadow-sm border border-slate-200/90 bg-white transition-all duration-300 group-hover:shadow-md group-hover:border-[#013e37]/40">
         
-        {/* Employee Code */}
-        <span className="text-gray-400 text-xs font-mono mb-1.5">
-          {employee.employeeCode}
-        </span>
-        
-        {/* Designation */}
-        <span className="text-gray-600 text-xs font-medium mb-1">
-          {employee.designation}
-        </span>
-        
-        {/* Department */}
-        <span className="text-gray-500 text-[11px] mb-1">
-          {employee.department}
-        </span>
-        
-        {/* Location */}
-        <span className="text-gray-500 text-[11px]">
-          {employee.location}
-        </span>
+        {/* Name Banner Pill - Single Consistent Theme Color (#013e37) */}
+        <div className="pt-6 pb-1.5 px-2.5 text-center text-[#ffefb3] bg-[#013e37] transition-colors">
+          <h4
+            className="font-extrabold text-[11px] sm:text-xs tracking-tight uppercase truncate"
+            title={employee.name}
+          >
+            {employee.name}
+          </h4>
+        </div>
+
+        {/* Card Body Details */}
+        <div className="py-2.5 px-3 text-center space-y-0.5 bg-white">
+          <p
+            className="text-[11px] font-bold text-slate-800 truncate"
+            title={employee.designation}
+          >
+            {employee.designation}
+          </p>
+          <p
+            className="text-[10px] text-slate-500 font-medium truncate"
+            title={`${employee.department} • ${employee.employeeCode}`}
+          >
+            {employee.department} <span className="text-slate-300">•</span> <span className="font-mono">{employee.employeeCode}</span>
+          </p>
+        </div>
       </div>
     </div>
   );
