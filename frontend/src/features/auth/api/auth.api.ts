@@ -59,7 +59,11 @@ export async function loginUser(
         localStorage.setItem("token", data.token);
         localStorage.setItem("auth_token", data.token);
         localStorage.setItem("user_role", role);
-        localStorage.setItem("user_name", name);
+        if (data.data?.firstName) {
+          localStorage.setItem("user_name", name);
+        } else {
+          localStorage.removeItem("user_name");
+        }
         if (companyId) {
           localStorage.setItem("company_id", String(companyId));
         }
