@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { X, Loader2, ShieldAlert, CheckCircle2 } from "lucide-react";
+import { X, Loader2, ShieldAlert, CheckCircle2, User as UserIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -118,7 +118,6 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
     aadhaarNumber: "",
     panNumber: "",
     passportNumber: "",
-    passportExpiryDate: "",
 
     // Parents Info
     fatherName: "",
@@ -162,7 +161,20 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
 
     // Statutory Details
     uanNumber: "",
+    pfNumber: "",
+    pfJoiningDate: "",
+    pfLeavingDate: "",
+    isInternationalWorker: false,
+    educationLevel: "",
+    pfDocumentNumber: "",
+    pfDocumentType: "",
+    pfDocumentExpiryDate: "",
+    pfReasonForLeaving: "",
+    pfPhcCategory: "",
     esiNumber: "",
+    esiJoiningDate: "",
+    esiLeavingDate: "",
+    esiReasonForLeaving: "",
     insuranceProvider: "",
     insuranceType: "HEALTH",
     policyNumber: "",
@@ -307,7 +319,6 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
         aadhaarNumber: pi?.aadhaarNumber || "",
         panNumber: pi?.panNumber || "",
         passportNumber: pi?.passportNumber || "",
-        passportExpiryDate: pi?.passportExpiryDate ? pi.passportExpiryDate.split("T")[0] : "",
 
         fatherName: pa?.fatherName || "",
         fatherMobile: pa?.fatherMobile || "",
@@ -347,7 +358,20 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
         salaryAccount: bk?.salaryAccount ?? true,
 
         uanNumber: pf?.uanNumber || "",
+        pfNumber: pf?.pfNumber || "",
+        pfJoiningDate: pf?.pfJoiningDate ? pf.pfJoiningDate.split("T")[0] : "",
+        pfLeavingDate: pf?.pfLeavingDate ? pf.pfLeavingDate.split("T")[0] : "",
+        isInternationalWorker: pf?.isInternationalWorker || false,
+        educationLevel: pf?.educationLevel || "",
+        pfDocumentNumber: pf?.documentNumber || "",
+        pfDocumentType: pf?.documentType || "",
+        pfDocumentExpiryDate: pf?.documentExpiryDate ? pf.documentExpiryDate.split("T")[0] : "",
+        pfReasonForLeaving: pf?.reasonForLeaving || "",
+        pfPhcCategory: pf?.phcCategory || "",
         esiNumber: esi?.esiNumber || "",
+        esiJoiningDate: esi?.esiJoiningDate ? esi.esiJoiningDate.split("T")[0] : "",
+        esiLeavingDate: esi?.esiLeavingDate ? esi.esiLeavingDate.split("T")[0] : "",
+        esiReasonForLeaving: esi?.reasonForLeaving || "",
         insuranceProvider: ins?.insuranceProvider || "",
         insuranceType: ins?.insuranceType || "HEALTH",
         policyNumber: ins?.policyNumber || "",
@@ -372,6 +396,70 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
     setIsSubmitting(true);
     setErrorMsg(null);
     setSuccessMsg(null);
+
+    // Validation helpers
+    const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    const validatePhone = (phone: string) => /^\+?[0-9\s-]{10,15}$/.test(phone);
+    const validatePAN = (pan: string) => /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(pan.toUpperCase());
+    const validateAadhaar = (aadhaar: string) => /^\d{12}$/.test(aadhaar);
+    const validateIFSC = (ifsc: string) => /^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc.toUpperCase());
+
+    // Validation checks
+    if (formData.personalEmail && !validateEmail(formData.personalEmail)) {
+      setErrorMsg("Personal Email address format is invalid.");
+      setIsSubmitting(false);
+      return;
+    }
+    if (formData.officialEmail && !validateEmail(formData.officialEmail)) {
+      setErrorMsg("Official Email address format is invalid.");
+      setIsSubmitting(false);
+      return;
+    }
+    if (formData.fatherMobile && !validatePhone(formData.fatherMobile)) {
+      setErrorMsg("Father's mobile number format is invalid.");
+      setIsSubmitting(false);
+      return;
+    }
+    if (formData.motherMobile && !validatePhone(formData.motherMobile)) {
+      setErrorMsg("Mother's mobile number format is invalid.");
+      setIsSubmitting(false);
+      return;
+    }
+    if (formData.guardianMobile && !validatePhone(formData.guardianMobile)) {
+      setErrorMsg("Guardian's mobile number format is invalid.");
+      setIsSubmitting(false);
+      return;
+    }
+    if (formData.aadhaarNumber && !validateAadhaar(formData.aadhaarNumber)) {
+      setErrorMsg("Aadhaar Number must be exactly 12 digits.");
+      setIsSubmitting(false);
+      return;
+    }
+    if (formData.panNumber && !validatePAN(formData.panNumber)) {
+      setErrorMsg("PAN Number format is invalid (Format: ABCDE1234F).");
+      setIsSubmitting(false);
+      return;
+    }
+    if (formData.ifscCode && !validateIFSC(formData.ifscCode)) {
+      setErrorMsg("IFSC Code format is invalid (e.g. SBIN0001234).");
+      setIsSubmitting(false);
+      return;
+    }
+
+    const cur = formData.currentAddress;
+    if (!cur.addressLine1 || !cur.city || !cur.state || !cur.postalCode) {
+      setErrorMsg("Current Address details (Line 1, City, State, and Pincode) are required.");
+      setIsSubmitting(false);
+      return;
+    }
+    if (!formData.isSameAddress) {
+      const perm = formData.permanentAddress;
+      if (!perm.addressLine1 || !perm.city || !perm.state || !perm.postalCode) {
+        setErrorMsg("Permanent Address details are required unless same as current.");
+        setIsSubmitting(false);
+        return;
+      }
+    }
 
     try {
       const selectedRole = roles.find((r) => String(r.roleId) === String(formData.roleId));
@@ -464,8 +552,20 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
         if (!caRes.success) throw new Error(caRes.error || "Failed to create current address details.");
       }
 
-      if (!formData.isSameAddress) {
-        const permAddrPayload = {
+      let permAddrPayload = null;
+      if (formData.isSameAddress) {
+        permAddrPayload = {
+          userId: employeeId,
+          addressType: "PERMANENT",
+          addressLine1: formData.currentAddress.addressLine1,
+          addressLine2: formData.currentAddress.addressLine2 || null,
+          city: formData.currentAddress.city,
+          state: formData.currentAddress.state,
+          country: formData.currentAddress.country,
+          postalCode: formData.currentAddress.postalCode,
+        };
+      } else if (formData.permanentAddress?.addressLine1) {
+        permAddrPayload = {
           userId: employeeId,
           addressType: "PERMANENT",
           addressLine1: formData.permanentAddress.addressLine1,
@@ -475,7 +575,9 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
           country: formData.permanentAddress.country,
           postalCode: formData.permanentAddress.postalCode,
         };
+      }
 
+      if (permAddrPayload) {
         if (permanentAddressExists) {
           const paRes = await updateAddressInfo(employeeId, "PERMANENT", permAddrPayload);
           if (!paRes.success) throw new Error(paRes.error || "Failed to update permanent address details.");
@@ -507,20 +609,20 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
       }
 
       // 6. PF Details (POST if pfDetailId is null, PUT otherwise)
-      if (formData.uanNumber) {
+      if (formData.uanNumber || formData.pfNumber) {
         const pfPayload = {
           userId: employeeId,
-          uanNumber: formData.uanNumber,
-          isInternationalWorker: false,
-          educationLevel: null,
-          pfNumber: null,
-          pfJoiningDate: null,
-          pfLeavingDate: null,
-          documentNumber: null,
-          documentType: null,
-          documentExpiryDate: null,
-          reasonForLeaving: null,
-          phcCategory: null,
+          uanNumber: formData.uanNumber || null,
+          pfNumber: formData.pfNumber || null,
+          isInternationalWorker: formData.isInternationalWorker,
+          educationLevel: (formData.educationLevel || null) as any,
+          pfJoiningDate: formData.pfJoiningDate ? new Date(formData.pfJoiningDate).toISOString() : null,
+          pfLeavingDate: formData.pfLeavingDate ? new Date(formData.pfLeavingDate).toISOString() : null,
+          documentNumber: formData.pfDocumentNumber || null,
+          documentType: (formData.pfDocumentType || null) as any,
+          documentExpiryDate: formData.pfDocumentExpiryDate ? new Date(formData.pfDocumentExpiryDate).toISOString() : null,
+          reasonForLeaving: (formData.pfReasonForLeaving || null) as any,
+          phcCategory: (formData.pfPhcCategory || null) as any,
         };
 
         if (pfDetailId) {
@@ -537,9 +639,9 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
         const esiPayload = {
           userId: employeeId,
           esiNumber: formData.esiNumber,
-          esiJoiningDate: null,
-          esiLeavingDate: null,
-          reasonForLeaving: null,
+          esiJoiningDate: formData.esiJoiningDate ? new Date(formData.esiJoiningDate).toISOString() : null,
+          esiLeavingDate: formData.esiLeavingDate ? new Date(formData.esiLeavingDate).toISOString() : null,
+          reasonForLeaving: (formData.esiReasonForLeaving || null) as any,
         };
 
         if (esiDetailId) {
@@ -585,7 +687,7 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
   if (!isOpen || !mounted) return null;
 
   return createPortal(
-    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
       <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/80 w-full max-w-[850px] overflow-hidden flex flex-col relative animate-in zoom-in-95 duration-200 max-h-[90vh] force-light">
         <style>{`
           .force-light input,
@@ -902,74 +1004,116 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
                 <div className="space-y-6">
                   <div className="space-y-4">
                     <h4 className="text-xs font-extrabold text-slate-700 tracking-wide uppercase">Personal Profile</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <Input
-                        label="Date of Birth"
-                        type="date"
-                        value={formData.dateOfBirth}
-                        onChange={(e) => handleChange("dateOfBirth", e.target.value)}
-                      />
-
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Gender</label>
-                        <select
-                          className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none"
-                          value={formData.gender}
-                          onChange={(e) => handleChange("gender", e.target.value)}
-                        >
-                          <option value="Male">Male</option>
-                          <option value="Female">Female</option>
-                          <option value="Other">Other</option>
-                        </select>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start animate-in fade-in duration-150">
+                      {/* Photo Section */}
+                      <div className="flex flex-col items-center justify-center p-4 border border-dashed border-slate-200 bg-slate-50/50 rounded-2xl gap-3">
+                        <div className="w-24 h-24 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 overflow-hidden relative shadow-2xs">
+                          {formData.profilePhoto ? (
+                            <img
+                              src={formData.profilePhoto}
+                              alt="Preview"
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <UserIcon className="w-10 h-10" />
+                          )}
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <label className="cursor-pointer bg-white hover:bg-slate-50 text-indigo-600 border border-slate-300 shadow-2xs rounded-lg px-3 py-1.5 text-xs font-bold transition-all">
+                            Upload Photo
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  const reader = new FileReader();
+                                  reader.onloadend = () => {
+                                    handleChange("profilePhoto", reader.result);
+                                  };
+                                  reader.readAsDataURL(file);
+                                }
+                              }}
+                            />
+                          </label>
+                          <span className="text-[10px] text-slate-400 mt-1">PNG, JPG up to 1MB</span>
+                        </div>
                       </div>
 
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Marital Status</label>
-                        <select
-                          className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none"
-                          value={formData.maritalStatus}
-                          onChange={(e) => handleChange("maritalStatus", e.target.value)}
-                        >
-                          <option value="Single">Single</option>
-                          <option value="Married">Married</option>
-                          <option value="Divorced">Divorced</option>
-                          <option value="Widowed">Widowed</option>
-                        </select>
+                      {/* Fields section */}
+                      <div className="md:col-span-2 space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                          <Input
+                            label="Date of Birth"
+                            type="date"
+                            value={formData.dateOfBirth}
+                            onChange={(e) => handleChange("dateOfBirth", e.target.value)}
+                          />
+
+                          <div className="flex flex-col gap-1.5 text-left">
+                            <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider font-semibold">Gender</label>
+                            <select
+                              className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none"
+                              value={formData.gender}
+                              onChange={(e) => handleChange("gender", e.target.value)}
+                            >
+                              <option value="Male">Male</option>
+                              <option value="Female">Female</option>
+                              <option value="Other">Other</option>
+                            </select>
+                          </div>
+
+                          <div className="flex flex-col gap-1.5 text-left">
+                            <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider font-semibold">Marital Status</label>
+                            <select
+                              className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none"
+                              value={formData.maritalStatus}
+                              onChange={(e) => handleChange("maritalStatus", e.target.value)}
+                            >
+                              <option value="Single">Single</option>
+                              <option value="Married">Married</option>
+                              <option value="Divorced">Divorced</option>
+                              <option value="Widowed">Widowed</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                          <div className="flex flex-col gap-1.5 text-left">
+                            <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider font-semibold">Blood Group</label>
+                            <select
+                              className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none"
+                              value={formData.bloodGroup}
+                              onChange={(e) => handleChange("bloodGroup", e.target.value)}
+                            >
+                              <option value="A+">A+</option>
+                              <option value="A-">A-</option>
+                              <option value="B+">B+</option>
+                              <option value="B-">B-</option>
+                              <option value="AB+">AB+</option>
+                              <option value="AB-">AB-</option>
+                              <option value="O+">O+</option>
+                              <option value="O-">O-</option>
+                            </select>
+                          </div>
+
+                          <Input
+                            label="Nationality"
+                            value={formData.nationality}
+                            onChange={(e) => handleChange("nationality", e.target.value)}
+                          />
+
+                          <Input
+                            label="Personal Email"
+                            type="email"
+                            placeholder="name@email.com"
+                            value={formData.personalEmail}
+                            onChange={(e) => handleChange("personalEmail", e.target.value)}
+                          />
+                        </div>
                       </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Blood Group</label>
-                        <select
-                          className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none"
-                          value={formData.bloodGroup}
-                          onChange={(e) => handleChange("bloodGroup", e.target.value)}
-                        >
-                          <option value="A+">A+</option>
-                          <option value="A-">A-</option>
-                          <option value="B+">B+</option>
-                          <option value="B-">B-</option>
-                          <option value="AB+">AB+</option>
-                          <option value="AB-">AB-</option>
-                          <option value="O+">O+</option>
-                          <option value="O-">O-</option>
-                        </select>
-                      </div>
-
-                      <Input
-                        label="Nationality"
-                        value={formData.nationality}
-                        onChange={(e) => handleChange("nationality", e.target.value)}
-                      />
-
-                      <Input
-                        label="Personal Email"
-                        type="email"
-                        placeholder="name@email.com"
-                        value={formData.personalEmail}
-                        onChange={(e) => handleChange("personalEmail", e.target.value)}
-                      />
                     </div>
                   </div>
 
@@ -1185,10 +1329,10 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
 
               {/* TAB 4: STATUTORY */}
               {activeTab === "statutory" && (
-                <div className="space-y-6">
+                <div className="space-y-6 text-left">
                   <div className="space-y-4">
                     <h4 className="text-xs font-extrabold text-slate-700 tracking-wide uppercase">Statutory IDs</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                       <Input
                         label="Aadhaar No"
                         value={formData.aadhaarNumber}
@@ -1204,39 +1348,185 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
                         value={formData.passportNumber}
                         onChange={(e) => handleChange("passportNumber", e.target.value)}
                       />
-                      <Input
-                        label="Passport Expiry Date"
-                        type="date"
-                        value={formData.passportExpiryDate}
-                        onChange={(e) => handleChange("passportExpiryDate", e.target.value)}
-                      />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-slate-100">
-                    {/* PF */}
-                    <div className="space-y-4">
-                      <h5 className="text-xs font-bold text-slate-700 uppercase tracking-wide">PF details</h5>
+                  {/* PF Details */}
+                  <div className="space-y-4 pt-4 border-t border-slate-100">
+                    <h4 className="text-xs font-extrabold text-slate-700 tracking-wide uppercase">PF Details</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                       <Input
                         label="UAN Number"
                         value={formData.uanNumber}
                         onChange={(e) => handleChange("uanNumber", e.target.value)}
                       />
-                    </div>
-
-                    {/* ESI */}
-                    <div className="space-y-4">
-                      <h5 className="text-xs font-bold text-slate-700 uppercase tracking-wide">ESI details</h5>
                       <Input
-                        label="ESI Account Number"
+                        label="PF Number"
+                        placeholder="PF Account Number"
+                        value={formData.pfNumber}
+                        onChange={(e) => handleChange("pfNumber", e.target.value)}
+                      />
+                      <Input
+                        label="PF Joining Date"
+                        type="date"
+                        value={formData.pfJoiningDate}
+                        onChange={(e) => handleChange("pfJoiningDate", e.target.value)}
+                      />
+                      <Input
+                        label="PF Leaving Date"
+                        type="date"
+                        value={formData.pfLeavingDate}
+                        onChange={(e) => handleChange("pfLeavingDate", e.target.value)}
+                      />
+                      <div className="flex flex-col gap-1.5 text-left">
+                        <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider font-semibold">Education Level</label>
+                        <select
+                          className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none"
+                          value={formData.educationLevel}
+                          onChange={(e) => handleChange("educationLevel", e.target.value)}
+                        >
+                          <option value="">Select Education Level</option>
+                          <option value="BELOW_10TH">Below 10th</option>
+                          <option value="SSLC">SSLC</option>
+                          <option value="PUC">PUC</option>
+                          <option value="DIPLOMA">Diploma</option>
+                          <option value="GRADUATE">Graduate</option>
+                          <option value="POST_GRADUATE">Post Graduate</option>
+                          <option value="DOCTORATE">Doctorate</option>
+                          <option value="OTHER">Other</option>
+                        </select>
+                      </div>
+
+                      <div className="flex flex-col gap-1.5 text-left">
+                        <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider font-semibold">PHC Category</label>
+                        <select
+                          className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none"
+                          value={formData.pfPhcCategory}
+                          onChange={(e) => handleChange("pfPhcCategory", e.target.value)}
+                        >
+                          <option value="">Select PHC Category</option>
+                          <option value="GENERAL">General</option>
+                          <option value="PH">PH (Physically Handicapped)</option>
+                          <option value="EXEMPT">Exempt</option>
+                        </select>
+                      </div>
+
+                      <div className="flex flex-col gap-1.5 text-left">
+                        <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider font-semibold">PF Reason for Leaving</label>
+                        <select
+                          className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none"
+                          value={formData.pfReasonForLeaving}
+                          onChange={(e) => handleChange("pfReasonForLeaving", e.target.value)}
+                        >
+                          <option value="">Select Reason</option>
+                          <option value="RESIGNED">Resigned</option>
+                          <option value="TERMINATED">Terminated</option>
+                          <option value="RETIRED">Retired</option>
+                          <option value="TRANSFERRED">Transferred</option>
+                          <option value="CONTRACT_COMPLETED">Contract Completed</option>
+                          <option value="DECEASED">Deceased</option>
+                          <option value="OTHER">Other</option>
+                        </select>
+                      </div>
+
+                      <Input
+                        label="PF Document Number"
+                        placeholder="Supporting Doc No"
+                        value={formData.pfDocumentNumber}
+                        onChange={(e) => handleChange("pfDocumentNumber", e.target.value)}
+                      />
+
+                      <div className="flex flex-col gap-1.5 text-left">
+                        <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider font-semibold">PF Document Type</label>
+                        <select
+                          className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none"
+                          value={formData.pfDocumentType}
+                          onChange={(e) => handleChange("pfDocumentType", e.target.value)}
+                        >
+                          <option value="">Select Document Type</option>
+                          <option value="AADHAAR">Aadhaar</option>
+                          <option value="PAN">PAN</option>
+                          <option value="PASSPORT">Passport</option>
+                          <option value="DRIVING_LICENSE">Driving License</option>
+                          <option value="VOTER_ID">Voter ID</option>
+                          <option value="PHOTO">Photo</option>
+                          <option value="RESUME">Resume</option>
+                          <option value="OFFER_LETTER">Offer Letter</option>
+                          <option value="EXPERIENCE_CERTIFICATE">Experience Certificate</option>
+                          <option value="DEGREE_CERTIFICATE">Degree Certificate</option>
+                          <option value="SALARY_SLIP">Salary Slip</option>
+                          <option value="RELIEVING_LETTER">Relieving Letter</option>
+                          <option value="OTHER">Other</option>
+                        </select>
+                      </div>
+
+                      <Input
+                        label="PF Document Expiry"
+                        type="date"
+                        value={formData.pfDocumentExpiryDate}
+                        onChange={(e) => handleChange("pfDocumentExpiryDate", e.target.value)}
+                      />
+                      <div className="flex items-center gap-2 py-2 sm:col-span-2 md:col-span-3">
+                        <input
+                          type="checkbox"
+                          id="isInternationalWorker"
+                          checked={formData.isInternationalWorker}
+                          onChange={(e) => handleChange("isInternationalWorker", e.target.checked)}
+                          className="w-4 h-4 rounded text-[#013e37] border-slate-300 focus:ring-[#013e37]"
+                        />
+                        <label htmlFor="isInternationalWorker" className="text-xs font-semibold text-slate-700 cursor-pointer select-none">
+                          Is International Worker?
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ESI Details */}
+                  <div className="space-y-4 pt-4 border-t border-slate-100">
+                    <h4 className="text-xs font-extrabold text-slate-700 tracking-wide uppercase">ESI Details</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                      <Input
+                        label="ESI Number"
+                        placeholder="ESI Account Number"
                         value={formData.esiNumber}
                         onChange={(e) => handleChange("esiNumber", e.target.value)}
                       />
+                      <Input
+                        label="ESI Joining Date"
+                        type="date"
+                        value={formData.esiJoiningDate}
+                        onChange={(e) => handleChange("esiJoiningDate", e.target.value)}
+                      />
+                      <Input
+                        label="ESI Leaving Date"
+                        type="date"
+                        value={formData.esiLeavingDate}
+                        onChange={(e) => handleChange("esiLeavingDate", e.target.value)}
+                      />
+                      <div className="flex flex-col gap-1.5 text-left">
+                        <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider font-semibold">ESI Reason for Leaving</label>
+                        <select
+                          className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none"
+                          value={formData.esiReasonForLeaving}
+                          onChange={(e) => handleChange("esiReasonForLeaving", e.target.value)}
+                        >
+                          <option value="">Select Reason</option>
+                          <option value="RESIGNED">Resigned</option>
+                          <option value="TERMINATED">Terminated</option>
+                          <option value="RETIRED">Retired</option>
+                          <option value="CONTRACT_COMPLETED">Contract Completed</option>
+                          <option value="TRANSFERRED">Transferred</option>
+                          <option value="DECEASED">Deceased</option>
+                          <option value="OTHER">Other</option>
+                        </select>
+                      </div>
                     </div>
+                  </div>
 
-                    {/* Insurance */}
-                    <div className="space-y-4">
-                      <h5 className="text-xs font-bold text-slate-700 uppercase tracking-wide">Insurance details</h5>
+                  {/* Insurance Details */}
+                  <div className="space-y-4 pt-4 border-t border-slate-100">
+                    <h4 className="text-xs font-extrabold text-slate-700 tracking-wide uppercase">Insurance Details</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                       <Input
                         label="Insurance Provider"
                         value={formData.insuranceProvider}

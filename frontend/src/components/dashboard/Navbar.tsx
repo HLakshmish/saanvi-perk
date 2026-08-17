@@ -27,8 +27,11 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [isProfileOpen, setIsProfileOpen] = React.useState(false);
   const [isQuickActionsOpen, setIsQuickActionsOpen] = React.useState(false);
   const [assignedRoles, setAssignedRoles] = React.useState<UserRole[]>([currentRole]);
+  const [hasFetchedRoles, setHasFetchedRoles] = React.useState(false);
 
   React.useEffect(() => {
+    if (hasFetchedRoles) return;
+
     const fetchUserRoles = async () => {
       try {
         const userId = getCurrentUserId();
@@ -50,6 +53,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 roles.push(currentRole);
               }
               setAssignedRoles(roles);
+              setHasFetchedRoles(true);
             }
           }
         }
@@ -58,7 +62,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       }
     };
     fetchUserRoles();
-  }, [currentRole]);
+  }, [currentRole, hasFetchedRoles]);
 
   const handleLogout = () => {
     document.cookie = "auth_token=; path=/; max-age=0;";
