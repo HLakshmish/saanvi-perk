@@ -59,6 +59,7 @@ model CompanyDetails {
   attendances         Attendance[]
   leaveTypes          LeaveType[]
   leaveRequests       LeaveRequest[]
+  leavePolicies       LeavePolicy[]
   assets              AssetDetails[]
   reimbursementClaims ReimbursementClaim[]
 
@@ -759,6 +760,8 @@ model LeaveType {
   company       CompanyDetails @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
   createdUser   User?          @relation("LeaveTypeCreatedBy", fields: [createdBy], references: [userId])
   leaveRequests LeaveRequest[]
+  leavePolicyRules LeavePolicyRule[]
+  leavePolicyAccumulations LeavePolicyAccumulation[]
 
   @@unique([companyId, leaveCode])
   @@map("leave_types")
@@ -978,4 +981,106 @@ model ReimbursementHistory {
   user  User?              @relation(fields: [actionBy], references: [userId])
 
   @@map("reimbursement_history")
+}
+
+// ==========================
+// Leave Policies
+// ==========================
+model LeavePolicy {
+  leavePolicyId Int      @id @default(autoincrement()) @map("leave_policy_id")
+  companyId     Int      @map("company_id")
+  policyName    String   @map("policy_name") @db.VarChar(100)
+  policyCode    String   @map("policy_code") @db.VarChar(50)
+  remarks       String?  @db.Text
+  status        Boolean  @default(true)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
+
+  company                 CompanyDetails            @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
+  leavePolicyRules        LeavePolicyRule[]
+  leavePolicyAccumulations LeavePolicyAccumulation[]
+
+  @@unique([companyId, policyCode], name: "uq_leave_policy_code")
+  @@map("leave_policies")
+}
+
+model LeavePolicyRule {
+  leavePolicyRuleId           Int      @id @default(autoincrement()) @map("leave_policy_rule_id")
+  leavePolicyId               Int      @map("leave_policy_id")
+  leaveTypeId                 Int      @map("leave_type_id")
+  
+  requestSubmissionDays       Int?     @map("request_submission_days")
+  requestSubmissionPeriod     String?  @map("request_submission_period") @db.VarChar(20)
+  
+  informLeaveGreaterThan      Decimal? @db.Decimal(5, 2) @map("inform_leave_greater_than")
+  informAfterDays             Int?     @map("inform_after_days")
+  informPeriod                String?  @map("inform_period") @db.VarChar(20)
+  
+  minLeaveDays                Decimal? @db.Decimal(5, 2) @map("min_leave_days")
+  maxLeaveDays                Decimal? @db.Decimal(5, 2) @map("max_leave_days")
+  annualRequestLimit          Decimal? @db.Decimal(8, 2) @map("annual_request_limit")
+  
+  isPaid                      Boolean  @default(false) @map("is_paid")
+  payMultiplier               Decimal? @default(1.00) @db.Decimal(5, 2) @map("pay_multiplier")
+  
+  allowFileAttachment         Boolean  @default(false) @map("allow_file_attachment")
+  attachmentRequiredAfterDays Int?     @default(0) @map("attachment_required_after_days")
+  
+  countHolidayDuring          Boolean  @default(false) @map("count_holiday_during")
+  countHolidayAfter           Boolean  @default(false) @map("count_holiday_after")
+  countHolidayBefore          Boolean  @default(false) @map("count_holiday_before")
+  optionalHolidayOnly         Boolean  @default(false) @map("optional_holiday_only")
+  
+  countWeekoffDuring          Boolean  @default(false) @map("count_weekoff_during")
+  countWeekoffAfter           Boolean  @default(false) @map("count_weekoff_after")
+  countWeekoffBefore          Boolean  @default(false) @map("count_weekoff_before")
+  
+  status                      Boolean  @default(true)
+  createdAt                   DateTime @default(now()) @map("created_at")
+  updatedAt                   DateTime @default(now()) @updatedAt @map("updated_at")
+
+  leavePolicy LeavePolicy @relation(fields: [leavePolicyId], references: [leavePolicyId], onDelete: Cascade)
+  leaveType   LeaveType   @relation(fields: [leaveTypeId], references: [leaveTypeId], onDelete: Cascade)
+
+  @@map("leave_policies_rules")
+}
+
+model LeavePolicyAccumulation {
+  leavePolicyAccumulationId Int      @id @default(autoincrement()) @map("leave_policy_accumulation_id")
+  leavePolicyId             Int      @map("leave_policy_id")
+  leaveTypeId               Int      @map("leave_type_id")
+  
+  autoAccumulate            Boolean  @default(false) @map("auto_accumulate")
+  considerDateOfJoining     Boolean  @default(false) @map("consider_date_of_joining")
+  considerDateOfProbation   Boolean  @default(false) @map("consider_date_of_probation")
+  
+  accumulationStartDays     Int?     @default(0) @map("accumulation_start_days")
+  accumulationAmount        Decimal? @db.Decimal(8, 2) @map("accumulation_amount")
+  accumulationFrequency     String?  @map("accumulation_frequency") @db.VarChar(20)
+  
+  accumulationDay           Int?     @map("accumulation_day")
+  accumulationMonth         Int?     @map("accumulation_month")
+  
+  expiryPeriod              String?  @map("expiry_period") @db.VarChar(30)
+  
+  basedOnDaysPresent        Boolean  @default(false) @map("based_on_days_present")
+  presencePeriod            String?  @map("presence_period") @db.VarChar(20)
+  
+  considerForEncashment     Boolean  @default(false) @map("consider_for_encashment")
+  
+  maxLeaveBalance           Decimal? @db.Decimal(8, 2) @map("max_leave_balance")
+  maxAccumulationPerYear    Decimal? @db.Decimal(8, 2) @map("max_accumulation_per_year")
+  maxNegativeBalance        Decimal? @db.Decimal(8, 2) @map("max_negative_balance")
+  maxCarryForward           Decimal? @db.Decimal(8, 2) @map("max_carry_forward")
+  
+  remainingLeaveAction      String?  @map("remaining_leave_action") @db.VarChar(20)
+  
+  status                    Boolean  @default(true)
+  createdAt                 DateTime @default(now()) @map("created_at")
+  updatedAt                 DateTime @default(now()) @updatedAt @map("updated_at")
+
+  leavePolicy LeavePolicy @relation(fields: [leavePolicyId], references: [leavePolicyId], onDelete: Cascade)
+  leaveType   LeaveType   @relation(fields: [leaveTypeId], references: [leaveTypeId], onDelete: Cascade)
+
+  @@map("leave_policy_accumulations")
 }
