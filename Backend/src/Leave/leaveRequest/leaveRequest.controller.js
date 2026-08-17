@@ -1,5 +1,5 @@
 const leaveRequestService = require("./leaveRequest.service");
-
+// Triggering server restart for new prisma client
 class LeaveRequestController {
     async createLeaveRequest(request, reply) {
         try {
