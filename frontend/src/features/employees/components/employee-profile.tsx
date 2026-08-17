@@ -298,10 +298,19 @@ export const EmployeeProfile: React.FC<EmployeeProfileProps> = ({ employeeId, on
         
         {/* Left Column: Employee summary card */}
         <div className="lg:col-span-4 bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs flex flex-col items-center text-center space-y-5">
-          <div className="w-24 h-24 rounded-full bg-[#013e37]/5 border border-[#013e37]/10 flex items-center justify-center shadow-inner relative group select-none">
-            <span className="text-[#013e37] text-3xl font-extrabold tracking-tight">
-              {userProfile.firstName.charAt(0).toUpperCase()}
-            </span>
+          <div className="w-24 h-24 rounded-full bg-[#013e37]/5 border-2 border-[#013e37]/20 flex items-center justify-center shadow-inner relative group select-none overflow-hidden">
+            {userProfile.profilePic || personalInfo?.profilePhoto ? (
+              <img
+                src={userProfile.profilePic || personalInfo?.profilePhoto}
+                alt={fullName}
+                className="w-full h-full object-cover rounded-full"
+                onError={(e) => {
+                  (e.target as HTMLElement).style.display = "none";
+                }}
+              />
+            ) : (
+              <UserIcon className="w-12 h-12 text-[#013e37]" />
+            )}
           </div>
 
           <div className="space-y-1">
@@ -343,6 +352,14 @@ export const EmployeeProfile: React.FC<EmployeeProfileProps> = ({ employeeId, on
                 {(userProfile.employmentType || "FULL_TIME").replace("_", "-")}
               </span>
             </div>
+            {userProfile.manager && (
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">Reporting Manager</span>
+                <span className="text-[#013e37] font-bold select-all">
+                  {`${userProfile.manager.firstName} ${userProfile.manager.lastName || ""}`.trim()}
+                </span>
+              </div>
+            )}
             <div className="flex items-center justify-between">
               <span className="text-slate-400">Status</span>
               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border bg-emerald-50 text-emerald-700 border-emerald-200">
