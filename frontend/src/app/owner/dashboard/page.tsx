@@ -181,18 +181,16 @@ export default function OwnerDashboardPage() {
                 <div className="flex items-center bg-white border border-slate-200 p-1 rounded-xl shadow-2xs mr-2">
                   <button
                     onClick={() => setViewMode("grid")}
-                    className={`p-1.5 rounded-lg transition-all ${
-                      viewMode === "grid" ? "bg-[#013e37] text-[#ffefb3]" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
-                    }`}
+                    className={`p-1.5 rounded-lg transition-all ${viewMode === "grid" ? "bg-[#013e37] text-[#ffefb3]" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+                      }`}
                     title="Grid View"
                   >
                     <LayoutGrid className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => setViewMode("list")}
-                    className={`p-1.5 rounded-lg transition-all ${
-                      viewMode === "list" ? "bg-[#013e37] text-[#ffefb3]" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
-                    }`}
+                    className={`p-1.5 rounded-lg transition-all ${viewMode === "list" ? "bg-[#013e37] text-[#ffefb3]" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+                      }`}
                     title="List View"
                   >
                     <List className="w-4 h-4" />
@@ -269,9 +267,8 @@ export default function OwnerDashboardPage() {
                   {companies.map((company) => (
                     <div
                       key={company.companyId}
-                      className={`bg-white rounded-2xl border border-slate-200 shadow-xs hover:shadow-md hover:border-[#013e37]/40 transition-all p-6 group ${
-                        viewMode === "list" ? "flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6" : "flex flex-col justify-between"
-                      }`}
+                      className={`bg-white rounded-2xl border border-slate-200 shadow-xs hover:shadow-md hover:border-[#013e37]/40 transition-all p-6 group ${viewMode === "list" ? "flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6" : "flex flex-col justify-between"
+                        }`}
                     >
                       <div className={viewMode === "list" ? "flex-1 flex flex-col md:flex-row items-start md:items-center gap-6 w-full" : ""}>
                         {/* Company Header */}

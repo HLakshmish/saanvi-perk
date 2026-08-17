@@ -136,9 +136,14 @@ export const getEmployees = async (): Promise<Employee[]> => {
       }
     }
 
-    // 2. Fetch Users and Designations concurrently
-    const [res, designations] = await Promise.all([
+    // 2. Fetch Users, Personal Info, and Designations concurrently
+    const [res, personalRes, designations] = await Promise.all([
       fetchDeduplicated(`${API_BASE_URL}/api/users`, {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      }),
+      fetchDeduplicated(`${API_BASE_URL}/api/personal-information`, {
         headers: {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
@@ -147,6 +152,16 @@ export const getEmployees = async (): Promise<Employee[]> => {
     ]);
 
     const result = await res.json();
+    const personalResult = await personalRes.json();
+    const personalMap = new Map<number, string>();
+
+    if (personalRes.ok && personalResult.success && Array.isArray(personalResult.data)) {
+      personalResult.data.forEach((pi: any) => {
+        if (pi.userId && pi.profilePhoto) {
+          personalMap.set(pi.userId, pi.profilePhoto);
+        }
+      });
+    }
 
     if (res.ok && Array.isArray(result.data)) {
       // Create a map of userId -> employeeCode
@@ -161,6 +176,7 @@ export const getEmployees = async (): Promise<Employee[]> => {
         const mgrCode = user.reportingToId ? userIdToCodeMap.get(user.reportingToId) : undefined;
         const matchingDesignation = designations.find((d) => d.designationId === user.designationId);
         const userRoleName = user.userRoles?.[0]?.role?.roleName || user.role?.roleName || "";
+        const personalPhoto = personalMap.get(user.userId);
         return {
           id: String(user.userId),
           employeeCode: user.employeeCode,
@@ -173,7 +189,7 @@ export const getEmployees = async (): Promise<Employee[]> => {
           reportsTo: mgrCode,
           reportingToId: user.reportingToId || undefined,
           roleName: userRoleName,
-          profilePic: user.profilePic || user.profilePhoto || undefined,
+          profilePic: user.profilePic || personalPhoto || undefined,
           designationId: user.designationId || undefined,
           status: user.status || "ACTIVE",
         };

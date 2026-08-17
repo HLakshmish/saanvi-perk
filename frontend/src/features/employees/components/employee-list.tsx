@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { createPortal } from "react-dom";
 import { SearchBox } from "@/components/ui/search-box";
 import { toast } from "sonner";
 import { Pagination } from "./pagination";
@@ -214,9 +215,9 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
       )}
 
       {/* Delete Confirmation Modal */}
-      {isDeleteConfirmOpen && employeeToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fade-in">
-          <div className="bg-white w-full max-w-md rounded-2xl border border-slate-200 p-6 shadow-xl space-y-4">
+      {isDeleteConfirmOpen && employeeToDelete && createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/65 backdrop-blur-md p-4 animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-md rounded-3xl border border-slate-200/80 p-6 shadow-2xl space-y-4 animate-in zoom-in-95 duration-200">
             <div className="space-y-2">
               <h3 className="text-lg font-bold text-slate-900">Delete Employee</h3>
               <p className="text-sm text-slate-500 font-medium">
@@ -241,7 +242,8 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
