@@ -4,8 +4,8 @@ export default function SuperadminDashboardPage() {
   return (
     <DashboardView
       initialRole="superadmin"
-      userName="System Superadmin"
-      companyName="Saanvi Technologies"
+      userName=""
+      companyName=""
     />
   );
 }

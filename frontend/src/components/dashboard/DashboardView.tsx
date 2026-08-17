@@ -35,8 +35,8 @@ interface DashboardViewProps {
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
   initialRole = "admin",
-  userName = "Varsha",
-  companyName = "Saanvi Technologies",
+  userName = "",
+  companyName = "",
 }) => {
   const [role, setRole] = useState<UserRole>(initialRole);
   const [activeTab, setActiveTab] = useState<string>("dashboard");
@@ -58,7 +58,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           if (comp.superAdmin && role === "superadmin") {
             const sa = comp.superAdmin;
             setResolvedUserName(`${sa.firstName} ${sa.lastName || ""}`.trim());
-          } else if (role === "employee") {
+          } else {
             const loggedInUserId = getCurrentUserId();
             if (loggedInUserId) {
               const userRes = await getUserById(loggedInUserId);
