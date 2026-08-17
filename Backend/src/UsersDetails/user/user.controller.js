@@ -1,5 +1,5 @@
 const userService = require("./user.service");
-
+// Trigger restart for prisma client
 class UserController {
     async createUser(request, reply) {
         try {

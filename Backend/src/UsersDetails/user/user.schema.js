@@ -18,6 +18,7 @@ const userResponseProperties = {
     lastLogin: { type: 'string', format: 'date-time', nullable: true },
     createdBy: { type: 'number', nullable: true },
     updatedBy: { type: 'number', nullable: true },
+    profilePic: { type: 'string', nullable: true },
     createdAt: { type: 'string', format: 'date-time' },
     updatedAt: { type: 'string', format: 'date-time' },
     role: {
@@ -66,6 +67,7 @@ const createUserSchema = {
             reportingToId: { type: 'number', nullable: true },
             shiftId: { type: 'number', nullable: true },
             status: { type: 'string', enum: ['ACTIVE', 'INACTIVE', 'RESIGNED', 'TERMINATED'], default: 'ACTIVE' },
+            profilePic: { type: 'string', nullable: true },
             companyId: { type: 'number', description: 'Required for OWNER' }
         }
     },
@@ -179,7 +181,8 @@ const updateUserSchema = {
             probationEndDate: { type: 'string', format: 'date-time', nullable: true },
             reportingToId: { type: 'number', nullable: true },
             shiftId: { type: 'number', nullable: true },
-            status: { type: 'string', enum: ['ACTIVE', 'INACTIVE', 'RESIGNED', 'TERMINATED'] }
+            status: { type: 'string', enum: ['ACTIVE', 'INACTIVE', 'RESIGNED', 'TERMINATED'] },
+            profilePic: { type: 'string', nullable: true }
         }
     },
     response: {
