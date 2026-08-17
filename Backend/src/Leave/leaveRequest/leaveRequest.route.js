@@ -17,15 +17,15 @@ async function leaveRequestRoutes(fastify, options) {
     // APPLY_LEAVE is a typical permission for applying
     fastify.post("/", opts(createLeaveRequestSchema, 'APPLY_LEAVE'), leaveRequestController.createLeaveRequest.bind(leaveRequestController));
     
-    // VIEW_LEAVE_REQUESTS or VIEW_OWN_LEAVE (checked in controller)
-    fastify.get("/:id", opts(getLeaveRequestByIdSchema, 'VIEW_LEAVE_REQUESTS'), leaveRequestController.getLeaveRequestById.bind(leaveRequestController));
-    fastify.get("/", opts(getAllLeaveRequestsSchema, 'VIEW_LEAVE_REQUESTS'), leaveRequestController.getAllLeaveRequests.bind(leaveRequestController));
+    // VIEW_LEAVES or VIEW_OWN_LEAVE (checked in controller)
+    fastify.get("/:id", opts(getLeaveRequestByIdSchema, 'VIEW_LEAVES'), leaveRequestController.getLeaveRequestById.bind(leaveRequestController));
+    fastify.get("/", opts(getAllLeaveRequestsSchema, 'VIEW_LEAVES'), leaveRequestController.getAllLeaveRequests.bind(leaveRequestController));
     
-    // MANAGE_LEAVE_REQUESTS typically for HR/Managers to approve/reject
-    fastify.put("/:id/status", opts(updateLeaveRequestStatusSchema, 'MANAGE_LEAVE_REQUESTS'), leaveRequestController.updateLeaveRequestStatus.bind(leaveRequestController));
+    // MANAGE_LEAVES typically for HR/Managers to approve/reject
+    fastify.put("/:id/status", opts(updateLeaveRequestStatusSchema, 'MANAGE_LEAVES'), leaveRequestController.updateLeaveRequestStatus.bind(leaveRequestController));
     
     // Deletion might be restricted
-    fastify.delete("/:id", opts(deleteLeaveRequestSchema, 'MANAGE_LEAVE_REQUESTS'), leaveRequestController.deleteLeaveRequest.bind(leaveRequestController));
+    fastify.delete("/:id", opts(deleteLeaveRequestSchema, 'MANAGE_LEAVES'), leaveRequestController.deleteLeaveRequest.bind(leaveRequestController));
 }
 
 module.exports = leaveRequestRoutes;
