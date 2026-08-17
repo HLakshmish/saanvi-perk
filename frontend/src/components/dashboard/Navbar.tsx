@@ -173,21 +173,23 @@ export const Navbar: React.FC<NavbarProps> = ({
           )}
         </div>
 
-        {/* Role Selector Dropdown */}
-        <div className="relative">
-          <select
-            value={currentRole}
-            onChange={(e) => handleRoleSwitch(e.target.value as UserRole)}
-            className="appearance-none px-3 py-1.5 pr-7 border border-slate-200/90 rounded-xl text-[#013e37] bg-slate-50 hover:bg-slate-100 font-bold text-xs focus:ring-2 focus:ring-[#013e37]/20 focus:outline-none cursor-pointer capitalize shadow-2xs"
-          >
-            {assignedRoles.map((r) => (
-              <option key={r} value={r} className="bg-white text-slate-800 capitalize">
-                {r === "superadmin" ? "Superadmin" : r === "admin" ? "Admin" : "Employee"}
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="w-3.5 h-3.5 text-slate-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-        </div>
+        {/* Role Selector Dropdown (Hidden for employees or users with only 1 assigned role) */}
+        {currentRole !== "employee" && assignedRoles.length > 1 && (
+          <div className="relative">
+            <select
+              value={currentRole}
+              onChange={(e) => handleRoleSwitch(e.target.value as UserRole)}
+              className="appearance-none px-3 py-1.5 pr-7 border border-slate-200/90 rounded-xl text-[#013e37] bg-slate-50 hover:bg-slate-100 font-bold text-xs focus:ring-2 focus:ring-[#013e37]/20 focus:outline-none cursor-pointer capitalize shadow-2xs"
+            >
+              {assignedRoles.map((r) => (
+                <option key={r} value={r} className="bg-white text-slate-800 capitalize">
+                  {r === "superadmin" ? "Superadmin" : r === "admin" ? "Admin" : "Employee"}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="w-3.5 h-3.5 text-slate-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          </div>
+        )}
 
         {/* User Profile Pill */}
         <div className="relative pl-3 border-l border-slate-200">
