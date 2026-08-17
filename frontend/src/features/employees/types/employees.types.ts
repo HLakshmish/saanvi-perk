@@ -17,6 +17,9 @@ export interface Employee {
   designation: string;
   employeeGroup: string;
   reportsTo?: string; // manager's employeeCode
+  reportingToId?: number;
+  roleName?: string;
+  profilePic?: string;
   designationId?: number;
   status?: string;
 }
