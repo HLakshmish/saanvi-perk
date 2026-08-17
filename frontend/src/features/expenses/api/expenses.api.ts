@@ -336,7 +336,7 @@ export const getExpenseStats = async (period?: string, trendOffset: number = 0):
     if (res.status === 403 || !res.ok || !result.success || !Array.isArray(result.data)) {
       return {
         totalAmount: 0,
-        submittedCount: 0,
+        totalRequests: 0,
         pendingCount: 0,
         approvedCount: 0,
         rejectedCount: 0,

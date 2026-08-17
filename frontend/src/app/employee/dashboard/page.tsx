@@ -4,8 +4,8 @@ export default function EmployeeDashboardPage() {
   return (
     <DashboardView
       initialRole="employee"
-      userName="Rahul Sharma"
-      companyName="Saanvi Technologies"
+      userName=""
+      companyName=""
     />
   );
 }

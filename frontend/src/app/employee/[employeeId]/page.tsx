@@ -44,8 +44,8 @@ export default function EmployeeProfilePage({ params }: PageProps) {
   const router = useRouter();
 
   const [role, setRole] = useState<UserRole>("employee");
-  const [userName, setUserName] = useState("Varsha");
-  const [companyName, setCompanyName] = useState("Saanvi Technologies");
+  const [userName, setUserName] = useState("");
+  const [companyName, setCompanyName] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const [isEditOpen, setIsEditOpen] = useState(false);
