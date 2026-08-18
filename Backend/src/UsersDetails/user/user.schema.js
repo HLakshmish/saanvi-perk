@@ -25,6 +25,7 @@ const userResponseProperties = {
         type: 'object',
         nullable: true,
         properties: {
+            roleId: { type: 'number' },
             roleName: { type: 'string' }
         }
     },
