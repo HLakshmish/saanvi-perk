@@ -37,14 +37,18 @@ export const Navbar: React.FC<NavbarProps> = ({
         const userId = getCurrentUserId();
         if (userId) {
           const res = await getUserById(userId);
-          if (res.success && res.data && Array.isArray(res.data.userRoles) && res.data.userRoles.length > 0) {
-            const roles: UserRole[] = res.data.userRoles
+          const rolesArray = Array.isArray(res.data?.roles) && res.data.roles.length > 0
+            ? res.data.roles
+            : (Array.isArray(res.data?.userRoles) ? res.data.userRoles : []);
+
+          if (res.success && res.data && rolesArray.length > 0) {
+            const roles: UserRole[] = rolesArray
               .map((ur: any) => {
-                const code = (ur.role?.roleCode || ur.role?.roleName || "").toUpperCase();
-                if (code === "SUPERADMIN") return "superadmin";
-                if (code === "ADMIN") return "admin";
-                if (code === "EMPLOYEE") return "employee";
-                return null;
+                const code = (ur.roleCode || ur.roleName || ur.role?.roleCode || ur.role?.roleName || "").toUpperCase();
+                if (code.includes("SUPERADMIN") || code.includes("OWNER")) return "superadmin";
+                if (code.includes("ADMIN") || code.includes("SYSTEM ADMINISTRATOR")) return "admin";
+                if (code.includes("EMPLOYEE") || code.includes("STAFF") || code.includes("USER") || code.includes("TESTING")) return "employee";
+                return "employee" as UserRole;
               })
               .filter((r: UserRole | null): r is UserRole => r !== null);
 

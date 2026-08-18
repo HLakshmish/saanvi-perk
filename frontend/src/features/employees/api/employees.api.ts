@@ -76,7 +76,7 @@ const mapUserToEmployee = (user: any): Employee => {
     email: user.officialEmail,
     location: "Saligrama", // default placeholder or company branch
     department: user.department?.departmentName || "General",
-    designation: user.userRoles?.[0]?.role?.roleName || user.role?.roleName || "Staff",
+    designation: user.roles?.[0]?.roleName || user.userRoles?.[0]?.role?.roleName || user.role?.roleName || "Staff",
     employeeGroup: (user.employmentType || "FULL_TIME").replace("_", "-"),
     reportsTo: user.reportingToId ? String(user.reportingToId) : undefined,
     designationId: user.designationId || undefined,
@@ -175,7 +175,7 @@ export const getEmployees = async (): Promise<Employee[]> => {
       const remoteEmployees: Employee[] = result.data.map((user: any) => {
         const mgrCode = user.reportingToId ? userIdToCodeMap.get(user.reportingToId) : undefined;
         const matchingDesignation = designations.find((d) => d.designationId === user.designationId);
-        const userRoleName = user.userRoles?.[0]?.role?.roleName || user.role?.roleName || "";
+        const userRoleName = user.roles?.[0]?.roleName || user.userRoles?.[0]?.role?.roleName || user.role?.roleName || "";
         const personalPhoto = personalMap.get(user.userId);
         return {
           id: String(user.userId),

@@ -214,7 +214,7 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
   }, [expenses]);
 
   // Resolve Designation Name
-  const roleName = userProfile?.userRoles?.[0]?.role?.roleName || userProfile?.role?.roleName || "Staff";
+  const roleName = userProfile?.roles?.[0]?.roleName || userProfile?.userRoles?.[0]?.role?.roleName || userProfile?.role?.roleName || "Staff";
   const designationName = designations.find((d) => d.designationId === userProfile?.designationId)?.designationName || roleName;
   const employeeFullName = userProfile ? `${userProfile.firstName} ${userProfile.lastName || ""}`.trim() : propUserName;
 

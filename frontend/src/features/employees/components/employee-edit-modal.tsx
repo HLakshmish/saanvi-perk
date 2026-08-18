@@ -289,8 +289,12 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
       if (curAddr) setCurrentAddressExists(true);
       if (permAddr) setPermanentAddressExists(true);
 
-      const assignedRoleIds = Array.isArray(u.userRoles) && u.userRoles.length > 0
-        ? u.userRoles.map((ur: any) => Number(ur.roleId || ur.role?.roleId)).filter(Boolean)
+      const rolesArray = Array.isArray(u.roles) && u.roles.length > 0
+        ? u.roles
+        : (Array.isArray(u.userRoles) ? u.userRoles : []);
+
+      const assignedRoleIds = rolesArray.length > 0
+        ? rolesArray.map((ur: any) => Number(ur.roleId || ur.role?.roleId)).filter(Boolean)
         : (u.roleId ? [Number(u.roleId)] : []);
 
       // Populate Form State
