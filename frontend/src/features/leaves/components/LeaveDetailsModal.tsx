@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { X, Loader2, Calendar, User, CheckCircle2, XCircle, Clock } from "lucide-react";
-import { fetchLeaveRequestById } from "../api/leaves.api";
+import { X, Loader2, Calendar, User, CheckCircle2, XCircle, Clock, Trash2 } from "lucide-react";
+import { fetchLeaveRequestById, deleteLeaveRequest } from "../api/leaves.api";
+import { toast } from "sonner";
 
 interface LeaveDetailsModalProps {
   isOpen: boolean;
@@ -8,6 +9,14 @@ interface LeaveDetailsModalProps {
   leaveRequestId: string | number | null;
   employees: any[];
   leaveTypes: any[];
+  isAdminOrSuperAdmin?: boolean;
+  onDeleteSuccess?: () => void;
+}
+
+function getUserRoleCookie(): string | null {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.match(/(?:^|; )user_role=([^;]*)/);
+  return match ? match[1] : null;
 }
 
 export const LeaveDetailsModal: React.FC<LeaveDetailsModalProps> = ({
@@ -16,9 +25,12 @@ export const LeaveDetailsModal: React.FC<LeaveDetailsModalProps> = ({
   leaveRequestId,
   employees = [],
   leaveTypes = [],
+  isAdminOrSuperAdmin,
+  onDeleteSuccess,
 }) => {
   const [details, setDetails] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
@@ -117,6 +129,33 @@ export const LeaveDetailsModal: React.FC<LeaveDetailsModalProps> = ({
             Pending Approval
           </span>
         );
+    }
+  };
+
+  const userRole = getUserRoleCookie();
+  const isUserAdminOrSuper = isAdminOrSuperAdmin !== undefined 
+    ? isAdminOrSuperAdmin 
+    : (userRole === "superadmin" || userRole === "admin");
+
+  const handleDelete = async () => {
+    if (!leaveRequestId) return;
+    if (!confirm("Are you sure you want to cancel / delete this leave request?")) return;
+
+    setIsDeleting(true);
+    setErrorMsg(null);
+    try {
+      const res = await deleteLeaveRequest(Number(leaveRequestId));
+      if (res.success) {
+        toast.success("Leave request cancelled successfully.");
+        onDeleteSuccess?.();
+        onClose();
+      } else {
+        setErrorMsg(res.error || "Failed to cancel leave request.");
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || "An unexpected error occurred.");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -265,7 +304,24 @@ export const LeaveDetailsModal: React.FC<LeaveDetailsModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end p-4 border-t border-slate-100 bg-slate-50/50">
+        <div className="flex items-center justify-between p-4 border-t border-slate-100 bg-slate-50/50">
+          <div>
+            {isUserAdminOrSuper && details?.status === "PENDING" && (
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={handleDelete}
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 disabled:bg-rose-400 text-white font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer flex items-center gap-1.5"
+              >
+                {isDeleting ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Trash2 className="w-3.5 h-3.5" />
+                )}
+                <span>Cancel Request</span>
+              </button>
+            )}
+          </div>
           <button
             onClick={onClose}
             className="px-5 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-xl shadow-2xs transition-colors cursor-pointer"
