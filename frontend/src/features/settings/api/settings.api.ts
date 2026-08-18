@@ -715,3 +715,116 @@ export const deleteLeavePolicyAccumulationApi = async (id: string | number) => {
     return { success: false, error: error.message };
   }
 };
+
+// ==========================================
+// LEAVE ACCUMULATIONS (Employee-level records)
+// ==========================================
+export const fetchLeaveAccumulations = async (filters?: { userId?: number; leaveTypeId?: number }) => {
+  const token = getAuthToken();
+  const companyId = getCompanyIdCookie();
+  
+  let url = `${API_BASE_URL}/api/leave-accumulations`;
+  const params: string[] = [];
+  if (companyId) params.push(`companyId=${companyId}`);
+  if (filters?.userId) params.push(`userId=${filters.userId}`);
+  if (filters?.leaveTypeId) params.push(`leaveTypeId=${filters.leaveTypeId}`);
+  
+  if (params.length > 0) {
+    url += `?${params.join("&")}`;
+  }
+
+  try {
+    const res = await fetchDeduplicated(url, {
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    const result = await res.json();
+    if (res.ok && result.success && Array.isArray(result.data)) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, data: [], error: result.message || "Failed to fetch leave accumulations" };
+  } catch (error: any) {
+    return { success: false, data: [], error: error.message };
+  }
+};
+
+export const createLeaveAccumulation = async (data: Record<string, any>) => {
+  const token = getAuthToken();
+  const companyId = getCompanyIdCookie() || 4;
+  const payload = {
+    companyId: Number(companyId),
+    ...data,
+  };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/leave-accumulations`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(payload),
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, error: result.message || "Failed to create leave accumulation" };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const updateLeaveAccumulation = async (id: number, data: Record<string, any>) => {
+  const token = getAuthToken();
+  const companyId = getCompanyIdCookie() || 4;
+  const payload = {
+    companyId: Number(companyId),
+    ...data,
+  };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/leave-accumulations/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(payload),
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, error: result.message || "Failed to update leave accumulation" };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const deleteLeaveAccumulation = async (id: number) => {
+  const token = getAuthToken();
+  const companyId = getCompanyIdCookie();
+  const url = companyId
+    ? `${API_BASE_URL}/api/leave-accumulations/${id}?companyId=${companyId}`
+    : `${API_BASE_URL}/api/leave-accumulations/${id}`;
+
+  try {
+    const res = await fetch(url, {
+      method: "DELETE",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true };
+    }
+    return { success: false, error: result.message || "Failed to delete leave accumulation" };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
+

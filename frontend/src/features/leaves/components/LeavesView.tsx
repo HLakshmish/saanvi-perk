@@ -10,7 +10,7 @@ import { ApplyLeaveModal } from "./ApplyLeaveModal";
 import { RejectLeaveModal } from "./RejectLeaveModal";
 import { LeaveDetailsModal } from "./LeaveDetailsModal";
 import { fetchLeaveRequests, createLeaveRequest, getCurrentUserId, updateLeaveRequestStatus } from "../api/leaves.api";
-import { fetchLeaveTypes, fetchLeavePolicies, fetchLeavePolicyRules, fetchLeavePolicyAccumulations } from "@/features/settings/api/settings.api";
+import { fetchLeaveTypes, fetchLeavePolicies, fetchLeavePolicyRules, fetchLeavePolicyAccumulations, fetchLeaveAccumulations } from "@/features/settings/api/settings.api";
 import { getEmployees } from "@/features/employees/api/employees.api";
 import { Employee } from "@/features/employees/types/employees.types";
 import { toast } from "sonner";
@@ -51,45 +51,68 @@ export const LeavesView: React.FC = () => {
     setError(null);
     try {
       const filterUserId = isAdminOrSuperAdmin ? undefined : (getCurrentUserId() || undefined);
-      const [res, typesRes, empList, policiesRes, rulesRes, accsRes] = await Promise.all([
+      const currentUserId = getCurrentUserId();
+
+      const [res, typesRes, empList, policiesRes, rulesRes, accsRes, empAccsRes] = await Promise.all([
         fetchLeaveRequests(filterUserId),
         fetchLeaveTypes(),
         getEmployees().catch(() => [] as Employee[]),
         fetchLeavePolicies().catch(() => ({ success: false, data: [] })),
         fetchLeavePolicyRules().catch(() => ({ success: false, data: [] })),
         fetchLeavePolicyAccumulations().catch(() => ({ success: false, data: [] })),
+        fetchLeaveAccumulations().catch(() => ({ success: false, data: [] })),
       ]);
 
+      const DEFAULT_LEAVE_TYPES = [
+        { leaveTypeId: 1, leaveName: "Sick Leave/Casual Leave", leaveCode: "SL+CL", status: true },
+        { leaveTypeId: 2, leaveName: "Earned Leave", leaveCode: "EL", status: true },
+        { leaveTypeId: 3, leaveName: "Loss of Pay", leaveCode: "LOP", status: true },
+        { leaveTypeId: 4, leaveName: "COMPOFF", leaveCode: "COFF", status: true },
+      ];
+
       let resolvedTypes = [] as any[];
-      if (typesRes.success && Array.isArray(typesRes.data)) {
+      if (typesRes.success && Array.isArray(typesRes.data) && typesRes.data.length > 0) {
         setLeaveTypes(typesRes.data);
         resolvedTypes = typesRes.data;
+      } else {
+        setLeaveTypes(DEFAULT_LEAVE_TYPES);
+        resolvedTypes = DEFAULT_LEAVE_TYPES;
       }
+
       if (Array.isArray(empList)) {
         setEmployees(empList);
       }
 
-      // Calculate dynamic accumulations from policies, rules, accumulations
-      if (policiesRes.success && Array.isArray(policiesRes.data) && resolvedTypes.length > 0) {
-        const activePolicies = policiesRes.data.filter((p: any) => p.status);
-        const activeRules = rulesRes.success && Array.isArray(rulesRes.data)
-          ? rulesRes.data.filter((r: any) => r.status && activePolicies.some((p: any) => p.leavePolicyId === r.leavePolicyId))
-          : [];
-        const activeAccs = accsRes.success && Array.isArray(accsRes.data)
-          ? accsRes.data.filter((a: any) => a.status && activePolicies.some((p: any) => p.leavePolicyId === a.leavePolicyId))
-          : [];
+      const userAllocations = empAccsRes.success && Array.isArray(empAccsRes.data)
+        ? empAccsRes.data.filter((a: any) => Number(a.userId) === Number(currentUserId) && a.status)
+        : [];
 
-        let dynamicSick = 0;
-        let dynamicComp = 0;
-        let dynamicEarned = 0;
-        let dynamicLop = 0;
-        let hasRules = false;
+      // Calculate dynamic accumulations from user's allocations, or fall back to policies/rules config
+      const activePolicies = (policiesRes.success && Array.isArray(policiesRes.data)) ? policiesRes.data.filter((p: any) => p.status) : [];
+      const activeRules = rulesRes.success && Array.isArray(rulesRes.data)
+        ? rulesRes.data.filter((r: any) => r.status && activePolicies.some((p: any) => p.leavePolicyId === r.leavePolicyId))
+        : [];
+      const activeAccs = accsRes.success && Array.isArray(accsRes.data)
+        ? accsRes.data.filter((a: any) => a.status && activePolicies.some((p: any) => p.leavePolicyId === a.leavePolicyId))
+        : [];
 
-        resolvedTypes.forEach((lt: any) => {
+      let dynamicSick = 0;
+      let dynamicComp = 0;
+      let dynamicEarned = 0;
+      let dynamicLop = 0;
+      let hasAccumulations = userAllocations.length > 0;
+      let hasRules = false;
+
+      resolvedTypes.forEach((lt: any) => {
+        const alloc = userAllocations.find((a: any) => Number(a.leaveTypeId) === Number(lt.leaveTypeId));
+        
+        let limit = 0;
+        if (alloc) {
+          limit = Number(alloc.numberOfLeaves);
+        } else {
           const rule = activeRules.find((r: any) => Number(r.leaveTypeId) === Number(lt.leaveTypeId));
           const acc = activeAccs.find((a: any) => Number(a.leaveTypeId) === Number(lt.leaveTypeId));
 
-          let limit = 0;
           if (rule && rule.annualRequestLimit !== null) {
             limit = Number(rule.annualRequestLimit);
             hasRules = true;
@@ -102,31 +125,26 @@ export const LeavesView: React.FC = () => {
               hasRules = true;
             }
           }
-
-          const name = lt.leaveName.toLowerCase();
-          const code = lt.leaveCode.toLowerCase();
-          if (name.includes("sick") || name.includes("casual") || code.includes("sl") || code.includes("cl")) {
-            dynamicSick += limit;
-          } else if (name.includes("comp") || code.includes("comp")) {
-            dynamicComp += limit;
-          } else if (name.includes("earned") || code.includes("el")) {
-            dynamicEarned += limit;
-          } else if (name.includes("loss") || name.includes("lop") || code.includes("lop")) {
-            dynamicLop += limit;
-          }
-        });
-
-        if (hasRules) {
-          setAccumulatedSick(dynamicSick);
-          setAccumulatedComp(dynamicComp);
-          setAccumulatedEarned(dynamicEarned);
-          setAccumulatedLop(dynamicLop);
-        } else {
-          setAccumulatedSick(12.00);
-          setAccumulatedComp(0.00);
-          setAccumulatedEarned(0.00);
-          setAccumulatedLop(0.00);
         }
+
+        const name = lt.leaveName.toLowerCase();
+        const code = lt.leaveCode.toLowerCase();
+        if (name.includes("sick") || name.includes("casual") || code.includes("sl") || code.includes("cl")) {
+          dynamicSick += limit;
+        } else if (name.includes("comp") || code.includes("comp")) {
+          dynamicComp += limit;
+        } else if (name.includes("earned") || code.includes("el")) {
+          dynamicEarned += limit;
+        } else if (name.includes("loss") || name.includes("lop") || code.includes("lop")) {
+          dynamicLop += limit;
+        }
+      });
+
+      if (hasAccumulations || hasRules) {
+        setAccumulatedSick(dynamicSick);
+        setAccumulatedComp(dynamicComp);
+        setAccumulatedEarned(dynamicEarned);
+        setAccumulatedLop(dynamicLop);
       } else {
         setAccumulatedSick(12.00);
         setAccumulatedComp(0.00);
@@ -170,7 +188,7 @@ export const LeavesView: React.FC = () => {
           if (item.leaveType) {
             leaveTypeName = item.leaveType.leaveName;
           } else {
-            const lt = (typesRes.data || []).find((t: any) => Number(t.leaveTypeId) === Number(item.leaveTypeId));
+            const lt = resolvedTypes.find((t: any) => Number(t.leaveTypeId) === Number(item.leaveTypeId));
             if (lt) leaveTypeName = lt.leaveName;
           }
 
@@ -393,6 +411,7 @@ export const LeavesView: React.FC = () => {
         leaveRequestId={selectedLeaveId}
         employees={employees}
         leaveTypes={leaveTypes}
+        onDeleteSuccess={loadRequests}
       />
 
       {/* Reject Leave Modal */}
