@@ -26,8 +26,13 @@ class UserController {
 
             const user = await userService.createUser(userData);
             
-            // Do not return password hash
-            const { password, ...userWithoutPassword } = user;
+            const { password, userRoles, ...userWithoutPassword } = user;
+            if (userRoles && userRoles.length > 0) {
+                userWithoutPassword.role = {
+                    roleId: userRoles[0].role.roleId,
+                    roleName: userRoles[0].role.roleName
+                };
+            }
             
             reply.code(201).send({ success: true, message: "User created successfully", data: userWithoutPassword });
         } catch (error) {
@@ -48,6 +53,13 @@ class UserController {
             
             if (user) {
                 delete user.password;
+                if (user.userRoles && user.userRoles.length > 0) {
+                    user.role = {
+                        roleId: user.userRoles[0].role.roleId,
+                        roleName: user.userRoles[0].role.roleName
+                    };
+                }
+                delete user.userRoles;
             }
 
             reply.code(200).send({ success: true, data: user });
@@ -65,9 +77,18 @@ class UserController {
 
             const users = await userService.getAllUsers(companyId);
             
-            users.forEach(u => delete u.password);
+            const formattedUsers = users.map(u => {
+                const { password, userRoles, ...rest } = u;
+                if (userRoles && userRoles.length > 0) {
+                    rest.role = {
+                        roleId: userRoles[0].role.roleId,
+                        roleName: userRoles[0].role.roleName
+                    };
+                }
+                return rest;
+            });
 
-            reply.code(200).send({ success: true, data: users });
+            reply.code(200).send({ success: true, data: formattedUsers });
         } catch (error) {
             reply.code(500).send({ success: false, message: error.message });
         }
@@ -95,9 +116,15 @@ class UserController {
             if (data.password === "") delete data.password;
 
             const user = await userService.updateUser(Number(id), targetCompanyId, data);
-            delete user.password;
+            const { password, userRoles, ...userWithoutPassword } = user;
+            if (userRoles && userRoles.length > 0) {
+                userWithoutPassword.role = {
+                    roleId: userRoles[0].role.roleId,
+                    roleName: userRoles[0].role.roleName
+                };
+            }
 
-            reply.code(200).send({ success: true, message: "User updated successfully", data: user });
+            reply.code(200).send({ success: true, message: "User updated successfully", data: userWithoutPassword });
         } catch (error) {
             reply.code(400).send({ success: false, message: error.message });
         }

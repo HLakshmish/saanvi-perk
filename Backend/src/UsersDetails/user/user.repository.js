@@ -13,7 +13,7 @@ class UserRepository {
         return await prisma.user.create({ 
             data: createData,
             include: {
-                userRoles: { select: { role: { select: { roleName: true, roleCode: true } } } },
+                userRoles: { select: { role: { select: { roleId: true, roleName: true, roleCode: true } } } },
                 department: { select: { departmentName: true } },
                 designation: { select: { designationName: true } }
             }
@@ -27,7 +27,7 @@ class UserRepository {
         return await prisma.user.findFirst({
             where: whereClause,
             include: {
-                userRoles: { select: { role: { select: { roleName: true, roleCode: true } } } },
+                userRoles: { select: { role: { select: { roleId: true, roleName: true, roleCode: true } } } },
                 department: { select: { departmentName: true } },
                 designation: { select: { designationName: true } },
                 manager: { select: { firstName: true, lastName: true, officialEmail: true } }
@@ -42,7 +42,7 @@ class UserRepository {
         return await prisma.user.findMany({
             where: whereClause,
             include: {
-                userRoles: { select: { role: { select: { roleName: true, roleCode: true } } } },
+                userRoles: { select: { role: { select: { roleId: true, roleName: true, roleCode: true } } } },
                 department: { select: { departmentName: true } },
                 designation: { select: { designationName: true } }
             }
@@ -69,7 +69,7 @@ class UserRepository {
             where: { userId },
             data: updateData,
             include: {
-                userRoles: { select: { role: { select: { roleName: true, roleCode: true } } } },
+                userRoles: { select: { role: { select: { roleId: true, roleName: true, roleCode: true } } } },
                 department: { select: { departmentName: true } },
                 designation: { select: { designationName: true } }
             }
