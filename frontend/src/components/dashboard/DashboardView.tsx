@@ -40,11 +40,28 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 }) => {
   const [role, setRole] = useState<UserRole>(initialRole);
   const [activeTab, setActiveTab] = useState<string>("dashboard");
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [profileEditOpen, setProfileEditOpen] = useState(false);
 
   const [resolvedCompanyName, setResolvedCompanyName] = useState(companyName);
   const [resolvedUserName, setResolvedUserName] = useState(userName);
+
+  // Expand sidebar on desktop screens, keep hidden on mobile
+  useEffect(() => {
+    if (window.innerWidth >= 768) {
+      setIsSidebarOpen(true);
+    }
+
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setIsSidebarOpen(false);
+      } else {
+        setIsSidebarOpen(true);
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     const loadCompanyMetadata = async () => {
@@ -126,7 +143,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       case "approval":
         return <ApprovalsView />;
       case "attendance":
-        return <AttendanceView />;
+        return <AttendanceView currentRole={role} currentUserName={resolvedUserName} />;
       case "expenses":
         if (role === "employee") {
           return (
@@ -243,6 +260,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           activeTab={activeTab}
           onTabChange={setActiveTab}
           isSidebarOpen={isSidebarOpen}
+          onCloseMobileSidebar={() => setIsSidebarOpen(false)}
         />
 
         {/* Content View */}
