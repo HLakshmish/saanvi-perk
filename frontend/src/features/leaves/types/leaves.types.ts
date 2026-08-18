@@ -18,7 +18,7 @@ export interface LeaveRequest {
   toDate: string;
   days: number;
   remarks: string;
-  status: "Approved" | "Pending" | "Rejected";
+  status: "Approved" | "Pending" | "Rejected" | "Cancelled";
 }
 
 export interface Holiday {
@@ -31,13 +31,14 @@ export interface Holiday {
 }
 
 export interface ApplyLeaveInput {
-  leaveType: string;
+  leaveTypeId: number;
   isHalfDay: boolean;
   fromDate: string;
   toDate: string;
   reason: string;
   notifyOthers?: string;
   reliever?: string;
+  userId?: number;
 }
 
 export interface CompOffInput {

@@ -1,12 +1,20 @@
 import React, { useState } from "react";
-import { CheckCircle2, Search } from "lucide-react";
+import { CheckCircle2, Clock, XCircle, MinusCircle, Search } from "lucide-react";
 import { LeaveRequest } from "../types/leaves.types";
 
 interface LeavesRequestTabProps {
   requests: LeaveRequest[];
+  isAdminOrSuperAdmin?: boolean;
+  onStatusUpdate?: (id: string, status: "APPROVED" | "REJECTED") => Promise<boolean>;
+  onRowClick?: (id: string) => void;
 }
 
-export const LeavesRequestTab: React.FC<LeavesRequestTabProps> = ({ requests }) => {
+export const LeavesRequestTab: React.FC<LeavesRequestTabProps> = ({
+  requests,
+  isAdminOrSuperAdmin = false,
+  onStatusUpdate,
+  onRowClick,
+}) => {
   const [searchTerm, setSearchTerm] = useState("");
 
   const filteredRequests = requests.filter(
@@ -15,6 +23,36 @@ export const LeavesRequestTab: React.FC<LeavesRequestTabProps> = ({ requests }) 
       r.remarks.toLowerCase().includes(searchTerm.toLowerCase()) ||
       r.requestDate.includes(searchTerm)
   );
+
+  const getStatusIcon = (status: "Approved" | "Pending" | "Rejected" | "Cancelled") => {
+    switch (status) {
+      case "Approved":
+        return <CheckCircle2 className="w-4 h-4 text-emerald-500 fill-emerald-100" />;
+      case "Pending":
+        return <Clock className="w-4 h-4 text-amber-500 fill-amber-100" />;
+      case "Rejected":
+        return <XCircle className="w-4 h-4 text-rose-500 fill-rose-100" />;
+      case "Cancelled":
+        return <MinusCircle className="w-4 h-4 text-slate-400 fill-slate-100" />;
+      default:
+        return <Clock className="w-4 h-4 text-slate-400 fill-slate-100" />;
+    }
+  };
+
+  const getStatusStyles = (status: "Approved" | "Pending" | "Rejected" | "Cancelled") => {
+    switch (status) {
+      case "Approved":
+        return "bg-emerald-50 text-emerald-700 border-emerald-200";
+      case "Pending":
+        return "bg-amber-50 text-amber-700 border-amber-200";
+      case "Rejected":
+        return "bg-rose-50 text-rose-700 border-rose-200";
+      case "Cancelled":
+        return "bg-slate-100 text-slate-600 border-slate-200";
+      default:
+        return "bg-slate-50 text-slate-700 border-slate-200";
+    }
+  };
 
   return (
     <div className="space-y-5 animate-fade-in">
@@ -59,21 +97,42 @@ export const LeavesRequestTab: React.FC<LeavesRequestTabProps> = ({ requests }) 
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
               {filteredRequests.map((req) => (
-                <tr key={req.id} className="hover:bg-slate-50/70 transition-colors">
+                <tr
+                  key={req.id}
+                  onClick={() => onRowClick?.(req.id)}
+                  className="hover:bg-slate-50/70 transition-colors cursor-pointer"
+                >
                   <td className="py-3.5 px-4 font-semibold text-slate-900">{req.requestDate}</td>
                   <td className="py-3.5 px-4 text-slate-700 font-semibold">{req.leaveType}</td>
                   <td className="py-3.5 px-4 font-mono text-xs text-slate-600">{req.fromDate} to {req.toDate}</td>
                   <td className="py-3.5 px-4 font-bold text-slate-900">{req.days}</td>
-                  <td className="py-3.5 px-4 text-slate-600 truncate max-w-[220px]">{req.remarks}</td>
+                  <td className="py-3.5 px-4 text-slate-600 truncate max-w-[220px]" title={req.remarks}>{req.remarks}</td>
                   <td className="py-3.5 px-4 text-center">
                     <div className="flex items-center justify-center">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500 fill-emerald-100" />
+                      {getStatusIcon(req.status)}
                     </div>
                   </td>
                   <td className="py-3.5 px-4 text-center">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border bg-emerald-50 text-emerald-700 border-emerald-200">
-                      Approved
-                    </span>
+                    {isAdminOrSuperAdmin && req.status === "Pending" && onStatusUpdate ? (
+                      <div className="flex items-center justify-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={() => onStatusUpdate(req.id, "APPROVED")}
+                          className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold shadow-2xs cursor-pointer transition-colors"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => onStatusUpdate(req.id, "REJECTED")}
+                          className="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-[10px] font-bold shadow-2xs cursor-pointer transition-colors"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    ) : (
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${getStatusStyles(req.status)}`}>
+                        {req.status}
+                      </span>
+                    )}
                   </td>
                 </tr>
               ))}

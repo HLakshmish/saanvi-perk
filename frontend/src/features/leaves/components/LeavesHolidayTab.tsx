@@ -1,51 +1,43 @@
-"use client";
-
 import React, { useState, useEffect } from "react";
-import { Search } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
 import { Holiday } from "../types/leaves.types";
 import { getHolidays } from "@/features/organization/api/calendar.api";
-
-const INITIAL_HOLIDAYS: Holiday[] = [
-  { id: "1", name: "Republic Day", startDate: "26-01-2026 Mon", endDate: "26-01-2026 Mon", numberOfHolidays: 1, type: "Holiday" },
-  { id: "2", name: "Ugadi", startDate: "19-03-2026 Thu", endDate: "19-03-2026 Thu", numberOfHolidays: 1, type: "Holiday" },
-  { id: "3", name: "Ramadan", startDate: "21-03-2026 Sat", endDate: "21-03-2026 Sat", numberOfHolidays: 1, type: "Holiday" },
-  { id: "4", name: "May Day", startDate: "01-05-2026 Fri", endDate: "01-05-2026 Fri", numberOfHolidays: 1, type: "Holiday" },
-  { id: "5", name: "Independence Day", startDate: "15-08-2026 Sat", endDate: "15-08-2026 Sat", numberOfHolidays: 1, type: "Holiday" },
-  { id: "6", name: "Shri Krishna Janmashtami", startDate: "05-09-2026 Sat", endDate: "05-09-2026 Sat", numberOfHolidays: 1, type: "Holiday" },
-  { id: "7", name: "Ganesh Chaturthi", startDate: "19-09-2026 Sat", endDate: "19-09-2026 Sat", numberOfHolidays: 1, type: "Holiday" },
-  { id: "8", name: "Gandhi Jayanthi", startDate: "02-10-2026 Fri", endDate: "02-10-2026 Fri", numberOfHolidays: 1, type: "Holiday" },
-  { id: "9", name: "Vijaya Dashami", startDate: "21-10-2026 Wed", endDate: "21-10-2026 Wed", numberOfHolidays: 1, type: "Holiday" },
-  { id: "10", name: "Kannada Rajyothsava", startDate: "01-11-2026 Sun", endDate: "01-11-2026 Sun", numberOfHolidays: 1, type: "Holiday" },
-  { id: "11", name: "Deepavali", startDate: "10-11-2026 Tue", endDate: "10-11-2026 Tue", numberOfHolidays: 1, type: "Holiday" },
-  { id: "12", name: "Naraka Chaturdashi", startDate: "11-11-2026 Wed", endDate: "11-11-2026 Wed", numberOfHolidays: 1, type: "Holiday" },
-];
 
 export const LeavesHolidayTab: React.FC = () => {
   const [selectedYear, setSelectedYear] = useState("2026");
   const [searchTerm, setSearchTerm] = useState("");
   const [holidays, setHolidays] = useState<Holiday[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchRemoteHolidays();
   }, []);
 
   const fetchRemoteHolidays = async () => {
-    const res = await getHolidays();
-    if (res.success && res.data && res.data.length > 0) {
-      const sortedResData = [...res.data].sort(
-        (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
-      );
-      const mapped: Holiday[] = sortedResData.map((h) => ({
-        id: String(h.holidayId),
-        name: h.holidayName,
-        startDate: new Date(h.startDate).toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric", weekday: "short" }),
-        endDate: new Date(h.endDate).toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric", weekday: "short" }),
-        numberOfHolidays: 1,
-        type: h.holidayType === "WEEK_OFF" ? "Week Off" : "Holiday",
-      }));
-      setHolidays(mapped);
-    } else {
+    setIsLoading(true);
+    try {
+      const res = await getHolidays();
+      if (res.success && res.data && res.data.length > 0) {
+        const sortedResData = [...res.data].sort(
+          (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+        );
+        const mapped: Holiday[] = sortedResData.map((h) => ({
+          id: String(h.holidayId),
+          name: h.holidayName,
+          startDate: new Date(h.startDate).toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric", weekday: "short" }),
+          endDate: new Date(h.endDate).toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric", weekday: "short" }),
+          numberOfHolidays: 1,
+          type: h.holidayType === "WEEK_OFF" ? "Week Off" : "Holiday",
+        }));
+        setHolidays(mapped);
+      } else {
+        setHolidays([]);
+      }
+    } catch (e) {
+      console.error(e);
       setHolidays([]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -98,39 +90,46 @@ export const LeavesHolidayTab: React.FC = () => {
 
         {/* Holidays Table */}
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[700px] text-left border-collapse text-xs sm:text-sm text-slate-700">
-            <thead>
-              <tr className="bg-slate-50/80 border-b border-slate-200 font-bold text-slate-900 uppercase text-[11px] tracking-wider">
-                <th className="py-3.5 px-4">Name of the Holiday</th>
-                <th className="py-3.5 px-4">Start Date</th>
-                <th className="py-3.5 px-4">End Date</th>
-                <th className="py-3.5 px-4">No. of Holidays</th>
-                <th className="py-3.5 px-4">Holiday Type</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 bg-white">
-              {filteredHolidays.map((holiday) => (
-                <tr key={holiday.id} className="hover:bg-slate-50/70 transition-colors">
-                  <td className="py-3.5 px-4 font-semibold text-slate-900">{holiday.name}</td>
-                  <td className="py-3.5 px-4 font-mono text-xs text-slate-700">{holiday.startDate}</td>
-                  <td className="py-3.5 px-4 font-mono text-xs text-slate-700">{holiday.endDate}</td>
-                  <td className="py-3.5 px-4 font-bold text-slate-900">{holiday.numberOfHolidays}</td>
-                  <td className="py-3.5 px-4">
-                    <span className="inline-flex items-center px-3 py-0.5 rounded-full text-[10px] font-bold border bg-[#4f39f6]/10 text-[#4f39f6] border-[#4f39f6]/20">
-                      {holiday.type}
-                    </span>
-                  </td>
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-16 text-slate-500 gap-2">
+              <Loader2 className="w-8 h-8 animate-spin text-[#013e37]" />
+              <span className="text-xs font-semibold">Loading holiday schedule...</span>
+            </div>
+          ) : (
+            <table className="w-full min-w-[700px] text-left border-collapse text-xs sm:text-sm text-slate-700">
+              <thead>
+                <tr className="bg-slate-50/80 border-b border-slate-200 font-bold text-slate-900 uppercase text-[11px] tracking-wider">
+                  <th className="py-3.5 px-4">Name of the Holiday</th>
+                  <th className="py-3.5 px-4">Start Date</th>
+                  <th className="py-3.5 px-4">End Date</th>
+                  <th className="py-3.5 px-4">No. of Holidays</th>
+                  <th className="py-3.5 px-4">Holiday Type</th>
                 </tr>
-              ))}
-              {filteredHolidays.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="py-8 text-center text-slate-400 font-semibold">
-                    No holidays match your search criteria.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100 bg-white">
+                {filteredHolidays.map((holiday) => (
+                  <tr key={holiday.id} className="hover:bg-slate-50/70 transition-colors">
+                    <td className="py-3.5 px-4 font-semibold text-slate-900">{holiday.name}</td>
+                    <td className="py-3.5 px-4 font-mono text-xs text-slate-700">{holiday.startDate}</td>
+                    <td className="py-3.5 px-4 font-mono text-xs text-slate-700">{holiday.endDate}</td>
+                    <td className="py-3.5 px-4 font-bold text-slate-900">{holiday.numberOfHolidays}</td>
+                    <td className="py-3.5 px-4">
+                      <span className="inline-flex items-center px-3 py-0.5 rounded-full text-[10px] font-bold border bg-[#4f39f6]/10 text-[#4f39f6] border-[#4f39f6]/20">
+                        {holiday.type}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+                {filteredHolidays.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="py-8 text-center text-slate-400 font-semibold">
+                      No holidays match your search criteria.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
     </div>
