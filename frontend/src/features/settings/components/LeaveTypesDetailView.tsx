@@ -43,6 +43,7 @@ export const LeaveTypesDetailView: React.FC<LeaveTypesDetailViewProps> = ({ onBa
   const [formName, setFormName] = useState("");
   const [formCode, setFormCode] = useState("");
   const [formRemarks, setFormRemarks] = useState("");
+  const [formStatus, setFormStatus] = useState(true);
   
   const [saveSuccessMsg, setSaveSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
@@ -80,6 +81,7 @@ export const LeaveTypesDetailView: React.FC<LeaveTypesDetailViewProps> = ({ onBa
     setFormName(leave.leaveName || "");
     setFormCode(leave.leaveCode || "");
     setFormRemarks(leave.remarks || "");
+    setFormStatus(leave.status !== undefined ? leave.status : true);
   };
 
   const handleSelectLeave = (leave: LeaveType) => {
@@ -97,6 +99,7 @@ export const LeaveTypesDetailView: React.FC<LeaveTypesDetailViewProps> = ({ onBa
     setFormName("");
     setFormCode("");
     setFormRemarks("");
+    setFormStatus(true);
     setErrorMsg("");
   };
 
@@ -130,7 +133,7 @@ export const LeaveTypesDetailView: React.FC<LeaveTypesDetailViewProps> = ({ onBa
       leaveName: formName.trim(),
       leaveCode: formCode.trim(),
       remarks: formRemarks.trim(),
-      status: true,
+      status: formStatus,
     };
 
     try {
@@ -334,6 +337,20 @@ export const LeaveTypesDetailView: React.FC<LeaveTypesDetailViewProps> = ({ onBa
                       {selectedLeave.remarks || "-"}
                     </p>
                   </div>
+
+                  {/* Status */}
+                  <div className="space-y-1">
+                    <span className="text-slate-400 font-bold uppercase text-[10px] tracking-wider block">
+                      Status
+                    </span>
+                    <p className="font-semibold text-sm">
+                      {selectedLeave.status ? (
+                        <span className="text-emerald-700 bg-emerald-50 border border-emerald-200/50 px-2 py-0.5 rounded-md text-[10px]">Active</span>
+                      ) : (
+                        <span className="text-rose-700 bg-rose-50 border border-rose-200/50 px-2 py-0.5 rounded-md text-[10px]">Inactive</span>
+                      )}
+                    </p>
+                  </div>
                 </div>
               </div>
             ) : (
@@ -418,6 +435,20 @@ export const LeaveTypesDetailView: React.FC<LeaveTypesDetailViewProps> = ({ onBa
                     placeholder="Enter description or rules regarding this leave type..."
                     className="w-full border border-slate-300 rounded-lg px-3 py-2 font-semibold text-slate-800 focus:outline-none focus:border-[#013e37]"
                   />
+                </div>
+
+                {/* Status Toggle Checkbox */}
+                <div className="space-y-2 md:col-span-2 flex items-center gap-2 pt-2">
+                  <input
+                    type="checkbox"
+                    id="leaveTypeStatus"
+                    checked={formStatus}
+                    onChange={(e) => setFormStatus(e.target.checked)}
+                    className="w-4 h-4 rounded-sm text-[#013e37] focus:ring-[#013e37]"
+                  />
+                  <label htmlFor="leaveTypeStatus" className="text-slate-700 font-bold uppercase text-[10px] tracking-wider cursor-pointer">
+                    Active / Status
+                  </label>
                 </div>
               </div>
             </form>

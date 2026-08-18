@@ -6,15 +6,64 @@ interface LeavesSummaryTabProps {
   onOpenCompOffModal: () => void;
   onOpenApplyLeaveModal: () => void;
   requests: LeaveRequest[];
+  isAdminOrSuperAdmin?: boolean;
+  onStatusUpdate?: (id: string, status: "APPROVED" | "REJECTED") => Promise<boolean>;
+  onRowClick?: (id: string) => void;
+  accumulatedSick?: number;
+  accumulatedComp?: number;
+  accumulatedEarned?: number;
+  accumulatedLop?: number;
 }
 
 export const LeavesSummaryTab: React.FC<LeavesSummaryTabProps> = ({
   onOpenCompOffModal,
   onOpenApplyLeaveModal,
   requests,
+  isAdminOrSuperAdmin = false,
+  onStatusUpdate,
+  onRowClick,
+  accumulatedSick = 12.00,
+  accumulatedComp = 0.00,
+  accumulatedEarned = 0.00,
+  accumulatedLop = 0.00,
 }) => {
+  // 1. Dynamic Balance Calculations
+  const totalAccumulated = accumulatedSick + accumulatedComp + accumulatedEarned + accumulatedLop;
+
+  let availedSick = 0;
+  let availedComp = 0;
+  let availedEarned = 0;
+  let availedLop = 0;
+
+  requests.forEach((req) => {
+    if (req.status === "Approved") {
+      const type = req.leaveType.toLowerCase();
+      if (type.includes("sick") || type.includes("casual")) {
+        availedSick += req.days;
+      } else if (type.includes("comp")) {
+        availedComp += req.days;
+      } else if (type.includes("earned")) {
+        availedEarned += req.days;
+      } else if (type.includes("loss") || type.includes("lop")) {
+        availedLop += req.days;
+      }
+    }
+  });
+
+  const totalAvailed = availedSick + availedComp + availedEarned + availedLop;
+
+  const balanceSick = Math.max(0, accumulatedSick - availedSick);
+  const balanceComp = Math.max(0, accumulatedComp - availedComp);
+  const balanceEarned = Math.max(0, accumulatedEarned - availedEarned);
+  const balanceLop = Math.max(0, accumulatedLop - availedLop);
+  const totalBalance = balanceSick + balanceComp + balanceEarned + balanceLop;
+
+  // Chart percentage helpers
+  const availedPercentage = totalAccumulated > 0 ? Math.min(100, (totalAvailed / totalAccumulated) * 100) : 0;
+  const balancePercentage = totalAccumulated > 0 ? Math.min(100, (totalBalance / totalAccumulated) * 100) : 0;
+
   // SVG Donut Chart helper component
-  const DonutChart = ({ percentage = 100 }: { percentage?: number }) => {
+  const DonutChart = ({ percentage = 100, color = "#a855f7" }: { percentage?: number; color?: string }) => {
     const size = 120;
     const strokeWidth = 14;
     const center = size / 2;
@@ -37,7 +86,7 @@ export const LeavesSummaryTab: React.FC<LeavesSummaryTabProps> = ({
             cx={center}
             cy={center}
             r={radius}
-            stroke="#a855f7"
+            stroke={color}
             strokeWidth={strokeWidth}
             fill="transparent"
             strokeDasharray={circumference}
@@ -48,6 +97,21 @@ export const LeavesSummaryTab: React.FC<LeavesSummaryTabProps> = ({
         </svg>
       </div>
     );
+  };
+
+  const getStatusStyles = (status: "Approved" | "Pending" | "Rejected" | "Cancelled") => {
+    switch (status) {
+      case "Approved":
+        return "bg-emerald-50 text-emerald-700 border-emerald-200";
+      case "Pending":
+        return "bg-amber-50 text-amber-700 border-amber-200";
+      case "Rejected":
+        return "bg-rose-50 text-rose-700 border-rose-200";
+      case "Cancelled":
+        return "bg-slate-100 text-slate-600 border-slate-200";
+      default:
+        return "bg-slate-50 text-slate-700 border-slate-200";
+    }
   };
 
   return (
@@ -79,136 +143,167 @@ export const LeavesSummaryTab: React.FC<LeavesSummaryTabProps> = ({
       </div>
 
       {/* 3 Donut Progress Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        {/* Card 1: Total Leaves Accumulated */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs hover:shadow-xs transition-shadow">
-          <h3 className="text-xs font-bold text-slate-900 tracking-wide">
-            Total Leaves Accumulated: <span className="text-slate-900 font-extrabold text-sm">12.00</span>
-          </h3>
-          <DonutChart percentage={100} />
-          {/* Legend */}
-          <div className="grid grid-cols-2 gap-y-2 gap-x-1 pt-2 text-[11px] font-bold text-slate-700">
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-teal-500 shrink-0" />
-              <span className="truncate">C.COMPOFF</span>
-              <span className="ml-auto font-extrabold text-slate-900">0</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0" />
-              <span className="truncate">Earned Leave</span>
-              <span className="ml-auto font-extrabold text-slate-900">0</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-rose-400 shrink-0" />
-              <span className="truncate">Loss of Pay</span>
-              <span className="ml-auto font-extrabold text-slate-900">0</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-purple-500 shrink-0" />
-              <span className="truncate">Sick Leave / Casu...</span>
-              <span className="ml-auto font-extrabold text-slate-900">12</span>
+      {!isAdminOrSuperAdmin && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {/* Card 1: Total Leaves Accumulated */}
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs hover:shadow-xs transition-shadow">
+            <h3 className="text-xs font-bold text-slate-900 tracking-wide">
+              Total Leaves Accumulated: <span className="text-slate-900 font-extrabold text-sm">{totalAccumulated.toFixed(2)}</span>
+            </h3>
+            <DonutChart percentage={100} color="#a855f7" />
+            {/* Legend */}
+            <div className="grid grid-cols-2 gap-y-2 gap-x-1 pt-2 text-[11px] font-bold text-slate-700">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-teal-500 shrink-0" />
+                <span className="truncate">C.COMPOFF</span>
+                <span className="ml-auto font-extrabold text-slate-900">{accumulatedComp}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0" />
+                <span className="truncate">Earned Leave</span>
+                <span className="ml-auto font-extrabold text-slate-900">{accumulatedEarned}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-rose-400 shrink-0" />
+                <span className="truncate">Loss of Pay</span>
+                <span className="ml-auto font-extrabold text-slate-900">{accumulatedLop}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-purple-500 shrink-0" />
+                <span className="truncate">Sick Leave / Casu...</span>
+                <span className="ml-auto font-extrabold text-slate-900">{accumulatedSick}</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Card 2: Total Leaves Availed */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs hover:shadow-xs transition-shadow">
-          <h3 className="text-xs font-bold text-slate-900 tracking-wide">
-            Total Leaves Availed: <span className="text-slate-900 font-extrabold text-sm">3.00</span>
-          </h3>
-          <DonutChart percentage={25} />
-          {/* Legend */}
-          <div className="grid grid-cols-2 gap-y-2 gap-x-1 pt-2 text-[11px] font-bold text-slate-700">
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-teal-500 shrink-0" />
-              <span className="truncate">C.COMPOFF</span>
-              <span className="ml-auto font-extrabold text-slate-900">0</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0" />
-              <span className="truncate">Earned Leave</span>
-              <span className="ml-auto font-extrabold text-slate-900">0</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-rose-400 shrink-0" />
-              <span className="truncate">Loss of Pay</span>
-              <span className="ml-auto font-extrabold text-slate-900">0</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-purple-500 shrink-0" />
-              <span className="truncate">Sick Leave / Casu...</span>
-              <span className="ml-auto font-extrabold text-slate-900">3</span>
+          {/* Card 2: Total Leaves Availed */}
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs hover:shadow-xs transition-shadow">
+            <h3 className="text-xs font-bold text-slate-900 tracking-wide">
+              Total Leaves Availed: <span className="text-slate-900 font-extrabold text-sm">{totalAvailed.toFixed(2)}</span>
+            </h3>
+            <DonutChart percentage={availedPercentage} color="#f43f5e" />
+            {/* Legend */}
+            <div className="grid grid-cols-2 gap-y-2 gap-x-1 pt-2 text-[11px] font-bold text-slate-700">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-teal-500 shrink-0" />
+                <span className="truncate">C.COMPOFF</span>
+                <span className="ml-auto font-extrabold text-slate-900">{availedComp}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0" />
+                <span className="truncate">Earned Leave</span>
+                <span className="ml-auto font-extrabold text-slate-900">{availedEarned}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-rose-400 shrink-0" />
+                <span className="truncate">Loss of Pay</span>
+                <span className="ml-auto font-extrabold text-slate-900">{availedLop}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-purple-500 shrink-0" />
+                <span className="truncate">Sick Leave / Casu...</span>
+                <span className="ml-auto font-extrabold text-slate-900">{availedSick}</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Card 3: Total Leaves Balance */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs hover:shadow-xs transition-shadow">
-          <h3 className="text-xs font-bold text-slate-900 tracking-wide">
-            Total Leaves Balance: <span className="text-slate-900 font-extrabold text-sm">9.00</span>
-          </h3>
-          <DonutChart percentage={75} />
-          {/* Legend */}
-          <div className="grid grid-cols-2 gap-y-2 gap-x-1 pt-2 text-[11px] font-bold text-slate-700">
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-teal-500 shrink-0" />
-              <span className="truncate">C.COMPOFF</span>
-              <span className="ml-auto font-extrabold text-slate-900">0</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0" />
-              <span className="truncate">Earned Leave</span>
-              <span className="ml-auto font-extrabold text-slate-900">0</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-rose-400 shrink-0" />
-              <span className="truncate">Loss of Pay</span>
-              <span className="ml-auto font-extrabold text-slate-900">0</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-purple-500 shrink-0" />
-              <span className="truncate">Sick Leave / Casu...</span>
-              <span className="ml-auto font-extrabold text-slate-900">9</span>
+          {/* Card 3: Total Leaves Balance */}
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs hover:shadow-xs transition-shadow">
+            <h3 className="text-xs font-bold text-slate-900 tracking-wide">
+              Total Leaves Balance: <span className="text-slate-900 font-extrabold text-sm">{totalBalance.toFixed(2)}</span>
+            </h3>
+            <DonutChart percentage={balancePercentage} color="#10b981" />
+            {/* Legend */}
+            <div className="grid grid-cols-2 gap-y-2 gap-x-1 pt-2 text-[11px] font-bold text-slate-700">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-teal-500 shrink-0" />
+                <span className="truncate">C.COMPOFF</span>
+                <span className="ml-auto font-extrabold text-slate-900">{balanceComp}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0" />
+                <span className="truncate">Earned Leave</span>
+                <span className="ml-auto font-extrabold text-slate-900">{balanceEarned}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-rose-400 shrink-0" />
+                <span className="truncate">Loss of Pay</span>
+                <span className="ml-auto font-extrabold text-slate-900">{balanceLop}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-purple-500 shrink-0" />
+                <span className="truncate">Sick Leave / Casu...</span>
+                <span className="ml-auto font-extrabold text-slate-900">{balanceSick}</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* My Requests Section */}
       <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs space-y-4">
-        <h3 className="text-sm font-bold text-slate-900">My Requests</h3>
+        <h3 className="text-sm font-bold text-slate-900">{isAdminOrSuperAdmin ? "Employee Requests" : "My Requests"}</h3>
 
         <div className="overflow-x-auto">
           <table className="w-full min-w-[700px] text-left border-collapse text-xs sm:text-sm text-slate-700">
             <thead>
               <tr className="bg-slate-50/80 border-b border-slate-200 font-bold text-slate-900">
-                <th className="py-3 px-4">Request Date</th>
-                <th className="py-3 px-4">Leave Type</th>
-                <th className="py-3 px-4">From - To</th>
-                <th className="py-3 px-4">Days</th>
-                <th className="py-3 px-4">Remarks</th>
-                <th className="py-3 px-4">Status</th>
-                <th className="py-3 px-4 w-10"></th>
+                <th className="py-3.5 px-4">Request Date</th>
+                <th className="py-3.5 px-4">Leave Type</th>
+                <th className="py-3.5 px-4">From - To</th>
+                <th className="py-3.5 px-4">Days</th>
+                <th className="py-3.5 px-4">Remarks</th>
+                <th className="py-3.5 px-4">Status</th>
+                <th className="py-3.5 px-4 w-10"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
-              {requests.map((req) => (
-                <tr key={req.id} className="hover:bg-slate-50/70 transition-colors cursor-pointer group">
-                  <td className="py-3.5 px-4 font-semibold text-slate-900">{req.requestDate}</td>
-                  <td className="py-3.5 px-4 text-slate-700 font-medium">{req.leaveType}</td>
-                  <td className="py-3.5 px-4 font-mono text-xs text-slate-600">{req.fromDate} to {req.toDate}</td>
-                  <td className="py-3.5 px-4 font-bold text-slate-900">{req.days}</td>
-                  <td className="py-3.5 px-4 text-slate-600 truncate max-w-[220px]">{req.remarks}</td>
-                  <td className="py-3.5 px-4">
-                    <span className="inline-flex items-center px-3 py-0.5 rounded-full text-[10px] font-bold border bg-emerald-50 text-emerald-700 border-emerald-200">
-                      {req.status}
-                    </span>
-                  </td>
-                  <td className="py-3.5 px-4 text-right">
-                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all" />
+              {requests.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-12 text-center text-slate-400 font-semibold">
+                    No leave requests found. Click "Apply Leave" to submit your first request.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                requests.map((req) => (
+                  <tr
+                    key={req.id}
+                    onClick={() => onRowClick?.(req.id)}
+                    className="hover:bg-slate-50/70 transition-colors cursor-pointer group"
+                  >
+                    <td className="py-3.5 px-4 font-semibold text-slate-900">{req.requestDate}</td>
+                    <td className="py-3.5 px-4 text-slate-700 font-medium">{req.leaveType}</td>
+                    <td className="py-3.5 px-4 font-mono text-xs text-slate-600">{req.fromDate} to {req.toDate}</td>
+                    <td className="py-3.5 px-4 font-bold text-slate-900">{req.days}</td>
+                    <td className="py-3.5 px-4 text-slate-600 truncate max-w-[220px]" title={req.remarks}>{req.remarks}</td>
+                    <td className="py-3.5 px-4">
+                      {isAdminOrSuperAdmin && req.status === "Pending" && onStatusUpdate ? (
+                        <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            onClick={() => onStatusUpdate(req.id, "APPROVED")}
+                            className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold shadow-2xs cursor-pointer transition-colors"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => onStatusUpdate(req.id, "REJECTED")}
+                            className="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-[10px] font-bold shadow-2xs cursor-pointer transition-colors"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      ) : (
+                        <span className={`inline-flex items-center px-3 py-0.5 rounded-full text-[10px] font-bold border ${getStatusStyles(req.status)}`}>
+                          {req.status}
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-3.5 px-4 text-right">
+                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all" />
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
