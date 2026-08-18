@@ -61,6 +61,7 @@ app.register(require("./Leave/leaveRequest/leaveRequest.route"), { prefix: "/api
 app.register(require("./Leave/leavePolicies/leavePolicy.route"), { prefix: "/api/leave-policies" });
 app.register(require("./Leave/leavePolicyRules/leavePolicyRule.route"), { prefix: "/api/leave-policy-rules" });
 app.register(require("./Leave/leavePolicyAccumulations/leavePolicyAccumulation.route"), { prefix: "/api/leave-policy-accumulations" });
+app.register(require("./Leave/leave_accumulations/leave_accumulation.route"), { prefix: "/api/leave-accumulations" });
 app.register(require("./Organisation/assets/asset.route"), { prefix: "/api/assets" });
 app.register(require("./Reimbursement/reimbursement.route"), { prefix: "/api/reimbursements" });
 
