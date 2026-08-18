@@ -60,7 +60,9 @@ model CompanyDetails {
   leaveTypes          LeaveType[]
   leaveRequests       LeaveRequest[]
   leavePolicies       LeavePolicy[]
-  leaveAccumulations  LeaveAccumulation[]
+  leaveAccumulations       LeaveAccumulation[]
+  leaveYearEndProcesses    LeaveYearEndProcess[]
+  compOffPolicies          CompOffPolicy[]
   assets              AssetDetails[]
   reimbursementClaims ReimbursementClaim[]
 
@@ -251,6 +253,10 @@ model User {
   leaveRequests       LeaveRequest[]       @relation("LeaveRequestUser")
   approvedLeaves      LeaveRequest[]       @relation("LeaveRequestApprovedBy")
   leaveAccumulations  LeaveAccumulation[]
+  leaveYearEndProcesses LeaveYearEndProcess[] @relation("YearEndProcessUser")
+  processedYearEnds     LeaveYearEndProcess[] @relation("YearEndProcessedBy")
+  createdCompOffPolicies CompOffPolicy[]      @relation("CompOffPolicyCreatedBy")
+  updatedCompOffPolicies CompOffPolicy[]      @relation("CompOffPolicyUpdatedBy")
 
   assetAssignments AssetAssignments[]
   assetHistory     AssetHistory[]
@@ -765,6 +771,8 @@ model LeaveType {
   leavePolicyRules LeavePolicyRule[]
   leavePolicyAccumulations LeavePolicyAccumulation[]
   leaveAccumulations       LeaveAccumulation[]
+  leaveYearEndProcesses    LeaveYearEndProcess[]
+  compOffPolicies          CompOffPolicy[]
 
   @@unique([companyId, leaveCode])
   @@map("leave_types")
@@ -1003,6 +1011,7 @@ model LeavePolicy {
   leavePolicyRules        LeavePolicyRule[]
   leavePolicyAccumulations LeavePolicyAccumulation[]
   leaveAccumulations       LeaveAccumulation[]
+  leaveYearEndProcesses    LeaveYearEndProcess[]
 
   @@unique([companyId, policyCode], name: "uq_leave_policy_code")
   @@map("leave_policies")
@@ -1122,4 +1131,99 @@ model LeaveAccumulation {
   leavePolicy LeavePolicy?   @relation(fields: [leavePolicyId], references: [leavePolicyId], onDelete: Cascade)
 
   @@map("leave_accumulations")
+}
+
+// ==========================
+// Leave Year End Process
+// ==========================
+model LeaveYearEndProcess {
+  processId          Int @id @default(autoincrement()) @map("process_id")
+  companyId          Int @map("company_id")
+  userId             Int @map("user_id")
+  leaveTypeId        Int @map("leave_type_id")
+  leavePolicyId      Int? @map("leave_policy_id")
+
+  year               Int
+  closingBalance     Decimal  @map("closing_balance") @db.Decimal(8, 2)
+  carryForwardLeaves Decimal  @map("carry_forward_leaves") @db.Decimal(8, 2)
+  encashedLeaves     Decimal  @map("encashed_leaves") @db.Decimal(8, 2)
+  lapsedLeaves       Decimal  @map("lapsed_leaves") @db.Decimal(8, 2)
+  encashmentAmount   Decimal? @map("encashment_amount") @db.Decimal(12, 2)
+
+  processedBy        Int?     @map("processed_by")
+  processDate        DateTime @default(now()) @map("process_date")
+  
+  remarks            String?  @db.Text
+  status             Boolean  @default(true)
+  
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @default(now()) @updatedAt @map("updated_at")
+
+  company       CompanyDetails @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
+  user          User           @relation("YearEndProcessUser", fields: [userId], references: [userId], onDelete: Cascade)
+  leaveType     LeaveType      @relation(fields: [leaveTypeId], references: [leaveTypeId], onDelete: Cascade)
+  leavePolicy   LeavePolicy?   @relation(fields: [leavePolicyId], references: [leavePolicyId], onDelete: Cascade)
+  processedUser User?          @relation("YearEndProcessedBy", fields: [processedBy], references: [userId])
+
+  @@map("leave_year_end_processes")
+}
+
+// ==========================
+// Comp Off Policy
+// ==========================
+model CompOffPolicy {
+  id                   Int @id @default(autoincrement()) @map("id")
+  companyId            Int @map("company_id")
+  policyName           String @map("policy_name") @db.VarChar(150)
+  leaveTypeId          Int @map("leave_type_id")
+
+  // Based on day mark
+  weekOffWorked        Boolean @default(false) @map("week_off_worked")
+  holidayWorked        Boolean @default(false) @map("holiday_worked")
+
+  // Based on hours
+  otHoursEnabled       Boolean @default(false) @map("ot_hours_enabled")
+  otFullDayHours       Int? @default(0) @map("ot_full_day_hours")
+  otFullDayMinutes     Int? @default(0) @map("ot_full_day_minutes")
+  otHalfDayHours       Int? @default(0) @map("ot_half_day_hours")
+  otHalfDayMinutes     Int? @default(0) @map("ot_half_day_minutes")
+
+  regularHoursEnabled  Boolean @default(false) @map("regular_hours_enabled")
+  regularFullDayHours  Int? @default(0) @map("regular_full_day_hours")
+  regularFullDayMinutes Int? @default(0) @map("regular_full_day_minutes")
+  regularHalfDayHours  Int? @default(0) @map("regular_half_day_hours")
+  regularHalfDayMinutes Int? @default(0) @map("regular_half_day_minutes")
+
+  // Availability period
+  availabilityType     String @map("availability_type") @db.VarChar(30)
+  availabilityDays     Int? @map("availability_days")
+
+  // Accumulation
+  accumulationType     String @map("accumulation_type") @db.VarChar(30)
+
+  // Employee request
+  requestRequired      Boolean @default(false) @map("request_required")
+
+  // Request deadline
+  requestDeadlineType  String? @map("request_deadline_type") @db.VarChar(30)
+  requestWithinDays    Int? @map("request_within_days")
+
+  // Request limits
+  maxRequestsPerMonth  Int? @map("max_requests_per_month")
+  maxRequestsPerYear   Int? @map("max_requests_per_year")
+
+  status               Boolean @default(true)
+
+  createdBy            Int? @map("created_by")
+  updatedBy            Int? @map("updated_by")
+
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @default(now()) @updatedAt @map("updated_at")
+
+  company     CompanyDetails @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
+  leaveType   LeaveType      @relation(fields: [leaveTypeId], references: [leaveTypeId], onDelete: Cascade)
+  createdUser User?          @relation("CompOffPolicyCreatedBy", fields: [createdBy], references: [userId])
+  updatedUser User?          @relation("CompOffPolicyUpdatedBy", fields: [updatedBy], references: [userId])
+
+  @@map("comp_off_policies")
 }

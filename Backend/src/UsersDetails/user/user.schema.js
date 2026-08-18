@@ -21,12 +21,15 @@ const userResponseProperties = {
     profilePic: { type: 'string', nullable: true },
     createdAt: { type: 'string', format: 'date-time' },
     updatedAt: { type: 'string', format: 'date-time' },
-    role: {
-        type: 'object',
+    roles: {
+        type: 'array',
         nullable: true,
-        properties: {
-            roleId: { type: 'number' },
-            roleName: { type: 'string' }
+        items: {
+            type: 'object',
+            properties: {
+                roleId: { type: 'number' },
+                roleName: { type: 'string' }
+            }
         }
     },
     department: {
