@@ -28,10 +28,12 @@ class UserController {
             
             const { password, userRoles, ...userWithoutPassword } = user;
             if (userRoles && userRoles.length > 0) {
-                userWithoutPassword.role = {
-                    roleId: userRoles[0].role.roleId,
-                    roleName: userRoles[0].role.roleName
-                };
+                userWithoutPassword.roles = userRoles.map(ur => ({
+                    roleId: ur.role.roleId,
+                    roleName: ur.role.roleName
+                }));
+            } else {
+                userWithoutPassword.roles = [];
             }
             
             reply.code(201).send({ success: true, message: "User created successfully", data: userWithoutPassword });
@@ -54,10 +56,12 @@ class UserController {
             if (user) {
                 delete user.password;
                 if (user.userRoles && user.userRoles.length > 0) {
-                    user.role = {
-                        roleId: user.userRoles[0].role.roleId,
-                        roleName: user.userRoles[0].role.roleName
-                    };
+                    user.roles = user.userRoles.map(ur => ({
+                        roleId: ur.role.roleId,
+                        roleName: ur.role.roleName
+                    }));
+                } else {
+                    user.roles = [];
                 }
                 delete user.userRoles;
             }
@@ -80,10 +84,12 @@ class UserController {
             const formattedUsers = users.map(u => {
                 const { password, userRoles, ...rest } = u;
                 if (userRoles && userRoles.length > 0) {
-                    rest.role = {
-                        roleId: userRoles[0].role.roleId,
-                        roleName: userRoles[0].role.roleName
-                    };
+                    rest.roles = userRoles.map(ur => ({
+                        roleId: ur.role.roleId,
+                        roleName: ur.role.roleName
+                    }));
+                } else {
+                    rest.roles = [];
                 }
                 return rest;
             });
@@ -118,10 +124,12 @@ class UserController {
             const user = await userService.updateUser(Number(id), targetCompanyId, data);
             const { password, userRoles, ...userWithoutPassword } = user;
             if (userRoles && userRoles.length > 0) {
-                userWithoutPassword.role = {
-                    roleId: userRoles[0].role.roleId,
-                    roleName: userRoles[0].role.roleName
-                };
+                userWithoutPassword.roles = userRoles.map(ur => ({
+                    roleId: ur.role.roleId,
+                    roleName: ur.role.roleName
+                }));
+            } else {
+                userWithoutPassword.roles = [];
             }
 
             reply.code(200).send({ success: true, message: "User updated successfully", data: userWithoutPassword });
