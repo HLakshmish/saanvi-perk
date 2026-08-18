@@ -438,13 +438,13 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
   };
 
   const handleDocumentAdd = () => {
-    if (!formData.docNumber) {
-      setErrorMsg("Please enter the document identifier number.");
+    if (!formData.docFile) {
+      setErrorMsg("Please select a document file to upload.");
       return;
     }
     const newDoc = {
       type: formData.docType,
-      number: formData.docNumber,
+      number: "",
       fileName: formData.docFileName || `${formData.docType.toLowerCase()}_copy.pdf`,
       expiry: formData.docExpiryDate,
       file: formData.docFile,
@@ -452,7 +452,6 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
     setFormData((prev) => ({
       ...prev,
       uploadedDocs: [...prev.uploadedDocs, newDoc],
-      docNumber: "",
       docExpiryDate: "",
       docFile: null,
       docFileName: "",
@@ -1759,7 +1758,7 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
               {/* Upload Input form */}
               <div className="space-y-4 p-4 border border-slate-200 rounded-xl bg-slate-50/50">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="flex flex-col gap-1.5 text-left">
+                  <div className="flex flex-col gap-1.5 text-left sm:col-span-3">
                     <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Document Type</label>
                     <select
                       className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none"
@@ -1772,15 +1771,6 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
                       <option value="Degree Certificate">Graduation Degree</option>
                       <option value="Relieving Letter">Relieving Letter</option>
                     </select>
-                  </div>
-
-                  <div className="sm:col-span-2">
-                    <Input
-                      label="Document Code/Number *"
-                      placeholder="Enter document identifier"
-                      value={formData.docNumber}
-                      onChange={(e) => handleChange("docNumber", e.target.value)}
-                    />
                   </div>
                 </div>
 
@@ -1843,7 +1833,7 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
                           </div>
                           <div>
                             <span className="text-xs font-bold text-slate-800">{doc.type}</span>
-                            <span className="text-[10px] text-slate-400 block">{doc.fileName} • ID: {doc.number}</span>
+                            <span className="text-[10px] text-slate-450 block">{doc.fileName}</span>
                           </div>
                         </div>
                         <button
