@@ -60,6 +60,7 @@ model CompanyDetails {
   leaveTypes          LeaveType[]
   leaveRequests       LeaveRequest[]
   leavePolicies       LeavePolicy[]
+  leaveAccumulations  LeaveAccumulation[]
   assets              AssetDetails[]
   reimbursementClaims ReimbursementClaim[]
 
@@ -249,6 +250,7 @@ model User {
   createdLeaveTypes   LeaveType[]          @relation("LeaveTypeCreatedBy")
   leaveRequests       LeaveRequest[]       @relation("LeaveRequestUser")
   approvedLeaves      LeaveRequest[]       @relation("LeaveRequestApprovedBy")
+  leaveAccumulations  LeaveAccumulation[]
 
   assetAssignments AssetAssignments[]
   assetHistory     AssetHistory[]
@@ -762,6 +764,7 @@ model LeaveType {
   leaveRequests LeaveRequest[]
   leavePolicyRules LeavePolicyRule[]
   leavePolicyAccumulations LeavePolicyAccumulation[]
+  leaveAccumulations       LeaveAccumulation[]
 
   @@unique([companyId, leaveCode])
   @@map("leave_types")
@@ -999,6 +1002,7 @@ model LeavePolicy {
   company                 CompanyDetails            @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
   leavePolicyRules        LeavePolicyRule[]
   leavePolicyAccumulations LeavePolicyAccumulation[]
+  leaveAccumulations       LeaveAccumulation[]
 
   @@unique([companyId, policyCode], name: "uq_leave_policy_code")
   @@map("leave_policies")
@@ -1083,4 +1087,39 @@ model LeavePolicyAccumulation {
   leaveType   LeaveType   @relation(fields: [leaveTypeId], references: [leaveTypeId], onDelete: Cascade)
 
   @@map("leave_policy_accumulations")
+}
+
+// ==========================
+// Leave Accumulation
+// ==========================
+model LeaveAccumulation {
+  leaveAccumulationId Int @id @default(autoincrement()) @map("leave_accumulation_id")
+  companyId           Int @map("company_id")
+  userId              Int @map("user_id")
+  leaveTypeId         Int @map("leave_type_id")
+  leavePolicyId       Int? @map("leave_policy_id")
+
+  accumulationDate       DateTime @map("accumulation_date") @db.Date
+  numberOfLeaves         Decimal  @map("number_of_leaves") @db.Decimal(8, 2)
+  
+  isOpeningBalance       Boolean  @default(false) @map("is_opening_balance")
+  
+  accumulationPeriodFrom DateTime @map("accumulation_period_from") @db.Date
+  accumulationPeriodTo   DateTime @map("accumulation_period_to") @db.Date
+  
+  availabilityPeriodFrom DateTime @map("availability_period_from") @db.Date
+  availabilityPeriodTo   DateTime @map("availability_period_to") @db.Date
+  
+  note                   String?  @db.Text
+  status                 Boolean  @default(true)
+  
+  createdAt              DateTime @default(now()) @map("created_at")
+  updatedAt              DateTime @default(now()) @updatedAt @map("updated_at")
+
+  company     CompanyDetails @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
+  user        User           @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  leaveType   LeaveType      @relation(fields: [leaveTypeId], references: [leaveTypeId], onDelete: Cascade)
+  leavePolicy LeavePolicy?   @relation(fields: [leavePolicyId], references: [leavePolicyId], onDelete: Cascade)
+
+  @@map("leave_accumulations")
 }
