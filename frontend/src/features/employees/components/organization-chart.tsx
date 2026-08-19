@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Employee } from "../types/employees.types";
 import { EmployeeCard } from "./employee-card";
 import { Search, Loader2, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { getCompanySuperAdmin } from "../api/employees.api";
 import { cn } from "@/lib/utils";
 
@@ -282,11 +283,34 @@ export const OrganizationChart: React.FC<OrganizationChartProps> = ({
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-slate-200/80 shadow-xs space-y-3">
-        <Loader2 className="w-8 h-8 text-brand-primary animate-spin" />
-        <span className="text-slate-500 text-xs font-bold">
-          Loading organizational hierarchy...
-        </span>
+      <div className="w-full bg-white rounded-3xl border border-slate-200/80 shadow-xs p-8 flex flex-col items-center space-y-8 animate-fade-in">
+        {/* Root Node Skeleton */}
+        <div className="w-64 p-4 rounded-2xl border border-slate-200/80 bg-slate-50 flex items-center gap-3">
+          <Skeleton className="w-12 h-12 rounded-xl shrink-0" />
+          <div className="space-y-1.5 w-full">
+            <Skeleton className="h-4 w-28" />
+            <Skeleton className="h-3 w-20" />
+          </div>
+        </div>
+
+        {/* Tree Branch Line */}
+        <div className="w-0.5 h-8 bg-slate-200" />
+
+        {/* Child Nodes Skeleton */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 w-full max-w-4xl">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="p-4 rounded-2xl border border-slate-200/80 bg-white shadow-2xs flex items-center gap-3"
+            >
+              <Skeleton className="w-10 h-10 rounded-xl shrink-0" />
+              <div className="space-y-1.5 w-full">
+                <Skeleton className="h-3.5 w-24" />
+                <Skeleton className="h-2.5 w-16" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

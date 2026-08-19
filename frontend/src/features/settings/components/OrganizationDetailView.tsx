@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { ChevronRight, Edit3, Upload, Check, Loader2, Search, ArrowLeft } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Company } from "../../company/types/company.types";
 import { getAllCompanies, updateCompany } from "../../company/api/company.api";
 import { fetchLocations, updateLocation } from "../api/settings.api";
@@ -276,9 +277,10 @@ export const OrganizationDetailView: React.FC<OrganizationDetailViewProps> = ({ 
           {/* List Content */}
           <div className="space-y-1.5 max-h-[350px] overflow-y-auto">
             {isLoadingList ? (
-              <div className="flex items-center justify-center py-8 text-xs font-bold text-slate-500 gap-1.5">
-                <Loader2 className="w-4 h-4 animate-spin text-brand-primary" />
-                <span>Loading...</span>
+              <div className="space-y-2 p-1">
+                {[1, 2, 3, 4].map((i) => (
+                  <Skeleton key={i} className="h-10 w-full rounded-xl" />
+                ))}
               </div>
             ) : filteredCompanies.length === 0 ? (
               <p className="text-xs text-slate-400 font-semibold text-center py-6">
@@ -310,10 +312,13 @@ export const OrganizationDetailView: React.FC<OrganizationDetailViewProps> = ({ 
         {/* Right Side: Organization Details */}
         <div className="lg:col-span-3 bg-white rounded-2xl border border-slate-200/80 p-6 shadow-2xs space-y-6 relative min-h-[400px]">
           {isLoadingDetails && (
-            <div className="absolute inset-0 bg-white/70 backdrop-blur-xs flex items-center justify-center z-20 rounded-2xl">
-              <div className="flex items-center gap-2 text-brand-primary font-bold text-xs">
-                <Loader2 className="w-5 h-5 animate-spin" />
-                <span>Loading Details...</span>
+            <div className="absolute inset-0 bg-white/80 backdrop-blur-xs flex flex-col justify-center p-6 z-20 rounded-2xl space-y-4">
+              <Skeleton className="h-6 w-48" />
+              <div className="grid grid-cols-2 gap-4">
+                <Skeleton className="h-10 rounded-xl" />
+                <Skeleton className="h-10 rounded-xl" />
+                <Skeleton className="h-10 rounded-xl" />
+                <Skeleton className="h-10 rounded-xl" />
               </div>
             </div>
           )}

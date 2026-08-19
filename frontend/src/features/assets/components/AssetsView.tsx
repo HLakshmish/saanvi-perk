@@ -24,6 +24,7 @@ import {
   TableRow,
   TableCell,
 } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Laptop,
   Plus,
@@ -457,9 +458,25 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ currentRole = "admin" })
 
       {/* Main Tab Content */}
       {isLoading ? (
-        <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-slate-200/80 shadow-2xs space-y-3">
-          <Loader2 className="w-8 h-8 animate-spin text-brand-primary" />
-          <p className="text-xs text-slate-500 font-bold">Loading asset details...</p>
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs space-y-4 animate-fade-in">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            <Skeleton className="h-6 w-36 rounded-xl" />
+            <Skeleton className="h-6 w-24 rounded-xl" />
+          </div>
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="flex items-center justify-between gap-4 py-2 border-b border-slate-100 last:border-none">
+              <Skeleton className="h-4 w-24 font-mono" />
+              <div className="space-y-1.5 w-48">
+                <Skeleton className="h-3.5 w-32" />
+                <Skeleton className="h-2.5 w-24" />
+              </div>
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-4 w-24 font-mono" />
+              <Skeleton className="h-6 w-20 rounded-full" />
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-8 w-16 rounded-xl" />
+            </div>
+          ))}
         </div>
       ) : activeTab === "inventory" ? (
         /* ─── INVENTORY TABLE ─── */

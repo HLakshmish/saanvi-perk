@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   getUserById,
   getPersonalInfoByUserId,
@@ -228,9 +229,43 @@ export const EmployeeProfile: React.FC<EmployeeProfileProps> = ({ employeeId, on
 
   if (isLoading) {
     return (
-      <div className="w-full h-96 flex flex-col items-center justify-center gap-3">
-        <Loader2 className="w-8 h-8 text-brand-primary animate-spin" />
-        <span className="text-slate-500 text-xs font-semibold">Loading profile details...</span>
+      <div className="w-full space-y-5 animate-fade-in">
+        {/* Top Profile Card Skeleton */}
+        <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-4">
+            <Skeleton className="w-20 h-20 rounded-2xl shrink-0" />
+            <div className="space-y-2">
+              <Skeleton className="h-6 w-44" />
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-3 w-48" />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Skeleton className="h-9 w-24 rounded-xl" />
+            <Skeleton className="h-9 w-24 rounded-xl" />
+          </div>
+        </div>
+
+        {/* Tab Pills Skeleton */}
+        <div className="flex gap-2 pb-2">
+          <Skeleton className="h-9 w-28 rounded-xl" />
+          <Skeleton className="h-9 w-28 rounded-xl" />
+          <Skeleton className="h-9 w-28 rounded-xl" />
+          <Skeleton className="h-9 w-28 rounded-xl" />
+        </div>
+
+        {/* Tab Content Box Skeleton */}
+        <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-4">
+          <Skeleton className="h-5 w-40" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-2">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="p-3 bg-slate-50 rounded-xl space-y-1.5 border border-slate-100">
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-4 w-32" />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }

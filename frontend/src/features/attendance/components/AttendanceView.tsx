@@ -28,6 +28,7 @@ import {
   TableRow,
   TableCell,
 } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface AttendanceViewProps {
   currentRole?: UserRole;
@@ -198,152 +199,258 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
     };
   }, [attendanceRows, employees]);
 
+  // Format Helper for Card Date Header (e.g. "Wed, 19 Aug 2026")
+  const formatCardDate = (dateStr?: string | null) => {
+    if (!dateStr) return "--";
+    try {
+      const d = new Date(dateStr);
+      return d.toLocaleDateString("en-IN", {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      });
+    } catch (e) {
+      return dateStr;
+    }
+  };
+
+  // Check if date string is today
+  const isTodayDate = (dateStr?: string | null) => {
+    if (!dateStr) return false;
+    try {
+      const d = new Date(dateStr);
+      const today = new Date();
+      return (
+        d.getFullYear() === today.getFullYear() &&
+        d.getMonth() === today.getMonth() &&
+        d.getDate() === today.getDate()
+      );
+    } catch {
+      return false;
+    }
+  };
+
+  // Sorted employee rows (newest first)
+  const sortedEmployeeRows = useMemo(() => {
+    return [...filteredRows].sort((a, b) => {
+      const da = new Date(a.attendanceDate || a.checkInTime || 0).getTime();
+      const db = new Date(b.attendanceDate || b.checkInTime || 0).getTime();
+      return db - da;
+    });
+  }, [filteredRows]);
+
+  // Employee aggregate stats
+  const employeeStats = useMemo(() => {
+    let totalMinutes = 0;
+    let daysCount = sortedEmployeeRows.length;
+
+    sortedEmployeeRows.forEach((r) => {
+      if (r.workingMinutes) {
+        totalMinutes += Number(r.workingMinutes);
+      }
+    });
+
+    const totalHours = Math.floor(totalMinutes / 60);
+    const remainingMins = totalMinutes % 60;
+    const avgMinutes = daysCount > 0 ? Math.round(totalMinutes / daysCount) : 0;
+    const avgHours = Math.floor(avgMinutes / 60);
+    const avgRemainingMins = avgMinutes % 60;
+
+    return {
+      daysCount,
+      totalWorkingHours: `${totalHours}h ${remainingMins}m`,
+      avgHours: `${avgHours}h ${avgRemainingMins}m`,
+    };
+  }, [sortedEmployeeRows]);
+
   // ==========================================
-  // 1. EMPLOYEE PERSONAL ATTENDANCE VIEW
+  // 1. EMPLOYEE PERSONAL ATTENDANCE VIEW (Date-wise Cards)
   // ==========================================
   if (isEmployee) {
     return (
-      <div className="space-y-6 animate-fade-in text-slate-800 pb-10">
+      <div className="space-y-5 animate-fade-in text-slate-800 pb-10">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xs">
           <div>
-            <h1 className="text-xl sm:text-2xl font-extrabold text-brand-primary tracking-tight">
+            <h1 className="text-lg sm:text-xl font-extrabold text-brand-primary tracking-tight">
               My Attendance Logs
             </h1>
-            <p className="text-xs text-slate-500 font-medium mt-1">
-              View your check-in, check-out, and total working hours history.
+            <p className="text-xs text-slate-500 font-medium mt-0.5">
+              Daily date-wise check-in, check-out times and total hours.
             </p>
           </div>
 
           <button
             onClick={loadData}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 text-slate-700 hover:text-brand-primary rounded-xl text-xs font-bold transition-all shadow-2xs cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 text-slate-700 hover:text-brand-primary rounded-xl text-xs font-bold transition-all shadow-2xs cursor-pointer hover:border-brand-primary/30"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             <span>Refresh</span>
           </button>
         </div>
 
-        {/* Assigned Shift Summary Card */}
-        <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs">
-          <div className="flex items-center gap-2 mb-3">
-            <CalendarDays className="w-4 h-4 text-brand-primary" />
-            <h3 className="text-sm font-extrabold text-brand-primary">Assigned Shift Details</h3>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                Shift Schedule
-              </span>
-              <p className="text-sm font-extrabold text-slate-900 mt-1">09:30 AM – 06:30 PM</p>
-              <span className="inline-block mt-2 text-[10px] font-bold text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded-md">
-                General Shift
-              </span>
-            </div>
-            <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                Working Days
-              </span>
-              <p className="text-sm font-extrabold text-slate-900 mt-1">Monday – Friday</p>
-              <span className="inline-block mt-2 text-[10px] font-bold text-slate-600 bg-slate-200/70 px-2 py-0.5 rounded-md">
-                5 Days / Week
-              </span>
-            </div>
-            <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                Weekly Offs
-              </span>
-              <p className="text-sm font-extrabold text-slate-900 mt-1">Saturday, Sunday</p>
-              <span className="inline-block mt-2 text-[10px] font-bold text-teal-700 bg-teal-100/70 px-2 py-0.5 rounded-md">
-                Weekend Off
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Attendance Log History Table (No GPS locations shown to employees) */}
-        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
-          <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between">
-            <h3 className="text-sm font-extrabold text-brand-primary">Recent Punch Logs</h3>
-            <span className="text-xs font-bold text-slate-400 font-mono">
-              {filteredRows.length} {filteredRows.length === 1 ? "Record" : "Records"}
+        {/* Quick KPI Overview */}
+        <div className="grid grid-cols-3 gap-2.5 sm:gap-3.5">
+          <div className="bg-white border border-slate-200/80 p-3 sm:p-4 rounded-xl sm:rounded-2xl shadow-2xs">
+            <span className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+              Total Days
             </span>
+            <p className="text-base sm:text-xl font-extrabold text-slate-900 mt-1">
+              {employeeStats.daysCount} <span className="text-xs font-semibold text-slate-400">Days</span>
+            </p>
           </div>
 
-          {isLoading ? (
-            <div className="py-20 flex flex-col items-center justify-center gap-2">
-              <Loader2 className="w-8 h-8 text-brand-primary animate-spin" />
-              <span className="text-xs text-slate-400 font-bold">Loading your attendance logs...</span>
-            </div>
-          ) : filteredRows.length === 0 ? (
-            <div className="py-16 text-center space-y-2">
-              <Clock className="w-10 h-10 text-slate-300 mx-auto" />
-              <h4 className="text-sm font-bold text-slate-700">No Attendance History Yet</h4>
-              <p className="text-xs text-slate-400 max-w-sm mx-auto">
-                Your daily check-in and check-out logs will automatically appear here.
-              </p>
-            </div>
-          ) : (
-            <TableContainer className="rounded-2xl border-none shadow-none">
-              <Table>
-                <TableHeader>
-                  <tr>
-                    <TableHead className="sm:px-6">Date</TableHead>
-                    <TableHead>Check In</TableHead>
-                    <TableHead>Check Out</TableHead>
-                    <TableHead>Working Hours</TableHead>
-                    <TableHead className="text-center">Status</TableHead>
-                  </tr>
-                </TableHeader>
-                <TableBody>
-                  {filteredRows.map((row) => {
-                    const workingHrs = row.workingMinutes
-                      ? `${Math.floor(row.workingMinutes / 60)}h ${row.workingMinutes % 60}m`
-                      : row.checkInTime && !row.checkOutTime
-                      ? "In Progress"
-                      : "--";
+          <div className="bg-white border border-slate-200/80 p-3 sm:p-4 rounded-xl sm:rounded-2xl shadow-2xs">
+            <span className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+              Total Hours
+            </span>
+            <p className="text-base sm:text-xl font-extrabold text-brand-primary mt-1">
+              {employeeStats.totalWorkingHours}
+            </p>
+          </div>
 
-                    return (
-                      <TableRow key={row.attendanceId}>
-                        <TableCell className="sm:px-6 font-bold text-slate-900 whitespace-nowrap">
-                          {formatDate(row.attendanceDate)}
-                        </TableCell>
-                        <TableCell className="font-mono font-bold text-slate-900 whitespace-nowrap">
-                          {formatTime(row.checkInTime)}
-                        </TableCell>
-                        <TableCell className="font-mono font-bold text-slate-900 whitespace-nowrap">
-                          {row.checkOutTime ? (
-                            formatTime(row.checkOutTime)
-                          ) : (
-                            <span className="text-amber-600 text-[11px] font-bold bg-amber-50 px-2 py-0.5 rounded-md">
-                              Active Shift
-                            </span>
-                          )}
-                        </TableCell>
-                        <TableCell className="font-mono font-extrabold text-brand-primary whitespace-nowrap">
-                          {workingHrs}
-                        </TableCell>
-                        <TableCell className="text-center whitespace-nowrap">
-                          <span
-                            className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide border ${
-                              row.attendanceStatus === "PRESENT"
-                                ? "bg-emerald-100 text-emerald-800 border-emerald-200"
-                                : row.attendanceStatus === "HALF_DAY"
-                                ? "bg-amber-100 text-amber-800 border-amber-200"
-                                : "bg-slate-100 text-slate-700 border-slate-200"
-                            }`}
-                          >
-                            {row.attendanceStatus || "PRESENT"}
-                          </span>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
+          <div className="bg-white border border-slate-200/80 p-3 sm:p-4 rounded-xl sm:rounded-2xl shadow-2xs">
+            <span className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+              Avg. Daily
+            </span>
+            <p className="text-base sm:text-xl font-extrabold text-emerald-700 mt-1">
+              {employeeStats.avgHours}
+            </p>
+          </div>
         </div>
+
+        {/* Date-wise Attendance Cards Grid */}
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div
+                key={i}
+                className="bg-white border border-slate-200/80 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs space-y-3.5"
+              >
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <div className="flex items-center gap-2.5">
+                    <Skeleton className="w-8 h-8 rounded-xl" />
+                    <Skeleton className="h-4 w-28" />
+                  </div>
+                  <Skeleton className="h-5 w-16 rounded-full" />
+                </div>
+                <div className="grid grid-cols-2 gap-2.5">
+                  <Skeleton className="h-14 rounded-xl" />
+                  <Skeleton className="h-14 rounded-xl" />
+                </div>
+                <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+                  <Skeleton className="h-3 w-20" />
+                  <Skeleton className="h-6 w-16 rounded-lg" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : sortedEmployeeRows.length === 0 ? (
+          <div className="py-16 text-center space-y-2 bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6">
+            <Clock className="w-10 h-10 text-slate-300 mx-auto" />
+            <h4 className="text-sm font-bold text-slate-700">No Attendance Records Yet</h4>
+            <p className="text-xs text-slate-400 max-w-sm mx-auto">
+              Your daily check-in and check-out cards will automatically appear here once you clock in.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
+            {sortedEmployeeRows.map((row) => {
+              const workingHrs = row.workingMinutes
+                ? `${Math.floor(row.workingMinutes / 60)}h ${row.workingMinutes % 60}m`
+                : row.checkInTime && !row.checkOutTime
+                ? "In Progress"
+                : "--";
+
+              const isToday = isTodayDate(row.attendanceDate || row.checkInTime);
+              const isActive = row.checkInTime && !row.checkOutTime;
+
+              return (
+                <div
+                  key={row.attendanceId}
+                  className="bg-white border border-slate-200/85 hover:border-brand-primary/40 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between gap-3 group"
+                >
+                  {/* Card Top: Date Header & Status Pill */}
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-brand-primary/10 text-brand-primary flex items-center justify-center font-bold text-xs shrink-0">
+                        <Calendar className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="text-xs sm:text-sm font-extrabold text-brand-primary leading-tight">
+                          {formatCardDate(row.attendanceDate || row.checkInTime)}
+                        </p>
+                        {isToday && (
+                          <span className="inline-block text-[9px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded-md uppercase tracking-wider mt-0.5">
+                            Today
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide border shrink-0 ${
+                        isActive
+                          ? "bg-amber-50 text-amber-800 border-amber-200 animate-pulse"
+                          : row.attendanceStatus === "PRESENT"
+                          ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                          : row.attendanceStatus === "HALF_DAY"
+                          ? "bg-amber-100 text-amber-800 border-amber-200"
+                          : "bg-slate-100 text-slate-700 border-slate-200"
+                      }`}
+                    >
+                      {isActive ? "Active Shift" : row.attendanceStatus || "Present"}
+                    </span>
+                  </div>
+
+                  {/* Card Center: Check-In & Check-Out Times */}
+                  <div className="grid grid-cols-2 gap-2.5">
+                    {/* Check In */}
+                    <div className="bg-slate-50/80 border border-slate-100 rounded-xl p-2.5">
+                      <div className="flex items-center gap-1 text-slate-400 mb-1">
+                        <Clock className="w-3 h-3 text-emerald-600" />
+                        <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
+                          Check In
+                        </span>
+                      </div>
+                      <p className="font-mono text-xs sm:text-sm font-extrabold text-slate-900">
+                        {formatTime(row.checkInTime)}
+                      </p>
+                    </div>
+
+                    {/* Check Out */}
+                    <div className="bg-slate-50/80 border border-slate-100 rounded-xl p-2.5">
+                      <div className="flex items-center gap-1 text-slate-400 mb-1">
+                        <Clock className="w-3 h-3 text-rose-500" />
+                        <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
+                          Check Out
+                        </span>
+                      </div>
+                      <p className="font-mono text-xs sm:text-sm font-extrabold text-slate-900">
+                        {row.checkOutTime ? (
+                          formatTime(row.checkOutTime)
+                        ) : (
+                          <span className="text-amber-600 font-bold text-xs bg-amber-50 px-1.5 py-0.5 rounded">
+                            Active
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Card Bottom: Total Hours Worked */}
+                  <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between">
+                    <span className="text-[11px] font-semibold text-slate-500">Total Worked</span>
+                    <span className="font-mono text-xs sm:text-sm font-extrabold text-brand-primary bg-brand-primary-light px-2.5 py-0.5 rounded-lg border border-brand-primary/15">
+                      {workingHrs}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     );
   }
@@ -480,9 +587,25 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
       {/* 4. Live Attendance Records Table */}
       <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
         {isLoading ? (
-          <div className="py-20 flex flex-col items-center justify-center gap-2">
-            <Loader2 className="w-8 h-8 text-brand-primary animate-spin" />
-            <span className="text-xs text-slate-400 font-bold">Loading attendance records...</span>
+          <div className="p-5 space-y-4">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="flex items-center justify-between gap-4 py-2 border-b border-slate-100 last:border-none">
+                <div className="flex items-center gap-3 w-48">
+                  <Skeleton className="w-9 h-9 rounded-xl shrink-0" />
+                  <div className="space-y-1.5 w-full">
+                    <Skeleton className="h-3.5 w-24" />
+                    <Skeleton className="h-2.5 w-16" />
+                  </div>
+                </div>
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-4 w-16 font-mono" />
+                <Skeleton className="h-6 w-24 rounded-lg" />
+                <Skeleton className="h-4 w-16 font-mono" />
+                <Skeleton className="h-6 w-24 rounded-lg" />
+                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-6 w-16 rounded-full" />
+              </div>
+            ))}
           </div>
         ) : filteredRows.length === 0 ? (
           <div className="py-20 text-center space-y-2">

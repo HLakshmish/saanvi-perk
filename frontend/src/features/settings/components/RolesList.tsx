@@ -11,6 +11,7 @@ import {
   TableRow,
   TableCell,
 } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface RolesListProps {
   onAddNewRole: () => void;
@@ -146,78 +147,85 @@ export const RolesList: React.FC<RolesListProps> = ({
 
       {/* Roles Table Container */}
       <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden relative">
-        {isLoading && (
-          <div className="absolute inset-0 bg-white/70 backdrop-blur-xs flex items-center justify-center z-20">
-            <div className="flex items-center gap-2 text-brand-primary font-bold text-xs">
-              <Loader2 className="w-5 h-5 animate-spin" />
-              <span>Loading Roles...</span>
-            </div>
+        {isLoading && rolesList.length === 0 ? (
+          <div className="p-5 space-y-4 animate-fade-in">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="flex items-center justify-between gap-4 py-2 border-b border-slate-100 last:border-none">
+                <Skeleton className="h-4 w-12" />
+                <Skeleton className="h-4 w-20 font-mono" />
+                <Skeleton className="h-4 w-36" />
+                <Skeleton className="h-4 w-48" />
+                <Skeleton className="h-8 w-16 rounded-xl" />
+              </div>
+            ))}
           </div>
-        )}
+        ) : (
+          <>
+            <TableContainer className="rounded-2xl border-none shadow-none">
+              <Table className="min-w-[700px]">
+                <TableHeader>
+                  <tr>
+                    <TableHead className="w-20 sm:px-6">S No.</TableHead>
+                    <TableHead className="sm:px-6">Role Code</TableHead>
+                    <TableHead className="sm:px-6">Role Name</TableHead>
+                    <TableHead className="sm:px-6">Remarks</TableHead>
+                    <TableHead className="w-24 text-right sm:px-6">Actions</TableHead>
+                  </tr>
+                </TableHeader>
+                <TableBody>
+                  {rolesList.slice(0, showEntries).map((role, index) => (
+                    <TableRow
+                      key={role.id}
+                      onClick={() => onViewRole(role)}
+                    >
+                      <TableCell className="sm:px-6 font-bold text-slate-900">{index + 1}</TableCell>
+                      <TableCell className="sm:px-6 font-mono font-bold text-slate-800">{role.code}</TableCell>
+                      <TableCell className="sm:px-6 font-bold text-slate-900">{role.name}</TableCell>
+                      <TableCell className="sm:px-6 text-slate-500 font-medium">{role.remarks || "-"}</TableCell>
+                      <TableCell className="sm:px-6 text-right">
+                        <div className="flex items-center justify-end gap-3">
+                          <button
+                            onClick={(e) => handleDeleteRole(e, role.id)}
+                            className="text-slate-300 hover:text-rose-500 transition-colors p-1 rounded-full cursor-pointer"
+                            title="Delete Role"
+                          >
+                            <MinusCircle className="w-4 h-4" />
+                          </button>
+                          <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-brand-primary group-hover:translate-x-0.5 transition-all inline-block" />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {rolesList.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={5} className="py-8 text-center text-slate-400 font-semibold">
+                        No roles found. Click "+ Add New Role" to create one.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
 
-        <TableContainer className="rounded-2xl border-none shadow-none">
-          <Table className="min-w-[700px]">
-            <TableHeader>
-              <tr>
-                <TableHead className="w-20 sm:px-6">S No.</TableHead>
-                <TableHead className="sm:px-6">Role Code</TableHead>
-                <TableHead className="sm:px-6">Role Name</TableHead>
-                <TableHead className="sm:px-6">Remarks</TableHead>
-                <TableHead className="w-24 text-right sm:px-6">Actions</TableHead>
-              </tr>
-            </TableHeader>
-            <TableBody>
-              {rolesList.slice(0, showEntries).map((role, index) => (
-                <TableRow
-                  key={role.id}
-                  onClick={() => onViewRole(role)}
+            {/* Table Pagination Footer */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 border-t border-slate-100 text-xs text-slate-500 font-semibold">
+              <span>Showing 1 to {Math.min(rolesList.length, showEntries)} of {rolesList.length} entries</span>
+              <div className="flex items-center gap-1.5">
+                <span>Show</span>
+                <select
+                  value={showEntries}
+                  onChange={(e) => setShowEntries(Number(e.target.value))}
+                  className="border border-slate-300 rounded-lg px-2 py-1 bg-white text-xs font-bold text-slate-800 focus:outline-none"
                 >
-                  <TableCell className="sm:px-6 font-bold text-slate-900">{index + 1}</TableCell>
-                  <TableCell className="sm:px-6 font-mono font-bold text-slate-800">{role.code}</TableCell>
-                  <TableCell className="sm:px-6 font-bold text-slate-900">{role.name}</TableCell>
-                  <TableCell className="sm:px-6 text-slate-500 font-medium">{role.remarks || "-"}</TableCell>
-                  <TableCell className="sm:px-6 text-right">
-                    <div className="flex items-center justify-end gap-3">
-                      <button
-                        onClick={(e) => handleDeleteRole(e, role.id)}
-                        className="text-slate-300 hover:text-rose-500 transition-colors p-1 rounded-full cursor-pointer"
-                        title="Delete Role"
-                      >
-                        <MinusCircle className="w-4 h-4" />
-                      </button>
-                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-brand-primary group-hover:translate-x-0.5 transition-all inline-block" />
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {rolesList.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={5} className="py-8 text-center text-slate-400 font-semibold">
-                    No roles found. Click "+ Add New Role" to create one.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-
-        {/* Table Pagination Footer */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 border-t border-slate-100 text-xs text-slate-500 font-semibold">
-          <span>Showing 1 to {Math.min(rolesList.length, showEntries)} of {rolesList.length} entries</span>
-          <div className="flex items-center gap-1.5">
-            <span>Show</span>
-            <select
-              value={showEntries}
-              onChange={(e) => setShowEntries(Number(e.target.value))}
-              className="border border-slate-300 rounded-lg px-2 py-1 bg-white text-xs font-bold text-slate-800 focus:outline-none"
-            >
-              <option value={5}>5</option>
-              <option value={10}>10</option>
-              <option value={25}>25</option>
-            </select>
-            <span>entries</span>
-          </div>
-        </div>
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={25}>25</option>
+                </select>
+                <span>entries</span>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
