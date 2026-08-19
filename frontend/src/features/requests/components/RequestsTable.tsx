@@ -12,6 +12,15 @@ import {
   ChevronsRight,
 } from "lucide-react";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
+import {
+  TableContainer,
+  Table,
+  TableHeader,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+} from "@/components/ui/table";
 
 interface RequestsTableProps {
   onRowClick: (id: string) => void;
@@ -61,7 +70,7 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
   );
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 p-6 sm:p-8 shadow-2xs hover:shadow-xs transition-all min-h-[500px] flex flex-col justify-between relative">
+    <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-2xs hover:shadow-xs transition-all min-h-[500px] flex flex-col justify-between relative">
       <div>
         {/* Filters Header */}
         <div className="flex flex-wrap items-center gap-3 mb-6">
@@ -72,7 +81,7 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
               placeholder="Search table items"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-800 text-sm placeholder:text-slate-400 shadow-2xs"
+              className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary text-slate-800 text-sm placeholder:text-slate-400 shadow-2xs"
             />
           </div>
 
@@ -90,50 +99,46 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
           </button>
         </div>
 
-        {/* Data Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-left text-sm text-gray-700">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-200/80 font-semibold text-brand-primary">
-                <th className="py-3 px-4">Request Date</th>
-                <th className="py-3 px-4">Request Type</th>
-                <th className="py-3 px-4">Last Action Taken By</th>
-                <th className="py-3 px-4">Status</th>
-                <th className="py-3 px-4 w-12"></th>
+        {/* Data Table using Reusable Table Component */}
+        <TableContainer>
+          <Table className="min-w-[800px]">
+            <TableHeader>
+              <tr>
+                <TableHead>Request Date</TableHead>
+                <TableHead>Request Type</TableHead>
+                <TableHead>Last Action Taken By</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="w-12 text-right"></TableHead>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
+            </TableHeader>
+            <TableBody>
               {filteredData.map((row) => (
-                <tr
-                  key={row.id}
-                  onClick={() => onRowClick(row.id)}
-                  className="hover:bg-slate-50/70 transition-colors cursor-pointer group"
-                >
-                  <td className="py-3.5 px-4 font-medium text-gray-900">
+                <TableRow key={row.id} onClick={() => onRowClick(row.id)}>
+                  <TableCell className="font-semibold text-slate-900">
                     {row.date}
-                  </td>
-                  <td className="py-3.5 px-4">{row.type}</td>
-                  <td className="py-3.5 px-4">{row.lastAction}</td>
-                  <td className="py-3.5 px-4">
-                    <span className="inline-block text-[11px] font-semibold text-emerald-700 bg-emerald-100/60 border border-emerald-200 px-3 py-0.5 rounded-full">
+                  </TableCell>
+                  <TableCell className="font-medium text-slate-700">{row.type}</TableCell>
+                  <TableCell className="font-medium text-slate-700">{row.lastAction}</TableCell>
+                  <TableCell>
+                    <span className="inline-block text-[11px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200/50 px-3 py-0.5 rounded-full">
                       {row.status}
                     </span>
-                  </td>
-                  <td className="py-3.5 px-4 text-right">
-                    <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-brand-primary group-hover:translate-x-0.5 transition-all" />
-                  </td>
-                </tr>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-brand-primary group-hover:translate-x-0.5 transition-all inline-block" />
+                  </TableCell>
+                </TableRow>
               ))}
               {filteredData.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="py-8 text-center text-gray-400">
+                <TableRow>
+                  <TableCell colSpan={5} className="py-8 text-center text-slate-400 font-medium">
                     No matching requests found
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               )}
-            </tbody>
-          </table>
-        </div>
+            </TableBody>
+          </Table>
+        </TableContainer>
       </div>
 
       {/* Custom Date Picker Modal */}
@@ -144,7 +149,7 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
       />
 
       {/* Footer Pagination controls */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-100 pt-6 mt-8 text-xs text-gray-500 font-medium">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-100 pt-6 mt-8 text-xs text-slate-500 font-medium">
         <span>Showing 1 to {filteredData.length} of 4 entries</span>
 
         {/* Entries select dropdown */}
@@ -154,32 +159,32 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
             <select
               value={showEntries}
               onChange={(e) => setShowEntries(Number(e.target.value))}
-              className="appearance-none border border-gray-300 rounded-md bg-white pl-2.5 pr-8 py-1.5 text-xs font-semibold text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
+              className="appearance-none border border-slate-300 rounded-lg bg-white pl-2.5 pr-8 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-brand-primary/20 focus:border-brand-primary cursor-pointer"
             >
               <option value={10}>10</option>
               <option value={25}>25</option>
               <option value={50}>50</option>
             </select>
-            <ChevronDown className="w-3.5 h-3.5 text-gray-500 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <ChevronDown className="w-3.5 h-3.5 text-slate-500 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
           <span>entries</span>
         </div>
 
         {/* Pagination buttons */}
         <div className="flex items-center gap-1">
-          <button className="p-1.5 border border-gray-300 rounded-md hover:bg-gray-50 text-gray-400">
+          <button className="p-1.5 border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-400 cursor-pointer">
             <ChevronsLeft className="w-3.5 h-3.5" />
           </button>
-          <button className="p-1.5 border border-gray-300 rounded-md hover:bg-gray-50 text-gray-400">
+          <button className="p-1.5 border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-400 cursor-pointer">
             <ChevronLeft className="w-3.5 h-3.5" />
           </button>
-          <button className="w-7 h-7 bg-blue-50 border border-blue-200 text-blue-600 font-bold rounded-md flex items-center justify-center">
+          <button className="w-7 h-7 bg-brand-primary border border-brand-primary text-white font-bold rounded-lg flex items-center justify-center text-xs shadow-xs">
             1
           </button>
-          <button className="p-1.5 border border-gray-300 rounded-md hover:bg-gray-50 text-gray-400">
+          <button className="p-1.5 border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-400 cursor-pointer">
             <ChevronRightIcon className="w-3.5 h-3.5" />
           </button>
-          <button className="p-1.5 border border-gray-300 rounded-md hover:bg-gray-50 text-gray-400">
+          <button className="p-1.5 border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-400 cursor-pointer">
             <ChevronsRight className="w-3.5 h-3.5" />
           </button>
         </div>

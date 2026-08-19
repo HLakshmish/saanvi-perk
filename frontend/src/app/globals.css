@@ -21,7 +21,7 @@
   --color-sidebar-bg: var(--brand-primary);
   --color-sidebar-border: rgba(255, 255, 255, 0.1);
   --color-sidebar-active-bg: var(--brand-accent);
-  --color-sidebar-active-text: var(--brand-btn-text);
+  --color-sidebar-active-text: var(--brand-primary);
   --color-sidebar-text: rgba(255, 255, 255, 0.85);
   --color-sidebar-text-hover: #ffffff;
 }
@@ -35,19 +35,19 @@
      ========================================================================== */
 
   /* 1. Main Brand / Background / Sidebar / Primary Color */
-  --brand-primary: #013f39;
+  --brand-primary: #012e29;
   --brand-primary-hover: #012d28;
   --brand-primary-dark: #012420;
   --brand-primary-light: #f4fbf7;
 
   /* 2. Main Accent / Highlight Color (Sidebar active, badges, highlights) */
-  --brand-accent: #C99D34;
+  --brand-accent: #d2e2c5;
   --brand-accent-hover: #b08728;
   --brand-accent-light: #C99D34;
   --brand-accent-soft: #fef9e7;
 
   /* 3. Global Primary Button / Icon Text Color (White) */
-  --brand-btn-text: #ffffff;
+  --brand-btn-text: #9cdfcb;
 }
 
 body {

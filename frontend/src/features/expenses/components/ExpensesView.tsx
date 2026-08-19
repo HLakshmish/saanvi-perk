@@ -32,6 +32,15 @@ import {
   ChevronRight,
   ShieldAlert,
 } from "lucide-react";
+import {
+  TableContainer,
+  Table,
+  TableHeader,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+} from "@/components/ui/table";
 
 interface ExpensesViewProps {
   currentRole?: string;
@@ -561,47 +570,46 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-left text-sm text-slate-600">
-                <thead>
-                  <tr className="bg-slate-50/70 border-b border-slate-100 font-bold text-slate-700 text-xs uppercase tracking-wider">
-                    <th className="py-3 px-4">Expense ID</th>
-                    <th className="py-3 px-4">Employee</th>
-                    <th className="py-3 px-4">Category</th>
-                    <th className="py-3 px-4">Submitted Date</th>
-                    <th className="py-3 px-4">Amount</th>
-                    <th className="py-3 px-4">Status</th>
-                    <th className="py-3 px-4 w-12 text-right">Action</th>
+            <TableContainer className="rounded-2xl border-none shadow-none">
+              <Table>
+                <TableHeader>
+                  <tr>
+                    <TableHead>Expense ID</TableHead>
+                    <TableHead>Employee</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Submitted Date</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="w-12 text-right">Action</TableHead>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-50">
+                </TableHeader>
+                <TableBody>
                   {expenses.map((exp) => (
-                    <tr
+                    <TableRow
                       key={exp.id}
                       onClick={() => setSelectedExpense(exp)}
-                      className="hover:bg-slate-50/60 transition-colors cursor-pointer group"
                     >
-                      <td className="py-4 px-4 font-extrabold text-slate-900 text-xs">
+                      <TableCell className="font-extrabold text-slate-900 text-xs">
                         {exp.id}
-                      </td>
-                      <td className="py-4 px-4">
+                      </TableCell>
+                      <TableCell>
                         <div className="flex flex-col">
                           <span className="font-semibold text-slate-800 text-sm">{exp.employeeName}</span>
                           <span className="text-[10px] text-slate-400 font-medium">ID: {exp.userId}</span>
                         </div>
-                      </td>
-                      <td className="py-4 px-4">
+                      </TableCell>
+                      <TableCell>
                         <span className="inline-block text-xs font-semibold text-slate-700 bg-slate-100 px-2.5 py-0.5 rounded-lg border border-slate-200/50">
                           {exp.category}
                         </span>
-                      </td>
-                      <td className="py-4 px-4 text-xs font-bold text-slate-500">
+                      </TableCell>
+                      <TableCell className="text-xs font-bold text-slate-500">
                         {exp.submittedDate}
-                      </td>
-                      <td className="py-4 px-4 font-black text-slate-900">
+                      </TableCell>
+                      <TableCell className="font-black text-slate-900">
                         ₹{exp.amount.toLocaleString()}
-                      </td>
-                      <td className="py-4 px-4">
+                      </TableCell>
+                      <TableCell>
                         <span
                           className={`inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${
                             exp.status === "Approved"
@@ -616,17 +624,17 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
                           {exp.status === "Pending" && <Clock className="w-2.5 h-2.5" />}
                           <span>{exp.status}</span>
                         </span>
-                      </td>
-                      <td className="py-4 px-4 text-right">
-                        <button className="p-1 rounded-lg text-slate-400 group-hover:text-brand-primary group-hover:bg-brand-primary/10 transition-all">
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <button className="p-1 rounded-lg text-slate-400 group-hover:text-brand-primary group-hover:bg-brand-primary/10 transition-all cursor-pointer">
                           <Eye className="w-4 h-4" />
                         </button>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </TableBody>
+              </Table>
+            </TableContainer>
           )}
         </div>
       </div>
@@ -634,9 +642,9 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
       {/* Claim Detail / Action Modal */}
       {selectedExpense && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/80 w-full max-w-[500px] overflow-hidden flex flex-col relative animate-in fade-in zoom-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/80 w-full max-w-[500px] max-h-[85vh] flex flex-col overflow-hidden relative animate-in fade-in zoom-in duration-200">
             {/* Modal Header */}
-            <div className="p-6 border-b border-brand-primary/15 bg-slate-50/50 flex justify-between items-center">
+            <div className="p-6 border-b border-brand-primary/15 bg-slate-50/50 flex justify-between items-center flex-none">
               <div>
                 <h3 className="text-base font-bold text-brand-primary">Expense details ({selectedExpense.id})</h3>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Submitted by {selectedExpense.employeeName}</p>
@@ -652,8 +660,8 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
               </button>
             </div>
 
-            {/* Modal Body */}
-            <div className="p-6 space-y-4 max-h-[400px] overflow-y-auto">
+            {/* Modal Body (Scrollable) */}
+            <div className="p-6 space-y-4 flex-1 overflow-y-auto">
               <div className="grid grid-cols-2 gap-4 border-b border-slate-100 pb-4">
                 <div>
                   <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Category</span>
@@ -719,41 +727,55 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
                   )}
                 </div>
               ) : (
-                /* Admin approval rules input fields */
                 !isEmployee && (
-                  <div className="space-y-3 pt-2">
+                  <div className="space-y-2">
                     <label className="text-[10px] font-extrabold text-brand-primary uppercase tracking-wider block">
-                      Approver / Review Comments *
+                      Approver / Review Comments
                     </label>
                     <textarea
                       placeholder="Explain approval or reason for rejection..."
                       value={actionComments}
                       onChange={(e) => setActionComments(e.target.value)}
-                      rows={3}
+                      rows={2}
                       className="w-full text-xs text-slate-800 border border-slate-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary placeholder:text-slate-400"
                     />
-
-                    <div className="grid grid-cols-2 gap-3 pt-2">
-                      <button
-                        onClick={() => handleStatusUpdate(selectedExpense.id, "Rejected")}
-                        disabled={isActioning}
-                        className="flex items-center justify-center gap-1.5 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/50 font-bold text-xs rounded-xl transition-all cursor-pointer disabled:opacity-50"
-                      >
-                        <XCircle className="w-4 h-4" />
-                        <span>Reject Claim</span>
-                      </button>
-
-                      <button
-                        onClick={() => handleStatusUpdate(selectedExpense.id, "Approved")}
-                        disabled={isActioning}
-                        className="flex items-center justify-center gap-1.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-all shadow-md shadow-emerald-500/10 cursor-pointer disabled:opacity-50"
-                      >
-                        <CheckCircle2 className="w-4 h-4" />
-                        <span>Approve Claim</span>
-                      </button>
-                    </div>
                   </div>
                 )
+              )}
+            </div>
+
+            {/* Fixed Modal Footer */}
+            <div className="p-4 sm:p-5 border-t border-slate-100 bg-slate-50/80 backdrop-blur-xs flex-none">
+              {selectedExpense.status === "Pending" && !isEmployee ? (
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => handleStatusUpdate(selectedExpense.id, "Rejected")}
+                    disabled={isActioning}
+                    className="flex items-center justify-center gap-1.5 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/50 font-bold text-xs rounded-xl transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    <XCircle className="w-4 h-4" />
+                    <span>Reject Claim</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleStatusUpdate(selectedExpense.id, "Approved")}
+                    disabled={isActioning}
+                    className="flex items-center justify-center gap-1.5 py-2.5 bg-brand-primary hover:bg-brand-primary-hover text-brand-btn-text font-bold text-xs rounded-xl transition-all shadow-md shadow-brand-primary/10 cursor-pointer disabled:opacity-50"
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Approve Claim</span>
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => {
+                    setSelectedExpense(null);
+                    setActionComments("");
+                  }}
+                  className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all cursor-pointer"
+                >
+                  Close Details
+                </button>
               )}
             </div>
           </div>

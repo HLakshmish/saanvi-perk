@@ -16,6 +16,15 @@ import { CreateAssetModal } from "./CreateAssetModal";
 import { AssignAssetModal } from "./AssignAssetModal";
 import { ReturnAssetModal } from "./ReturnAssetModal";
 import {
+  TableContainer,
+  Table,
+  TableHeader,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+} from "@/components/ui/table";
+import {
   Laptop,
   Plus,
   Search,
@@ -454,67 +463,66 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ currentRole = "admin" })
         </div>
       ) : activeTab === "inventory" ? (
         /* ─── INVENTORY TABLE ─── */
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs sm:text-sm">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-200/80 font-bold text-slate-800 uppercase text-[11px] tracking-wider">
-                  <th className="py-3.5 px-4">Asset Code</th>
-                  <th className="py-3.5 px-4">Name & Specs</th>
-                  <th className="py-3.5 px-4">Type</th>
-                  <th className="py-3.5 px-4">Serial No.</th>
-                  <th className="py-3.5 px-4 font-semibold text-slate-800">Status</th>
-                  <th className="py-3.5 px-4 font-semibold text-slate-800">Assigned To</th>
-                  {currentRole !== "employee" && (
-                    <th className="py-3.5 px-4 text-right">Actions</th>
-                  )}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 bg-white">
+        <TableContainer className="rounded-2xl border-none shadow-none">
+          <Table>
+            <TableHeader>
+              <tr>
+                <TableHead>Asset Code</TableHead>
+                <TableHead>Name & Specs</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Serial No.</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Assigned To</TableHead>
+                {currentRole !== "employee" && (
+                  <TableHead className="text-right">Actions</TableHead>
+                )}
+              </tr>
+            </TableHeader>
+            <TableBody>
                 {filteredAssets.length === 0 ? (
-                  <tr>
-                    <td colSpan={currentRole === "employee" ? 6 : 7} className="py-12 text-center text-slate-400 font-semibold">
+                  <TableRow>
+                    <TableCell colSpan={currentRole === "employee" ? 6 : 7} className="py-12 text-center text-slate-400 font-semibold">
                       {currentRole === "employee"
                         ? "No assets currently assigned to you."
                         : 'No assets found matching criteria. Click "+ Add New Asset" to create one.'}
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ) : (
                   filteredAssets.map((asset) => {
                     const fallbackAssign = assignments.find((a) => a.assetId === asset.assetId && !a.returnedDate);
                     const activeAssign = (asset.assignments && asset.assignments.length > 0 ? asset.assignments[0] : null) || fallbackAssign;
                     return (
-                      <tr key={asset.assetId} className="hover:bg-slate-50/70 transition-colors">
+                      <TableRow key={asset.assetId}>
                         {/* Asset Code */}
-                        <td className="py-4 px-4 font-mono font-bold text-slate-900">
+                        <TableCell className="font-mono font-bold text-slate-900">
                           {asset.assetCode}
-                        </td>
+                        </TableCell>
 
                         {/* Name & Specs */}
-                        <td className="py-4 px-4">
+                        <TableCell>
                           <p className="font-bold text-slate-900 leading-snug">{asset.assetName}</p>
                           <p className="text-[11px] text-slate-500 font-medium">
                             {asset.brand || ""} {asset.model || ""}
                           </p>
-                        </td>
+                        </TableCell>
 
                         {/* Type */}
-                        <td className="py-4 px-4 font-semibold text-slate-700">
+                        <TableCell className="font-semibold text-slate-700">
                           {asset.assetType}
-                        </td>
+                        </TableCell>
 
                         {/* Serial Number */}
-                        <td className="py-4 px-4 font-mono text-slate-600">
+                        <TableCell className="font-mono text-slate-600">
                           {asset.serialNumber || "-"}
-                        </td>
+                        </TableCell>
 
                         {/* Status */}
-                        <td className="py-4 px-4">
+                        <TableCell>
                           {renderStatusBadge(asset.assetStatus)}
-                        </td>
+                        </TableCell>
 
                         {/* Assigned To */}
-                        <td className="py-4 px-4 font-semibold text-slate-800">
+                        <TableCell className="font-semibold text-slate-800">
                           {(() => {
                             const emp = activeAssign?.userId ? employees.find((e) => Number(e.id) === activeAssign.userId) : null;
                             if (emp) {
@@ -529,11 +537,11 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ currentRole = "admin" })
                             }
                             return <span className="text-slate-400 italic font-medium">Unassigned</span>;
                           })()}
-                        </td>
+                        </TableCell>
 
                         {/* Actions */}
                         {currentRole !== "employee" && (
-                          <td className="py-4 px-4 text-right">
+                          <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-1.5">
                               {asset.assetStatus === "AVAILABLE" && (
                                 <button
@@ -567,34 +575,32 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ currentRole = "admin" })
                                 <Trash2 className="w-4 h-4" />
                               </button>
                             </div>
-                          </td>
+                          </TableCell>
                         )}
-                      </tr>
+                      </TableRow>
                     );
                   })
                 )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+              </TableBody>
+            </Table>
+          </TableContainer>
       ) : activeTab === "assignments" ? (
         /* ─── ASSIGNMENTS & RETURNS TABLE ─── */
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs sm:text-sm">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-200/80 font-bold text-slate-800 uppercase text-[11px] tracking-wider">
-                  <th className="py-3.5 px-4">Asset Info</th>
-                  <th className="py-3.5 px-4">Assigned Employee</th>
-                  <th className="py-3.5 px-4">Assigned Date</th>
-                  <th className="py-3.5 px-4">Expected Return</th>
-                  <th className="py-3.5 px-4">Returned Date</th>
-                  {currentRole !== "employee" && (
-                    <th className="py-3.5 px-4 text-right">Actions</th>
-                  )}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 bg-white">
+        <TableContainer className="rounded-2xl border-none shadow-none">
+          <Table>
+            <TableHeader>
+              <tr>
+                <TableHead>Asset Info</TableHead>
+                <TableHead>Assigned Employee</TableHead>
+                <TableHead>Assigned Date</TableHead>
+                <TableHead>Expected Return</TableHead>
+                <TableHead>Returned Date</TableHead>
+                {currentRole !== "employee" && (
+                  <TableHead className="text-right">Actions</TableHead>
+                )}
+              </tr>
+            </TableHeader>
+            <TableBody>
                 {filteredAssignments.length === 0 ? (
                   <tr>
                     <td colSpan={currentRole === "employee" ? 5 : 6} className="py-12 text-center text-slate-400 font-semibold">
@@ -603,9 +609,9 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ currentRole = "admin" })
                   </tr>
                 ) : (
                   filteredAssignments.map((assign) => (
-                    <tr key={assign.assignmentId} className="hover:bg-slate-50/70 transition-colors">
+                    <TableRow key={assign.assignmentId}>
                       {/* Asset Info */}
-                      <td className="py-4 px-4">
+                      <TableCell>
                         {(() => {
                           const ast = assign.assetId ? assets.find((a) => a.assetId === assign.assetId) : null;
                           const name = ast?.assetName || assign.asset?.assetName || "Asset";
@@ -617,30 +623,30 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ currentRole = "admin" })
                             </>
                           );
                         })()}
-                      </td>
+                      </TableCell>
 
                       {/* Employee */}
-                      <td className="py-4 px-4 font-bold text-brand-primary">
+                      <TableCell className="font-bold text-brand-primary">
                         {(() => {
                           const emp = assign.userId ? employees.find((e) => Number(e.id) === assign.userId) : null;
                           if (emp) return emp.name;
                           if (assign.user) return `${assign.user.firstName} ${assign.user.lastName || ""}`;
                           return "Unassigned";
                         })()}
-                      </td>
+                      </TableCell>
 
                       {/* Assigned Date */}
-                      <td className="py-4 px-4 font-semibold text-slate-700">
+                      <TableCell className="font-semibold text-slate-700">
                         {formatDate(assign.assignedDate)}
-                      </td>
+                      </TableCell>
 
                       {/* Expected Return */}
-                      <td className="py-4 px-4 font-semibold text-slate-700">
+                      <TableCell className="font-semibold text-slate-700">
                         {formatDate(assign.expectedReturnDate)}
-                      </td>
+                      </TableCell>
 
                       {/* Returned Date */}
-                      <td className="py-4 px-4">
+                      <TableCell>
                         {assign.returnedDate ? (
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                             {formatDate(assign.returnedDate)}
@@ -650,11 +656,11 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ currentRole = "admin" })
                             Active Assignment
                           </span>
                         )}
-                      </td>
+                      </TableCell>
 
                       {/* Actions */}
                       {currentRole !== "employee" && (
-                        <td className="py-4 px-4 text-right">
+                        <TableCell className="text-right">
                           {!assign.returnedDate && (
                             <button
                               onClick={() => handleReturnAsset(assign)}
@@ -664,30 +670,28 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ currentRole = "admin" })
                               <span>Return Asset</span>
                             </button>
                           )}
-                        </td>
+                        </TableCell>
                       )}
-                    </tr>
+                    </TableRow>
                   ))
                 )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+              </TableBody>
+            </Table>
+          </TableContainer>
       ) : (
         /* ─── AUDIT HISTORY TABLE ─── */
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs sm:text-sm">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-200/80 font-bold text-slate-800 uppercase text-[11px] tracking-wider">
-                  <th className="py-3.5 px-4">Asset</th>
-                  <th className="py-3.5 px-4">Action Event</th>
-                  <th className="py-3.5 px-4">Status Change</th>
-                  <th className="py-3.5 px-4">Action Date</th>
-                  <th className="py-3.5 px-4">Remarks</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 bg-white">
+        <TableContainer className="rounded-2xl border-none shadow-none">
+          <Table>
+            <TableHeader>
+              <tr>
+                <TableHead>Asset</TableHead>
+                <TableHead>Action Event</TableHead>
+                <TableHead>Status Change</TableHead>
+                <TableHead>Action Date</TableHead>
+                <TableHead>Remarks</TableHead>
+              </tr>
+            </TableHeader>
+            <TableBody>
                 {filteredHistory.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="py-12 text-center text-slate-400 font-semibold">
@@ -695,49 +699,38 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ currentRole = "admin" })
                     </td>
                   </tr>
                 ) : (
-                  filteredHistory.map((log) => (
-                    <tr key={log.historyId} className="hover:bg-slate-50/70 transition-colors">
-                      {/* Asset */}
-                      <td className="py-4 px-4">
+                  filteredHistory.map((item) => (
+                    <TableRow key={item.historyId}>
+                      <TableCell className="font-extrabold text-slate-900">
                         {(() => {
-                          const ast = log.assetId ? assets.find((a) => a.assetId === log.assetId) : null;
-                          const name = ast?.assetName || log.asset?.assetName || "Asset";
-                          const code = ast?.assetCode || log.asset?.assetCode || "-";
-                          return (
-                            <>
-                              <p className="font-bold text-slate-900">{name}</p>
-                              <p className="text-[11px] text-slate-500 font-mono">{code}</p>
-                            </>
-                          );
+                          const ast = item.assetId ? assets.find((a) => a.assetId === item.assetId) : null;
+                          return ast?.assetName || item.asset?.assetName || `Asset #${item.assetId}`;
                         })()}
-                      </td>
-
-                      {/* Action Event */}
-                      <td className="py-4 px-4 font-bold text-brand-primary">
-                        <span className="uppercase">{log.action}</span>
-                      </td>
-
-                      {/* Status Change */}
-                      <td className="py-4 px-4 font-semibold text-slate-700">
-                        {log.previousStatus || "N/A"} → <span className="font-bold text-slate-900">{log.newStatus || "N/A"}</span>
-                      </td>
-
-                      {/* Date */}
-                      <td className="py-4 px-4 font-semibold text-slate-600">
-                        {formatDate(log.actionDate || log.createdAt)}
-                      </td>
-
-                      {/* Remarks */}
-                      <td className="py-4 px-4 text-slate-500 font-medium">
-                        {log.remarks || "-"}
-                      </td>
-                    </tr>
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-bold text-brand-primary uppercase text-[11px] bg-brand-primary-light px-2.5 py-0.5 rounded-md">
+                          {item.action}
+                        </span>
+                      </TableCell>
+                      <TableCell className="font-medium text-slate-600">
+                        {item.newStatus ? (
+                          <span>Changed to <span className="font-bold text-slate-900">{item.newStatus}</span></span>
+                        ) : (
+                          "-"
+                        )}
+                      </TableCell>
+                      <TableCell className="font-mono text-slate-500 font-semibold">
+                        {formatDate(item.actionDate || item.createdAt)}
+                      </TableCell>
+                      <TableCell className="text-slate-600 italic">
+                        {item.remarks || "-"}
+                      </TableCell>
+                    </TableRow>
                   ))
                 )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+              </TableBody>
+            </Table>
+          </TableContainer>
       )}
 
       {/* Modals */}

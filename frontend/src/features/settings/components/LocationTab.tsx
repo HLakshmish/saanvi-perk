@@ -18,6 +18,15 @@ import { LocationFormModal } from "./LocationFormModal";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { SearchBox } from "@/components/ui/search-box";
+import {
+  TableContainer,
+  Table,
+  TableHeader,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+} from "@/components/ui/table";
 
 interface LocationTabProps {
   onBack: () => void;
@@ -174,86 +183,84 @@ export const LocationTab: React.FC<LocationTabProps> = ({ onBack }) => {
             </p>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50/80 border-b border-slate-200/80 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-                    <th className="py-3.5 px-4">Location Name</th>
-                    <th className="py-3.5 px-4">Code</th>
-                    <th className="py-3.5 px-4">City / Region</th>
-                    <th className="py-3.5 px-4">Phone</th>
-                    <th className="py-3.5 px-4">Status</th>
-                    <th className="py-3.5 px-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-xs font-medium text-slate-700">
-                  {filteredLocations.map((loc) => (
-                    <tr key={loc.officeLocationId} className="hover:bg-slate-50/60 transition-colors">
-                      <td className="py-3.5 px-4 font-bold text-slate-900">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-7 h-7 rounded-lg bg-brand-primary/10 text-brand-primary flex items-center justify-center font-bold text-xs shrink-0">
-                            <MapPin className="w-3.5 h-3.5" />
-                          </div>
-                          <span>{loc.locationName}</span>
+          <TableContainer className="rounded-2xl border-none shadow-none">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Location Name</TableHead>
+                  <TableHead>Code</TableHead>
+                  <TableHead>City / Region</TableHead>
+                  <TableHead>Phone</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredLocations.map((loc) => (
+                  <TableRow key={loc.officeLocationId}>
+                    <TableCell className="font-bold text-slate-900">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-lg bg-brand-primary/10 text-brand-primary flex items-center justify-center font-bold text-xs shrink-0">
+                          <MapPin className="w-3.5 h-3.5" />
                         </div>
-                      </td>
-                      <td className="py-3.5 px-4 font-mono font-bold text-slate-600">
-                        {loc.locationCode}
-                      </td>
-                      <td className="py-3.5 px-4 text-slate-800 font-medium">
-                        {formatAddress(loc)}
-                      </td>
-                      <td className="py-3.5 px-4 text-slate-600 font-mono">
-                        {loc.officePhoneNumber || loc.mobileNumber || "—"}
-                      </td>
-                      <td className="py-3.5 px-4">
-                        {loc.status ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold">
-                            <CheckCircle2 className="w-3 h-3" />
-                            Active
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 text-[10px] font-bold">
-                            <XCircle className="w-3 h-3" />
-                            Inactive
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-3.5 px-4 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            onClick={() => setViewingLocation(loc)}
-                            title="View Details"
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-brand-primary hover:bg-slate-100 transition-colors cursor-pointer"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => {
-                              setEditingLocation(loc);
-                              setIsFormOpen(true);
-                            }}
-                            title="Edit"
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-brand-primary hover:bg-slate-100 transition-colors cursor-pointer"
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(loc.officeLocationId, loc.locationName)}
-                            title="Delete"
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                        <span>{loc.locationName}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-mono font-bold text-slate-600">
+                      {loc.locationCode}
+                    </TableCell>
+                    <TableCell className="text-slate-800 font-medium">
+                      {formatAddress(loc)}
+                    </TableCell>
+                    <TableCell className="text-slate-600 font-mono">
+                      {loc.officePhoneNumber || loc.mobileNumber || "—"}
+                    </TableCell>
+                    <TableCell>
+                      {loc.status ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold">
+                          <CheckCircle2 className="w-3 h-3" />
+                          Active
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 text-[10px] font-bold">
+                          <XCircle className="w-3 h-3" />
+                          Inactive
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={() => setViewingLocation(loc)}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer transition-all"
+                          title="View Location Details"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingLocation(loc);
+                            setIsFormOpen(true);
+                          }}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-brand-primary hover:bg-brand-primary/10 cursor-pointer transition-all"
+                          title="Edit Location"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(loc.officeLocationId, loc.locationName)}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer transition-all"
+                          title="Delete Location"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
         )}
       </div>
 

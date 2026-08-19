@@ -2,6 +2,15 @@ import React, { useState, useEffect } from "react";
 import { Plus, MinusCircle, ChevronRight, Loader2 } from "lucide-react";
 import { RoleItem } from "../types/settings.types";
 import { fetchRoles, deleteRoleApi } from "../api/settings.api";
+import {
+  TableContainer,
+  Table,
+  TableHeader,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+} from "@/components/ui/table";
 
 interface RolesListProps {
   onAddNewRole: () => void;
@@ -146,52 +155,51 @@ export const RolesList: React.FC<RolesListProps> = ({
           </div>
         )}
 
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[700px] text-left border-collapse text-xs sm:text-sm text-slate-700">
-            <thead>
-              <tr className="bg-slate-50/80 border-b border-slate-200 font-bold text-slate-900 uppercase text-[11px] tracking-wider">
-                <th className="py-3.5 px-6 w-20">S No.</th>
-                <th className="py-3.5 px-6">Role Code</th>
-                <th className="py-3.5 px-6">Role Name</th>
-                <th className="py-3.5 px-6">Remarks</th>
-                <th className="py-3.5 px-6 w-24 text-right">Actions</th>
+        <TableContainer className="rounded-2xl border-none shadow-none">
+          <Table className="min-w-[700px]">
+            <TableHeader>
+              <tr>
+                <TableHead className="w-20 sm:px-6">S No.</TableHead>
+                <TableHead className="sm:px-6">Role Code</TableHead>
+                <TableHead className="sm:px-6">Role Name</TableHead>
+                <TableHead className="sm:px-6">Remarks</TableHead>
+                <TableHead className="w-24 text-right sm:px-6">Actions</TableHead>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 bg-white">
+            </TableHeader>
+            <TableBody>
               {rolesList.slice(0, showEntries).map((role, index) => (
-                <tr
+                <TableRow
                   key={role.id}
                   onClick={() => onViewRole(role)}
-                  className="hover:bg-slate-50/80 transition-colors cursor-pointer group"
                 >
-                  <td className="py-4 px-6 font-bold text-slate-900">{index + 1}</td>
-                  <td className="py-4 px-6 font-mono font-bold text-slate-800">{role.code}</td>
-                  <td className="py-4 px-6 font-bold text-slate-900">{role.name}</td>
-                  <td className="py-4 px-6 text-slate-500 font-medium">{role.remarks || "-"}</td>
-                  <td className="py-4 px-6 text-right">
+                  <TableCell className="sm:px-6 font-bold text-slate-900">{index + 1}</TableCell>
+                  <TableCell className="sm:px-6 font-mono font-bold text-slate-800">{role.code}</TableCell>
+                  <TableCell className="sm:px-6 font-bold text-slate-900">{role.name}</TableCell>
+                  <TableCell className="sm:px-6 text-slate-500 font-medium">{role.remarks || "-"}</TableCell>
+                  <TableCell className="sm:px-6 text-right">
                     <div className="flex items-center justify-end gap-3">
                       <button
                         onClick={(e) => handleDeleteRole(e, role.id)}
-                        className="text-slate-300 hover:text-rose-500 transition-colors p-1 rounded-full"
+                        className="text-slate-300 hover:text-rose-500 transition-colors p-1 rounded-full cursor-pointer"
                         title="Delete Role"
                       >
                         <MinusCircle className="w-4 h-4" />
                       </button>
-                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-brand-primary group-hover:translate-x-0.5 transition-all" />
+                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-brand-primary group-hover:translate-x-0.5 transition-all inline-block" />
                     </div>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
               {rolesList.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="py-8 text-center text-slate-400 font-semibold">
+                <TableRow>
+                  <TableCell colSpan={5} className="py-8 text-center text-slate-400 font-semibold">
                     No roles found. Click "+ Add New Role" to create one.
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               )}
-            </tbody>
-          </table>
-        </div>
+            </TableBody>
+          </Table>
+        </TableContainer>
 
         {/* Table Pagination Footer */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 border-t border-slate-100 text-xs text-slate-500 font-semibold">

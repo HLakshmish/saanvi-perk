@@ -17,6 +17,15 @@ import { Employee } from "../../employees/types/employees.types";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { SearchBox } from "@/components/ui/search-box";
+import {
+  TableContainer,
+  Table,
+  TableHeader,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+} from "@/components/ui/table";
 
 interface DepartmentTabProps {
   onBack: () => void;
@@ -203,102 +212,100 @@ export const DepartmentTab: React.FC<DepartmentTabProps> = ({ onBack }) => {
           )}
         </div>
       ) : (
-        <div className="w-full overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-2xs">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[800px] text-left border-collapse text-sm text-slate-700">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-200 font-bold text-slate-900">
-                  <th className="py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wider">Dept Code</th>
-                  <th className="py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wider">Dept Name</th>
-                  <th className="py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wider">Dept Head</th>
-                  <th className="py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wider">Description</th>
-                  <th className="py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wider">Status</th>
-                  <th className="py-3 px-4 text-xs font-semibold text-slate-700 uppercase tracking-wider text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 bg-white">
-                {filteredDepartments.map((dept) => {
-                  const head = getHeadEmployee(dept.departmentHead);
-                  return (
-                    <tr key={dept.departmentId} className="hover:bg-slate-50/40 transition-colors">
-                      {/* Dept Code */}
-                      <td className="py-3.5 px-4 font-mono text-xs font-bold text-slate-900">
-                        {dept.departmentCode}
-                      </td>
+        <TableContainer className="rounded-2xl border-none shadow-none">
+          <Table className="min-w-[800px]">
+            <TableHeader>
+              <tr>
+                <TableHead>Dept Code</TableHead>
+                <TableHead>Dept Name</TableHead>
+                <TableHead>Dept Head</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </tr>
+            </TableHeader>
+            <TableBody>
+              {filteredDepartments.map((dept) => {
+                const head = getHeadEmployee(dept.departmentHead);
+                return (
+                  <TableRow key={dept.departmentId}>
+                    {/* Dept Code */}
+                    <TableCell className="font-mono font-bold text-slate-900">
+                      {dept.departmentCode}
+                    </TableCell>
 
-                      {/* Dept Name */}
-                      <td className="py-3.5 px-4 font-semibold text-slate-900">
-                        {dept.departmentName}
-                      </td>
+                    {/* Dept Name */}
+                    <TableCell className="font-semibold text-slate-900">
+                      {dept.departmentName}
+                    </TableCell>
 
-                      {/* Dept Head */}
-                      <td className="py-3.5 px-4">
-                        {head ? (
-                          <div className="space-y-0.5">
-                            <p className="font-semibold text-slate-900 text-xs">{head.name}</p>
-                            <p className="text-[10px] text-slate-500 font-medium">{head.email}</p>
-                          </div>
-                        ) : (
-                          <span className="text-slate-400 text-xs font-medium italic">Unassigned</span>
-                        )}
-                      </td>
-
-                      {/* Description */}
-                      <td className="py-3.5 px-4 text-slate-500 font-medium text-xs max-w-xs truncate">
-                        {dept.description || "-"}
-                      </td>
-
-                      {/* Status */}
-                      <td className="py-3.5 px-4">
-                        {dept.status ? (
-                          <span className="inline-flex items-center px-3 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-250">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5" />
-                            Active
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-3 py-0.5 rounded-full text-[10px] font-bold bg-slate-50 text-slate-600 border border-slate-200">
-                            <span className="w-1.5 h-1.5 rounded-full bg-slate-400 mr-1.5" />
-                            Inactive
-                          </span>
-                        )}
-                      </td>
-
-                      {/* Actions */}
-                      <td className="py-3.5 px-4 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            onClick={() => setViewingDepartment(dept)}
-                            title="View Details"
-                            className="p-1.5 hover:bg-slate-100 hover:text-brand-primary text-slate-400 rounded-lg transition-colors cursor-pointer"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => {
-                              setEditingDepartment(dept);
-                              setIsFormOpen(true);
-                            }}
-                            title="Edit"
-                            className="p-1.5 hover:bg-slate-100 hover:text-brand-primary text-slate-400 rounded-lg transition-colors cursor-pointer"
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(dept.departmentId, dept.departmentName)}
-                            title="Delete"
-                            className="p-1.5 hover:bg-slate-100 hover:text-red-600 text-slate-400 rounded-lg transition-colors cursor-pointer"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                    {/* Dept Head */}
+                    <TableCell>
+                      {head ? (
+                        <div className="space-y-0.5">
+                          <p className="font-semibold text-slate-900 text-xs">{head.name}</p>
+                          <p className="text-[10px] text-slate-500 font-medium">{head.email}</p>
                         </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                      ) : (
+                        <span className="text-slate-400 text-xs font-medium italic">Unassigned</span>
+                      )}
+                    </TableCell>
+
+                    {/* Description */}
+                    <TableCell className="text-slate-500 font-medium max-w-xs truncate">
+                      {dept.description || "-"}
+                    </TableCell>
+
+                    {/* Status */}
+                    <TableCell>
+                      {dept.status ? (
+                        <span className="inline-flex items-center px-3 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-250">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5" />
+                          Active
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-3 py-0.5 rounded-full text-[10px] font-bold bg-slate-50 text-slate-600 border border-slate-200">
+                          <span className="w-1.5 h-1.5 rounded-full bg-slate-400 mr-1.5" />
+                          Inactive
+                        </span>
+                      )}
+                    </TableCell>
+
+                    {/* Actions */}
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => setViewingDepartment(dept)}
+                          title="View Details"
+                          className="p-1.5 hover:bg-slate-100 hover:text-brand-primary text-slate-400 rounded-lg transition-colors cursor-pointer"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingDepartment(dept);
+                            setIsFormOpen(true);
+                          }}
+                          title="Edit"
+                          className="p-1.5 hover:bg-slate-100 hover:text-brand-primary text-slate-400 rounded-lg transition-colors cursor-pointer"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(dept.departmentId, dept.departmentName)}
+                          title="Delete"
+                          className="p-1.5 hover:bg-slate-100 hover:text-red-600 text-slate-400 rounded-lg transition-colors cursor-pointer"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </TableContainer>
       )}
       </div>
 
