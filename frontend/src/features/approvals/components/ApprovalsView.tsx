@@ -25,8 +25,8 @@ export const ApprovalsView: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header & Sub-tabs */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#013e37]/15 pb-3">
-        <h1 className="text-xl sm:text-2xl font-bold text-[#013e37] tracking-tight">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-brand-primary/15 pb-3">
+        <h1 className="text-xl sm:text-2xl font-bold text-brand-primary tracking-tight">
           Approval Request
         </h1>
 
@@ -36,8 +36,8 @@ export const ApprovalsView: React.FC = () => {
             onClick={() => setActiveTab("insights")}
             className={`pb-2.5 font-bold transition-colors relative cursor-pointer ${
               activeTab === "insights"
-                ? "text-[#013e37] border-b-2 border-[#013e37]"
-                : "text-slate-500 hover:text-[#013e37]"
+                ? "text-brand-primary border-b-2 border-brand-primary"
+                : "text-slate-500 hover:text-brand-primary"
             }`}
           >
             Insights
@@ -46,8 +46,8 @@ export const ApprovalsView: React.FC = () => {
             onClick={() => setActiveTab("pending")}
             className={`pb-2.5 font-semibold transition-colors relative cursor-pointer ${
               activeTab === "pending"
-                ? "text-[#013e37] border-b-2 border-[#013e37]"
-                : "text-slate-500 hover:text-[#013e37]"
+                ? "text-brand-primary border-b-2 border-brand-primary"
+                : "text-slate-500 hover:text-brand-primary"
             }`}
           >
             Pending
@@ -56,8 +56,8 @@ export const ApprovalsView: React.FC = () => {
             onClick={() => setActiveTab("completed")}
             className={`pb-2.5 font-semibold transition-colors relative cursor-pointer ${
               activeTab === "completed"
-                ? "text-[#013e37] border-b-2 border-[#013e37]"
-                : "text-slate-500 hover:text-[#013e37]"
+                ? "text-brand-primary border-b-2 border-brand-primary"
+                : "text-slate-500 hover:text-brand-primary"
             }`}
           >
             Completed

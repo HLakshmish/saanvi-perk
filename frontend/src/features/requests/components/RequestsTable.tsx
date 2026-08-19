@@ -85,7 +85,7 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
             <ChevronDown className="w-3.5 h-3.5 text-slate-400 ml-1" />
           </button>
 
-          <button className="px-5 py-2 bg-[#013e37] hover:bg-[#012d28] text-[#ffefb3] font-bold text-sm rounded-xl shadow-2xs transition-all hover:shadow-xs cursor-pointer">
+          <button className="px-5 py-2 bg-brand-primary hover:bg-brand-primary-hover text-brand-btn-text font-bold text-sm rounded-xl shadow-2xs transition-all hover:shadow-xs cursor-pointer">
             Search
           </button>
         </div>
@@ -94,7 +94,7 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-left text-sm text-gray-700">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200/80 font-semibold text-[#013e37]">
+              <tr className="bg-slate-50 border-b border-slate-200/80 font-semibold text-brand-primary">
                 <th className="py-3 px-4">Request Date</th>
                 <th className="py-3 px-4">Request Type</th>
                 <th className="py-3 px-4">Last Action Taken By</th>
@@ -120,7 +120,7 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
                     </span>
                   </td>
                   <td className="py-3.5 px-4 text-right">
-                    <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-[#013e37] group-hover:translate-x-0.5 transition-all" />
+                    <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-brand-primary group-hover:translate-x-0.5 transition-all" />
                   </td>
                 </tr>
               ))}

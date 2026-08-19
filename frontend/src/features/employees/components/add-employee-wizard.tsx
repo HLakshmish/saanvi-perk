@@ -754,13 +754,13 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
           <div className="flex items-center gap-2.5">
             <button
               onClick={onCancel}
-              className="p-2 hover:bg-slate-50 text-slate-500 hover:text-[#013e37] border border-slate-200 rounded-xl transition-all shadow-2xs cursor-pointer"
+              className="p-2 hover:bg-slate-50 text-slate-500 hover:text-brand-primary border border-slate-200 rounded-xl transition-all shadow-2xs cursor-pointer"
               title="Return to Directory"
             >
               <Undo2 className="w-4 h-4" />
             </button>
             <div>
-              <h2 className="text-lg font-bold text-[#013e37] leading-tight">
+              <h2 className="text-lg font-bold text-brand-primary leading-tight">
                 Add New Employee
               </h2>
               <p className="text-xs text-slate-500 font-medium">
@@ -789,17 +789,17 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
                   <div
                     className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                       isDone
-                        ? "bg-[#013e37] text-[#ffefb3]"
+                        ? "bg-brand-primary text-brand-btn-text"
                         : isActive
-                        ? "bg-[#013e37] text-[#ffefb3] ring-4 ring-[#013e37]/20"
+                        ? "bg-brand-primary text-brand-btn-text ring-4 ring-[#013e37]/20"
                         : "bg-slate-100 text-slate-400 border border-slate-200"
                     }`}
                   >
-                    {isDone ? <CheckCircle2 className="w-4 h-4 text-[#ffefb3]" /> : step.number}
+                    {isDone ? <CheckCircle2 className="w-4 h-4 text-brand-btn-text" /> : step.number}
                   </div>
                   <span
                     className={`text-xs font-bold hidden sm:inline ${
-                      isActive ? "text-[#013e37]" : isDone ? "text-[#013e37]" : "text-slate-400"
+                      isActive ? "text-brand-primary" : isDone ? "text-brand-primary" : "text-slate-400"
                     }`}
                   >
                     {step.title}
@@ -849,8 +849,8 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
                     onClick={() => setActiveSubTab(tab.id as any)}
                     className={`px-4 py-2 text-xs font-bold border-b-2 transition-all transition-colors duration-150 cursor-pointer ${
                       activeSubTab === tab.id
-                        ? "border-[#013e37] text-[#013e37] font-extrabold"
-                        : "border-transparent text-slate-500 hover:text-[#013e37]"
+                        ? "border-brand-primary text-brand-primary font-extrabold"
+                        : "border-transparent text-slate-500 hover:text-brand-primary"
                     }`}
                   >
                     {tab.label}
@@ -1425,7 +1425,7 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
                           id="isInternationalWorker"
                           checked={formData.isInternationalWorker}
                           onChange={(e) => handleChange("isInternationalWorker", e.target.checked)}
-                          className="w-4 h-4 rounded text-[#013e37] border-slate-300 focus:ring-[#013e37]"
+                          className="w-4 h-4 rounded text-brand-primary border-slate-300 focus:ring-brand-primary"
                         />
                         <label htmlFor="isInternationalWorker" className="text-xs font-semibold text-slate-700 cursor-pointer select-none">
                           Is International Worker?
@@ -1599,13 +1599,13 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
                             }}
                             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border ${
                               isSelected
-                                ? "bg-[#013e37] text-[#ffefb3] border-[#013e37] shadow-2xs"
+                                ? "bg-brand-primary text-brand-btn-text border-brand-primary shadow-2xs"
                                 : "bg-white text-slate-700 border-slate-300 hover:border-slate-400 hover:bg-slate-100"
                             }`}
                           >
                             <span
                               className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center text-[9px] ${
-                                isSelected ? "border-[#ffefb3] bg-[#ffefb3] text-[#013e37] font-extrabold" : "border-slate-400"
+                                isSelected ? "border-[#ffefb3] bg-[#ffefb3] text-brand-primary font-extrabold" : "border-slate-400"
                               }`}
                             >
                               {isSelected && "✓"}
@@ -1904,10 +1904,10 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
               <button
                 type="button"
                 onClick={nextStep}
-                className="px-5 py-2.5 rounded-xl bg-[#013e37] hover:bg-[#012d28] text-[#ffefb3] text-xs sm:text-sm font-bold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer active:scale-[0.98]"
+                className="px-5 py-2.5 rounded-xl bg-brand-primary hover:bg-brand-primary-hover text-white text-xs sm:text-sm font-bold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer active:scale-[0.98]"
               >
                 Next
-                <ChevronRight className="w-4 h-4 text-[#ffefb3]" />
+                <ChevronRight className="w-4 h-4 text-white" />
               </button>
             ) : (
               <Button

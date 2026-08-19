@@ -119,7 +119,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
 
         {/* Modal Header */}
         <div className="p-6 pb-4 border-b border-slate-100">
-          <h3 className="text-lg font-bold text-[#013e37] tracking-tight">
+          <h3 className="text-lg font-bold text-brand-primary tracking-tight">
             Apply Leave
           </h3>
           <p className="text-xs text-slate-500 font-medium mt-1">
@@ -146,7 +146,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
                   value={selectedEmployeeId}
                   onChange={(e) => setSelectedEmployeeId(Number(e.target.value))}
                   disabled={isSubmitting}
-                  className="w-full text-xs font-semibold text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 px-3 focus:outline-none focus:ring-2 focus:ring-[#013e37]/20 focus:border-[#013e37] shadow-2xs transition-all cursor-pointer disabled:bg-slate-50"
+                  className="w-full text-xs font-semibold text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 px-3 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary shadow-2xs transition-all cursor-pointer disabled:bg-slate-50"
                 >
                   <option value="0">Select Employee</option>
                   {mappedEmployees.map((emp) => (
@@ -170,7 +170,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
                     value={leaveTypeId}
                     onChange={(e) => setLeaveTypeId(Number(e.target.value))}
                     disabled={isSubmitting}
-                    className="w-full text-xs font-semibold text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 px-3 focus:outline-none focus:ring-2 focus:ring-[#013e37]/20 focus:border-[#013e37] shadow-2xs transition-all cursor-pointer disabled:bg-slate-50"
+                    className="w-full text-xs font-semibold text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 px-3 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary shadow-2xs transition-all cursor-pointer disabled:bg-slate-50"
                   >
                     <option value="0">Select Leave Type</option>
                     {leaveTypes.filter((t) => t.status !== false).map((t) => (
@@ -189,7 +189,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
                   checked={isHalfDay}
                   onChange={(e) => setIsHalfDay(e.target.checked)}
                   disabled={isSubmitting}
-                  className="w-4 h-4 rounded border-slate-300 text-[#013e37] focus:ring-[#013e37]/20 cursor-pointer disabled:opacity-50"
+                  className="w-4 h-4 rounded border-slate-300 text-brand-primary focus:ring-brand-primary/20 cursor-pointer disabled:opacity-50"
                 />
                 <label
                   htmlFor="halfDay"
@@ -210,7 +210,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
                     value={fromDate}
                     onChange={(e) => setFromDate(e.target.value)}
                     disabled={isSubmitting}
-                    className="w-full text-xs font-bold text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 pl-3.5 pr-10 focus:outline-none focus:ring-2 focus:ring-[#013e37]/20 focus:border-[#013e37] shadow-2xs transition-all disabled:bg-slate-50"
+                    className="w-full text-xs font-bold text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 pl-3.5 pr-10 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary shadow-2xs transition-all disabled:bg-slate-50"
                   />
                 </div>
               </div>
@@ -227,7 +227,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
                     onChange={(e) => setNotifyOthers(e.target.value)}
                     placeholder="Enter email or name..."
                     disabled={isSubmitting}
-                    className="w-full text-xs font-medium text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 pl-3.5 pr-10 focus:outline-none focus:ring-2 focus:ring-[#013e37]/20 focus:border-[#013e37] shadow-2xs transition-all placeholder:text-slate-400"
+                    className="w-full text-xs font-medium text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 pl-3.5 pr-10 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary shadow-2xs transition-all placeholder:text-slate-400"
                   />
                   <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
@@ -248,7 +248,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
                   onChange={(e) => setReason(e.target.value)}
                   placeholder="Enter leave reason..."
                   disabled={isSubmitting}
-                  className="w-full text-xs font-medium text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-[#013e37]/20 focus:border-[#013e37] shadow-2xs transition-all placeholder:text-slate-400"
+                  className="w-full text-xs font-medium text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary shadow-2xs transition-all placeholder:text-slate-400"
                 />
               </div>
 
@@ -266,7 +266,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
                     value={toDate}
                     onChange={(e) => setToDate(e.target.value)}
                     disabled={isSubmitting}
-                    className="w-full text-xs font-bold text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 pl-3.5 pr-10 focus:outline-none focus:ring-2 focus:ring-[#013e37]/20 focus:border-[#013e37] shadow-2xs transition-all disabled:bg-slate-50"
+                    className="w-full text-xs font-bold text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 pl-3.5 pr-10 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary shadow-2xs transition-all disabled:bg-slate-50"
                   />
                 </div>
               </div>
@@ -283,7 +283,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
                     onChange={(e) => setReliever(e.target.value)}
                     placeholder="Search reliever..."
                     disabled={isSubmitting}
-                    className="w-full text-xs font-medium text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 pl-3.5 pr-10 focus:outline-none focus:ring-2 focus:ring-[#013e37]/20 focus:border-[#013e37] shadow-2xs transition-all placeholder:text-slate-400"
+                    className="w-full text-xs font-medium text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 pl-3.5 pr-10 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary shadow-2xs transition-all placeholder:text-slate-400"
                   />
                   <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
@@ -304,9 +304,9 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-6 py-2 bg-[#013e37] hover:bg-[#012d28] text-[#ffefb3] font-bold text-xs rounded-xl shadow-2xs transition-all hover:shadow-xs cursor-pointer disabled:opacity-60 flex items-center gap-1.5"
+              className="px-6 py-2 bg-brand-primary hover:bg-brand-primary-hover text-brand-btn-text font-bold text-xs rounded-xl shadow-2xs transition-all hover:shadow-xs cursor-pointer disabled:opacity-60 flex items-center gap-1.5"
             >
-              {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin text-[#ffefb3]" />}
+              {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-btn-text" />}
               <span>Submit</span>
             </button>
           </div>

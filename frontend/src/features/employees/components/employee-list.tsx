@@ -115,7 +115,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
   if (isLoading) {
     return (
       <div className="w-full h-64 flex flex-col items-center justify-center gap-3">
-        <Loader2 className="w-8 h-8 text-[#013e37] animate-spin" />
+        <Loader2 className="w-8 h-8 text-brand-primary animate-spin" />
         <span className="text-slate-500 text-xs font-semibold">Loading employee directory...</span>
       </div>
     );
@@ -130,8 +130,8 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
             onClick={() => setActiveTab("list")}
             className={`flex items-center gap-2 px-4 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 cursor-pointer ${
               activeTab === "list"
-                ? "bg-[#013e37] text-[#ffefb3] shadow-2xs border border-[#013e37]"
-                : "text-slate-500 hover:text-[#013e37]"
+                ? "bg-brand-primary text-white shadow-2xs border border-brand-primary"
+                : "text-slate-500 hover:text-brand-primary"
             }`}
           >
             <List className="w-3.5 h-3.5" />
@@ -141,8 +141,8 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
             onClick={() => setActiveTab("chart")}
             className={`flex items-center gap-2 px-4 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 cursor-pointer ${
               activeTab === "chart"
-                ? "bg-[#013e37] text-[#ffefb3] shadow-2xs border border-[#013e37]"
-                : "text-slate-500 hover:text-[#013e37]"
+                ? "bg-brand-primary text-white shadow-2xs border border-brand-primary"
+                : "text-slate-500 hover:text-brand-primary"
             }`}
           >
             <LayoutGrid className="w-3.5 h-3.5" />

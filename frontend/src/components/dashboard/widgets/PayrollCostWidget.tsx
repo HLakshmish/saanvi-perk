@@ -19,17 +19,17 @@ export const PayrollCostWidget: React.FC = () => {
   ];
 
   return (
-    <div className="bg-white p-4 rounded-xl border border-[#013e37]/15 shadow-2xs flex flex-col justify-between overflow-hidden">
+    <div className="bg-white p-4 rounded-xl border border-brand-primary/15 shadow-2xs flex flex-col justify-between overflow-hidden">
       <div>
         {/* Header */}
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-[#013e37]/10 flex items-center justify-center">
-              <IndianRupee className="w-3.5 h-3.5 text-[#013e37]" />
+            <div className="w-7 h-7 rounded-lg bg-brand-primary/10 flex items-center justify-center">
+              <IndianRupee className="w-3.5 h-3.5 text-brand-primary" />
             </div>
-            <h3 className="font-bold text-[#013e37] text-xs sm:text-sm">Payroll Cost</h3>
+            <h3 className="font-bold text-brand-primary text-xs sm:text-sm">Payroll Cost</h3>
           </div>
-          <div className="flex items-center gap-1 text-[10px] font-bold text-[#013e37] bg-[#013e37]/10 px-2 py-0.5 rounded-full">
+          <div className="flex items-center gap-1 text-[10px] font-bold text-brand-primary bg-brand-primary/10 px-2 py-0.5 rounded-full">
             <TrendingUp className="w-2.5 h-2.5" />
             <span>+8.2%</span>
           </div>
@@ -37,7 +37,7 @@ export const PayrollCostWidget: React.FC = () => {
 
         {/* Cost Summary */}
         <div className="flex items-baseline gap-2 mb-2 ml-9">
-          <span className="text-xl font-extrabold text-[#013e37] leading-none">
+          <span className="text-xl font-extrabold text-brand-primary leading-none">
             {activePoint !== null ? amounts[activePoint] : "₹23.7L"}
           </span>
           <span className="text-[10px] text-slate-400 font-medium">
@@ -111,7 +111,7 @@ export const PayrollCostWidget: React.FC = () => {
               key={m}
               onClick={() => setActivePoint(i)}
               className={`cursor-pointer transition-colors ${
-                activePoint === i ? "text-[#013e37] font-extrabold" : "hover:text-slate-600"
+                activePoint === i ? "text-brand-primary font-extrabold" : "hover:text-slate-600"
               }`}
             >
               {m}

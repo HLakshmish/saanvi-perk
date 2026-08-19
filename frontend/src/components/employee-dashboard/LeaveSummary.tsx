@@ -12,10 +12,10 @@ export const LeaveSummary: React.FC<LeaveSummaryProps> = ({ onApplyLeave }) => {
     <div className="bg-white border border-slate-200/80 p-5 rounded-2xl shadow-2xs flex flex-col justify-between min-h-[250px]">
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-bold text-[#013e37] text-xs sm:text-sm">Leave Summary</h3>
+          <h3 className="font-bold text-brand-primary text-xs sm:text-sm">Leave Summary</h3>
           <button 
             onClick={onApplyLeave}
-            className="text-[10px] font-bold text-[#013e37] hover:underline flex items-center gap-0.5 cursor-pointer animate-in"
+            className="text-[10px] font-bold text-brand-primary hover:underline flex items-center gap-0.5 cursor-pointer animate-in"
           >
             <span>View Leave</span>
             <ChevronRight className="w-3.5 h-3.5" />
@@ -27,9 +27,9 @@ export const LeaveSummary: React.FC<LeaveSummaryProps> = ({ onApplyLeave }) => {
             <p className="text-[9px] text-emerald-700 font-bold uppercase tracking-wider">Available</p>
             <p className="text-base font-extrabold text-emerald-950 mt-1">12.0</p>
           </div>
-          <div className="bg-[#f4fbf7] border border-[#013e37]/10 rounded-xl p-2">
-            <p className="text-[9px] text-[#013e37]/80 font-bold uppercase tracking-wider">Used</p>
-            <p className="text-base font-extrabold text-[#013e37] mt-1">3.0</p>
+          <div className="bg-[#f4fbf7] border border-brand-primary/10 rounded-xl p-2">
+            <p className="text-[9px] text-brand-primary/80 font-bold uppercase tracking-wider">Used</p>
+            <p className="text-base font-extrabold text-brand-primary mt-1">3.0</p>
           </div>
           <div className="bg-slate-50 border border-slate-100 rounded-xl p-2">
             <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Pending</p>
@@ -64,7 +64,7 @@ export const LeaveSummary: React.FC<LeaveSummaryProps> = ({ onApplyLeave }) => {
 
       <button
         onClick={onApplyLeave}
-        className="w-full mt-3 py-2 bg-[#013e37] text-[#ffefb3] hover:bg-[#012d28] text-xs font-bold rounded-xl shadow-2xs transition-colors flex items-center justify-center gap-1 cursor-pointer"
+        className="w-full mt-3 py-2 bg-brand-primary text-brand-btn-text hover:bg-brand-primary-hover text-xs font-bold rounded-xl shadow-2xs transition-colors flex items-center justify-center gap-1 cursor-pointer"
       >
         <Plus className="w-3.5 h-3.5" />
         <span>Apply Leave</span>

@@ -91,7 +91,7 @@ export const DepartmentFormModal: React.FC<DepartmentFormModalProps> = ({
       <div className="bg-white rounded-3xl w-full max-w-lg max-h-[90vh] flex flex-col shadow-2xl border border-slate-100 overflow-hidden animate-in zoom-in-95 duration-200">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
-          <h3 className="text-sm font-bold text-[#013e37] uppercase tracking-wider">
+          <h3 className="text-sm font-bold text-brand-primary uppercase tracking-wider">
             {department ? "Edit Department" : "Add Department"}
           </h3>
           <button
@@ -148,7 +148,7 @@ export const DepartmentFormModal: React.FC<DepartmentFormModalProps> = ({
               <select
                 value={headId}
                 onChange={(e) => setHeadId(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 font-semibold text-slate-800 text-sm focus:outline-none focus:border-[#013e37] focus:bg-white transition-all cursor-pointer"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 font-semibold text-slate-800 text-sm focus:outline-none focus:border-brand-primary focus:bg-white transition-all cursor-pointer"
               >
                 <option value="">-- Choose Head --</option>
                 {employees.map((emp) => (
@@ -169,7 +169,7 @@ export const DepartmentFormModal: React.FC<DepartmentFormModalProps> = ({
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Brief department responsibilities..."
                 rows={3}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 font-semibold text-slate-800 text-sm focus:outline-none focus:border-[#013e37] focus:bg-white transition-all resize-none"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 font-semibold text-slate-800 text-sm focus:outline-none focus:border-brand-primary focus:bg-white transition-all resize-none"
               />
             </div>
 
@@ -181,7 +181,7 @@ export const DepartmentFormModal: React.FC<DepartmentFormModalProps> = ({
               <select
                 value={status ? "active" : "inactive"}
                 onChange={(e) => setStatus(e.target.value === "active")}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 font-semibold text-slate-800 text-sm focus:outline-none focus:border-[#013e37] focus:bg-white transition-all cursor-pointer"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 font-semibold text-slate-800 text-sm focus:outline-none focus:border-brand-primary focus:bg-white transition-all cursor-pointer"
               >
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>

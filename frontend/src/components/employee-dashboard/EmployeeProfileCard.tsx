@@ -21,7 +21,7 @@ export const EmployeeProfileCard: React.FC<EmployeeProfileCardProps> = ({
   if (isLoading) {
     return (
       <div className="bg-white border border-slate-200/85 rounded-2xl p-5 shadow-2xs flex flex-col items-center justify-center text-center py-12 min-h-[280px]">
-        <Loader2 className="w-6 h-6 text-[#013e37] animate-spin" />
+        <Loader2 className="w-6 h-6 text-brand-primary animate-spin" />
         <span className="text-[11px] text-slate-400 font-semibold mt-2">Loading profile...</span>
       </div>
     );
@@ -31,15 +31,15 @@ export const EmployeeProfileCard: React.FC<EmployeeProfileCardProps> = ({
 
   return (
     <div className="bg-white border border-slate-200/85 rounded-2xl p-5 shadow-2xs flex flex-col items-center text-center space-y-4">
-      <div className="w-18 h-18 rounded-full bg-[#013e37]/5 border border-[#013e37]/15 flex items-center justify-center shadow-inner relative select-none">
-        <span className="text-[#013e37] text-2.5xl font-extrabold tracking-tight">
+      <div className="w-18 h-18 rounded-full bg-brand-primary/5 border border-brand-primary/15 flex items-center justify-center shadow-inner relative select-none">
+        <span className="text-brand-primary text-2.5xl font-extrabold tracking-tight">
           {firstLetter}
         </span>
       </div>
 
       <div className="space-y-1">
         <h3 className="font-bold text-slate-900 text-sm tracking-tight">{employeeFullName}</h3>
-        <p className="text-[10px] text-[#013e37] font-bold uppercase tracking-wider">{designationName}</p>
+        <p className="text-[10px] text-brand-primary font-bold uppercase tracking-wider">{designationName}</p>
       </div>
 
       <div className="w-full h-px bg-slate-100" />
@@ -69,7 +69,7 @@ export const EmployeeProfileCard: React.FC<EmployeeProfileCardProps> = ({
 
       <button
         onClick={onViewProfile}
-        className="w-full py-2 border border-[#013e37]/20 text-[#013e37] hover:bg-[#013e37]/5 text-xs font-bold rounded-xl shadow-2xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+        className="w-full py-2 border border-brand-primary/20 text-brand-primary hover:bg-brand-primary/5 text-xs font-bold rounded-xl shadow-2xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
       >
         <User className="w-3.5 h-3.5" />
         <span>View Full Profile</span>

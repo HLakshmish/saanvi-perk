@@ -203,7 +203,7 @@ export const LeaveTypesDetailView: React.FC<LeaveTypesDetailViewProps> = ({ onBa
         <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold">
           <button
             onClick={onBack}
-            className="inline-flex items-center gap-1 text-slate-500 hover:text-[#013e37] font-bold transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1 text-slate-500 hover:text-brand-primary font-bold transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Leave</span>
@@ -216,7 +216,7 @@ export const LeaveTypesDetailView: React.FC<LeaveTypesDetailViewProps> = ({ onBa
         {viewState === "read" && (
           <button
             onClick={handleStartAdd}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#013e37] hover:bg-[#012d28] text-[#ffefb3] font-bold text-xs rounded-xl shadow-md shadow-[#013e37]/20 transition-all hover:-translate-y-0.5 cursor-pointer"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-brand-primary hover:bg-brand-primary-hover text-brand-btn-text font-bold text-xs rounded-xl shadow-md shadow-brand-primary/20 transition-all hover:-translate-y-0.5 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Add New Leave</span>
@@ -252,7 +252,7 @@ export const LeaveTypesDetailView: React.FC<LeaveTypesDetailViewProps> = ({ onBa
           <div className="space-y-1.5 max-h-[400px] overflow-y-auto">
             {isLoading ? (
               <div className="flex items-center justify-center py-8 text-xs font-bold text-slate-500 gap-1.5">
-                <Loader2 className="w-4 h-4 animate-spin text-[#013e37]" />
+                <Loader2 className="w-4 h-4 animate-spin text-brand-primary" />
                 <span>Loading...</span>
               </div>
             ) : leaveTypes.length === 0 ? (
@@ -268,7 +268,7 @@ export const LeaveTypesDetailView: React.FC<LeaveTypesDetailViewProps> = ({ onBa
                     onClick={() => handleSelectLeave(leave)}
                     className={`group w-full text-left px-3.5 py-3 rounded-xl text-xs font-bold flex items-center justify-between border cursor-pointer transition-all ${
                       isSelected
-                        ? "bg-[#013e37]/10 text-[#013e37] border-[#013e37]/20"
+                        ? "bg-brand-primary/10 text-brand-primary border-brand-primary/20"
                         : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200/80 hover:border-slate-300"
                     }`}
                   >
@@ -282,7 +282,7 @@ export const LeaveTypesDetailView: React.FC<LeaveTypesDetailViewProps> = ({ onBa
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
-                      <ChevronRight className={`w-4 h-4 shrink-0 transition-transform ${isSelected ? "text-[#013e37] translate-x-0.5" : "text-slate-400"}`} />
+                      <ChevronRight className={`w-4 h-4 shrink-0 transition-transform ${isSelected ? "text-brand-primary translate-x-0.5" : "text-slate-400"}`} />
                     </div>
                   </div>
                 );
@@ -303,7 +303,7 @@ export const LeaveTypesDetailView: React.FC<LeaveTypesDetailViewProps> = ({ onBa
                   </h3>
                   <button
                     onClick={handleStartEdit}
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#013e37] hover:text-[#012d28] transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-primary hover:text-[#012d28] transition-colors cursor-pointer"
                   >
                     <Edit3 className="w-3.5 h-3.5" />
                     <span>Edit Details</span>
@@ -379,10 +379,10 @@ export const LeaveTypesDetailView: React.FC<LeaveTypesDetailViewProps> = ({ onBa
                   <button
                     type="submit"
                     disabled={isSaving}
-                    className="px-4 py-1.5 bg-[#013e37] hover:bg-[#012d28] text-[#ffefb3] rounded-lg text-xs font-bold shadow-2xs cursor-pointer flex items-center gap-1 transition-colors"
+                    className="px-4 py-1.5 bg-brand-primary hover:bg-brand-primary-hover text-brand-btn-text rounded-lg text-xs font-bold shadow-2xs cursor-pointer flex items-center gap-1 transition-colors"
                   >
                     {isSaving ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin text-[#ffefb3]" />
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-btn-text" />
                     ) : (
                       <Check className="w-3.5 h-3.5" />
                     )}
@@ -404,7 +404,7 @@ export const LeaveTypesDetailView: React.FC<LeaveTypesDetailViewProps> = ({ onBa
                     value={formName}
                     onChange={(e) => setFormName(e.target.value)}
                     placeholder="e.g. Sick Leave / Casual Leave"
-                    className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-[#013e37]"
+                    className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-brand-primary"
                   />
                 </div>
 
@@ -419,7 +419,7 @@ export const LeaveTypesDetailView: React.FC<LeaveTypesDetailViewProps> = ({ onBa
                     value={formCode}
                     onChange={(e) => setFormCode(e.target.value)}
                     placeholder="e.g. SL+CL"
-                    className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-[#013e37]"
+                    className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-brand-primary"
                   />
                 </div>
 
@@ -433,7 +433,7 @@ export const LeaveTypesDetailView: React.FC<LeaveTypesDetailViewProps> = ({ onBa
                     value={formRemarks}
                     onChange={(e) => setFormRemarks(e.target.value)}
                     placeholder="Enter description or rules regarding this leave type..."
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2 font-semibold text-slate-800 focus:outline-none focus:border-[#013e37]"
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2 font-semibold text-slate-800 focus:outline-none focus:border-brand-primary"
                   />
                 </div>
 
@@ -444,7 +444,7 @@ export const LeaveTypesDetailView: React.FC<LeaveTypesDetailViewProps> = ({ onBa
                     id="leaveTypeStatus"
                     checked={formStatus}
                     onChange={(e) => setFormStatus(e.target.checked)}
-                    className="w-4 h-4 rounded-sm text-[#013e37] focus:ring-[#013e37]"
+                    className="w-4 h-4 rounded-sm text-brand-primary focus:ring-brand-primary"
                   />
                   <label htmlFor="leaveTypeStatus" className="text-slate-700 font-bold uppercase text-[10px] tracking-wider cursor-pointer">
                     Active / Status

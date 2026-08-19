@@ -74,7 +74,7 @@ export const AttendanceCard: React.FC<AttendanceCardProps> = ({
   const displayCheckOutTime = formatCheckInDisplay(checkOutTime);
 
   return (
-    <div className="relative overflow-hidden bg-[#013e37] border border-[#ffefb3]/25 p-4 sm:p-5 rounded-2xl sm:rounded-3xl text-[#ffefb3] shadow-md flex flex-col justify-between">
+    <div className="relative overflow-hidden bg-brand-primary border border-[#ffefb3]/25 p-4 sm:p-5 rounded-2xl sm:rounded-3xl text-brand-btn-text shadow-md flex flex-col justify-between">
       {/* Decorative backdrop glow circles */}
       <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-white/5 pointer-events-none" />
       <div className="absolute -bottom-8 -left-8 w-24 h-24 rounded-full bg-white/5 pointer-events-none" />
@@ -82,7 +82,7 @@ export const AttendanceCard: React.FC<AttendanceCardProps> = ({
       {/* Top Bar: Title */}
       <div className="flex items-center justify-between gap-2 z-10">
         <div>
-          <h3 className="text-base sm:text-lg font-extrabold text-[#ffefb3] tracking-tight">
+          <h3 className="text-base sm:text-lg font-extrabold text-brand-btn-text tracking-tight">
             Check In / Out
           </h3>
         </div>
@@ -93,14 +93,14 @@ export const AttendanceCard: React.FC<AttendanceCardProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
           {/* Left: Working Hours */}
           <div className="text-center sm:text-left sm:border-r sm:border-[#ffefb3]/15 sm:pr-4">
-            <div className="text-3xl sm:text-4xl font-mono font-extrabold tracking-widest text-[#ffefb3]">
+            <div className="text-3xl sm:text-4xl font-mono font-extrabold tracking-widest text-brand-btn-text">
               {formatTime(seconds)}
             </div>
           </div>
 
           {/* Right: Dynamic Check-In or Check-Out Time */}
           <div className="flex flex-col items-center sm:items-start justify-center p-3 bg-black/10 sm:bg-white/5 rounded-xl border border-white/5">
-            <span className="text-[10px] text-[#ffefb3]/80 font-bold uppercase tracking-wider mb-1">
+            <span className="text-[10px] text-brand-btn-text/80 font-bold uppercase tracking-wider mb-1">
               {isCheckedOut ? "Check-Out Time" : "Check-In Time"}
             </span>
             <span className="text-xl sm:text-2xl font-mono font-extrabold text-white">
@@ -119,7 +119,7 @@ export const AttendanceCard: React.FC<AttendanceCardProps> = ({
           className={`py-3 px-3 rounded-xl font-extrabold text-xs sm:text-sm transition-all flex items-center justify-center gap-1.5 shadow-md active:scale-[0.98] cursor-pointer ${
             isCheckedIn
               ? "bg-white/10 text-white/50 border border-white/10 cursor-not-allowed"
-              : "bg-[#ffefb3] text-[#013e37] hover:bg-[#ffe794] border border-[#ffefb3] shadow-black/20"
+              : "bg-[#ffefb3] text-brand-primary hover:bg-[#ffe794] border border-[#ffefb3] shadow-black/20"
           }`}
         >
           {isLoadingLocation && !isCheckedIn ? (

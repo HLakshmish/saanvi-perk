@@ -119,7 +119,7 @@ export const LeavesSummaryTab: React.FC<LeavesSummaryTabProps> = ({
       {/* Top Header Row with Title & Action Buttons */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-[#013e37] tracking-tight">
+          <h2 className="text-xl sm:text-2xl font-bold text-brand-primary tracking-tight">
             Leave Summary
           </h2>
           <p className="text-xs text-slate-500 font-semibold">
@@ -129,13 +129,13 @@ export const LeavesSummaryTab: React.FC<LeavesSummaryTabProps> = ({
         <div className="flex items-center gap-3">
           <button
             onClick={onOpenCompOffModal}
-            className="px-4 py-2 border border-[#013e37]/20 text-[#013e37] hover:bg-[#013e37]/5 font-bold text-xs rounded-xl shadow-2xs transition-colors cursor-pointer"
+            className="px-4 py-2 border border-brand-primary/20 text-brand-primary hover:bg-brand-primary/5 font-bold text-xs rounded-xl shadow-2xs transition-colors cursor-pointer"
           >
             Add Comp Off Balance
           </button>
           <button
             onClick={onOpenApplyLeaveModal}
-            className="px-5 py-2 bg-[#013e37] hover:bg-[#012d28] text-[#ffefb3] font-bold text-xs rounded-xl shadow-2xs transition-all hover:shadow-xs cursor-pointer"
+            className="px-5 py-2 bg-brand-primary hover:bg-brand-primary-hover text-brand-btn-text font-bold text-xs rounded-xl shadow-2xs transition-all hover:shadow-xs cursor-pointer"
           >
             Apply Leave
           </button>

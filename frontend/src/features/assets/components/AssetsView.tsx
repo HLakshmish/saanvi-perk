@@ -237,8 +237,8 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ currentRole = "admin" })
         );
       case "ASSIGNED":
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#013e37]/10 text-[#013e37] border border-[#013e37]/20">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#013e37] mr-1.5" />
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-brand-primary/10 text-brand-primary border border-brand-primary/20">
+            <span className="w-1.5 h-1.5 rounded-full bg-brand-primary mr-1.5" />
             ASSIGNED
           </span>
         );
@@ -271,11 +271,11 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ currentRole = "admin" })
       {/* Top Banner Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-white border border-[#013e37]/20 shadow-2xs flex items-center justify-center">
-            <Laptop className="w-5 h-5 text-[#013e37]" />
+          <div className="w-11 h-11 rounded-2xl bg-white border border-brand-primary/20 shadow-2xs flex items-center justify-center">
+            <Laptop className="w-5 h-5 text-brand-primary" />
           </div>
           <div>
-            <h1 className="text-xl sm:text-2xl font-extrabold text-[#013e37] tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-extrabold text-brand-primary tracking-tight">
               Asset Management
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
@@ -293,9 +293,9 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ currentRole = "admin" })
               setAssetToEdit(null);
               setIsCreateModalOpen(true);
             }}
-            className="px-4 py-2.5 bg-[#013e37] hover:bg-[#012d28] text-[#ffefb3] font-bold rounded-xl text-xs sm:text-sm flex items-center gap-2 shadow-2xs transition-colors cursor-pointer"
+            className="px-4 py-2.5 bg-brand-primary hover:bg-brand-primary-hover text-brand-btn-text font-bold rounded-xl text-xs sm:text-sm flex items-center gap-2 shadow-2xs transition-colors cursor-pointer"
           >
-            <Plus className="w-4 h-4 text-[#ffefb3]" />
+            <Plus className="w-4 h-4 text-brand-btn-text" />
             <span>Add New Asset</span>
           </button>
         )}
@@ -331,12 +331,12 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ currentRole = "admin" })
 
             <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-[#013e37]">Assigned</span>
-                <div className="w-8 h-8 rounded-xl bg-[#013e37]/10 flex items-center justify-center text-[#013e37]">
+                <span className="text-xs font-semibold text-brand-primary">Assigned</span>
+                <div className="w-8 h-8 rounded-xl bg-brand-primary/10 flex items-center justify-center text-brand-primary">
                   <UserCheck className="w-4 h-4" />
                 </div>
               </div>
-              <p className="text-2xl font-extrabold text-[#013e37] mt-2">{assignedCount}</p>
+              <p className="text-2xl font-extrabold text-brand-primary mt-2">{assignedCount}</p>
             </div>
 
             <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
@@ -361,7 +361,7 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ currentRole = "admin" })
               onClick={() => setActiveTab("inventory")}
               className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 activeTab === "inventory"
-                  ? "bg-[#013e37] text-[#ffefb3] shadow-xs"
+                  ? "bg-brand-primary text-brand-btn-text shadow-xs"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
@@ -371,7 +371,7 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ currentRole = "admin" })
               onClick={() => setActiveTab("assignments")}
               className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 activeTab === "assignments"
-                  ? "bg-[#013e37] text-[#ffefb3] shadow-xs"
+                  ? "bg-brand-primary text-brand-btn-text shadow-xs"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
@@ -382,7 +382,7 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ currentRole = "admin" })
                 onClick={() => setActiveTab("history")}
                 className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   activeTab === "history"
-                    ? "bg-[#013e37] text-[#ffefb3] shadow-xs"
+                    ? "bg-brand-primary text-brand-btn-text shadow-xs"
                     : "text-slate-600 hover:text-slate-900"
                 }`}
               >
@@ -399,7 +399,7 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ currentRole = "admin" })
               placeholder="Search code, name, serial..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-[#013e37] transition-all"
+              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-brand-primary transition-all"
             />
           </div>
         </div>
@@ -413,7 +413,7 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ currentRole = "admin" })
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-slate-800 font-bold focus:outline-none focus:border-[#013e37] cursor-pointer"
+                className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-slate-800 font-bold focus:outline-none focus:border-brand-primary cursor-pointer"
               >
                 <option value="ALL">All Statuses</option>
                 <option value="AVAILABLE">AVAILABLE</option>
@@ -430,7 +430,7 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ currentRole = "admin" })
               <select
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
-                className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-slate-800 font-bold focus:outline-none focus:border-[#013e37] cursor-pointer"
+                className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-slate-800 font-bold focus:outline-none focus:border-brand-primary cursor-pointer"
               >
                 <option value="ALL">All Types</option>
                 <option value="Laptop">Laptop</option>
@@ -449,7 +449,7 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ currentRole = "admin" })
       {/* Main Tab Content */}
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-slate-200/80 shadow-2xs space-y-3">
-          <Loader2 className="w-8 h-8 animate-spin text-[#013e37]" />
+          <Loader2 className="w-8 h-8 animate-spin text-brand-primary" />
           <p className="text-xs text-slate-500 font-bold">Loading asset details...</p>
         </div>
       ) : activeTab === "inventory" ? (
@@ -518,11 +518,11 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ currentRole = "admin" })
                           {(() => {
                             const emp = activeAssign?.userId ? employees.find((e) => Number(e.id) === activeAssign.userId) : null;
                             if (emp) {
-                              return <span className="text-[#013e37] font-bold">{emp.name}</span>;
+                              return <span className="text-brand-primary font-bold">{emp.name}</span>;
                             }
                             if (activeAssign?.user) {
                               return (
-                                <span className="text-[#013e37] font-bold">
+                                <span className="text-brand-primary font-bold">
                                   {activeAssign.user.firstName} {activeAssign.user.lastName || ""}
                                 </span>
                               );
@@ -542,7 +542,7 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ currentRole = "admin" })
                                     setIsAssignModalOpen(true);
                                   }}
                                   title="Assign to Employee"
-                                  className="px-2.5 py-1 rounded-lg bg-[#013e37]/10 hover:bg-[#013e37]/20 text-[#013e37] font-bold text-xs transition-colors cursor-pointer flex items-center gap-1"
+                                  className="px-2.5 py-1 rounded-lg bg-brand-primary/10 hover:bg-brand-primary/20 text-brand-primary font-bold text-xs transition-colors cursor-pointer flex items-center gap-1"
                                 >
                                   <UserCheck className="w-3.5 h-3.5" />
                                   <span>Assign</span>
@@ -555,7 +555,7 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ currentRole = "admin" })
                                   setIsCreateModalOpen(true);
                                 }}
                                 title="Edit Asset"
-                                className="p-1.5 rounded-lg text-slate-400 hover:text-[#013e37] hover:bg-slate-100 transition-colors cursor-pointer"
+                                className="p-1.5 rounded-lg text-slate-400 hover:text-brand-primary hover:bg-slate-100 transition-colors cursor-pointer"
                               >
                                 <Pencil className="w-4 h-4" />
                               </button>
@@ -620,7 +620,7 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ currentRole = "admin" })
                       </td>
 
                       {/* Employee */}
-                      <td className="py-4 px-4 font-bold text-[#013e37]">
+                      <td className="py-4 px-4 font-bold text-brand-primary">
                         {(() => {
                           const emp = assign.userId ? employees.find((e) => Number(e.id) === assign.userId) : null;
                           if (emp) return emp.name;
@@ -713,7 +713,7 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ currentRole = "admin" })
                       </td>
 
                       {/* Action Event */}
-                      <td className="py-4 px-4 font-bold text-[#013e37]">
+                      <td className="py-4 px-4 font-bold text-brand-primary">
                         <span className="uppercase">{log.action}</span>
                       </td>
 

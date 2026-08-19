@@ -309,8 +309,8 @@ export const LeavesView: React.FC = () => {
             onClick={() => setActiveTab("summary")}
             className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 cursor-pointer ${
               activeTab === "summary"
-                ? "bg-[#013e37] text-[#ffefb3] shadow-2xs border border-[#013e37]"
-                : "text-slate-500 hover:text-[#013e37]"
+                ? "bg-brand-primary text-brand-btn-text shadow-2xs border border-brand-primary"
+                : "text-slate-500 hover:text-brand-primary"
             }`}
           >
             Summary
@@ -319,8 +319,8 @@ export const LeavesView: React.FC = () => {
             onClick={() => setActiveTab("request")}
             className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 cursor-pointer ${
               activeTab === "request"
-                ? "bg-[#013e37] text-[#ffefb3] shadow-2xs border border-[#013e37]"
-                : "text-slate-500 hover:text-[#013e37]"
+                ? "bg-brand-primary text-brand-btn-text shadow-2xs border border-brand-primary"
+                : "text-slate-500 hover:text-brand-primary"
             }`}
           >
             Request
@@ -329,8 +329,8 @@ export const LeavesView: React.FC = () => {
             onClick={() => setActiveTab("holiday")}
             className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 cursor-pointer ${
               activeTab === "holiday"
-                ? "bg-[#013e37] text-[#ffefb3] shadow-2xs border border-[#013e37]"
-                : "text-slate-500 hover:text-[#013e37]"
+                ? "bg-brand-primary text-brand-btn-text shadow-2xs border border-brand-primary"
+                : "text-slate-500 hover:text-brand-primary"
             }`}
           >
             Holiday
@@ -341,7 +341,7 @@ export const LeavesView: React.FC = () => {
       {/* Render Active Tab Content */}
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-20 text-slate-500 gap-2 bg-white rounded-2xl border border-slate-200/80 p-8 shadow-2xs animate-fade-in">
-          <Loader2 className="w-8 h-8 animate-spin text-[#013e37]" />
+          <Loader2 className="w-8 h-8 animate-spin text-brand-primary" />
           <span className="text-xs font-bold">Loading leave data...</span>
         </div>
       ) : error ? (
@@ -353,7 +353,7 @@ export const LeavesView: React.FC = () => {
           </div>
           <button
             onClick={loadRequests}
-            className="px-5 py-2 bg-[#013e37] hover:bg-[#012d28] text-[#ffefb3] font-bold text-xs rounded-xl shadow-2xs cursor-pointer transition-colors"
+            className="px-5 py-2 bg-brand-primary hover:bg-brand-primary-hover text-brand-btn-text font-bold text-xs rounded-xl shadow-2xs cursor-pointer transition-colors"
           >
             Try Again
           </button>

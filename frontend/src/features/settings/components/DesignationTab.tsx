@@ -132,7 +132,7 @@ export const DesignationTab: React.FC<DesignationTabProps> = ({ onBack }) => {
           <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold">
             <button
               onClick={onBack}
-              className="text-slate-500 hover:text-[#013e37] font-bold transition-colors cursor-pointer"
+              className="text-slate-500 hover:text-brand-primary font-bold transition-colors cursor-pointer"
             >
               Organization
             </button>
@@ -146,7 +146,7 @@ export const DesignationTab: React.FC<DesignationTabProps> = ({ onBack }) => {
               setEditingDesignation(null);
               setIsFormOpen(true);
             }}
-            className="bg-[#013e37] text-[#ffefb3] hover:bg-[#012d28] font-bold text-xs rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5 self-start sm:self-auto"
+            className="bg-brand-primary text-brand-btn-text hover:bg-brand-primary-hover font-bold text-xs rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5 self-start sm:self-auto"
           >
             <Plus className="w-4 h-4" />
             <span>Add Designation</span>
@@ -163,14 +163,14 @@ export const DesignationTab: React.FC<DesignationTabProps> = ({ onBack }) => {
             />
           </div>
           <div className="text-xs font-semibold text-slate-500">
-            Total: <span className="font-extrabold text-[#013e37]">{filteredDesignations.length}</span> designations
+            Total: <span className="font-extrabold text-brand-primary">{filteredDesignations.length}</span> designations
           </div>
         </div>
 
         {/* Data Table Container */}
         {loading ? (
           <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center shadow-2xs">
-            <div className="w-8 h-8 rounded-full border-3 border-[#013e37] border-t-transparent animate-spin mx-auto mb-3" />
+            <div className="w-8 h-8 rounded-full border-3 border-brand-primary border-t-transparent animate-spin mx-auto mb-3" />
             <p className="text-xs font-bold text-slate-600">Loading designations...</p>
           </div>
         ) : error ? (
@@ -204,7 +204,7 @@ export const DesignationTab: React.FC<DesignationTabProps> = ({ onBack }) => {
                     <tr key={desig.designationId} className="hover:bg-slate-50/60 transition-colors">
                       <td className="py-3.5 px-4 font-bold text-slate-900">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-7 h-7 rounded-lg bg-[#013e37]/10 text-[#013e37] flex items-center justify-center font-bold text-xs shrink-0">
+                          <div className="w-7 h-7 rounded-lg bg-brand-primary/10 text-brand-primary flex items-center justify-center font-bold text-xs shrink-0">
                             <Briefcase className="w-3.5 h-3.5" />
                           </div>
                           <span>{desig.designationName}</span>
@@ -215,7 +215,7 @@ export const DesignationTab: React.FC<DesignationTabProps> = ({ onBack }) => {
                       </td>
                       <td className="py-3.5 px-4">
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 text-slate-800 font-bold text-[11px]">
-                          <Network className="w-3 h-3 text-[#013e37]" />
+                          <Network className="w-3 h-3 text-brand-primary" />
                           <span>{desig.department?.departmentName || getDepartmentName(desig.departmentId)}</span>
                         </span>
                       </td>
@@ -240,7 +240,7 @@ export const DesignationTab: React.FC<DesignationTabProps> = ({ onBack }) => {
                           <button
                             onClick={() => setViewingDesignation(desig)}
                             title="View Details"
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-[#013e37] hover:bg-slate-100 transition-colors cursor-pointer"
+                            className="p-1.5 rounded-lg text-slate-500 hover:text-brand-primary hover:bg-slate-100 transition-colors cursor-pointer"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
@@ -250,7 +250,7 @@ export const DesignationTab: React.FC<DesignationTabProps> = ({ onBack }) => {
                               setIsFormOpen(true);
                             }}
                             title="Edit"
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-[#013e37] hover:bg-slate-100 transition-colors cursor-pointer"
+                            className="p-1.5 rounded-lg text-slate-500 hover:text-brand-primary hover:bg-slate-100 transition-colors cursor-pointer"
                           >
                             <Pencil className="w-4 h-4" />
                           </button>
@@ -290,7 +290,7 @@ export const DesignationTab: React.FC<DesignationTabProps> = ({ onBack }) => {
           <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl border border-slate-100 overflow-hidden p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-[#013e37]/10 text-[#013e37] flex items-center justify-center font-bold">
+                <div className="w-9 h-9 rounded-xl bg-brand-primary/10 text-brand-primary flex items-center justify-center font-bold">
                   <Briefcase className="w-5 h-5" />
                 </div>
                 <div>

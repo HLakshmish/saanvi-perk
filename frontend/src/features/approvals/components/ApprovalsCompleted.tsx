@@ -38,7 +38,7 @@ export const ApprovalsCompleted: React.FC<ApprovalsCompletedProps> = ({
     <div className="bg-white rounded-2xl border border-slate-200/80 p-6 sm:p-8 shadow-2xs hover:shadow-xs transition-all min-h-[500px] flex flex-col relative">
       {/* Header Titles */}
       <div className="mb-6 text-left">
-        <h2 className="text-base font-bold text-[#013e37]">
+        <h2 className="text-base font-bold text-brand-primary">
           Completed Approvals
         </h2>
         <p className="text-xs text-slate-500 mt-1 font-semibold">
@@ -56,7 +56,7 @@ export const ApprovalsCompleted: React.FC<ApprovalsCompletedProps> = ({
             placeholder="Search by name or #code"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-3 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#013e37]/20 focus:border-[#013e37] shadow-2xs"
+            className="w-full pl-10 pr-3 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary shadow-2xs"
           />
         </div>
 
@@ -100,7 +100,7 @@ export const ApprovalsCompleted: React.FC<ApprovalsCompletedProps> = ({
                   }}
                   className={`w-full text-left px-4 py-2 text-xs font-semibold hover:bg-slate-50 transition-colors uppercase ${
                     selectedType === type
-                      ? "text-[#013e37] bg-[#013e37]/10"
+                      ? "text-brand-primary bg-brand-primary/10"
                       : "text-slate-700"
                   }`}
                 >
@@ -112,7 +112,7 @@ export const ApprovalsCompleted: React.FC<ApprovalsCompletedProps> = ({
         </div>
 
         {/* Search button */}
-        <button className="px-5 py-2 bg-[#013e37] hover:bg-[#012d28] text-[#ffefb3] font-bold text-sm rounded-xl shadow-2xs transition-all hover:shadow-xs cursor-pointer">
+        <button className="px-5 py-2 bg-brand-primary hover:bg-brand-primary-hover text-brand-btn-text font-bold text-sm rounded-xl shadow-2xs transition-all hover:shadow-xs cursor-pointer">
           Search
         </button>
       </div>

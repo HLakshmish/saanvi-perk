@@ -11,7 +11,7 @@ export const RequestsView: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl sm:text-2xl font-bold text-[#013e37] border-b border-[#013e37]/15 pb-3">
+      <h1 className="text-xl sm:text-2xl font-bold text-brand-primary border-b border-brand-primary/15 pb-3">
         Request History
       </h1>
 

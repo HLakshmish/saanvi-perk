@@ -841,13 +841,13 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
                                 }}
                                 className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border ${
                                   isSelected
-                                    ? "bg-[#013e37] text-[#ffefb3] border-[#013e37] shadow-2xs"
+                                    ? "bg-brand-primary text-brand-btn-text border-brand-primary shadow-2xs"
                                     : "bg-white text-slate-700 border-slate-300 hover:border-slate-400 hover:bg-slate-100"
                                 }`}
                               >
                                 <span
                                   className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center text-[9px] ${
-                                    isSelected ? "border-[#ffefb3] bg-[#ffefb3] text-[#013e37] font-extrabold" : "border-slate-400"
+                                    isSelected ? "border-[#ffefb3] bg-[#ffefb3] text-brand-primary font-extrabold" : "border-slate-400"
                                   }`}
                                 >
                                   {isSelected && "✓"}
@@ -1476,7 +1476,7 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
                           id="isInternationalWorker"
                           checked={formData.isInternationalWorker}
                           onChange={(e) => handleChange("isInternationalWorker", e.target.checked)}
-                          className="w-4 h-4 rounded text-[#013e37] border-slate-300 focus:ring-[#013e37]"
+                          className="w-4 h-4 rounded text-brand-primary border-slate-300 focus:ring-brand-primary"
                         />
                         <label htmlFor="isInternationalWorker" className="text-xs font-semibold text-slate-700 cursor-pointer select-none">
                           Is International Worker?

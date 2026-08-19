@@ -47,9 +47,9 @@ export const EmployeeListPage: React.FC<EmployeeListPageProps> = ({
   return (
     <div className="w-full space-y-5 text-slate-900 animate-fade-in">
       {/* Header Area */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-3 border-b border-[#013e37]/15">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-3 border-b border-brand-primary/15">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-[#013e37] tracking-tight">
+          <h2 className="text-xl sm:text-2xl font-bold text-brand-primary tracking-tight">
             Employees
           </h2>
           <p className="text-slate-500 text-xs font-semibold">
@@ -62,7 +62,7 @@ export const EmployeeListPage: React.FC<EmployeeListPageProps> = ({
             <Button
               variant="primary"
               size="sm"
-              className="h-9 text-xs bg-[#013e37] text-[#ffefb3] hover:bg-[#012d28] font-bold rounded-xl shadow-xs"
+              className="h-9 text-xs font-bold rounded-xl shadow-xs"
               onClick={() => setShowWizard(true)}
             >
               Add Employee

@@ -212,7 +212,7 @@ export const LeaveAllocationFormModal: React.FC<LeaveAllocationFormModalProps> =
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 shrink-0">
           <div>
-            <h2 className="text-sm font-bold text-[#013e37] uppercase tracking-wider">
+            <h2 className="text-sm font-bold text-brand-primary uppercase tracking-wider">
               {allocationRecord ? "Edit Leave Allocation" : "Allocate Leaves to Employee"}
             </h2>
             <p className="text-[10px] text-slate-400 font-semibold uppercase mt-0.5">
@@ -419,7 +419,7 @@ export const LeaveAllocationFormModal: React.FC<LeaveAllocationFormModalProps> =
                   id="modalIsOpeningBalance"
                   checked={isOpeningBalance}
                   onChange={(e) => setIsOpeningBalance(e.target.checked)}
-                  className="rounded-sm text-[#013e37] focus:ring-[#013e37]"
+                  className="rounded-sm text-brand-primary focus:ring-brand-primary"
                 />
                 <label htmlFor="modalIsOpeningBalance" className="cursor-pointer">Mark as Opening Balance</label>
               </div>
@@ -436,7 +436,7 @@ export const LeaveAllocationFormModal: React.FC<LeaveAllocationFormModalProps> =
                   id="modalStatus"
                   checked={status}
                   onChange={(e) => setStatus(e.target.checked)}
-                  className="rounded-sm text-[#013e37] focus:ring-[#013e37]"
+                  className="rounded-sm text-brand-primary focus:ring-brand-primary"
                 />
                 <label htmlFor="modalStatus" className="cursor-pointer">Active</label>
               </div>
@@ -470,10 +470,10 @@ export const LeaveAllocationFormModal: React.FC<LeaveAllocationFormModalProps> =
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-5 py-2 bg-[#013e37] hover:bg-[#012d28] disabled:bg-[#013e37]/70 text-[#ffefb3] rounded-xl text-xs font-bold shadow-md cursor-pointer flex items-center gap-1.5 transition-colors"
+              className="px-5 py-2 bg-brand-primary hover:bg-brand-primary-hover disabled:bg-brand-primary/70 text-brand-btn-text rounded-xl text-xs font-bold shadow-md cursor-pointer flex items-center gap-1.5 transition-colors"
             >
               {isSubmitting ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-[#ffefb3]" />
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-btn-text" />
               ) : (
                 <Check className="w-3.5 h-3.5" />
               )}

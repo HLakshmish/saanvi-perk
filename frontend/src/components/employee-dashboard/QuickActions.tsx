@@ -35,7 +35,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ onTabChange }) => {
       subtitle: "Apply & Balance",
       icon: Umbrella,
       bgClass: "bg-teal-50 text-teal-800 border-teal-100 hover:border-teal-300",
-      iconBg: "bg-[#013e37] text-[#ffefb3]",
+      iconBg: "bg-brand-primary text-brand-btn-text",
     },
     {
       id: "requests",
@@ -84,11 +84,11 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ onTabChange }) => {
       {/* Header */}
       <div className="flex items-center justify-between mb-3.5 sm:mb-4 pb-2 border-b border-slate-100">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-[#013e37]/10 flex items-center justify-center text-[#013e37]">
+          <div className="w-7 h-7 rounded-lg bg-brand-primary/10 flex items-center justify-center text-brand-primary">
             <LayoutGrid className="w-4 h-4" />
           </div>
           <div>
-            <h3 className="font-extrabold text-[#013e37] text-xs sm:text-sm tracking-tight">
+            <h3 className="font-extrabold text-brand-primary text-xs sm:text-sm tracking-tight">
               Quick Hub
             </h3>
           </div>
@@ -103,7 +103,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ onTabChange }) => {
             <button
               key={item.id}
               onClick={() => onTabChange(item.id)}
-              className="group relative flex flex-col p-3 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-200/90 bg-slate-50/50 hover:bg-white hover:border-[#013e37]/40 hover:shadow-md transition-all duration-200 text-left cursor-pointer active:scale-95 overflow-hidden"
+              className="group relative flex flex-col p-3 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-200/90 bg-slate-50/50 hover:bg-white hover:border-brand-primary/40 hover:shadow-md transition-all duration-200 text-left cursor-pointer active:scale-95 overflow-hidden"
             >
               <div className="flex items-center justify-between w-full mb-2">
                 <div
@@ -111,11 +111,11 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ onTabChange }) => {
                 >
                   <Icon className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
                 </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#013e37] group-hover:translate-x-0.5 transition-all" />
+                  <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-brand-primary group-hover:translate-x-0.5 transition-all" />
               </div>
 
               <div className="mt-0.5">
-                <h4 className="font-extrabold text-xs text-slate-800 group-hover:text-[#013e37] transition-colors leading-tight">
+                <h4 className="font-extrabold text-xs text-slate-800 group-hover:text-brand-primary transition-colors leading-tight">
                   {item.title}
                 </h4>
                 <p className="text-[10px] text-slate-500 font-medium truncate mt-0.5">

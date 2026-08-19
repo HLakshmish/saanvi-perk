@@ -283,7 +283,7 @@ export const OrganizationChart: React.FC<OrganizationChartProps> = ({
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-slate-200/80 shadow-xs space-y-3">
-        <Loader2 className="w-8 h-8 text-[#013e37] animate-spin" />
+        <Loader2 className="w-8 h-8 text-brand-primary animate-spin" />
         <span className="text-slate-500 text-xs font-bold">
           Loading organizational hierarchy...
         </span>
@@ -310,7 +310,7 @@ export const OrganizationChart: React.FC<OrganizationChartProps> = ({
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 mb-6 border-b border-slate-100">
         <div>
           <div className="flex items-center gap-2">
-            <h3 className="text-base sm:text-lg font-extrabold text-[#013e37] tracking-tight">
+            <h3 className="text-base sm:text-lg font-extrabold text-brand-primary tracking-tight">
               Organization Hierarchy
             </h3>
           </div>
@@ -333,7 +333,7 @@ export const OrganizationChart: React.FC<OrganizationChartProps> = ({
               }}
               onFocus={() => setIsDropdownOpen(true)}
               placeholder="Search employee or code..."
-              className="w-full pl-9 pr-3.5 py-2 border border-slate-200 bg-slate-50 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-[#013e37] font-semibold transition-all"
+              className="w-full pl-9 pr-3.5 py-2 border border-slate-200 bg-slate-50 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-brand-primary font-semibold transition-all"
             />
 
             {/* Search Dropdown Overlay */}
@@ -343,7 +343,7 @@ export const OrganizationChart: React.FC<OrganizationChartProps> = ({
                   <button
                     key={emp.id}
                     onClick={() => handleSelectEmployee(emp)}
-                    className="flex flex-col w-full text-left px-3.5 py-2.5 hover:bg-[#013e37]/5 transition-colors cursor-pointer"
+                    className="flex flex-col w-full text-left px-3.5 py-2.5 hover:bg-brand-primary/5 transition-colors cursor-pointer"
                   >
                     <span className="font-bold text-slate-900 text-xs uppercase">
                       {emp.name}
@@ -370,7 +370,7 @@ export const OrganizationChart: React.FC<OrganizationChartProps> = ({
             <button
               onClick={() => setZoomLevel((prev) => Math.max(0.6, prev - 0.1))}
               title="Zoom Out"
-              className="p-1.5 text-slate-600 hover:text-[#013e37] hover:bg-white rounded-lg transition-all cursor-pointer"
+              className="p-1.5 text-slate-600 hover:text-brand-primary hover:bg-white rounded-lg transition-all cursor-pointer"
             >
               <ZoomOut className="w-3.5 h-3.5" />
             </button>
@@ -380,14 +380,14 @@ export const OrganizationChart: React.FC<OrganizationChartProps> = ({
             <button
               onClick={() => setZoomLevel((prev) => Math.min(1.4, prev + 0.1))}
               title="Zoom In"
-              className="p-1.5 text-slate-600 hover:text-[#013e37] hover:bg-white rounded-lg transition-all cursor-pointer"
+              className="p-1.5 text-slate-600 hover:text-brand-primary hover:bg-white rounded-lg transition-all cursor-pointer"
             >
               <ZoomIn className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => setZoomLevel(0.9)}
               title="Reset Zoom (90%)"
-              className="p-1.5 text-slate-600 hover:text-[#013e37] hover:bg-white rounded-lg transition-all cursor-pointer"
+              className="p-1.5 text-slate-600 hover:text-brand-primary hover:bg-white rounded-lg transition-all cursor-pointer"
             >
               <RotateCcw className="w-3.5 h-3.5" />
             </button>

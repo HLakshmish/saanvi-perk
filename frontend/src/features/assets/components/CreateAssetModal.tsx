@@ -115,11 +115,11 @@ export const CreateAssetModal: React.FC<CreateAssetModalProps> = ({
 
         {/* Modal Header */}
         <div className="flex items-center gap-3.5 mb-6 pb-4 border-b border-slate-100">
-          <div className="w-12 h-12 rounded-2xl bg-[#013e37] text-[#ffefb3] flex items-center justify-center shadow-md shrink-0">
+          <div className="w-12 h-12 rounded-2xl bg-brand-primary text-brand-btn-text flex items-center justify-center shadow-md shrink-0">
             <Laptop className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-[#013e37]">
+            <h2 className="text-xl font-bold text-brand-primary">
               {assetToEdit ? "Edit Asset Details" : "Register New Asset"}
             </h2>
             <p className="text-xs text-slate-500 font-medium">
@@ -138,7 +138,7 @@ export const CreateAssetModal: React.FC<CreateAssetModalProps> = ({
           {/* Section 1: Basic Information */}
           <div className="bg-slate-50/70 p-4 rounded-2xl border border-slate-200/60 space-y-3">
             <div className="flex items-center gap-2 font-bold text-slate-900 text-xs uppercase tracking-wider">
-              <Info className="w-4 h-4 text-[#013e37]" />
+              <Info className="w-4 h-4 text-brand-primary" />
               <span>Basic Information</span>
             </div>
 
@@ -151,7 +151,7 @@ export const CreateAssetModal: React.FC<CreateAssetModalProps> = ({
                   value={formData.assetCode}
                   onChange={(e) => setFormData({ ...formData, assetCode: e.target.value })}
                   placeholder="e.g. AST-LAP-001"
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white font-mono font-bold text-slate-900 focus:outline-none focus:border-[#013e37] transition-colors"
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white font-mono font-bold text-slate-900 focus:outline-none focus:border-brand-primary transition-colors"
                 />
               </div>
 
@@ -163,7 +163,7 @@ export const CreateAssetModal: React.FC<CreateAssetModalProps> = ({
                   value={formData.assetName}
                   onChange={(e) => setFormData({ ...formData, assetName: e.target.value })}
                   placeholder="e.g. Dell Latitude 5440"
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white font-semibold text-slate-900 focus:outline-none focus:border-[#013e37] transition-colors"
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white font-semibold text-slate-900 focus:outline-none focus:border-brand-primary transition-colors"
                 />
               </div>
 
@@ -173,7 +173,7 @@ export const CreateAssetModal: React.FC<CreateAssetModalProps> = ({
                   required
                   value={formData.assetType}
                   onChange={(e) => setFormData({ ...formData, assetType: e.target.value })}
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white font-semibold text-slate-900 focus:outline-none focus:border-[#013e37] transition-colors cursor-pointer"
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white font-semibold text-slate-900 focus:outline-none focus:border-brand-primary transition-colors cursor-pointer"
                 >
                   <option value="LAPTOP">LAPTOP / Computer</option>
                   <option value="MONITOR">MONITOR / Display</option>
@@ -190,7 +190,7 @@ export const CreateAssetModal: React.FC<CreateAssetModalProps> = ({
                 <select
                   value={formData.assetStatus}
                   onChange={(e) => setFormData({ ...formData, assetStatus: e.target.value as AssetStatus })}
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white font-bold text-[#013e37] focus:outline-none focus:border-[#013e37] transition-colors cursor-pointer"
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white font-bold text-brand-primary focus:outline-none focus:border-brand-primary transition-colors cursor-pointer"
                 >
                   <option value="AVAILABLE">AVAILABLE</option>
                   <option value="ASSIGNED">ASSIGNED</option>
@@ -206,7 +206,7 @@ export const CreateAssetModal: React.FC<CreateAssetModalProps> = ({
           {/* Section 2: Hardware Specifications */}
           <div className="bg-slate-50/70 p-4 rounded-2xl border border-slate-200/60 space-y-3">
             <div className="flex items-center gap-2 font-bold text-slate-900 text-xs uppercase tracking-wider">
-              <Cpu className="w-4 h-4 text-[#013e37]" />
+              <Cpu className="w-4 h-4 text-brand-primary" />
               <span>Hardware Specifications</span>
             </div>
 
@@ -218,7 +218,7 @@ export const CreateAssetModal: React.FC<CreateAssetModalProps> = ({
                   value={formData.brand || ""}
                   onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
                   placeholder="e.g. Dell, Apple"
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white font-semibold text-slate-900 focus:outline-none focus:border-[#013e37] transition-colors"
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white font-semibold text-slate-900 focus:outline-none focus:border-brand-primary transition-colors"
                 />
               </div>
               <div>
@@ -228,7 +228,7 @@ export const CreateAssetModal: React.FC<CreateAssetModalProps> = ({
                   value={formData.model || ""}
                   onChange={(e) => setFormData({ ...formData, model: e.target.value })}
                   placeholder="e.g. Latitude 5440"
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white font-semibold text-slate-900 focus:outline-none focus:border-[#013e37] transition-colors"
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white font-semibold text-slate-900 focus:outline-none focus:border-brand-primary transition-colors"
                 />
               </div>
               <div>
@@ -238,7 +238,7 @@ export const CreateAssetModal: React.FC<CreateAssetModalProps> = ({
                   value={formData.serialNumber || ""}
                   onChange={(e) => setFormData({ ...formData, serialNumber: e.target.value })}
                   placeholder="e.g. DL5440SN2026001"
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white font-mono font-bold text-slate-900 focus:outline-none focus:border-[#013e37] transition-colors"
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white font-mono font-bold text-slate-900 focus:outline-none focus:border-brand-primary transition-colors"
                 />
               </div>
             </div>
@@ -247,7 +247,7 @@ export const CreateAssetModal: React.FC<CreateAssetModalProps> = ({
           {/* Section 3: Purchase & Warranty Details */}
           <div className="bg-slate-50/70 p-4 rounded-2xl border border-slate-200/60 space-y-3">
             <div className="flex items-center gap-2 font-bold text-slate-900 text-xs uppercase tracking-wider">
-              <Calendar className="w-4 h-4 text-[#013e37]" />
+              <Calendar className="w-4 h-4 text-brand-primary" />
               <span>Purchase & Warranty</span>
             </div>
 
@@ -259,7 +259,7 @@ export const CreateAssetModal: React.FC<CreateAssetModalProps> = ({
                   value={formData.vendorName || ""}
                   onChange={(e) => setFormData({ ...formData, vendorName: e.target.value })}
                   placeholder="e.g. Dell Technologies India"
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white font-semibold text-slate-900 focus:outline-none focus:border-[#013e37] transition-colors"
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white font-semibold text-slate-900 focus:outline-none focus:border-brand-primary transition-colors"
                 />
               </div>
 
@@ -270,7 +270,7 @@ export const CreateAssetModal: React.FC<CreateAssetModalProps> = ({
                   value={formData.purchasePrice || ""}
                   onChange={(e) => setFormData({ ...formData, purchasePrice: e.target.value ? Number(e.target.value) : undefined })}
                   placeholder="e.g. 68500"
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white font-semibold text-slate-900 focus:outline-none focus:border-[#013e37] transition-colors"
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white font-semibold text-slate-900 focus:outline-none focus:border-brand-primary transition-colors"
                 />
               </div>
 
@@ -280,7 +280,7 @@ export const CreateAssetModal: React.FC<CreateAssetModalProps> = ({
                   type="date"
                   value={formData.purchaseDate || ""}
                   onChange={(e) => setFormData({ ...formData, purchaseDate: e.target.value })}
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white font-semibold text-slate-900 focus:outline-none focus:border-[#013e37] transition-colors"
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white font-semibold text-slate-900 focus:outline-none focus:border-brand-primary transition-colors"
                 />
               </div>
 
@@ -290,7 +290,7 @@ export const CreateAssetModal: React.FC<CreateAssetModalProps> = ({
                   type="date"
                   value={formData.warrantyStartDate || ""}
                   onChange={(e) => setFormData({ ...formData, warrantyStartDate: e.target.value })}
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white font-semibold text-slate-900 focus:outline-none focus:border-[#013e37] transition-colors"
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white font-semibold text-slate-900 focus:outline-none focus:border-brand-primary transition-colors"
                 />
               </div>
 
@@ -300,7 +300,7 @@ export const CreateAssetModal: React.FC<CreateAssetModalProps> = ({
                   type="date"
                   value={formData.warrantyEndDate || ""}
                   onChange={(e) => setFormData({ ...formData, warrantyEndDate: e.target.value })}
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white font-semibold text-slate-900 focus:outline-none focus:border-[#013e37] transition-colors"
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white font-semibold text-slate-900 focus:outline-none focus:border-brand-primary transition-colors"
                 />
               </div>
             </div>
@@ -309,7 +309,7 @@ export const CreateAssetModal: React.FC<CreateAssetModalProps> = ({
           {/* Section 4: Notes & Description */}
           <div className="bg-slate-50/70 p-4 rounded-2xl border border-slate-200/60 space-y-2">
             <div className="flex items-center gap-2 font-bold text-slate-900 text-xs uppercase tracking-wider">
-              <FileText className="w-4 h-4 text-[#013e37]" />
+              <FileText className="w-4 h-4 text-brand-primary" />
               <span>Notes & Specifications</span>
             </div>
             <textarea
@@ -317,7 +317,7 @@ export const CreateAssetModal: React.FC<CreateAssetModalProps> = ({
               value={formData.description || ""}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="Add hardware specs, accessories included, or physical condition notes..."
-              className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white font-semibold text-slate-900 focus:outline-none focus:border-[#013e37] transition-colors resize-none"
+              className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-white font-semibold text-slate-900 focus:outline-none focus:border-brand-primary transition-colors resize-none"
             />
           </div>
 
@@ -333,12 +333,12 @@ export const CreateAssetModal: React.FC<CreateAssetModalProps> = ({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-5 py-2 rounded-xl bg-[#013e37] hover:bg-[#012d28] text-[#ffefb3] font-bold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer disabled:opacity-50"
+              className="px-5 py-2 rounded-xl bg-brand-primary hover:bg-brand-primary-hover text-brand-btn-text font-bold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer disabled:opacity-50"
             >
               {isSubmitting ? (
-                <Loader2 className="w-4 h-4 animate-spin text-[#ffefb3]" />
+                <Loader2 className="w-4 h-4 animate-spin text-brand-btn-text" />
               ) : (
-                <Check className="w-4 h-4 text-[#ffefb3]" />
+                <Check className="w-4 h-4 text-brand-btn-text" />
               )}
               <span>{assetToEdit ? "Save Changes" : "Register Asset"}</span>
             </button>

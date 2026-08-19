@@ -198,7 +198,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs">
           <div>
-            <h1 className="text-xl sm:text-2xl font-extrabold text-[#013e37] tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-extrabold text-brand-primary tracking-tight">
               My Attendance Logs
             </h1>
             <p className="text-xs text-slate-500 font-medium mt-1">
@@ -208,7 +208,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
 
           <button
             onClick={loadData}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 text-slate-700 hover:text-[#013e37] rounded-xl text-xs font-bold transition-all shadow-2xs cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 text-slate-700 hover:text-brand-primary rounded-xl text-xs font-bold transition-all shadow-2xs cursor-pointer"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             <span>Refresh</span>
@@ -218,8 +218,8 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
         {/* Assigned Shift Summary Card */}
         <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs">
           <div className="flex items-center gap-2 mb-3">
-            <CalendarDays className="w-4 h-4 text-[#013e37]" />
-            <h3 className="text-sm font-extrabold text-[#013e37]">Assigned Shift Details</h3>
+            <CalendarDays className="w-4 h-4 text-brand-primary" />
+            <h3 className="text-sm font-extrabold text-brand-primary">Assigned Shift Details</h3>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
@@ -255,7 +255,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
         {/* Attendance Log History Table (No GPS locations shown to employees) */}
         <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
           <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between">
-            <h3 className="text-sm font-extrabold text-[#013e37]">Recent Punch Logs</h3>
+            <h3 className="text-sm font-extrabold text-brand-primary">Recent Punch Logs</h3>
             <span className="text-xs font-bold text-slate-400 font-mono">
               {filteredRows.length} {filteredRows.length === 1 ? "Record" : "Records"}
             </span>
@@ -263,7 +263,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
 
           {isLoading ? (
             <div className="py-20 flex flex-col items-center justify-center gap-2">
-              <Loader2 className="w-8 h-8 text-[#013e37] animate-spin" />
+              <Loader2 className="w-8 h-8 text-brand-primary animate-spin" />
               <span className="text-xs text-slate-400 font-bold">Loading your attendance logs...</span>
             </div>
           ) : filteredRows.length === 0 ? (
@@ -278,7 +278,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="bg-[#f4fbf7] text-[#013e37] font-extrabold uppercase text-[10px] tracking-wider border-b border-slate-200/80">
+                  <tr className="bg-[#f4fbf7] text-brand-primary font-extrabold uppercase text-[10px] tracking-wider border-b border-slate-200/80">
                     <th className="py-3.5 px-4 sm:px-6">Date</th>
                     <th className="py-3.5 px-4">Check In</th>
                     <th className="py-3.5 px-4">Check Out</th>
@@ -311,7 +311,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                             </span>
                           )}
                         </td>
-                        <td className="py-3.5 px-4 font-mono font-extrabold text-[#013e37] whitespace-nowrap">
+                        <td className="py-3.5 px-4 font-mono font-extrabold text-brand-primary whitespace-nowrap">
                           {workingHrs}
                         </td>
                         <td className="py-3.5 px-4 text-center whitespace-nowrap">
@@ -347,7 +347,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
       {/* 1. Header & Actions Bar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs">
         <div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-[#013e37] tracking-tight flex items-center gap-2">
+          <h1 className="text-xl sm:text-2xl font-extrabold text-brand-primary tracking-tight flex items-center gap-2">
             <span>Attendance & Location Records</span>
           </h1>
           <p className="text-xs text-slate-500 font-medium mt-1">
@@ -358,7 +358,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Date Picker Filter */}
           <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700">
-            <Calendar className="w-3.5 h-3.5 text-[#013e37]" />
+            <Calendar className="w-3.5 h-3.5 text-brand-primary" />
             <input
               type="date"
               value={selectedDate}
@@ -370,7 +370,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
           <button
             onClick={loadData}
             title="Refresh logs"
-            className="p-2 bg-white border border-slate-200 text-slate-600 hover:text-[#013e37] hover:border-[#013e37]/30 rounded-xl transition-all shadow-2xs cursor-pointer"
+            className="p-2 bg-white border border-slate-200 text-slate-600 hover:text-brand-primary hover:border-brand-primary/30 rounded-xl transition-all shadow-2xs cursor-pointer"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
@@ -399,11 +399,11 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
             <span className="text-[10px] sm:text-xs text-slate-500 font-bold uppercase tracking-wider">
               Currently Clocked In
             </span>
-            <div className="w-7 h-7 rounded-lg bg-teal-50 text-[#013e37] flex items-center justify-center font-bold">
+            <div className="w-7 h-7 rounded-lg bg-teal-50 text-brand-primary flex items-center justify-center font-bold">
               <Clock className="w-4 h-4" />
             </div>
           </div>
-          <p className="text-xl sm:text-2xl font-extrabold text-[#013e37] mt-2">
+          <p className="text-xl sm:text-2xl font-extrabold text-brand-primary mt-2">
             {metrics.active}
           </p>
         </div>
@@ -446,7 +446,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
             placeholder="Search employee, code, or department..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-[#013e37]"
+            className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-brand-primary"
           />
         </div>
 
@@ -458,7 +458,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
               onClick={() => setStatusFilter(status)}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer shrink-0 ${
                 statusFilter === status
-                  ? "bg-[#013e37] text-[#ffefb3] shadow-xs"
+                  ? "bg-brand-primary text-brand-btn-text shadow-xs"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
             >
@@ -472,7 +472,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
       <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
         {isLoading ? (
           <div className="py-20 flex flex-col items-center justify-center gap-2">
-            <Loader2 className="w-8 h-8 text-[#013e37] animate-spin" />
+            <Loader2 className="w-8 h-8 text-brand-primary animate-spin" />
             <span className="text-xs text-slate-400 font-bold">Loading attendance records...</span>
           </div>
         ) : filteredRows.length === 0 ? (
@@ -487,7 +487,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="bg-[#f4fbf7] text-[#013e37] font-extrabold uppercase text-[10px] tracking-wider border-b border-slate-200/80">
+                <tr className="bg-[#f4fbf7] text-brand-primary font-extrabold uppercase text-[10px] tracking-wider border-b border-slate-200/80">
                   <th className="py-3.5 px-4 sm:px-6">Employee</th>
                   <th className="py-3.5 px-4">Date</th>
                   <th className="py-3.5 px-4">Check In</th>
@@ -519,7 +519,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                       {/* Employee Column */}
                       <td className="py-3.5 px-4 sm:px-6">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-[#013e37] text-[#ffefb3] flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden">
+                          <div className="w-9 h-9 rounded-xl bg-brand-primary text-brand-btn-text flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden">
                             {row.profilePic ? (
                               <img
                                 src={row.profilePic}
@@ -603,7 +603,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                       </td>
 
                       {/* Total Duration */}
-                      <td className="py-3.5 px-4 font-mono font-extrabold text-[#013e37] whitespace-nowrap">
+                      <td className="py-3.5 px-4 font-mono font-extrabold text-brand-primary whitespace-nowrap">
                         {workingHrs}
                       </td>
 

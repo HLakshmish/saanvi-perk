@@ -407,10 +407,10 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
         >
           {/* Slide 0: Greeting & Workspace Status */}
           <div className="w-full shrink-0 snap-center snap-always pr-0 flex">
-            <div className="w-full flex items-center justify-between gap-3 bg-white border border-[#013e37]/15 py-3 px-4 sm:py-3.5 sm:px-5 rounded-2xl sm:rounded-3xl shadow-xs">
+            <div className="w-full flex items-center justify-between gap-3 bg-white border border-brand-primary/15 py-3 px-4 sm:py-3.5 sm:px-5 rounded-2xl sm:rounded-3xl shadow-xs">
               <div>
                 <div className="flex items-center gap-1.5">
-                  <h1 className="text-base sm:text-lg font-extrabold text-[#013e37] tracking-tight">
+                  <h1 className="text-base sm:text-lg font-extrabold text-brand-primary tracking-tight">
                     Hi, {employeeFullName}!
                   </h1>
                   <span className="text-base sm:text-lg select-none">👋</span>
@@ -418,9 +418,9 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
               </div>
 
               {/* Date Pill at Right End */}
-              <div className="px-2.5 py-1.5 bg-[#f4fbf7] border border-[#013e37]/15 rounded-xl text-center shrink-0">
-                <p className="text-[8px] text-[#013e37]/75 font-bold uppercase tracking-wider">Today</p>
-                <p className="text-xs sm:text-xs font-extrabold text-[#013e37] whitespace-nowrap">
+              <div className="px-2.5 py-1.5 bg-brand-primary-light border border-brand-primary/15 rounded-xl text-center shrink-0">
+                <p className="text-[8px] text-brand-primary/75 font-bold uppercase tracking-wider">Today</p>
+                <p className="text-xs sm:text-xs font-extrabold text-brand-primary whitespace-nowrap">
                   {new Date().toLocaleDateString("en-IN", {
                     weekday: "short",
                     day: "numeric",
@@ -435,12 +435,12 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
           <div className="w-full shrink-0 snap-center snap-always pr-0 flex">
             <div className="w-full bg-white border border-slate-200/80 p-3 sm:p-4 rounded-2xl sm:rounded-3xl shadow-xs flex flex-col justify-between">
               <div className="flex items-center justify-between mb-1.5">
-                <h3 className="font-extrabold text-[#013e37] text-xs sm:text-sm flex items-center gap-1.5">
+                <h3 className="font-extrabold text-brand-primary text-xs sm:text-sm flex items-center gap-1.5">
                   <span>Leave Summary</span>
                 </h3>
                 <button
                   onClick={() => onTabChange("holidays-leaves")}
-                  className="text-[10px] font-bold text-[#013e37] hover:underline flex items-center gap-0.5 cursor-pointer"
+                  className="text-[10px] font-bold text-brand-primary hover:underline flex items-center gap-0.5 cursor-pointer"
                 >
                   <span>Apply</span>
                   <ChevronRight className="w-3.5 h-3.5" />
@@ -452,9 +452,9 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
                   <p className="text-[8px] text-emerald-800 font-bold uppercase tracking-wider">Available</p>
                   <p className="text-xs sm:text-sm font-extrabold text-emerald-950 mt-0.5">12.0</p>
                 </div>
-                <div className="bg-[#f4fbf7] border border-[#013e37]/15 rounded-xl p-1.5">
-                  <p className="text-[8px] text-[#013e37]/80 font-bold uppercase tracking-wider">Used</p>
-                  <p className="text-xs sm:text-sm font-extrabold text-[#013e37] mt-0.5">3.0</p>
+                <div className="bg-brand-primary-light border border-brand-primary/15 rounded-xl p-1.5">
+                  <p className="text-[8px] text-brand-primary/80 font-bold uppercase tracking-wider">Used</p>
+                  <p className="text-xs sm:text-sm font-extrabold text-brand-primary mt-0.5">3.0</p>
                 </div>
                 <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-1.5">
                   <p className="text-[8px] text-slate-500 font-bold uppercase tracking-wider">Pending</p>
@@ -484,14 +484,14 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
             <div className="w-full bg-white border border-slate-200/80 p-3 sm:p-4 rounded-2xl sm:rounded-3xl shadow-xs flex flex-col justify-between">
               <div className="flex items-center justify-between mb-1.5">
                 <div className="flex items-center gap-1.5">
-                  <CalendarDays className="w-3.5 h-3.5 text-[#013e37]" />
-                  <h3 className="font-extrabold text-[#013e37] text-xs sm:text-sm">
+                  <CalendarDays className="w-3.5 h-3.5 text-brand-primary" />
+                  <h3 className="font-extrabold text-brand-primary text-xs sm:text-sm">
                     Upcoming Holidays
                   </h3>
                 </div>
                 <button
                   onClick={() => onTabChange("holidays-leaves")}
-                  className="text-[10px] font-bold text-[#013e37] hover:underline flex items-center gap-0.5 cursor-pointer"
+                  className="text-[10px] font-bold text-brand-primary hover:underline flex items-center gap-0.5 cursor-pointer"
                 >
                   <span>Calendar</span>
                   <ChevronRight className="w-3.5 h-3.5" />
@@ -500,7 +500,7 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
 
               {isLoadingHolidays ? (
                 <div className="py-2 flex items-center justify-center gap-2">
-                  <Loader2 className="w-3.5 h-3.5 text-[#013e37] animate-spin" />
+                  <Loader2 className="w-3.5 h-3.5 text-brand-primary animate-spin" />
                   <span className="text-[10px] text-slate-400 font-semibold">Loading holidays...</span>
                 </div>
               ) : holidays.length === 0 ? (
@@ -514,7 +514,7 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
                       key={`${h.id}-${idx}`}
                       className="flex items-center gap-2 p-1.5 rounded-xl bg-slate-50 border border-slate-100"
                     >
-                      <div className="bg-[#013e37] text-[#ffefb3] rounded-lg px-2 py-0.5 flex flex-col items-center justify-center min-w-[32px] text-[8px] font-extrabold">
+                      <div className="bg-brand-primary text-brand-accent-light rounded-lg px-2 py-0.5 flex flex-col items-center justify-center min-w-[32px] text-[8px] font-extrabold">
                         <span className="text-xs font-extrabold leading-none">{h.date}</span>
                         <span className="text-[7px] font-bold uppercase mt-0.5 opacity-90">{h.month}</span>
                       </div>
@@ -539,7 +539,7 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
               aria-label={`Go to slide ${idx + 1}`}
               className={`transition-all duration-300 rounded-full cursor-pointer ${
                 activeSlide === idx
-                  ? "w-6 h-1.5 bg-[#013e37] shadow-xs"
+                  ? "w-6 h-1.5 bg-brand-primary shadow-xs"
                   : "w-1.5 h-1.5 bg-slate-300 hover:bg-slate-400"
               }`}
             />
