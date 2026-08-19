@@ -1,6 +1,15 @@
 import React, { useState } from "react";
 import { CheckCircle2, Clock, XCircle, MinusCircle, Search } from "lucide-react";
 import { LeaveRequest } from "../types/leaves.types";
+import {
+  TableContainer,
+  Table,
+  TableHeader,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+} from "@/components/ui/table";
 
 interface LeavesRequestTabProps {
   requests: LeaveRequest[];
@@ -75,91 +84,88 @@ export const LeavesRequestTab: React.FC<LeavesRequestTabProps> = ({
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search table items..."
-            className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-xl text-xs bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-2xs font-medium"
+            className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-xl text-xs bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary shadow-2xs font-medium"
           />
         </div>
       </div>
 
       {/* Requests Table Container */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[750px] text-left border-collapse text-xs sm:text-sm text-slate-700">
-            <thead>
-              <tr className="bg-slate-50/80 border-b border-slate-200 font-bold text-slate-900 uppercase text-[11px] tracking-wider">
-                <th className="py-3.5 px-4">Date</th>
-                <th className="py-3.5 px-4">Leave Name</th>
-                <th className="py-3.5 px-4">From-To</th>
-                <th className="py-3.5 px-4">Days</th>
-                <th className="py-3.5 px-4">Remarks</th>
-                <th className="py-3.5 px-4 text-center">Status</th>
-                <th className="py-3.5 px-4 text-center">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 bg-white">
-              {filteredRequests.map((req) => (
-                <tr
-                  key={req.id}
-                  onClick={() => onRowClick?.(req.id)}
-                  className="hover:bg-slate-50/70 transition-colors cursor-pointer"
-                >
-                  <td className="py-3.5 px-4 font-semibold text-slate-900">{req.requestDate}</td>
-                  <td className="py-3.5 px-4 text-slate-700 font-semibold">{req.leaveType}</td>
-                  <td className="py-3.5 px-4 font-mono text-xs text-slate-600">{req.fromDate} to {req.toDate}</td>
-                  <td className="py-3.5 px-4 font-bold text-slate-900">{req.days}</td>
-                  <td className="py-3.5 px-4 text-slate-600 truncate max-w-[220px]" title={req.remarks}>{req.remarks}</td>
-                  <td className="py-3.5 px-4 text-center">
-                    <div className="flex items-center justify-center">
-                      {getStatusIcon(req.status)}
+      <TableContainer>
+        <Table className="min-w-[750px]">
+          <TableHeader>
+            <tr>
+              <TableHead>Date</TableHead>
+              <TableHead>Leave Name</TableHead>
+              <TableHead>From-To</TableHead>
+              <TableHead>Days</TableHead>
+              <TableHead>Remarks</TableHead>
+              <TableHead className="text-center">Status</TableHead>
+              <TableHead className="text-center">Action</TableHead>
+            </tr>
+          </TableHeader>
+          <TableBody>
+            {filteredRequests.map((req) => (
+              <TableRow
+                key={req.id}
+                onClick={() => onRowClick?.(req.id)}
+              >
+                <TableCell className="font-semibold text-slate-900">{req.requestDate}</TableCell>
+                <TableCell className="text-slate-700 font-semibold">{req.leaveType}</TableCell>
+                <TableCell className="font-mono text-xs text-slate-600">{req.fromDate} to {req.toDate}</TableCell>
+                <TableCell className="font-bold text-slate-900">{req.days}</TableCell>
+                <TableCell className="text-slate-600 truncate max-w-[220px]" title={req.remarks}>{req.remarks}</TableCell>
+                <TableCell className="text-center">
+                  <div className="flex items-center justify-center">
+                    {getStatusIcon(req.status)}
+                  </div>
+                </TableCell>
+                <TableCell className="text-center">
+                  {isAdminOrSuperAdmin && req.status === "Pending" && onStatusUpdate ? (
+                    <div className="flex items-center justify-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        onClick={() => onStatusUpdate(req.id, "APPROVED")}
+                        className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold shadow-2xs cursor-pointer transition-colors"
+                      >
+                        Approve
+                      </button>
+                      <button
+                        onClick={() => onStatusUpdate(req.id, "REJECTED")}
+                        className="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-[10px] font-bold shadow-2xs cursor-pointer transition-colors"
+                      >
+                        Reject
+                      </button>
                     </div>
-                  </td>
-                  <td className="py-3.5 px-4 text-center">
-                    {isAdminOrSuperAdmin && req.status === "Pending" && onStatusUpdate ? (
-                      <div className="flex items-center justify-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          onClick={() => onStatusUpdate(req.id, "APPROVED")}
-                          className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold shadow-2xs cursor-pointer transition-colors"
-                        >
-                          Approve
-                        </button>
-                        <button
-                          onClick={() => onStatusUpdate(req.id, "REJECTED")}
-                          className="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-[10px] font-bold shadow-2xs cursor-pointer transition-colors"
-                        >
-                          Reject
-                        </button>
-                      </div>
-                    ) : (
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${getStatusStyles(req.status)}`}>
-                        {req.status}
-                      </span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-              {filteredRequests.length === 0 && (
-                <tr>
-                  <td colSpan={7} className="py-8 text-center text-slate-400 font-semibold">
-                    No matching leave requests found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                  ) : (
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${getStatusStyles(req.status)}`}>
+                      {req.status}
+                    </span>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+            {filteredRequests.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={7} className="py-8 text-center text-slate-400 font-semibold">
+                  No matching leave requests found.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
 
         {/* Pagination Footer */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 border-t border-slate-100 text-xs text-slate-500 font-semibold">
           <span>Showing 1 to {filteredRequests.length} of {filteredRequests.length} entries</span>
           <div className="flex items-center gap-1.5">
             <span>Show</span>
-            <select className="border border-slate-300 rounded-lg px-2 py-1 bg-white text-xs font-bold text-slate-800 focus:outline-none">
+            <select className="border border-slate-300 rounded-lg px-2 py-1 bg-white text-xs font-bold text-slate-800 focus:outline-none cursor-pointer">
               <option value="25">25</option>
               <option value="50">50</option>
             </select>
             <span>entries</span>
           </div>
         </div>
-      </div>
+      </TableContainer>
     </div>
   );
 };

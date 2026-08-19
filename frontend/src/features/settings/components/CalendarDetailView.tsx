@@ -24,6 +24,15 @@ import {
   updateHoliday,
   deleteHoliday,
 } from "@/features/organization/api/calendar.api";
+import {
+  TableContainer,
+  Table,
+  TableHeader,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+} from "@/components/ui/table";
 
 interface CalendarDetailViewProps {
   onBackToOrganization: () => void;
@@ -660,49 +669,48 @@ export const CalendarDetailView: React.FC<CalendarDetailViewProps> = ({
                     </form>
                   )}
 
-                  {/* Holidays Table */}
-                  <div className="border border-slate-200/80 rounded-xl overflow-hidden shadow-2xs">
-                    <table className="w-full text-left border-collapse text-xs sm:text-sm">
-                      <thead>
-                        <tr className="bg-slate-50 border-b border-slate-200/80 font-bold text-slate-800 text-xs">
-                          <th className="py-3 px-4">Holiday Name</th>
-                          <th className="py-3 px-4">Start Date - Day</th>
-                          <th className="py-3 px-4">End Date - Day</th>
-                          <th className="py-3 px-4 text-center">Days</th>
-                          <th className="py-3 px-4 text-right">Action</th>
+                  <TableContainer className="rounded-xl border-none shadow-none">
+                    <Table>
+                      <TableHeader>
+                        <tr>
+                          <TableHead>Holiday Name</TableHead>
+                          <TableHead>Start Date - Day</TableHead>
+                          <TableHead>End Date - Day</TableHead>
+                          <TableHead className="text-center">Days</TableHead>
+                          <TableHead className="text-right">Action</TableHead>
                         </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 bg-white">
+                      </TableHeader>
+                      <TableBody>
                         {holidays.map((h) => {
                           const isEditingThis = editingHolidayId === h.holidayId;
                           return isEditingThis ? (
-                            <tr key={h.holidayId} className="bg-brand-primary/10 border-b border-brand-primary/20">
-                              <td className="py-2.5 px-3">
+                            <TableRow key={h.holidayId} className="bg-brand-primary/10 border-b border-brand-primary/20">
+                              <TableCell className="py-2.5 px-3">
                                 <input
                                   type="text"
                                   value={editHolName}
                                   onChange={(e) => setEditHolName(e.target.value)}
                                   className="w-full px-2 py-1 rounded border border-slate-300 text-xs bg-white text-slate-900"
                                 />
-                              </td>
-                              <td className="py-2.5 px-3">
+                              </TableCell>
+                              <TableCell className="py-2.5 px-3">
                                 <input
                                   type="date"
                                   value={editHolStartDate}
                                   onChange={(e) => setEditHolStartDate(e.target.value)}
                                   className="w-full px-2 py-1 rounded border border-slate-300 text-xs bg-white text-slate-900"
                                 />
-                              </td>
-                              <td className="py-2.5 px-3">
+                              </TableCell>
+                              <TableCell className="py-2.5 px-3">
                                 <input
                                   type="date"
                                   value={editHolEndDate}
                                   onChange={(e) => setEditHolEndDate(e.target.value)}
                                   className="w-full px-2 py-1 rounded border border-slate-300 text-xs bg-white text-slate-900"
                                 />
-                              </td>
-                              <td className="py-2.5 px-3 text-center font-bold text-slate-800">1</td>
-                              <td className="py-2.5 px-3 text-right">
+                              </TableCell>
+                              <TableCell className="py-2.5 px-3 text-center font-bold text-slate-800">1</TableCell>
+                              <TableCell className="py-2.5 px-3 text-right">
                                 <div className="flex items-center justify-end gap-1">
                                   <button
                                     onClick={() => handleSaveEditHoliday(h.holidayId)}
@@ -719,45 +727,38 @@ export const CalendarDetailView: React.FC<CalendarDetailViewProps> = ({
                                     <X className="w-4 h-4" />
                                   </button>
                                 </div>
-                              </td>
-                            </tr>
+                              </TableCell>
+                            </TableRow>
                           ) : (
-                            <tr key={h.holidayId} className="hover:bg-slate-50/70 transition-colors text-slate-700">
-                              <td className="py-3.5 px-4 font-medium text-slate-900">{h.holidayName}</td>
-                              <td className="py-3.5 px-4 font-medium text-slate-600">{formatDateWithDay(h.startDate)}</td>
-                              <td className="py-3.5 px-4 font-medium text-slate-600">{formatDateWithDay(h.endDate)}</td>
-                              <td className="py-3.5 px-4 text-center font-bold text-slate-800">1</td>
-                              <td className="py-3.5 px-4 text-right">
+                            <TableRow key={h.holidayId}>
+                              <TableCell className="font-medium text-slate-900">{h.holidayName}</TableCell>
+                              <TableCell className="font-medium text-slate-600">{formatDateWithDay(h.startDate)}</TableCell>
+                              <TableCell className="font-medium text-slate-600">{formatDateWithDay(h.endDate)}</TableCell>
+                              <TableCell className="text-center font-bold text-slate-800">1</TableCell>
+                              <TableCell className="text-right">
                                 <div className="flex items-center justify-end gap-1">
                                   <button
                                     onClick={() => handleStartEditHoliday(h)}
-                                    className="text-slate-400 hover:text-brand-primary transition-colors p-1"
+                                    className="text-slate-400 hover:text-brand-primary transition-colors p-1 cursor-pointer"
                                     title="Edit Holiday"
                                   >
                                     <Pencil className="w-3.5 h-3.5" />
                                   </button>
                                   <button
                                     onClick={() => handleDeleteHoliday(h.holidayId)}
-                                    className="text-slate-400 hover:text-rose-600 transition-colors p-1"
+                                    className="text-slate-400 hover:text-rose-600 transition-colors p-1 cursor-pointer"
                                     title="Delete Holiday"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
                                   </button>
                                 </div>
-                              </td>
-                            </tr>
+                              </TableCell>
+                            </TableRow>
                           );
                         })}
-                        {holidays.length === 0 && (
-                          <tr>
-                            <td colSpan={5} className="py-8 text-center text-slate-400 font-medium">
-                              No holidays added yet. Click &quot;+ Add New&quot; to add holidays.
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
                 </div>
               )}
             </div>

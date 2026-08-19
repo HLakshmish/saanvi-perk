@@ -19,6 +19,15 @@ import { getEmployees } from "@/features/employees/api/employees.api";
 import { getCurrentUserId } from "@/features/expenses/api/expenses.api";
 import { Employee } from "@/features/employees/types/employees.types";
 import { UserRole } from "@/types/dashboard";
+import {
+  TableContainer,
+  Table,
+  TableHeader,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+} from "@/components/ui/table";
 
 interface AttendanceViewProps {
   currentRole?: UserRole;
@@ -275,18 +284,18 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse">
-                <thead>
-                  <tr className="bg-[#f4fbf7] text-brand-primary font-extrabold uppercase text-[10px] tracking-wider border-b border-slate-200/80">
-                    <th className="py-3.5 px-4 sm:px-6">Date</th>
-                    <th className="py-3.5 px-4">Check In</th>
-                    <th className="py-3.5 px-4">Check Out</th>
-                    <th className="py-3.5 px-4">Working Hours</th>
-                    <th className="py-3.5 px-4 text-center">Status</th>
+            <TableContainer className="rounded-2xl border-none shadow-none">
+              <Table>
+                <TableHeader>
+                  <tr>
+                    <TableHead className="sm:px-6">Date</TableHead>
+                    <TableHead>Check In</TableHead>
+                    <TableHead>Check Out</TableHead>
+                    <TableHead>Working Hours</TableHead>
+                    <TableHead className="text-center">Status</TableHead>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                </TableHeader>
+                <TableBody>
                   {filteredRows.map((row) => {
                     const workingHrs = row.workingMinutes
                       ? `${Math.floor(row.workingMinutes / 60)}h ${row.workingMinutes % 60}m`
@@ -295,14 +304,14 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                       : "--";
 
                     return (
-                      <tr key={row.attendanceId} className="hover:bg-slate-50/80 transition-colors">
-                        <td className="py-3.5 px-4 sm:px-6 font-bold text-slate-900 whitespace-nowrap">
+                      <TableRow key={row.attendanceId}>
+                        <TableCell className="sm:px-6 font-bold text-slate-900 whitespace-nowrap">
                           {formatDate(row.attendanceDate)}
-                        </td>
-                        <td className="py-3.5 px-4 font-mono font-bold text-slate-900 whitespace-nowrap">
+                        </TableCell>
+                        <TableCell className="font-mono font-bold text-slate-900 whitespace-nowrap">
                           {formatTime(row.checkInTime)}
-                        </td>
-                        <td className="py-3.5 px-4 font-mono font-bold text-slate-900 whitespace-nowrap">
+                        </TableCell>
+                        <TableCell className="font-mono font-bold text-slate-900 whitespace-nowrap">
                           {row.checkOutTime ? (
                             formatTime(row.checkOutTime)
                           ) : (
@@ -310,11 +319,11 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                               Active Shift
                             </span>
                           )}
-                        </td>
-                        <td className="py-3.5 px-4 font-mono font-extrabold text-brand-primary whitespace-nowrap">
+                        </TableCell>
+                        <TableCell className="font-mono font-extrabold text-brand-primary whitespace-nowrap">
                           {workingHrs}
-                        </td>
-                        <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                        </TableCell>
+                        <TableCell className="text-center whitespace-nowrap">
                           <span
                             className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide border ${
                               row.attendanceStatus === "PRESENT"
@@ -326,13 +335,13 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                           >
                             {row.attendanceStatus || "PRESENT"}
                           </span>
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     );
                   })}
-                </tbody>
-              </table>
-            </div>
+                </TableBody>
+              </Table>
+            </TableContainer>
           )}
         </div>
       </div>
@@ -484,21 +493,21 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="bg-[#f4fbf7] text-brand-primary font-extrabold uppercase text-[10px] tracking-wider border-b border-slate-200/80">
-                  <th className="py-3.5 px-4 sm:px-6">Employee</th>
-                  <th className="py-3.5 px-4">Date</th>
-                  <th className="py-3.5 px-4">Check In</th>
-                  <th className="py-3.5 px-4">Check-In GPS Location</th>
-                  <th className="py-3.5 px-4">Check Out</th>
-                  <th className="py-3.5 px-4">Check-Out GPS Location</th>
-                  <th className="py-3.5 px-4">Total Worked</th>
-                  <th className="py-3.5 px-4 text-center">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+        <TableContainer className="rounded-2xl border-none shadow-none">
+          <Table>
+            <TableHeader>
+              <tr>
+                <TableHead className="sm:px-6">Employee</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Check In</TableHead>
+                <TableHead>Check-In GPS Location</TableHead>
+                <TableHead>Check Out</TableHead>
+                <TableHead>Check-Out GPS Location</TableHead>
+                <TableHead>Total Worked</TableHead>
+                <TableHead className="text-center">Status</TableHead>
+              </tr>
+            </TableHeader>
+            <TableBody>
                 {filteredRows.map((row) => {
                   const checkInLat = row.checkInLatitude ? Number(row.checkInLatitude) : null;
                   const checkInLng = row.checkInLongitude ? Number(row.checkInLongitude) : null;
@@ -515,9 +524,9 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                     : "--";
 
                   return (
-                    <tr key={row.attendanceId} className="hover:bg-slate-50/80 transition-colors">
+                    <TableRow key={row.attendanceId}>
                       {/* Employee Column */}
-                      <td className="py-3.5 px-4 sm:px-6">
+                      <TableCell className="sm:px-6">
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-xl bg-brand-primary text-brand-btn-text flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden">
                             {row.profilePic ? (
@@ -539,20 +548,20 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                             </p>
                           </div>
                         </div>
-                      </td>
+                      </TableCell>
 
                       {/* Date */}
-                      <td className="py-3.5 px-4 font-semibold text-slate-800 whitespace-nowrap">
+                      <TableCell className="font-semibold text-slate-800 whitespace-nowrap">
                         {formatDate(row.attendanceDate)}
-                      </td>
+                      </TableCell>
 
                       {/* Check-In Time */}
-                      <td className="py-3.5 px-4 font-mono font-bold text-slate-900 whitespace-nowrap">
+                      <TableCell className="font-mono font-bold text-slate-900 whitespace-nowrap">
                         {formatTime(row.checkInTime)}
-                      </td>
+                      </TableCell>
 
                       {/* Check-In GPS Coordinates & Maps Link */}
-                      <td className="py-3.5 px-4 whitespace-nowrap">
+                      <TableCell className="whitespace-nowrap">
                         {hasCheckInLocation ? (
                           <a
                             href={`https://www.google.com/maps?q=${checkInLat},${checkInLng}`}
@@ -570,19 +579,19 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                         ) : (
                           <span className="text-[11px] text-slate-400 font-mono italic">No GPS</span>
                         )}
-                      </td>
+                      </TableCell>
 
                       {/* Check-Out Time */}
-                      <td className="py-3.5 px-4 font-mono font-bold text-slate-900 whitespace-nowrap">
+                      <TableCell className="font-mono font-bold text-slate-900 whitespace-nowrap">
                         {row.checkOutTime ? formatTime(row.checkOutTime) : (
                           <span className="text-amber-600 text-[11px] font-bold bg-amber-50 px-2 py-0.5 rounded-md">
                             Active
                           </span>
                         )}
-                      </td>
+                      </TableCell>
 
                       {/* Check-Out GPS Coordinates & Maps Link */}
-                      <td className="py-3.5 px-4 whitespace-nowrap">
+                      <TableCell className="whitespace-nowrap">
                         {hasCheckOutLocation ? (
                           <a
                             href={`https://www.google.com/maps?q=${checkOutLat},${checkOutLng}`}
@@ -600,15 +609,15 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                         ) : (
                           <span className="text-[11px] text-slate-400 font-mono italic">--</span>
                         )}
-                      </td>
+                      </TableCell>
 
                       {/* Total Duration */}
-                      <td className="py-3.5 px-4 font-mono font-extrabold text-brand-primary whitespace-nowrap">
+                      <TableCell className="font-mono font-extrabold text-brand-primary whitespace-nowrap">
                         {workingHrs}
-                      </td>
+                      </TableCell>
 
                       {/* Status */}
-                      <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                      <TableCell className="text-center whitespace-nowrap">
                         <span
                           className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide border ${
                             row.attendanceStatus === "PRESENT"
@@ -620,13 +629,13 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                         >
                           {row.attendanceStatus || "PRESENT"}
                         </span>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   );
                 })}
-              </tbody>
-            </table>
-          </div>
+              </TableBody>
+            </Table>
+          </TableContainer>
         )}
       </div>
     </div>

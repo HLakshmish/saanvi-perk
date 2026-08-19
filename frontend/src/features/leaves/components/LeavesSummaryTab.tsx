@@ -12,6 +12,15 @@ import {
   Zap,
 } from "lucide-react";
 import { LeaveRequest } from "../types/leaves.types";
+import {
+  TableContainer,
+  Table,
+  TableHeader,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+} from "@/components/ui/table";
 
 interface LeavesSummaryTabProps {
   onOpenApplyLeaveModal: () => void;
@@ -392,39 +401,38 @@ export const LeavesSummaryTab: React.FC<LeavesSummaryTabProps> = ({
       <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs space-y-4">
         <h3 className="text-sm font-bold text-brand-primary">{isAdminOrSuperAdmin ? "Employee Requests" : "My Requests"}</h3>
 
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[700px] text-left border-collapse text-xs sm:text-sm text-slate-700">
-            <thead>
-              <tr className="bg-slate-50/80 border-b border-slate-200 font-bold text-slate-900">
-                <th className="py-3.5 px-4">Request Date</th>
-                <th className="py-3.5 px-4">Leave Type</th>
-                <th className="py-3.5 px-4">From - To</th>
-                <th className="py-3.5 px-4">Days</th>
-                <th className="py-3.5 px-4">Remarks</th>
-                <th className="py-3.5 px-4">Status</th>
-                <th className="py-3.5 px-4 w-10"></th>
+        <TableContainer className="rounded-xl border-none shadow-none">
+          <Table className="min-w-[700px]">
+            <TableHeader>
+              <tr>
+                <TableHead>Request Date</TableHead>
+                <TableHead>Leave Type</TableHead>
+                <TableHead>From - To</TableHead>
+                <TableHead>Days</TableHead>
+                <TableHead>Remarks</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="w-10 text-right"></TableHead>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 bg-white">
+            </TableHeader>
+            <TableBody>
               {requests.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="py-12 text-center text-slate-400 font-semibold">
+                <TableRow>
+                  <TableCell colSpan={7} className="py-12 text-center text-slate-400 font-semibold">
                     No leave requests found. Click "Apply Leave" to submit your first request.
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ) : (
                 requests.map((req) => (
-                  <tr
+                  <TableRow
                     key={req.id}
                     onClick={() => onRowClick?.(req.id)}
-                    className="hover:bg-slate-50/70 transition-colors cursor-pointer group"
                   >
-                    <td className="py-3.5 px-4 font-semibold text-slate-900">{req.requestDate}</td>
-                    <td className="py-3.5 px-4 text-slate-700 font-medium">{req.leaveType}</td>
-                    <td className="py-3.5 px-4 font-mono text-xs text-slate-600">{req.fromDate} to {req.toDate}</td>
-                    <td className="py-3.5 px-4 font-bold text-slate-900">{req.days}</td>
-                    <td className="py-3.5 px-4 text-slate-600 truncate max-w-[220px]" title={req.remarks}>{req.remarks}</td>
-                    <td className="py-3.5 px-4">
+                    <TableCell className="font-semibold text-slate-900">{req.requestDate}</TableCell>
+                    <TableCell className="text-slate-700 font-medium">{req.leaveType}</TableCell>
+                    <TableCell className="font-mono text-xs text-slate-600">{req.fromDate} to {req.toDate}</TableCell>
+                    <TableCell className="font-bold text-slate-900">{req.days}</TableCell>
+                    <TableCell className="text-slate-600 truncate max-w-[220px]" title={req.remarks}>{req.remarks}</TableCell>
+                    <TableCell>
                       {isAdminOrSuperAdmin && req.status === "Pending" && onStatusUpdate ? (
                         <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                           <button
@@ -445,16 +453,16 @@ export const LeavesSummaryTab: React.FC<LeavesSummaryTabProps> = ({
                           {req.status}
                         </span>
                       )}
-                    </td>
-                    <td className="py-3.5 px-4 text-right">
-                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-brand-primary group-hover:translate-x-0.5 transition-all" />
-                    </td>
-                  </tr>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-brand-primary group-hover:translate-x-0.5 transition-all inline-block" />
+                    </TableCell>
+                  </TableRow>
                 ))
               )}
-            </tbody>
-          </table>
-        </div>
+            </TableBody>
+          </Table>
+        </TableContainer>
 
         {/* Pagination Footer */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-100 pt-4 text-xs text-slate-500 font-semibold">
