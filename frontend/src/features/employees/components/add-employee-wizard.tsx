@@ -618,20 +618,22 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
 
       // 6. Create PF Details Record (if uanNumber or pfNumber is provided)
       if (formData.uanNumber?.trim() || formData.pfNumber?.trim()) {
-        const pfData = {
+        const pfData: any = {
           userId: targetUserId,
-          uanNumber: formData.uanNumber.trim() || null,
-          pfNumber: formData.pfNumber.trim() || null,
-          isInternationalWorker: formData.isInternationalWorker,
-          educationLevel: (formData.educationLevel || null) as any,
+          uanNumber: formData.uanNumber?.trim() || null,
+          pfNumber: formData.pfNumber?.trim() || null,
+          isInternationalWorker: Boolean(formData.isInternationalWorker),
           pfJoiningDate: formData.pfJoiningDate ? new Date(formData.pfJoiningDate).toISOString() : null,
           pfLeavingDate: formData.pfLeavingDate ? new Date(formData.pfLeavingDate).toISOString() : null,
-          documentNumber: formData.pfDocumentNumber || null,
-          documentType: (formData.pfDocumentType || null) as any,
+          documentNumber: formData.pfDocumentNumber?.trim() || null,
           documentExpiryDate: formData.pfDocumentExpiryDate ? new Date(formData.pfDocumentExpiryDate).toISOString() : null,
-          reasonForLeaving: (formData.pfReasonForLeaving || null) as any,
-          phcCategory: (formData.pfPhcCategory || null) as any,
         };
+
+        if (formData.educationLevel) pfData.educationLevel = formData.educationLevel;
+        if (formData.pfDocumentType) pfData.documentType = formData.pfDocumentType;
+        if (formData.pfReasonForLeaving) pfData.reasonForLeaving = formData.pfReasonForLeaving;
+        if (formData.pfPhcCategory) pfData.phcCategory = formData.pfPhcCategory;
+
         const pfRes = await createPFDetail(pfData);
         if (!pfRes.success) {
           throw new Error(pfRes.error || "Failed to save PF details.");
@@ -640,13 +642,15 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
 
       // 7. Create ESI Details Record (if esiNumber is provided)
       if (formData.esiNumber?.trim()) {
-        const esiData = {
+        const esiData: any = {
           userId: targetUserId,
           esiNumber: formData.esiNumber.trim(),
           esiJoiningDate: formData.esiJoiningDate ? new Date(formData.esiJoiningDate).toISOString() : null,
           esiLeavingDate: formData.esiLeavingDate ? new Date(formData.esiLeavingDate).toISOString() : null,
-          reasonForLeaving: (formData.esiReasonForLeaving || null) as any,
         };
+
+        if (formData.esiReasonForLeaving) esiData.reasonForLeaving = formData.esiReasonForLeaving;
+
         const esiRes = await createESIDetail(esiData);
         if (!esiRes.success) {
           throw new Error(esiRes.error || "Failed to save ESI details.");
