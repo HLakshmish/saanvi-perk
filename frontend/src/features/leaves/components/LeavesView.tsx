@@ -362,7 +362,6 @@ export const LeavesView: React.FC = () => {
         <>
           {activeTab === "summary" && (
             <LeavesSummaryTab
-              onOpenCompOffModal={() => setIsCompOffModalOpen(true)}
               onOpenApplyLeaveModal={() => setIsApplyLeaveModalOpen(true)}
               requests={requests}
               isAdminOrSuperAdmin={isAdminOrSuperAdmin}
@@ -388,12 +387,7 @@ export const LeavesView: React.FC = () => {
         </>
       )}
 
-      {/* Request Comp-Off Modal */}
-      <RequestCompOffModal
-        isOpen={isCompOffModalOpen}
-        onClose={() => setIsCompOffModalOpen(false)}
-        onSubmit={handleCompOffSubmit}
-      />
+
 
       {/* Apply Leave Modal */}
       <ApplyLeaveModal

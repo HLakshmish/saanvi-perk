@@ -1,12 +1,22 @@
 "use client";
 
 import React, { useState } from "react";
-import { CalendarDays, Sliders, CalendarPlus } from "lucide-react";
+import { CalendarDays, Sliders, CalendarPlus, History, ClipboardList, UserCheck } from "lucide-react";
 import { LeaveTypesDetailView } from "./LeaveTypesDetailView";
 import { LeavePolicyDetailView } from "./LeavePolicyDetailView";
 import { LeaveAccumulationsDetailView } from "./LeaveAccumulationsDetailView";
+import { YearEndProcessDetailView } from "./YearEndProcessDetailView";
+import { CompOffPolicyDetailView } from "./CompOffPolicyDetailView";
+import { AssignCompOffPolicyDetailView } from "./AssignCompOffPolicyDetailView";
 
-type ViewMode = "cards" | "leave-types" | "leave-policy" | "leave-accumulations";
+type ViewMode =
+  | "cards"
+  | "leave-types"
+  | "leave-policy"
+  | "leave-accumulations"
+  | "year-end-process"
+  | "comp-off-policy"
+  | "assign-comp-off-policy";
 
 export const LeaveTab: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>("cards");
@@ -30,12 +40,28 @@ export const LeaveTab: React.FC = () => {
       description: "Allocate leaves to employees and set up the accumulation and availability period.",
       icon: CalendarPlus,
     },
+    {
+      id: "year-end-process",
+      title: "Year End Process",
+      description: "Manage carry-forward limits, encashments, and lapses of leave balances at year-end.",
+      icon: History,
+    },
+    {
+      id: "comp-off-policy",
+      title: "Comp-off Policy",
+      description: "Configure eligibility, rules, and validity period for compensatory leaves.",
+      icon: ClipboardList,
+    },
+    {
+      id: "assign-comp-off-policy",
+      title: "Assign Comp-off Policy",
+      description: "Assign compensatory off policies to employees with custom validity ranges.",
+      icon: UserCheck,
+    },
   ];
 
   const handleCardClick = (id: string) => {
-    if (id === "leave-types" || id === "leave-policy" || id === "leave-accumulations") {
-      setViewMode(id as ViewMode);
-    }
+    setViewMode(id as ViewMode);
   };
 
   if (viewMode === "leave-types") {
@@ -48,6 +74,18 @@ export const LeaveTab: React.FC = () => {
 
   if (viewMode === "leave-accumulations") {
     return <LeaveAccumulationsDetailView onBack={() => setViewMode("cards")} />;
+  }
+
+  if (viewMode === "year-end-process") {
+    return <YearEndProcessDetailView onBack={() => setViewMode("cards")} />;
+  }
+
+  if (viewMode === "comp-off-policy") {
+    return <CompOffPolicyDetailView onBack={() => setViewMode("cards")} />;
+  }
+
+  if (viewMode === "assign-comp-off-policy") {
+    return <AssignCompOffPolicyDetailView onBack={() => setViewMode("cards")} />;
   }
 
   return (
