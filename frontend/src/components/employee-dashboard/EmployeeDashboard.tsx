@@ -25,6 +25,7 @@ import {
 import { AttendanceCard } from "./AttendanceCard";
 import { QuickActions } from "./QuickActions";
 import { LeaveSummary } from "./LeaveSummary";
+import { EmployeeDashboardSkeleton } from "./EmployeeDashboardSkeleton";
 
 interface EmployeeDashboardProps {
   userName: string;
@@ -524,6 +525,10 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
     });
     setActiveSlide(index);
   };
+
+  if (isLoadingProfile) {
+    return <EmployeeDashboardSkeleton />;
+  }
 
   return (
     <div className="space-y-4 sm:space-y-6 animate-fade-in text-slate-800 pb-8">

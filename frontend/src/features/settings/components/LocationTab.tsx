@@ -18,6 +18,7 @@ import { LocationFormModal } from "./LocationFormModal";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { SearchBox } from "@/components/ui/search-box";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   TableContainer,
   Table,
@@ -166,9 +167,20 @@ export const LocationTab: React.FC<LocationTabProps> = ({ onBack }) => {
 
         {/* Data Table Container */}
         {loading ? (
-          <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center shadow-2xs">
-            <div className="w-8 h-8 rounded-full border-3 border-brand-primary border-t-transparent animate-spin mx-auto mb-3" />
-            <p className="text-xs font-bold text-slate-600">Loading office locations...</p>
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs space-y-4 animate-fade-in">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="flex items-center justify-between gap-4 py-2 border-b border-slate-100 last:border-none">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-16 font-mono" />
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-6 w-16 rounded-full" />
+                <div className="flex gap-2">
+                  <Skeleton className="h-8 w-8 rounded-lg" />
+                  <Skeleton className="h-8 w-8 rounded-lg" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : error ? (
           <div className="bg-rose-50 rounded-2xl border border-rose-200 p-8 text-center text-rose-700 text-xs font-semibold">

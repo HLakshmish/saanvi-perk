@@ -17,6 +17,7 @@ import { Employee } from "../../employees/types/employees.types";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { SearchBox } from "@/components/ui/search-box";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   TableContainer,
   Table,
@@ -180,9 +181,19 @@ export const DepartmentTab: React.FC<DepartmentTabProps> = ({ onBack }) => {
 
       {/* Main Table Content */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center p-20 border border-slate-200/80 rounded-2xl bg-white shadow-2xs space-y-3">
-          <span className="w-8 h-8 border-3 border-brand-primary/30 border-t-[#013e37] rounded-full animate-spin" />
-          <p className="text-xs text-slate-500 font-semibold animate-pulse">Loading departments...</p>
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs space-y-4 animate-fade-in">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="flex items-center justify-between gap-4 py-2 border-b border-slate-100 last:border-none">
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-4 w-20 font-mono" />
+              <Skeleton className="h-4 w-36" />
+              <Skeleton className="h-6 w-16 rounded-full" />
+              <div className="flex gap-2">
+                <Skeleton className="h-8 w-8 rounded-lg" />
+                <Skeleton className="h-8 w-8 rounded-lg" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : error ? (
         <div className="flex flex-col items-center justify-center p-12 border border-red-100 rounded-2xl bg-red-50/20 text-center space-y-2">
