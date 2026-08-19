@@ -21,7 +21,7 @@ class CompOffAssignController {
                 endDate: new Date(endDate),
                 status: status ?? true,
                 companyId,
-                createdBy: request.user.userId || null
+                createdBy: request.user.role === 'USER' ? request.user.userId : null
             }));
 
             const result = await service.createMany(assignments);
@@ -79,7 +79,7 @@ class CompOffAssignController {
 
             const updateData = {
                 ...request.body,
-                updatedBy: request.user.userId || null
+                updatedBy: request.user.role === 'USER' ? request.user.userId : null
             };
             
             // Remove companyId from updateData if it exists so we don't accidentally update it
