@@ -92,7 +92,7 @@ export const LeavesHolidayTab: React.FC = () => {
         <div className="overflow-x-auto">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-16 text-slate-500 gap-2">
-              <Loader2 className="w-8 h-8 animate-spin text-[#013e37]" />
+              <Loader2 className="w-8 h-8 animate-spin text-brand-primary" />
               <span className="text-xs font-semibold">Loading holiday schedule...</span>
             </div>
           ) : (

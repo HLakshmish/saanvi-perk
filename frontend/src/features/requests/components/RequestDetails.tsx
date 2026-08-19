@@ -19,12 +19,12 @@ export const RequestDetails: React.FC<RequestDetailsProps> = ({
         <div className="flex items-center gap-3 mb-6">
           <button
             onClick={onBack}
-            className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors border border-gray-200 text-[#013e37]"
+            className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors border border-gray-200 text-brand-primary"
             title="Back to History"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
-          <h2 className="text-base font-bold text-[#013e37]">
+          <h2 className="text-base font-bold text-brand-primary">
             Pending Approval Details - Karthik-{requestId}
           </h2>
         </div>
@@ -33,13 +33,13 @@ export const RequestDetails: React.FC<RequestDetailsProps> = ({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Panel: Request Details */}
           <div className="border border-gray-200 rounded-xl p-5 sm:p-6 bg-white space-y-6">
-            <h3 className="text-sm font-bold text-[#013e37] uppercase tracking-wider border-b border-gray-100 pb-2">
+            <h3 className="text-sm font-bold text-brand-primary uppercase tracking-wider border-b border-gray-100 pb-2">
               Request Details
             </h3>
 
             {/* Attendance Request Details */}
             <div className="space-y-4">
-              <h4 className="text-sm font-bold text-[#013e37]">
+              <h4 className="text-sm font-bold text-brand-primary">
                 Attendance Request Details
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">

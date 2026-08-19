@@ -70,18 +70,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Main Sidebar (Drawer on mobile, Sticky rail on desktop) */}
       <aside
-        className={`bg-[#013e37] border-r border-[#013e37]/40 flex flex-col h-[calc(100vh-3.5rem)] fixed md:sticky top-14 z-50 md:z-30 transition-all duration-300 select-none ${
+        className={`bg-sidebar-bg border-r border-sidebar-border flex flex-col h-[calc(100vh-3.5rem)] fixed md:sticky top-14 z-50 md:z-30 transition-all duration-300 select-none ${
           isSidebarOpen
             ? "w-64 md:w-60 translate-x-0 shadow-2xl md:shadow-lg"
             : "-translate-x-full md:translate-x-0 md:w-14 lg:md:w-16 items-center"
         }`}
       >
         {/* Mobile Header with Close Button */}
-        <div className="flex md:hidden items-center justify-between px-4 py-3 border-b border-white/10 text-[#ffefb3]">
+        <div className="flex md:hidden items-center justify-between px-4 py-3 border-b border-sidebar-border text-sidebar-active-text">
           <span className="text-xs font-extrabold uppercase tracking-wider">Navigation Menu</span>
           <button
             onClick={onCloseMobileSidebar}
-            className="p-1 rounded-lg hover:bg-white/10 text-[#ffefb3]/80 hover:text-[#ffefb3] cursor-pointer"
+            className="p-1 rounded-lg hover:bg-white/10 text-sidebar-text hover:text-sidebar-text-hover cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -105,13 +105,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   isSidebarOpen
                     ? `w-full px-4 py-3 gap-3.5 ${
                         isActive
-                          ? "text-[#013e37] bg-[#ffefb3] shadow-md shadow-black/20 font-extrabold"
-                          : "text-[#ffefb3]/80 hover:text-[#ffefb3] hover:bg-white/10 font-semibold"
+                          ? "text-sidebar-active-text bg-sidebar-active-bg shadow-md shadow-black/20 font-extrabold"
+                          : "text-sidebar-text hover:text-sidebar-text-hover hover:bg-white/10 font-semibold"
                       }`
                     : `p-2.5 justify-center ${
                         isActive
-                          ? "text-[#013e37] bg-[#ffefb3] shadow-md shadow-black/20 scale-105"
-                          : "text-[#ffefb3]/80 hover:text-[#ffefb3] hover:bg-white/10 hover:scale-105"
+                          ? "text-sidebar-active-text bg-sidebar-active-bg shadow-md shadow-black/20 scale-105"
+                          : "text-sidebar-text hover:text-sidebar-text-hover hover:bg-white/10 hover:scale-105"
                       }`
                 }`}
               >
@@ -126,7 +126,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
                 {/* Collapsed sidebar Tooltips */}
                 {!isSidebarOpen && (
-                  <span className="absolute left-16 bg-[#012d28] text-[#ffefb3] text-[11px] font-bold px-2.5 py-1.5 rounded-md shadow-xl border border-[#ffefb3]/20 opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-50 whitespace-nowrap">
+                  <span className="absolute left-16 bg-[#012d28] text-sidebar-active-text text-[11px] font-bold px-2.5 py-1.5 rounded-md shadow-xl border border-sidebar-border opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-50 whitespace-nowrap">
                     {item.label}
                   </span>
                 )}
@@ -139,7 +139,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <style jsx>{`
           .sidebar-scroll {
             scrollbar-width: thin;
-            scrollbar-color: rgba(255, 239, 179, 0.2) transparent;
+            scrollbar-color: var(--brand-accent) transparent;
           }
           .sidebar-scroll::-webkit-scrollbar {
             width: 4px;
@@ -148,11 +148,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
             background: transparent;
           }
           .sidebar-scroll::-webkit-scrollbar-thumb {
-            background: rgba(255, 239, 179, 0.2);
+            background: var(--brand-accent);
+            opacity: 0.3;
             border-radius: 999px;
           }
           .sidebar-scroll::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 239, 179, 0.4);
+            background: var(--brand-accent-hover);
           }
         `}</style>
       </aside>

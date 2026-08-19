@@ -52,15 +52,15 @@ export const HolidaysWidget: React.FC<HolidaysWidgetProps> = ({ holidays: propsH
   };
 
   return (
-    <div className="bg-white p-4 rounded-xl border border-[#013e37]/15 shadow-2xs flex flex-col overflow-hidden">
+    <div className="bg-white p-4 rounded-xl border border-brand-primary/15 shadow-2xs flex flex-col overflow-hidden">
       {/* Header */}
       <div className="flex items-center gap-2 mb-3">
-        <div className="w-7 h-7 rounded-lg bg-[#013e37]/10 flex items-center justify-center">
-          <CalendarDays className="w-3.5 h-3.5 text-[#013e37]" />
+        <div className="w-7 h-7 rounded-lg bg-brand-primary/10 flex items-center justify-center">
+          <CalendarDays className="w-3.5 h-3.5 text-brand-primary" />
         </div>
         <div>
-          <h3 className="font-bold text-[#013e37] text-xs sm:text-sm">Upcoming Holidays</h3>
-          <p className="text-[10px] text-[#013e37]/65 font-medium">
+          <h3 className="font-bold text-brand-primary text-xs sm:text-sm">Upcoming Holidays</h3>
+          <p className="text-[10px] text-brand-primary/65 font-medium">
             {list.length} upcoming {list.length === 1 ? "holiday" : "holidays"}
           </p>
         </div>
@@ -71,10 +71,10 @@ export const HolidaysWidget: React.FC<HolidaysWidgetProps> = ({ holidays: propsH
         {list.map((item, idx) => (
           <div
             key={`${item.id}-${idx}`}
-            className="flex items-center gap-2.5 p-2.5 rounded-lg bg-slate-50 border border-slate-100 transition-all duration-200 hover:border-[#013e37]/30 hover:bg-[#013e37]/5 group mr-1.5"
+            className="flex items-center gap-2.5 p-2.5 rounded-lg bg-slate-50 border border-slate-100 transition-all duration-200 hover:border-brand-primary/30 hover:bg-brand-primary/5 group mr-1.5"
           >
             {/* Date Badge */}
-            <div className="bg-[#013e37] text-[#ffefb3] rounded-lg px-2.5 py-1.5 flex flex-col items-center justify-center min-w-[46px] shadow-2xs shrink-0 font-bold">
+            <div className="bg-brand-primary text-brand-btn-text rounded-lg px-2.5 py-1.5 flex flex-col items-center justify-center min-w-[46px] shadow-2xs shrink-0 font-bold">
               <span className="text-base font-extrabold leading-none">{item.date}</span>
               <span className="text-[8px] font-bold uppercase mt-0.5 opacity-90">
                 {item.month.substring(0, 3)}
@@ -83,7 +83,7 @@ export const HolidaysWidget: React.FC<HolidaysWidgetProps> = ({ holidays: propsH
 
             {/* Event Info */}
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-slate-800 leading-tight truncate group-hover:text-[#013e37] transition-colors">
+              <p className="text-xs font-bold text-slate-800 leading-tight truncate group-hover:text-brand-primary transition-colors">
                 {item.title}
               </p>
               <p className="text-[10px] text-slate-400 font-medium mt-0.5">{item.day}</p>

@@ -117,7 +117,7 @@ export const RolesList: React.FC<RolesListProps> = ({
       {/* Top Header Row */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-[#013e37] tracking-tight">
+          <h2 className="text-xl sm:text-2xl font-bold text-brand-primary tracking-tight">
             Roles
           </h2>
           <p className="text-xs text-slate-500 font-semibold mt-1">
@@ -128,9 +128,9 @@ export const RolesList: React.FC<RolesListProps> = ({
         {/* Add New Role Button */}
         <button
           onClick={onAddNewRole}
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#013e37] hover:bg-[#012d28] text-[#ffefb3] font-bold text-xs rounded-xl shadow-2xs transition-all hover:shadow-xs cursor-pointer"
+          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-brand-primary hover:bg-brand-primary-hover text-brand-btn-text font-bold text-xs rounded-xl shadow-2xs transition-all hover:shadow-xs cursor-pointer"
         >
-          <Plus className="w-4 h-4 text-[#ffefb3]" />
+          <Plus className="w-4 h-4 text-brand-btn-text" />
           <span>Add New Role</span>
         </button>
       </div>
@@ -139,7 +139,7 @@ export const RolesList: React.FC<RolesListProps> = ({
       <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden relative">
         {isLoading && (
           <div className="absolute inset-0 bg-white/70 backdrop-blur-xs flex items-center justify-center z-20">
-            <div className="flex items-center gap-2 text-[#013e37] font-bold text-xs">
+            <div className="flex items-center gap-2 text-brand-primary font-bold text-xs">
               <Loader2 className="w-5 h-5 animate-spin" />
               <span>Loading Roles...</span>
             </div>
@@ -177,7 +177,7 @@ export const RolesList: React.FC<RolesListProps> = ({
                       >
                         <MinusCircle className="w-4 h-4" />
                       </button>
-                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-[#013e37] group-hover:translate-x-0.5 transition-all" />
+                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-brand-primary group-hover:translate-x-0.5 transition-all" />
                     </div>
                   </td>
                 </tr>

@@ -120,7 +120,7 @@ export const LocationTab: React.FC<LocationTabProps> = ({ onBack }) => {
           <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold">
             <button
               onClick={onBack}
-              className="text-slate-500 hover:text-[#013e37] font-bold transition-colors cursor-pointer"
+              className="text-slate-500 hover:text-brand-primary font-bold transition-colors cursor-pointer"
             >
               Organization
             </button>
@@ -134,7 +134,7 @@ export const LocationTab: React.FC<LocationTabProps> = ({ onBack }) => {
               setEditingLocation(null);
               setIsFormOpen(true);
             }}
-            className="bg-[#013e37] text-[#ffefb3] hover:bg-[#012d28] font-bold text-xs rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5 self-start sm:self-auto"
+            className="bg-brand-primary text-brand-btn-text hover:bg-brand-primary-hover font-bold text-xs rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5 self-start sm:self-auto"
           >
             <Plus className="w-4 h-4" />
             <span>Add Location</span>
@@ -151,14 +151,14 @@ export const LocationTab: React.FC<LocationTabProps> = ({ onBack }) => {
             />
           </div>
           <div className="text-xs font-semibold text-slate-500">
-            Total: <span className="font-extrabold text-[#013e37]">{filteredLocations.length}</span> locations
+            Total: <span className="font-extrabold text-brand-primary">{filteredLocations.length}</span> locations
           </div>
         </div>
 
         {/* Data Table Container */}
         {loading ? (
           <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center shadow-2xs">
-            <div className="w-8 h-8 rounded-full border-3 border-[#013e37] border-t-transparent animate-spin mx-auto mb-3" />
+            <div className="w-8 h-8 rounded-full border-3 border-brand-primary border-t-transparent animate-spin mx-auto mb-3" />
             <p className="text-xs font-bold text-slate-600">Loading office locations...</p>
           </div>
         ) : error ? (
@@ -192,7 +192,7 @@ export const LocationTab: React.FC<LocationTabProps> = ({ onBack }) => {
                     <tr key={loc.officeLocationId} className="hover:bg-slate-50/60 transition-colors">
                       <td className="py-3.5 px-4 font-bold text-slate-900">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-7 h-7 rounded-lg bg-[#013e37]/10 text-[#013e37] flex items-center justify-center font-bold text-xs shrink-0">
+                          <div className="w-7 h-7 rounded-lg bg-brand-primary/10 text-brand-primary flex items-center justify-center font-bold text-xs shrink-0">
                             <MapPin className="w-3.5 h-3.5" />
                           </div>
                           <span>{loc.locationName}</span>
@@ -225,7 +225,7 @@ export const LocationTab: React.FC<LocationTabProps> = ({ onBack }) => {
                           <button
                             onClick={() => setViewingLocation(loc)}
                             title="View Details"
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-[#013e37] hover:bg-slate-100 transition-colors cursor-pointer"
+                            className="p-1.5 rounded-lg text-slate-500 hover:text-brand-primary hover:bg-slate-100 transition-colors cursor-pointer"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
@@ -235,7 +235,7 @@ export const LocationTab: React.FC<LocationTabProps> = ({ onBack }) => {
                               setIsFormOpen(true);
                             }}
                             title="Edit"
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-[#013e37] hover:bg-slate-100 transition-colors cursor-pointer"
+                            className="p-1.5 rounded-lg text-slate-500 hover:text-brand-primary hover:bg-slate-100 transition-colors cursor-pointer"
                           >
                             <Pencil className="w-4 h-4" />
                           </button>
@@ -274,7 +274,7 @@ export const LocationTab: React.FC<LocationTabProps> = ({ onBack }) => {
           <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl border border-slate-100 overflow-hidden p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-[#013e37]/10 text-[#013e37] flex items-center justify-center font-bold">
+                <div className="w-9 h-9 rounded-xl bg-brand-primary/10 text-brand-primary flex items-center justify-center font-bold">
                   <MapPin className="w-5 h-5" />
                 </div>
                 <div>
@@ -327,7 +327,7 @@ export const LocationTab: React.FC<LocationTabProps> = ({ onBack }) => {
                       href={viewingLocation.website}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="font-bold text-[#013e37] hover:underline truncate max-w-[200px]"
+                      className="font-bold text-brand-primary hover:underline truncate max-w-[200px]"
                     >
                       {viewingLocation.website}
                     </a>
@@ -342,7 +342,7 @@ export const LocationTab: React.FC<LocationTabProps> = ({ onBack }) => {
                 {(viewingLocation.latitude !== null || viewingLocation.longitude !== null) && (
                   <div className="flex justify-between">
                     <span className="text-slate-500 font-semibold">Geo Coordinates:</span>
-                    <span className="font-bold text-[#013e37] font-mono">
+                    <span className="font-bold text-brand-primary font-mono">
                       {viewingLocation.latitude ?? "—"}, {viewingLocation.longitude ?? "—"}
                     </span>
                   </div>

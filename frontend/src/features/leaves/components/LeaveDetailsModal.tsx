@@ -173,7 +173,7 @@ export const LeaveDetailsModal: React.FC<LeaveDetailsModalProps> = ({
 
         {/* Header */}
         <div className="p-6 pb-4 border-b border-slate-100">
-          <h3 className="text-lg font-bold text-[#013e37] tracking-tight">
+          <h3 className="text-lg font-bold text-brand-primary tracking-tight">
             Leave Request Details
           </h3>
           <p className="text-xs text-slate-500 font-semibold mt-1">
@@ -185,7 +185,7 @@ export const LeaveDetailsModal: React.FC<LeaveDetailsModalProps> = ({
         <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-16 text-slate-500 gap-2">
-              <Loader2 className="w-8 h-8 animate-spin text-[#013e37]" />
+              <Loader2 className="w-8 h-8 animate-spin text-brand-primary" />
               <span className="text-xs font-semibold">Retrieving details...</span>
             </div>
           ) : errorMsg ? (

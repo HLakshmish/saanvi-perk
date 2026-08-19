@@ -9,7 +9,7 @@ export const ApprovalsPending: React.FC = () => {
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-2xs space-y-5">
-      <h2 className="text-base font-bold text-[#013e37]">Pending Approvals</h2>
+      <h2 className="text-base font-bold text-brand-primary">Pending Approvals</h2>
 
       {/* Filter Controls Bar */}
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -21,7 +21,7 @@ export const ApprovalsPending: React.FC = () => {
               placeholder="Search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#013e37]/20 focus:border-[#013e37]"
+              className="w-full pl-9 pr-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary"
             />
           </div>
 
@@ -30,7 +30,7 @@ export const ApprovalsPending: React.FC = () => {
               type="checkbox"
               checked={selectAll}
               onChange={(e) => setSelectAll(e.target.checked)}
-              className="w-4 h-4 rounded border-gray-300 text-[#013e37] focus:ring-[#013e37]"
+              className="w-4 h-4 rounded border-gray-300 text-brand-primary focus:ring-brand-primary"
             />
             <span>Select All</span>
           </label>

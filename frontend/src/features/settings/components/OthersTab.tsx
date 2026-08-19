@@ -183,7 +183,7 @@ export const OthersTab: React.FC = () => {
         <div className="space-y-6 animate-fade-in">
           {/* Header */}
           <div>
-            <h2 className="text-xl font-bold text-[#013e37] tracking-tight">
+            <h2 className="text-xl font-bold text-brand-primary tracking-tight">
               Other
             </h2>
             <p className="text-xs text-slate-500 font-semibold mt-1">
@@ -200,15 +200,15 @@ export const OthersTab: React.FC = () => {
                   key={card.id}
                   onClick={() => handleCardClick(card.id)}
                   className={`bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs hover:shadow-md transition-all cursor-pointer group flex items-start gap-4 ${
-                    card.highlight ? "hover:border-[#013e37] ring-2 ring-[#013e37]/10" : "hover:border-[#013e37]/40"
+                    card.highlight ? "hover:border-brand-primary ring-2 ring-[#013e37]/10" : "hover:border-brand-primary/40"
                   }`}
                 >
                   {/* Icon Box */}
                   <div
                     className={`w-12 h-12 rounded-2xl border flex items-center justify-center shrink-0 group-hover:scale-105 transition-all ${
                       card.highlight
-                        ? "bg-[#013e37]/10 border-[#013e37]/20 text-[#013e37] group-hover:bg-[#013e37] group-hover:text-[#ffefb3]"
-                        : "bg-slate-50 border-slate-200/80 text-[#013e37] group-hover:bg-[#013e37] group-hover:text-[#ffefb3] group-hover:border-[#013e37]"
+                        ? "bg-brand-primary/10 border-brand-primary/20 text-brand-primary group-hover:bg-brand-primary group-hover:text-brand-btn-text"
+                        : "bg-slate-50 border-slate-200/80 text-brand-primary group-hover:bg-brand-primary group-hover:text-brand-btn-text group-hover:border-brand-primary"
                     }`}
                   >
                     <Icon className="w-5 h-5" />
@@ -216,7 +216,7 @@ export const OthersTab: React.FC = () => {
 
                   {/* Card Description */}
                   <div className="space-y-1">
-                    <h3 className="text-sm font-bold text-slate-900 group-hover:text-[#013e37] transition-colors">
+                    <h3 className="text-sm font-bold text-slate-900 group-hover:text-brand-primary transition-colors">
                       {card.title}
                     </h3>
                     <p className="text-xs text-slate-500 font-medium leading-relaxed">

@@ -20,8 +20,8 @@ export const SettingsView: React.FC = () => {
   return (
     <div className="w-full space-y-6">
       {/* Top Header Row with Title & Right-Aligned Sub Navigation Tabs */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#013e37]/15 pb-3">
-        <h1 className="text-xl sm:text-2xl font-bold text-[#013e37] tracking-tight">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-brand-primary/15 pb-3">
+        <h1 className="text-xl sm:text-2xl font-bold text-brand-primary tracking-tight">
           Configuration
         </h1>
 
@@ -31,8 +31,8 @@ export const SettingsView: React.FC = () => {
             onClick={() => handleSubTabChange("account-info")}
             className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
               activeSubTab === "account-info"
-                ? "bg-[#013e37] text-[#ffefb3] font-bold shadow-2xs border border-[#013e37]"
-                : "hover:text-[#013e37]"
+                ? "bg-brand-primary text-brand-btn-text font-bold shadow-2xs border border-brand-primary"
+                : "hover:text-brand-primary"
             }`}
           >
             Account Info
@@ -43,8 +43,8 @@ export const SettingsView: React.FC = () => {
             onClick={() => handleSubTabChange("organization")}
             className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
               activeSubTab === "organization"
-                ? "bg-[#013e37] text-[#ffefb3] font-bold shadow-2xs border border-[#013e37]"
-                : "hover:text-[#013e37]"
+                ? "bg-brand-primary text-brand-btn-text font-bold shadow-2xs border border-brand-primary"
+                : "hover:text-brand-primary"
             }`}
           >
             Organization
@@ -55,8 +55,8 @@ export const SettingsView: React.FC = () => {
             onClick={() => handleSubTabChange("payroll")}
             className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
               activeSubTab === "payroll"
-                ? "bg-[#013e37] text-[#ffefb3] font-bold shadow-2xs border border-[#013e37]"
-                : "hover:text-[#013e37]"
+                ? "bg-brand-primary text-brand-btn-text font-bold shadow-2xs border border-brand-primary"
+                : "hover:text-brand-primary"
             }`}
           >
             Payroll
@@ -67,8 +67,8 @@ export const SettingsView: React.FC = () => {
             onClick={() => handleSubTabChange("attendance")}
             className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
               activeSubTab === "attendance"
-                ? "bg-[#013e37] text-[#ffefb3] font-bold shadow-2xs border border-[#013e37]"
-                : "hover:text-[#013e37]"
+                ? "bg-brand-primary text-brand-btn-text font-bold shadow-2xs border border-brand-primary"
+                : "hover:text-brand-primary"
             }`}
           >
             Attendance
@@ -79,8 +79,8 @@ export const SettingsView: React.FC = () => {
             onClick={() => handleSubTabChange("leave")}
             className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
               activeSubTab === "leave"
-                ? "bg-[#013e37] text-[#ffefb3] font-bold shadow-2xs border border-[#013e37]"
-                : "hover:text-[#013e37]"
+                ? "bg-brand-primary text-brand-btn-text font-bold shadow-2xs border border-brand-primary"
+                : "hover:text-brand-primary"
             }`}
           >
             Leave
@@ -91,8 +91,8 @@ export const SettingsView: React.FC = () => {
             onClick={() => handleSubTabChange("others")}
             className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
               activeSubTab === "others"
-                ? "bg-[#013e37] text-[#ffefb3] font-bold shadow-2xs border border-[#013e37]"
-                : "hover:text-[#013e37]"
+                ? "bg-brand-primary text-brand-btn-text font-bold shadow-2xs border border-brand-primary"
+                : "hover:text-brand-primary"
             }`}
           >
             Others

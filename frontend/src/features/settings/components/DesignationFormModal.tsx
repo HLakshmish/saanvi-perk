@@ -94,7 +94,7 @@ export const DesignationFormModal: React.FC<DesignationFormModalProps> = ({
       <div className="bg-white rounded-3xl w-full max-w-lg max-h-[90vh] flex flex-col shadow-2xl border border-slate-100 overflow-hidden animate-in zoom-in-95 duration-200">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
-          <h3 className="text-sm font-bold text-[#013e37] uppercase tracking-wider">
+          <h3 className="text-sm font-bold text-brand-primary uppercase tracking-wider">
             {designation ? "Edit Designation" : "Add Designation"}
           </h3>
           <button
@@ -154,7 +154,7 @@ export const DesignationFormModal: React.FC<DesignationFormModalProps> = ({
                   setDepartmentId(e.target.value);
                   if (errors.departmentId) setErrors((prev) => ({ ...prev, departmentId: undefined }));
                 }}
-                className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#013e37]/20 focus:border-[#013e37] transition-all"
+                className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all"
               >
                 <option value="">Select Department</option>
                 {departments.map((dept) => (
@@ -178,7 +178,7 @@ export const DesignationFormModal: React.FC<DesignationFormModalProps> = ({
                 onChange={(e) => setRemarks(e.target.value)}
                 placeholder="Brief role responsibilities or designation details..."
                 rows={3}
-                className="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#013e37]/20 focus:border-[#013e37] transition-all resize-none"
+                className="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all resize-none"
               />
             </div>
 
@@ -194,12 +194,12 @@ export const DesignationFormModal: React.FC<DesignationFormModalProps> = ({
                 type="button"
                 onClick={() => setStatus(!status)}
                 className={`w-12 h-6 rounded-full transition-colors relative cursor-pointer ${
-                  status ? "bg-[#013e37]" : "bg-slate-300"
+                  status ? "bg-brand-primary" : "bg-slate-300"
                 }`}
               >
                 <div
                   className={`w-5 h-5 rounded-full bg-white transition-transform absolute top-0.5 left-0.5 flex items-center justify-center ${
-                    status ? "translate-x-6 text-[#013e37]" : "text-slate-400"
+                    status ? "translate-x-6 text-brand-primary" : "text-slate-400"
                   }`}
                 >
                   {status && <Check className="w-3 h-3 stroke-[3]" />}
@@ -221,7 +221,7 @@ export const DesignationFormModal: React.FC<DesignationFormModalProps> = ({
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="text-xs font-bold bg-[#013e37] text-[#ffefb3] hover:bg-[#012d28] rounded-xl shadow-xs"
+              className="text-xs font-bold bg-brand-primary text-brand-btn-text hover:bg-brand-primary-hover rounded-xl shadow-xs"
             >
               {isSubmitting ? "Saving..." : designation ? "Update Designation" : "Create Designation"}
             </Button>

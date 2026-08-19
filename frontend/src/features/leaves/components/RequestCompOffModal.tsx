@@ -40,7 +40,7 @@ export const RequestCompOffModal: React.FC<RequestCompOffModalProps> = ({
 
         {/* Modal Header */}
         <div className="p-6 pb-4 border-b border-slate-100">
-          <h3 className="text-lg font-bold text-[#013e37] tracking-tight">
+          <h3 className="text-lg font-bold text-brand-primary tracking-tight">
             Request Comp-Off balance
           </h3>
           <p className="text-xs text-slate-500 font-medium mt-1">
@@ -61,9 +61,9 @@ export const RequestCompOffModal: React.FC<RequestCompOffModalProps> = ({
                 value={compensateDate}
                 onChange={(e) => setCompensateDate(e.target.value)}
                 placeholder="01 Aug 2026"
-                className="w-full text-xs font-bold text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 pl-3.5 pr-10 focus:outline-none focus:ring-2 focus:ring-[#013e37]/20 focus:border-[#013e37] shadow-2xs transition-all"
+                className="w-full text-xs font-bold text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 pl-3.5 pr-10 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary shadow-2xs transition-all"
               />
-              <CalendarIcon className="w-4 h-4 text-[#013e37] absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <CalendarIcon className="w-4 h-4 text-brand-primary absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
           </div>
 
@@ -77,7 +77,7 @@ export const RequestCompOffModal: React.FC<RequestCompOffModalProps> = ({
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="Worked on Republic Day"
-              className="w-full text-xs font-medium text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-[#013e37]/20 focus:border-[#013e37] shadow-2xs transition-all placeholder:text-slate-400"
+              className="w-full text-xs font-medium text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary shadow-2xs transition-all placeholder:text-slate-400"
             />
           </div>
 
@@ -92,7 +92,7 @@ export const RequestCompOffModal: React.FC<RequestCompOffModalProps> = ({
             </button>
             <button
               type="submit"
-              className="px-6 py-2 bg-[#013e37] hover:bg-[#012d28] text-[#ffefb3] font-bold text-xs rounded-xl shadow-2xs transition-all hover:shadow-xs cursor-pointer"
+              className="px-6 py-2 bg-brand-primary hover:bg-brand-primary-hover text-brand-btn-text font-bold text-xs rounded-xl shadow-2xs transition-all hover:shadow-xs cursor-pointer"
             >
               Apply
             </button>

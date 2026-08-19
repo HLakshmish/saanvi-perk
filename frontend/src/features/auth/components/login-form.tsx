@@ -82,13 +82,13 @@ export function LoginForm() {
       <div className="min-h-screen w-full flex items-center justify-center p-3 sm:p-6 bg-[#f4fbf7] transition-colors duration-500 overflow-y-auto relative select-none forced-light-theme font-sans">
         
         {/* Floating background decorative shapes */}
-        <div className="absolute top-[10%] left-[8%] w-24 sm:w-36 h-24 sm:h-36 bg-[#013e37]/5 rounded-full blur-xs pointer-events-none"></div>
-        <div className="absolute bottom-[12%] left-[5%] w-16 sm:w-24 h-16 sm:h-24 bg-[#013e37]/5 rounded-2xl sm:rounded-3xl transform rotate-45 pointer-events-none"></div>
-        <div className="absolute top-[15%] right-[6%] w-16 sm:w-20 h-16 sm:h-20 bg-[#013e37]/5 rounded-xl sm:rounded-2xl transform -rotate-12 pointer-events-none"></div>
-        <div className="absolute bottom-[8%] right-[10%] w-24 sm:w-32 h-8 sm:h-10 bg-[#013e37]/5 rounded-full transform rotate-12 pointer-events-none"></div>
+        <div className="absolute top-[10%] left-[8%] w-24 sm:w-36 h-24 sm:h-36 bg-brand-primary/5 rounded-full blur-xs pointer-events-none"></div>
+        <div className="absolute bottom-[12%] left-[5%] w-16 sm:w-24 h-16 sm:h-24 bg-brand-primary/5 rounded-2xl sm:rounded-3xl transform rotate-45 pointer-events-none"></div>
+        <div className="absolute top-[15%] right-[6%] w-16 sm:w-20 h-16 sm:h-20 bg-brand-primary/5 rounded-xl sm:rounded-2xl transform -rotate-12 pointer-events-none"></div>
+        <div className="absolute bottom-[8%] right-[10%] w-24 sm:w-32 h-8 sm:h-10 bg-brand-primary/5 rounded-full transform rotate-12 pointer-events-none"></div>
 
         {/* Centered Split-Screen Responsive Card */}
-        <div className="relative w-full max-w-4xl rounded-2xl sm:rounded-3xl bg-white border border-[#013e37]/15 shadow-xl overflow-hidden flex flex-col md:flex-row h-auto md:min-h-[540px] md:max-h-[600px] transition-all duration-300 pointer-events-auto select-text">
+        <div className="relative w-full max-w-4xl rounded-2xl sm:rounded-3xl bg-white border border-brand-primary/15 shadow-xl overflow-hidden flex flex-col md:flex-row h-auto md:min-h-[540px] md:max-h-[600px] transition-all duration-300 pointer-events-auto select-text">
           
           {/* Left Side: Form Panel */}
           <div className="w-full md:w-1/2 flex flex-col justify-between p-6 sm:p-8 md:p-10 overflow-y-auto bg-white">
@@ -108,10 +108,10 @@ export function LoginForm() {
             {/* Mid Form Section */}
             <div className="space-y-5 my-auto">
               <div className="space-y-1 text-center">
-                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#013e37]">
+                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-brand-primary">
                   Welcome Back!
                 </h1>
-                <p className="text-xs sm:text-sm text-[#013e37]/75 font-medium">
+                <p className="text-xs sm:text-sm text-brand-primary/75 font-medium">
                   Please enter your email and password to log in.
                 </p>
               </div>
@@ -127,7 +127,7 @@ export function LoginForm() {
                   onChange={handleChange}
                   error={errors.email}
                   required
-                  className="border-[#013e37]/20 focus:ring-[#013e37]/15 focus:border-[#013e37] focus:outline-none py-2.5 text-sm rounded-lg transition-all duration-200 shadow-2xs text-[#013e37]"
+                  className="border-brand-primary/20 focus:ring-brand-primary/15 focus:border-brand-primary focus:outline-none py-2.5 text-sm rounded-lg transition-all duration-200 shadow-2xs text-brand-primary"
                 />
 
                 <div className="relative">
@@ -140,12 +140,12 @@ export function LoginForm() {
                     onChange={handleChange}
                     error={errors.password}
                     required
-                    className="pr-10 border-[#013e37]/20 focus:ring-[#013e37]/15 focus:border-[#013e37] focus:outline-none py-2.5 text-sm rounded-lg transition-all duration-200 shadow-2xs text-[#013e37]"
+                    className="pr-10 border-brand-primary/20 focus:ring-brand-primary/15 focus:border-brand-primary focus:outline-none py-2.5 text-sm rounded-lg transition-all duration-200 shadow-2xs text-brand-primary"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 bottom-2.5 z-10 p-1 rounded-md text-[#013e37]/60 hover:text-[#013e37] hover:bg-[#013e37]/10 transition-colors cursor-pointer focus:outline-none"
+                    className="absolute right-3.5 bottom-2.5 z-10 p-1 rounded-md text-brand-primary/60 hover:text-brand-primary hover:bg-brand-primary/10 transition-colors cursor-pointer focus:outline-none"
                     title={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? (
@@ -161,15 +161,15 @@ export function LoginForm() {
                   </button>
                 </div>
 
-                {/* Submit Button with #013e37 background & #FFEFB3 text */}
+                {/* Submit Button with brand-primary background & white text */}
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full mt-2 h-10 sm:h-11 text-sm font-bold text-[#FFEFB3] bg-[#013e37] hover:bg-[#012d28] active:scale-[0.98] rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
+                  className="w-full mt-2 h-10 sm:h-11 text-sm font-bold text-white bg-brand-primary hover:bg-brand-primary-hover active:scale-[0.98] rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
                 >
                   {isLoading ? (
                     <svg
-                      className="animate-spin h-4 w-4 text-[#FFEFB3]"
+                      className="animate-spin h-4 w-4 text-white"
                       xmlns="http://www.w3.org/2000/svg"
                       fill="none"
                       viewBox="0 0 24 24"
@@ -196,17 +196,17 @@ export function LoginForm() {
             </div>
 
             {/* Bottom Support & Footer */}
-            <div className="mt-6 pt-4 border-t border-[#013e37]/10 space-y-1.5 text-center sm:text-left">
-              <div className="text-[11px] sm:text-xs text-[#013e37]/75 font-medium">
+            <div className="mt-6 pt-4 border-t border-brand-primary/10 space-y-1.5 text-center sm:text-left">
+              <div className="text-[11px] sm:text-xs text-brand-primary/75 font-medium">
                 <span>Need help? Contact support at </span>
                 <a
                   href="mailto:support@saanvinexus.com"
-                  className="text-[#013e37] hover:underline font-bold"
+                  className="text-brand-primary hover:underline font-bold"
                 >
                   support@saanvinexus.com
                 </a>
               </div>
-              <div className="text-[10px] sm:text-xs text-[#013e37]/50 font-medium">
+              <div className="text-[10px] sm:text-xs text-brand-primary/50 font-medium">
                 All rights reserved © {new Date().getFullYear()} Nexus.
               </div>
             </div>
@@ -226,11 +226,11 @@ export function LoginForm() {
             />
             
             {/* Frosted Glass Overlay Slide Box */}
-            <div className="absolute bottom-6 inset-x-6 backdrop-blur-md bg-[#013e37]/85 border border-[#FFEFB3]/20 rounded-2xl p-5 text-[#FFEFB3] shadow-lg transition-all duration-500">
-              <h3 className="text-base sm:text-lg font-bold leading-snug mb-1 transition-all duration-500 text-[#FFEFB3]">
+            <div className="absolute bottom-6 inset-x-6 backdrop-blur-md bg-brand-primary/85 border border-white/20 rounded-2xl p-5 text-white shadow-lg transition-all duration-500">
+              <h3 className="text-base sm:text-lg font-bold leading-snug mb-1 transition-all duration-500 text-white">
                 {bannerSlides[activeSlide].title}
               </h3>
-              <p className="text-xs text-[#FFEFB3]/90 transition-all duration-500 font-medium">
+              <p className="text-xs text-white/90 transition-all duration-500 font-medium">
                 {bannerSlides[activeSlide].description}
               </p>
             </div>
@@ -239,7 +239,7 @@ export function LoginForm() {
             <button
               type="button"
               onClick={() => setActiveSlide((prev) => (prev + 1) % bannerSlides.length)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-[#013e37] hover:bg-[#012d28] text-[#FFEFB3] flex items-center justify-center shadow-lg transition-all duration-200 focus:outline-none cursor-pointer z-20"
+              className="absolute right-4 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-brand-primary hover:bg-brand-primary-hover text-white flex items-center justify-center shadow-lg transition-all duration-200 focus:outline-none cursor-pointer z-20"
               aria-label="Next slide"
             >
               <svg

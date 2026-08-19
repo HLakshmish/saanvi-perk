@@ -141,7 +141,7 @@ export const AccountInformationDetail: React.FC<AccountInformationDetailProps> =
         <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold">
           <button
             onClick={onBackToAccountInfo}
-            className="text-slate-500 hover:text-[#013e37] font-bold transition-colors cursor-pointer"
+            className="text-slate-500 hover:text-brand-primary font-bold transition-colors cursor-pointer"
           >
             Account Info
           </button>
@@ -170,10 +170,10 @@ export const AccountInformationDetail: React.FC<AccountInformationDetailProps> =
         {/* Left Sub-Sidebar Menu */}
         <div className="bg-white rounded-2xl border border-slate-200/80 p-3 shadow-2xs space-y-1">
           <button
-            className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold bg-[#013e37]/10 text-[#013e37] border border-[#013e37]/20 cursor-pointer"
+            className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold bg-brand-primary/10 text-brand-primary border border-brand-primary/20 cursor-pointer"
           >
             <span>Company info</span>
-            <ChevronRight className="w-4 h-4 text-[#013e37]" />
+            <ChevronRight className="w-4 h-4 text-brand-primary" />
           </button>
         </div>
 
@@ -181,7 +181,7 @@ export const AccountInformationDetail: React.FC<AccountInformationDetailProps> =
         <div className="lg:col-span-3 bg-white rounded-2xl border border-slate-200/80 p-6 shadow-2xs space-y-6 relative min-h-[380px]">
           {isLoading && (
             <div className="absolute inset-0 bg-white/70 backdrop-blur-xs flex items-center justify-center z-20 rounded-2xl">
-              <div className="flex items-center gap-2 text-[#013e37] font-bold text-xs">
+              <div className="flex items-center gap-2 text-brand-primary font-bold text-xs">
                 <Loader2 className="w-5 h-5 animate-spin" />
                 <span>Loading Company & Location Data...</span>
               </div>
@@ -196,7 +196,7 @@ export const AccountInformationDetail: React.FC<AccountInformationDetailProps> =
             {!isEditing ? (
               <button
                 onClick={() => setIsEditing(true)}
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#013e37] hover:text-[#012d28] transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-primary hover:text-[#012d28] transition-colors cursor-pointer"
               >
                 <Edit3 className="w-3.5 h-3.5" />
                 <span>Edit Detail</span>
@@ -215,9 +215,9 @@ export const AccountInformationDetail: React.FC<AccountInformationDetailProps> =
                   type="button"
                   onClick={handleSave}
                   disabled={isSaving}
-                  className="px-3.5 py-1 bg-[#013e37] hover:bg-[#012d28] text-[#ffefb3] rounded-lg text-xs font-bold shadow-2xs cursor-pointer flex items-center gap-1"
+                  className="px-3.5 py-1 bg-brand-primary hover:bg-brand-primary-hover text-brand-btn-text rounded-lg text-xs font-bold shadow-2xs cursor-pointer flex items-center gap-1"
                 >
-                  {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5 text-[#ffefb3]" />}
+                  {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5 text-brand-btn-text" />}
                   Save
                 </button>
               </div>
@@ -235,7 +235,7 @@ export const AccountInformationDetail: React.FC<AccountInformationDetailProps> =
                   value={formData.companyName}
                   onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
                   placeholder="Enter company name"
-                  className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-bold text-slate-800 focus:outline-none focus:border-[#013e37]"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-bold text-slate-800 focus:outline-none focus:border-brand-primary"
                 />
               ) : (
                 <p className="font-bold text-slate-800 text-sm">{companyData.companyName || "-"}</p>
@@ -251,7 +251,7 @@ export const AccountInformationDetail: React.FC<AccountInformationDetailProps> =
                   value={formData.address1}
                   onChange={(e) => setFormData({ ...formData, address1: e.target.value })}
                   placeholder="Enter address line 1"
-                  className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-[#013e37]"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-brand-primary"
                 />
               ) : (
                 <p className="font-semibold text-slate-800">{companyData.address1 || "-"}</p>
@@ -267,7 +267,7 @@ export const AccountInformationDetail: React.FC<AccountInformationDetailProps> =
                   value={formData.address2}
                   onChange={(e) => setFormData({ ...formData, address2: e.target.value })}
                   placeholder="Enter address line 2"
-                  className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-[#013e37]"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-brand-primary"
                 />
               ) : (
                 <p className="font-semibold text-slate-800">{companyData.address2 || "-"}</p>
@@ -283,7 +283,7 @@ export const AccountInformationDetail: React.FC<AccountInformationDetailProps> =
                   value={formData.city}
                   onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                   placeholder="Enter city"
-                  className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-[#013e37]"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-brand-primary"
                 />
               ) : (
                 <p className="font-semibold text-slate-800">{companyData.city || "-"}</p>
@@ -299,7 +299,7 @@ export const AccountInformationDetail: React.FC<AccountInformationDetailProps> =
                   value={formData.state}
                   onChange={(e) => setFormData({ ...formData, state: e.target.value })}
                   placeholder="Enter state"
-                  className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-[#013e37]"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-brand-primary"
                 />
               ) : (
                 <p className="font-semibold text-slate-800">{companyData.state || "-"}</p>
@@ -315,7 +315,7 @@ export const AccountInformationDetail: React.FC<AccountInformationDetailProps> =
                   value={formData.country}
                   onChange={(e) => setFormData({ ...formData, country: e.target.value })}
                   placeholder="Enter country"
-                  className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-[#013e37]"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-brand-primary"
                 />
               ) : (
                 <p className="font-semibold text-slate-800">{companyData.country || "-"}</p>
@@ -331,7 +331,7 @@ export const AccountInformationDetail: React.FC<AccountInformationDetailProps> =
                   value={formData.pinCode}
                   onChange={(e) => setFormData({ ...formData, pinCode: e.target.value })}
                   placeholder="Enter pincode"
-                  className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-[#013e37]"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-brand-primary"
                 />
               ) : (
                 <p className="font-semibold text-slate-800">{companyData.pinCode || "-"}</p>
@@ -347,7 +347,7 @@ export const AccountInformationDetail: React.FC<AccountInformationDetailProps> =
                   value={formData.fax}
                   onChange={(e) => setFormData({ ...formData, fax: e.target.value })}
                   placeholder="Enter fax number"
-                  className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-[#013e37]"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-brand-primary"
                 />
               ) : (
                 <p className="font-semibold text-slate-800">{companyData.fax || "-"}</p>
@@ -363,7 +363,7 @@ export const AccountInformationDetail: React.FC<AccountInformationDetailProps> =
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   placeholder="Enter phone number"
-                  className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-[#013e37]"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-brand-primary"
                 />
               ) : (
                 <p className="font-semibold text-slate-800">{companyData.phone || "-"}</p>
@@ -379,10 +379,10 @@ export const AccountInformationDetail: React.FC<AccountInformationDetailProps> =
                   value={formData.website}
                   onChange={(e) => setFormData({ ...formData, website: e.target.value })}
                   placeholder="Enter website URL"
-                  className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-[#013e37]"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-brand-primary"
                 />
               ) : (
-                <p className="font-semibold text-[#013e37] hover:underline cursor-pointer">{companyData.website || "-"}</p>
+                <p className="font-semibold text-brand-primary hover:underline cursor-pointer">{companyData.website || "-"}</p>
               )}
             </div>
           </div>
@@ -412,7 +412,7 @@ export const AccountInformationDetail: React.FC<AccountInformationDetailProps> =
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-md bg-[#013e37] text-[#ffefb3] flex items-center justify-center text-xs font-bold">
+                    <div className="w-6 h-6 rounded-md bg-brand-primary text-brand-btn-text flex items-center justify-center text-xs font-bold">
                       {companyData.companyName ? companyData.companyName.charAt(0).toUpperCase() : "C"}
                     </div>
                     <span className="font-bold text-slate-800 text-sm tracking-tight">
@@ -429,8 +429,8 @@ export const AccountInformationDetail: React.FC<AccountInformationDetailProps> =
                     Preferred Image Size: 120 x 40 pixels, Maximum 100 KB
                   </p>
 
-                  <label className="inline-flex items-center gap-2 px-4 py-2 bg-[#013e37] hover:bg-[#012d28] text-[#ffefb3] font-bold text-xs rounded-xl shadow-2xs transition-all cursor-pointer hover:shadow-xs">
-                    <Upload className="w-3.5 h-3.5 text-[#ffefb3]" />
+                  <label className="inline-flex items-center gap-2 px-4 py-2 bg-brand-primary hover:bg-brand-primary-hover text-brand-btn-text font-bold text-xs rounded-xl shadow-2xs transition-all cursor-pointer hover:shadow-xs">
+                    <Upload className="w-3.5 h-3.5 text-brand-btn-text" />
                     <span>Choose File</span>
                     <input
                       type="file"

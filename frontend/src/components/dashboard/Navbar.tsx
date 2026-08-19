@@ -102,10 +102,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           <Menu className="w-5 h-5" />
         </button>
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-[#013e37] text-[#ffefb3] flex items-center justify-center text-xs font-extrabold shadow-2xs">
+          <div className="w-7 h-7 rounded-lg bg-brand-primary text-white flex items-center justify-center text-xs font-extrabold shadow-2xs">
             {companyName.charAt(0).toUpperCase()}
           </div>
-          <span className="font-extrabold text-[#013e37] text-sm sm:text-base tracking-tight">
+          <span className="font-extrabold text-brand-primary text-sm sm:text-base tracking-tight">
             {companyName}
           </span>
         </div>
@@ -114,13 +114,13 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Right section: Actions & User Info */}
       <div className="flex items-center gap-2 sm:gap-3.5 text-xs sm:text-sm">
         {/* Notifications Icon */}
-        <button className="p-2 text-slate-600 hover:text-[#013e37] rounded-full hover:bg-slate-100 transition-colors cursor-pointer relative">
+        <button className="p-2 text-slate-600 hover:text-brand-primary rounded-full hover:bg-slate-100 transition-colors cursor-pointer relative">
           <Bell className="w-4 h-4" />
           <span className="w-2 h-2 rounded-full bg-emerald-500 absolute top-1.5 right-1.5 ring-2 ring-white" />
         </button>
 
         {/* Support Icon */}
-        <button className="p-2 text-slate-600 hover:text-[#013e37] rounded-full hover:bg-slate-100 transition-colors cursor-pointer hidden sm:flex">
+        <button className="p-2 text-slate-600 hover:text-brand-primary rounded-full hover:bg-slate-100 transition-colors cursor-pointer hidden sm:flex">
           <Headset className="w-4 h-4" />
         </button>
 
@@ -128,7 +128,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="relative hidden md:block">
           <button
             onClick={() => setIsQuickActionsOpen(!isQuickActionsOpen)}
-            className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200/90 rounded-xl text-[#013e37] bg-slate-50 hover:bg-slate-100 text-xs font-bold shadow-2xs transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200/90 rounded-xl text-brand-primary bg-slate-50 hover:bg-slate-100 text-xs font-bold shadow-2xs transition-colors cursor-pointer"
           >
             <span>Quick Actions</span>
             <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform ${isQuickActionsOpen ? "rotate-180" : ""}`} />
@@ -143,7 +143,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     onTabChange?.("attendance");
                     setIsQuickActionsOpen(false);
                   }}
-                  className="w-full text-left px-4 py-2 hover:bg-slate-50 text-xs font-semibold text-slate-700 hover:text-[#013e37] transition-colors cursor-pointer"
+                  className="w-full text-left px-4 py-2 hover:bg-slate-50 text-xs font-semibold text-slate-700 hover:text-brand-primary transition-colors cursor-pointer"
                 >
                   Attendance
                 </button>
@@ -152,7 +152,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     onTabChange?.("holidays-leaves");
                     setIsQuickActionsOpen(false);
                   }}
-                  className="w-full text-left px-4 py-2 hover:bg-slate-50 text-xs font-semibold text-slate-700 hover:text-[#013e37] transition-colors cursor-pointer"
+                  className="w-full text-left px-4 py-2 hover:bg-slate-50 text-xs font-semibold text-slate-700 hover:text-brand-primary transition-colors cursor-pointer"
                 >
                   Leaves
                 </button>
@@ -161,7 +161,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     onTabChange?.("attendance");
                     setIsQuickActionsOpen(false);
                   }}
-                  className="w-full text-left px-4 py-2 hover:bg-slate-50 text-xs font-semibold text-slate-700 hover:text-[#013e37] transition-colors cursor-pointer"
+                  className="w-full text-left px-4 py-2 hover:bg-slate-50 text-xs font-semibold text-slate-700 hover:text-brand-primary transition-colors cursor-pointer"
                 >
                   Over Time
                 </button>
@@ -170,7 +170,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     onTabChange?.("expenses");
                     setIsQuickActionsOpen(false);
                   }}
-                  className="w-full text-left px-4 py-2 hover:bg-slate-50 text-xs font-semibold text-slate-700 hover:text-[#013e37] transition-colors cursor-pointer"
+                  className="w-full text-left px-4 py-2 hover:bg-slate-50 text-xs font-semibold text-slate-700 hover:text-brand-primary transition-colors cursor-pointer"
                 >
                   Reimbursements
                 </button>
@@ -179,7 +179,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     onTabChange?.("requests");
                     setIsQuickActionsOpen(false);
                   }}
-                  className="w-full text-left px-4 py-2 hover:bg-slate-50 text-xs font-semibold text-slate-700 hover:text-[#013e37] transition-colors cursor-pointer"
+                  className="w-full text-left px-4 py-2 hover:bg-slate-50 text-xs font-semibold text-slate-700 hover:text-brand-primary transition-colors cursor-pointer"
                 >
                   Requests
                 </button>
@@ -194,7 +194,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <select
               value={currentRole}
               onChange={(e) => handleRoleSwitch(e.target.value as UserRole)}
-              className="appearance-none px-3 py-1.5 pr-7 border border-slate-200/90 rounded-xl text-[#013e37] bg-slate-50 hover:bg-slate-100 font-bold text-xs focus:ring-2 focus:ring-[#013e37]/20 focus:outline-none cursor-pointer capitalize shadow-2xs"
+              className="appearance-none px-3 py-1.5 pr-7 border border-slate-200/90 rounded-xl text-brand-primary bg-slate-50 hover:bg-slate-100 font-bold text-xs focus:ring-2 focus:ring-brand-primary/20 focus:outline-none cursor-pointer capitalize shadow-2xs"
             >
               {(currentRole === "superadmin"
                 ? (["superadmin", "admin", "employee"] as UserRole[])
@@ -215,8 +215,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={() => setIsProfileOpen(!isProfileOpen)}
             className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-slate-100 border border-transparent transition-colors cursor-pointer"
           >
-            <div className="w-7.5 h-7.5 rounded-full bg-[#013e37] text-[#ffefb3] flex items-center justify-center font-bold shadow-2xs shrink-0">
-              <UserIcon className="w-4 h-4 text-[#ffefb3]" />
+            <div className="w-7.5 h-7.5 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold shadow-2xs shrink-0">
+              <UserIcon className="w-4 h-4 text-white" />
             </div>
             <span className="font-bold text-slate-800 text-xs hidden sm:inline">
               {userName}
@@ -244,16 +244,16 @@ export const Navbar: React.FC<NavbarProps> = ({
                     }
                     setIsProfileOpen(false);
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 text-slate-700 hover:text-[#013e37] text-sm transition-colors text-left font-medium cursor-pointer"
+                  className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 text-slate-700 hover:text-brand-primary text-sm transition-colors text-left font-medium cursor-pointer"
                 >
                   <CircleUser className="w-4 h-4 shrink-0 text-slate-400" />
                   <span>View My Profile</span>
                 </button>
-                <button className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 text-slate-700 hover:text-[#013e37] text-sm transition-colors text-left font-medium cursor-pointer">
+                <button className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 text-slate-700 hover:text-brand-primary text-sm transition-colors text-left font-medium cursor-pointer">
                   <Activity className="w-4 h-4 shrink-0 text-slate-400" />
                   <span>Set Status</span>
                 </button>
-                <button className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 text-slate-700 hover:text-[#013e37] text-sm transition-colors text-left font-medium cursor-pointer">
+                <button className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 text-slate-700 hover:text-brand-primary text-sm transition-colors text-left font-medium cursor-pointer">
                   <Lock className="w-4 h-4 shrink-0 text-slate-400" />
                   <span>Change Password</span>
                 </button>

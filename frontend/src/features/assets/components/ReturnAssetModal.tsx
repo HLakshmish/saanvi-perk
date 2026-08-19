@@ -78,7 +78,7 @@ export const ReturnAssetModal: React.FC<ReturnAssetModalProps> = ({
             <RotateCcw className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-[#013e37]">Return Asset</h2>
+            <h2 className="text-lg font-bold text-brand-primary">Return Asset</h2>
             <p className="text-xs text-slate-500 font-medium">
               Record return for <span className="font-bold text-slate-800">{assignmentToReturn.asset?.assetName || "Asset"}</span>
             </p>
@@ -100,7 +100,7 @@ export const ReturnAssetModal: React.FC<ReturnAssetModalProps> = ({
               required
               value={formData.returnedDate}
               onChange={(e) => setFormData({ ...formData, returnedDate: e.target.value })}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 font-semibold text-slate-900 focus:outline-none focus:border-[#013e37] transition-colors"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 font-semibold text-slate-900 focus:outline-none focus:border-brand-primary transition-colors"
             />
           </div>
 
@@ -111,7 +111,7 @@ export const ReturnAssetModal: React.FC<ReturnAssetModalProps> = ({
               required
               value={formData.conditionAtReturn || ""}
               onChange={(e) => setFormData({ ...formData, conditionAtReturn: e.target.value })}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 font-semibold text-slate-900 focus:outline-none focus:border-[#013e37] transition-colors cursor-pointer"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 font-semibold text-slate-900 focus:outline-none focus:border-brand-primary transition-colors cursor-pointer"
             >
               <option value="Good Condition / Working">Good Condition / Fully Working</option>
               <option value="Minor Wear / Scratches">Minor Wear / Cosmetic Scratches</option>
@@ -128,7 +128,7 @@ export const ReturnAssetModal: React.FC<ReturnAssetModalProps> = ({
               value={formData.remarks || ""}
               onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
               placeholder="e.g. All accessories (charger, mouse, cable) returned..."
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 font-semibold text-slate-900 focus:outline-none focus:border-[#013e37] transition-colors resize-none"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 font-semibold text-slate-900 focus:outline-none focus:border-brand-primary transition-colors resize-none"
             />
           </div>
 

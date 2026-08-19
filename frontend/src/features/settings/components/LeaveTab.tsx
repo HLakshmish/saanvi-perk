@@ -54,7 +54,7 @@ export const LeaveTab: React.FC = () => {
     <div className="space-y-6 animate-fade-in">
       {/* Section Header */}
       <div>
-        <h2 className="text-xl font-bold text-[#013e37] tracking-tight">
+        <h2 className="text-xl font-bold text-brand-primary tracking-tight">
           Leave Configuration
         </h2>
         <p className="text-xs text-slate-500 font-semibold mt-1">
@@ -70,16 +70,16 @@ export const LeaveTab: React.FC = () => {
             <div
               key={card.id}
               onClick={() => handleCardClick(card.id)}
-              className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs hover:shadow-md hover:border-[#013e37]/40 transition-all cursor-pointer group flex items-start gap-4"
+              className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs hover:shadow-md hover:border-brand-primary/40 transition-all cursor-pointer group flex items-start gap-4"
             >
               {/* Circular Icon Box */}
-              <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-center text-[#013e37] shrink-0 group-hover:scale-105 group-hover:bg-[#013e37] group-hover:text-[#ffefb3] group-hover:border-[#013e37] transition-all">
+              <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-center text-brand-primary shrink-0 group-hover:scale-105 group-hover:bg-brand-primary group-hover:text-brand-btn-text group-hover:border-brand-primary transition-all">
                 <Icon className="w-5 h-5" />
               </div>
 
               {/* Text info */}
               <div className="space-y-1">
-                <h3 className="text-sm font-bold text-slate-900 group-hover:text-[#013e37] transition-colors">
+                <h3 className="text-sm font-bold text-slate-900 group-hover:text-brand-primary transition-colors">
                   {card.title}
                 </h3>
                 <p className="text-xs text-slate-500 font-medium leading-relaxed">

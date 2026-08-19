@@ -2,11 +2,52 @@
 
 @theme {
   --font-sans: var(--font-poppins), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  /* Brand Theme Colors */
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-primary-hover: var(--brand-primary-hover);
+  --color-brand-primary-dark: var(--brand-primary-dark);
+  --color-brand-primary-light: var(--brand-primary-light);
+
+  --color-brand-accent: var(--brand-accent);
+  --color-brand-accent-hover: var(--brand-accent-hover);
+  --color-brand-accent-light: var(--brand-accent-light);
+  --color-brand-accent-soft: var(--brand-accent-soft);
+
+  /* Unified Button & High-Contrast Text Tokens */
+  --color-brand-btn-text: var(--brand-btn-text);
+
+  /* Sidebar Tokens (Referencing the single palette directly - no duplicate hex codes) */
+  --color-sidebar-bg: var(--brand-primary);
+  --color-sidebar-border: rgba(255, 255, 255, 0.1);
+  --color-sidebar-active-bg: var(--brand-accent);
+  --color-sidebar-active-text: var(--brand-btn-text);
+  --color-sidebar-text: rgba(255, 255, 255, 0.85);
+  --color-sidebar-text-hover: #ffffff;
 }
 
 :root {
   --background: #f8fafc;
   --foreground: #0f172a;
+
+  /* ==========================================================================
+     SINGLE GLOBAL BRAND PALETTE (Change once here to affect the WHOLE app)
+     ========================================================================== */
+
+  /* 1. Main Brand / Background / Sidebar / Primary Color */
+  --brand-primary: #013f39;
+  --brand-primary-hover: #012d28;
+  --brand-primary-dark: #012420;
+  --brand-primary-light: #f4fbf7;
+
+  /* 2. Main Accent / Highlight Color (Sidebar active, badges, highlights) */
+  --brand-accent: #C99D34;
+  --brand-accent-hover: #b08728;
+  --brand-accent-light: #C99D34;
+  --brand-accent-soft: #fef9e7;
+
+  /* 3. Global Primary Button / Icon Text Color (White) */
+  --brand-btn-text: #ffffff;
 }
 
 body {

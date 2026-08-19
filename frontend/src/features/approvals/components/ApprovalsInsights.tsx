@@ -24,7 +24,7 @@ export const ApprovalsInsights: React.FC = () => {
           </div>
 
           <div className="my-2">
-            <span className="text-5xl font-bold text-blue-600">0</span>
+            <span className="text-5xl font-bold text-brand-primary">0</span>
             <p className="text-xs text-gray-500 mt-2 font-medium">
               Total Approvals Received
             </p>
@@ -61,8 +61,8 @@ export const ApprovalsInsights: React.FC = () => {
           </div>
 
           <div className="flex flex-col items-center justify-center my-auto py-4 text-center">
-            <div className="w-16 h-16 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center mb-3">
-              <div className="w-10 h-10 bg-blue-600/80 rounded-md flex flex-col justify-center p-1.5 space-y-1">
+            <div className="w-16 h-16 rounded-full bg-brand-primary-light border border-brand-primary/10 flex items-center justify-center mb-3">
+              <div className="w-10 h-10 bg-brand-primary/80 rounded-md flex flex-col justify-center p-1.5 space-y-1">
                 <div className="h-1 bg-white rounded-full w-full" />
                 <div className="h-1 bg-white/70 rounded-full w-3/4" />
                 <div className="h-1 bg-white/70 rounded-full w-1/2" />
@@ -83,10 +83,10 @@ export const ApprovalsInsights: React.FC = () => {
           </div>
 
           <div className="flex flex-col items-center justify-center my-auto py-4 text-center">
-            <div className="w-16 h-16 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center mb-3">
-              <div className="w-10 h-10 bg-slate-700 rounded-md flex flex-col justify-center p-1.5 space-y-1">
+            <div className="w-16 h-16 rounded-full bg-brand-primary-light border border-brand-primary/10 flex items-center justify-center mb-3">
+              <div className="w-10 h-10 bg-brand-primary rounded-md flex flex-col justify-center p-1.5 space-y-1">
                 <div className="h-1 bg-white rounded-full w-full" />
-                <div className="h-1 bg-blue-400 rounded-full w-3/4" />
+                <div className="h-1 bg-brand-accent rounded-full w-3/4" />
                 <div className="h-1 bg-white/60 rounded-full w-1/2" />
               </div>
             </div>
@@ -111,7 +111,7 @@ export const ApprovalsInsights: React.FC = () => {
                 placeholder="Search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                className="w-full pl-9 pr-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary"
               />
             </div>
 
@@ -120,7 +120,7 @@ export const ApprovalsInsights: React.FC = () => {
                 type="checkbox"
                 checked={selectAll}
                 onChange={(e) => setSelectAll(e.target.checked)}
-                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                className="w-4 h-4 rounded border-gray-300 text-brand-primary focus:ring-brand-primary"
               />
               <span>Select All</span>
             </label>

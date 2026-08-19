@@ -61,7 +61,7 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({ employees, onRowCl
                 {/* Employee Name & Code (grouped beautifully with an avatar) */}
                 <td className="py-4 px-5">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl overflow-hidden bg-[#013e37]/5 border border-[#013e37]/10 flex items-center justify-center shrink-0 shadow-2xs relative">
+                    <div className="w-9 h-9 rounded-xl overflow-hidden bg-brand-primary/5 border border-brand-primary/10 flex items-center justify-center shrink-0 shadow-2xs relative">
                       {employee.profilePic ? (
                         <img
                           src={employee.profilePic}
@@ -69,13 +69,13 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({ employees, onRowCl
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <span className="text-[#013e37] text-sm font-extrabold">
+                        <span className="text-brand-primary text-sm font-extrabold">
                           {employee.name.charAt(0).toUpperCase()}
                         </span>
                       )}
                     </div>
                     <div className="flex flex-col">
-                      <span className="font-bold text-slate-900 leading-snug group-hover:text-[#013e37] transition-colors duration-200">
+                      <span className="font-bold text-slate-900 leading-snug group-hover:text-brand-primary transition-colors duration-200">
                         {employee.name}
                       </span>
                       <span className="text-[10px] font-mono text-slate-400 font-bold tracking-wider mt-0.5">
@@ -92,7 +92,7 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({ employees, onRowCl
                     <a
                       href={`mailto:${employee.email}`}
                       onClick={(e) => e.stopPropagation()}
-                      className="hover:text-[#013e37] transition-colors duration-150"
+                      className="hover:text-brand-primary transition-colors duration-150"
                     >
                       {employee.email}
                     </a>

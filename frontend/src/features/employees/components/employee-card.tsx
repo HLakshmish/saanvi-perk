@@ -40,7 +40,7 @@ export const EmployeeCard: React.FC<EmployeeCardProps> = ({
     >
       {/* Top Floating DP / Profile Picture */}
       <div
-        className="w-16 h-16 sm:w-18 sm:h-18 rounded-full border-[3.5px] border-[#013e37] bg-white shadow-md flex items-center justify-center -mb-5 z-20 overflow-hidden transition-transform duration-300 group-hover:scale-105"
+        className="w-16 h-16 sm:w-18 sm:h-18 rounded-full border-[3.5px] border-brand-primary bg-white shadow-md flex items-center justify-center -mb-5 z-20 overflow-hidden transition-transform duration-300 group-hover:scale-105"
       >
         {employee.profilePic ? (
           <img
@@ -53,17 +53,17 @@ export const EmployeeCard: React.FC<EmployeeCardProps> = ({
             }}
           />
         ) : (
-          <div className="w-full h-full bg-[#013e37]/5 text-[#013e37] flex items-center justify-center">
-            <User className="w-8 h-8 text-[#013e37]" />
+          <div className="w-full h-full bg-brand-primary/5 text-brand-primary flex items-center justify-center">
+            <User className="w-8 h-8 text-brand-primary" />
           </div>
         )}
       </div>
 
       {/* Main Card Box */}
-      <div className="w-full rounded-2xl overflow-hidden shadow-sm border border-slate-200/90 bg-white transition-all duration-300 group-hover:shadow-md group-hover:border-[#013e37]/40">
+      <div className="w-full rounded-2xl overflow-hidden shadow-sm border border-slate-200/90 bg-white transition-all duration-300 group-hover:shadow-md group-hover:border-brand-primary/40">
         
-        {/* Name Banner Pill - Single Consistent Theme Color (#013e37) */}
-        <div className="pt-6 pb-1.5 px-2.5 text-center text-[#ffefb3] bg-[#013e37] transition-colors">
+        {/* Name Banner Pill - Single Consistent Theme Color */}
+        <div className="pt-6 pb-1.5 px-2.5 text-center text-white bg-brand-primary transition-colors">
           <h4
             className="font-extrabold text-[11px] sm:text-xs tracking-tight uppercase truncate"
             title={employee.name}

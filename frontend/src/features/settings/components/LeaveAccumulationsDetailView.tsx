@@ -394,7 +394,7 @@ export const LeaveAccumulationsDetailView: React.FC<LeaveAccumulationsDetailView
         <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold">
           <button
             onClick={onBack}
-            className="inline-flex items-center gap-1 text-slate-500 hover:text-[#013e37] font-bold transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1 text-slate-500 hover:text-brand-primary font-bold transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Leave</span>
@@ -413,7 +413,7 @@ export const LeaveAccumulationsDetailView: React.FC<LeaveAccumulationsDetailView
                   setAllocDefaultLeaveTypeId(null);
                   setIsAllocationModalOpen(true);
                 }}
-                className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#013e37] hover:bg-[#012d28] text-[#ffefb3] font-bold text-xs rounded-xl shadow-md shadow-[#013e37]/20 transition-all hover:-translate-y-0.5 cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-brand-primary hover:bg-brand-primary-hover text-brand-btn-text font-bold text-xs rounded-xl shadow-md shadow-brand-primary/20 transition-all hover:-translate-y-0.5 cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
                 <span>Allocate to Employees</span>
@@ -421,7 +421,7 @@ export const LeaveAccumulationsDetailView: React.FC<LeaveAccumulationsDetailView
             ) : (
               <button
                 onClick={() => handleOpenForm()}
-                className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#013e37] hover:bg-[#012d28] text-[#ffefb3] font-bold text-xs rounded-xl shadow-md shadow-[#013e37]/20 transition-all hover:-translate-y-0.5 cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-brand-primary hover:bg-brand-primary-hover text-brand-btn-text font-bold text-xs rounded-xl shadow-md shadow-brand-primary/20 transition-all hover:-translate-y-0.5 cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
                 <span>Configure Accumulation</span>
@@ -458,7 +458,7 @@ export const LeaveAccumulationsDetailView: React.FC<LeaveAccumulationsDetailView
           <div className="space-y-1.5 max-h-[400px] overflow-y-auto">
             {isLoading ? (
               <div className="flex items-center justify-center py-8 text-xs font-bold text-slate-500 gap-1.5">
-                <Loader2 className="w-4 h-4 animate-spin text-[#013e37]" />
+                <Loader2 className="w-4 h-4 animate-spin text-brand-primary" />
                 <span>Loading...</span>
               </div>
             ) : policies.length === 0 ? (
@@ -474,12 +474,12 @@ export const LeaveAccumulationsDetailView: React.FC<LeaveAccumulationsDetailView
                     onClick={() => handleSelectPolicy(p)}
                     className={`group w-full text-left px-3.5 py-3 rounded-xl text-xs font-bold flex items-center justify-between border cursor-pointer transition-all ${
                       isSelected
-                        ? "bg-[#013e37]/10 text-[#013e37] border-[#013e37]/20"
+                        ? "bg-brand-primary/10 text-brand-primary border-brand-primary/20"
                         : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200/80 hover:border-slate-300"
                     }`}
                   >
                     <span>{p.policyName}</span>
-                    <ChevronRight className={`w-4 h-4 shrink-0 transition-transform ${isSelected ? "text-[#013e37] translate-x-0.5" : "text-slate-400"}`} />
+                    <ChevronRight className={`w-4 h-4 shrink-0 transition-transform ${isSelected ? "text-brand-primary translate-x-0.5" : "text-slate-400"}`} />
                   </div>
                 );
               })
@@ -508,10 +508,10 @@ export const LeaveAccumulationsDetailView: React.FC<LeaveAccumulationsDetailView
                     <button
                       type="submit"
                       disabled={isSaving}
-                      className="px-4 py-1.5 bg-[#013e37] hover:bg-[#012d28] text-[#ffefb3] rounded-lg text-xs font-bold shadow-2xs cursor-pointer flex items-center gap-1 transition-colors"
+                      className="px-4 py-1.5 bg-brand-primary hover:bg-brand-primary-hover text-brand-btn-text rounded-lg text-xs font-bold shadow-2xs cursor-pointer flex items-center gap-1 transition-colors"
                     >
                       {isSaving ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin text-[#ffefb3]" />
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-btn-text" />
                       ) : (
                         <Check className="w-3.5 h-3.5" />
                       )}
@@ -553,7 +553,7 @@ export const LeaveAccumulationsDetailView: React.FC<LeaveAccumulationsDetailView
                           type="checkbox"
                           checked={formAutoAccumulate}
                           onChange={(e) => setFormAutoAccumulate(e.target.checked)}
-                          className="rounded-sm text-[#013e37] focus:ring-[#013e37]"
+                          className="rounded-sm text-brand-primary focus:ring-brand-primary"
                         />
                         Automatically accumulate leaves
                       </label>
@@ -608,7 +608,7 @@ export const LeaveAccumulationsDetailView: React.FC<LeaveAccumulationsDetailView
                           type="checkbox"
                           checked={formConsiderDOJ}
                           onChange={(e) => setFormConsiderDOJ(e.target.checked)}
-                          className="rounded-sm text-[#013e37] focus:ring-[#013e37]"
+                          className="rounded-sm text-brand-primary focus:ring-brand-primary"
                         />
                         Consider Date of Joining
                       </label>
@@ -617,7 +617,7 @@ export const LeaveAccumulationsDetailView: React.FC<LeaveAccumulationsDetailView
                           type="checkbox"
                           checked={formConsiderProbation}
                           onChange={(e) => setFormConsiderProbation(e.target.checked)}
-                          className="rounded-sm text-[#013e37] focus:ring-[#013e37]"
+                          className="rounded-sm text-brand-primary focus:ring-brand-primary"
                         />
                         Consider Probation Completion Date
                       </label>
@@ -663,7 +663,7 @@ export const LeaveAccumulationsDetailView: React.FC<LeaveAccumulationsDetailView
                           type="checkbox"
                           checked={formConsiderEncashment}
                           onChange={(e) => setFormConsiderEncashment(e.target.checked)}
-                          className="rounded-sm text-[#013e37] focus:ring-[#013e37]"
+                          className="rounded-sm text-brand-primary focus:ring-brand-primary"
                         />
                         Allow encashment of remaining leaves
                       </label>
@@ -741,7 +741,7 @@ export const LeaveAccumulationsDetailView: React.FC<LeaveAccumulationsDetailView
                         id="formBasedOnDaysPresent"
                         checked={formBasedOnDaysPresent}
                         onChange={(e) => setFormBasedOnDaysPresent(e.target.checked)}
-                        className="rounded-sm text-[#013e37] focus:ring-[#013e37]"
+                        className="rounded-sm text-brand-primary focus:ring-brand-primary"
                       />
                       <label htmlFor="formBasedOnDaysPresent" className="cursor-pointer">Based on Days Present</label>
                     </div>
@@ -818,7 +818,7 @@ export const LeaveAccumulationsDetailView: React.FC<LeaveAccumulationsDetailView
                         id="formStatusCheckbox"
                         checked={formStatus}
                         onChange={(e) => setFormStatus(e.target.checked)}
-                        className="rounded-sm text-[#013e37] focus:ring-[#013e37]"
+                        className="rounded-sm text-brand-primary focus:ring-brand-primary"
                       />
                       <label htmlFor="formStatusCheckbox" className="cursor-pointer">Active</label>
                     </div>
@@ -834,7 +834,7 @@ export const LeaveAccumulationsDetailView: React.FC<LeaveAccumulationsDetailView
                   type="button"
                   onClick={() => setSubTab("employees")}
                   className={`pb-2 border-b-2 transition-all cursor-pointer ${
-                    subTab === "employees" ? "border-[#013e37] text-[#013e37]" : "border-transparent text-slate-500 hover:text-[#013e37]"
+                    subTab === "employees" ? "border-brand-primary text-brand-primary" : "border-transparent text-slate-500 hover:text-brand-primary"
                   }`}
                 >
                   Employee Allocations
@@ -843,7 +843,7 @@ export const LeaveAccumulationsDetailView: React.FC<LeaveAccumulationsDetailView
                   type="button"
                   onClick={() => setSubTab("rules")}
                   className={`pb-2 border-b-2 transition-all cursor-pointer ${
-                    subTab === "rules" ? "border-[#013e37] text-[#013e37]" : "border-transparent text-slate-500 hover:text-[#013e37]"
+                    subTab === "rules" ? "border-brand-primary text-brand-primary" : "border-transparent text-slate-500 hover:text-brand-primary"
                   }`}
                 >
                   Policy Accumulation Rules
@@ -962,7 +962,7 @@ export const LeaveAccumulationsDetailView: React.FC<LeaveAccumulationsDetailView
                                           setAllocDefaultLeaveTypeId(alloc.leaveTypeId);
                                           setIsAllocationModalOpen(true);
                                         }}
-                                        className="p-1 text-slate-400 hover:text-[#013e37] hover:bg-slate-100 rounded-md transition-colors"
+                                        className="p-1 text-slate-400 hover:text-brand-primary hover:bg-slate-100 rounded-md transition-colors"
                                         title="Edit Allocation"
                                       >
                                         <Edit3 className="w-3.5 h-3.5" />
@@ -1046,7 +1046,7 @@ export const LeaveAccumulationsDetailView: React.FC<LeaveAccumulationsDetailView
                                         setAllocDefaultLeaveTypeId(acc.leaveTypeId);
                                         setIsAllocationModalOpen(true);
                                       }}
-                                      className="p-1 text-slate-400 hover:text-[#013e37] hover:bg-slate-100 rounded-md transition-colors"
+                                      className="p-1 text-slate-400 hover:text-brand-primary hover:bg-slate-100 rounded-md transition-colors"
                                       title="Allocate to Employees"
                                     >
                                       <UserPlus className="w-3.5 h-3.5" />
@@ -1054,7 +1054,7 @@ export const LeaveAccumulationsDetailView: React.FC<LeaveAccumulationsDetailView
                                     <button
                                       type="button"
                                       onClick={() => handleOpenForm(acc)}
-                                      className="p-1 text-slate-400 hover:text-[#013e37] hover:bg-slate-100 rounded-md transition-colors"
+                                      className="p-1 text-slate-400 hover:text-brand-primary hover:bg-slate-100 rounded-md transition-colors"
                                       title="Edit Rule"
                                     >
                                       <Edit3 className="w-3.5 h-3.5" />

@@ -232,7 +232,7 @@ export function CompanyRegistrationForm({ onSuccess, editCompany }: CompanyRegis
         {/* Form Title Banner */}
         <div className="mb-6 pb-4 border-b border-slate-100 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-[#013e37]/10 flex items-center justify-center text-[#013e37]">
+            <div className="w-9 h-9 rounded-xl bg-brand-primary/10 flex items-center justify-center text-brand-primary">
               {editCompany ? <Pencil className="w-5 h-5" /> : <Building2 className="w-5 h-5" />}
             </div>
             <div>
@@ -260,7 +260,7 @@ export function CompanyRegistrationForm({ onSuccess, editCompany }: CompanyRegis
                       isDone
                         ? "bg-emerald-500 text-white"
                         : isActive
-                        ? "bg-[#013e37] text-[#ffefb3] ring-4 ring-[#013e37]/20"
+                        ? "bg-brand-primary text-brand-btn-text ring-4 ring-[#013e37]/20"
                         : "bg-slate-100 text-slate-400 border border-slate-200"
                     }`}
                   >
@@ -268,7 +268,7 @@ export function CompanyRegistrationForm({ onSuccess, editCompany }: CompanyRegis
                   </div>
                   <span
                     className={`text-xs font-semibold whitespace-nowrap ${
-                      isActive ? "text-[#013e37]" : isDone ? "text-emerald-600" : "text-slate-400"
+                      isActive ? "text-brand-primary" : isDone ? "text-emerald-600" : "text-slate-400"
                     }`}
                   >
                     {step.title}
@@ -305,7 +305,7 @@ export function CompanyRegistrationForm({ onSuccess, editCompany }: CompanyRegis
           {currentStep === 1 && (
             <div className="space-y-4 animate-in fade-in duration-200">
               <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-[#013e37]" />
+                <Building2 className="w-5 h-5 text-brand-primary" />
                 <span>Step 1: Company Profile</span>
               </h3>
 
@@ -356,7 +356,7 @@ export function CompanyRegistrationForm({ onSuccess, editCompany }: CompanyRegis
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-semibold text-slate-700">Industry Type</label>
                   <select
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:border-[#013e37] focus:outline-none focus:ring-2 focus:ring-[#013e37]/20"
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
                     value={formData.industryType}
                     onChange={(e) => handleChange("industryType", e.target.value)}
                   >
@@ -393,7 +393,7 @@ export function CompanyRegistrationForm({ onSuccess, editCompany }: CompanyRegis
           {!editCompany && currentStep === 2 && (
             <div className="space-y-4 animate-in fade-in duration-200">
               <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
-                <UserCheck className="w-5 h-5 text-[#013e37]" />
+                <UserCheck className="w-5 h-5 text-brand-primary" />
                 <span>Step 2: Superadmin Credentials</span>
               </h3>
 
@@ -455,7 +455,7 @@ export function CompanyRegistrationForm({ onSuccess, editCompany }: CompanyRegis
               <button
                 type="button"
                 onClick={nextStep}
-                className="px-5 py-2.5 rounded-xl bg-[#013e37] hover:bg-[#012d28] text-[#ffefb3] text-xs sm:text-sm font-bold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                className="px-5 py-2.5 rounded-xl bg-brand-primary hover:bg-brand-primary-hover text-brand-btn-text text-xs sm:text-sm font-bold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
               >
                 Next
                 <ChevronRight className="w-4 h-4" />

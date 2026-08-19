@@ -45,12 +45,12 @@ export const ExpenseSummary: React.FC<ExpenseSummaryProps> = ({
     <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-2xs">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="font-bold text-[#013e37] text-xs sm:text-sm">Expenses / Reimbursements</h3>
+          <h3 className="font-bold text-brand-primary text-xs sm:text-sm">Expenses / Reimbursements</h3>
           <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Live claim totals for your profile</p>
         </div>
         <button 
           onClick={onViewExpenses}
-          className="text-[10px] font-bold text-[#013e37] hover:underline flex items-center gap-0.5 cursor-pointer"
+          className="text-[10px] font-bold text-brand-primary hover:underline flex items-center gap-0.5 cursor-pointer"
         >
           <span>View Expenses</span>
           <ChevronRight className="w-3 h-3" />
@@ -59,7 +59,7 @@ export const ExpenseSummary: React.FC<ExpenseSummaryProps> = ({
 
       {isLoading ? (
         <div className="py-12 flex flex-col items-center justify-center gap-2">
-          <Loader2 className="w-6 h-6 text-[#013e37] animate-spin" />
+          <Loader2 className="w-6 h-6 text-brand-primary animate-spin" />
           <span className="text-[11px] text-slate-400 font-semibold">Loading stats...</span>
         </div>
       ) : (
@@ -92,7 +92,7 @@ export const ExpenseSummary: React.FC<ExpenseSummaryProps> = ({
               {expenses.slice(0, 3).map((item) => (
                 <div 
                   key={item.id}
-                  className="flex items-center justify-between p-2.5 rounded-xl border border-slate-100 hover:border-[#013e37]/20 bg-slate-50/50 hover:bg-[#013e37]/5 transition-colors"
+                  className="flex items-center justify-between p-2.5 rounded-xl border border-slate-100 hover:border-brand-primary/20 bg-slate-50/50 hover:bg-brand-primary/5 transition-colors"
                 >
                   <div className="min-w-0">
                     <p className="text-xs font-bold text-slate-800 leading-tight truncate">{item.category}</p>
@@ -121,7 +121,7 @@ export const ExpenseSummary: React.FC<ExpenseSummaryProps> = ({
 
           <button
             onClick={onSubmitExpense}
-            className="w-full mt-4 py-2 border border-[#013e37]/20 text-[#013e37] hover:bg-[#013e37]/5 text-xs font-bold rounded-xl shadow-2xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+            className="w-full mt-4 py-2 border border-brand-primary/20 text-brand-primary hover:bg-brand-primary/5 text-xs font-bold rounded-xl shadow-2xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Submit Expense</span>

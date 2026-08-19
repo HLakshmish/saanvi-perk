@@ -427,7 +427,7 @@ export const LeavePolicyDetailView: React.FC<LeavePolicyDetailViewProps> = ({ on
         <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold">
           <button
             onClick={onBack}
-            className="inline-flex items-center gap-1 text-slate-500 hover:text-[#013e37] font-bold transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1 text-slate-500 hover:text-brand-primary font-bold transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Leave</span>
@@ -440,7 +440,7 @@ export const LeavePolicyDetailView: React.FC<LeavePolicyDetailViewProps> = ({ on
         {viewState === "read" && (
           <button
             onClick={handleStartAdd}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#013e37] hover:bg-[#012d28] text-[#ffefb3] font-bold text-xs rounded-xl shadow-md shadow-[#013e37]/20 transition-all hover:-translate-y-0.5 cursor-pointer"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-brand-primary hover:bg-brand-primary-hover text-brand-btn-text font-bold text-xs rounded-xl shadow-md shadow-brand-primary/20 transition-all hover:-translate-y-0.5 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Add New Policy</span>
@@ -475,7 +475,7 @@ export const LeavePolicyDetailView: React.FC<LeavePolicyDetailViewProps> = ({ on
           <div className="space-y-1.5 max-h-[400px] overflow-y-auto">
             {isLoading ? (
               <div className="flex items-center justify-center py-8 text-xs font-bold text-slate-500 gap-1.5">
-                <Loader2 className="w-4 h-4 animate-spin text-[#013e37]" />
+                <Loader2 className="w-4 h-4 animate-spin text-brand-primary" />
                 <span>Loading...</span>
               </div>
             ) : policies.length === 0 ? (
@@ -491,7 +491,7 @@ export const LeavePolicyDetailView: React.FC<LeavePolicyDetailViewProps> = ({ on
                     onClick={() => handleSelectPolicy(p)}
                     className={`group w-full text-left px-3.5 py-3 rounded-xl text-xs font-bold flex items-center justify-between border cursor-pointer transition-all ${
                       isSelected
-                        ? "bg-[#013e37]/10 text-[#013e37] border-[#013e37]/20"
+                        ? "bg-brand-primary/10 text-brand-primary border-brand-primary/20"
                         : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200/80 hover:border-slate-300"
                     }`}
                   >
@@ -505,7 +505,7 @@ export const LeavePolicyDetailView: React.FC<LeavePolicyDetailViewProps> = ({ on
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
-                      <ChevronRight className={`w-4 h-4 shrink-0 transition-transform ${isSelected ? "text-[#013e37] translate-x-0.5" : "text-slate-400"}`} />
+                      <ChevronRight className={`w-4 h-4 shrink-0 transition-transform ${isSelected ? "text-brand-primary translate-x-0.5" : "text-slate-400"}`} />
                     </div>
                   </div>
                 );
@@ -527,7 +527,7 @@ export const LeavePolicyDetailView: React.FC<LeavePolicyDetailViewProps> = ({ on
                     </h3>
                     <button
                       onClick={handleStartEdit}
-                      className="inline-flex items-center gap-1.5 text-xs font-bold text-[#013e37] hover:text-[#012d28] transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-primary hover:text-[#012d28] transition-colors cursor-pointer"
                     >
                       <Edit3 className="w-3.5 h-3.5" />
                       <span>Edit Policy</span>
@@ -597,10 +597,10 @@ export const LeavePolicyDetailView: React.FC<LeavePolicyDetailViewProps> = ({ on
                     <button
                       type="submit"
                       disabled={isSaving}
-                      className="px-4 py-1.5 bg-[#013e37] hover:bg-[#012d28] text-[#ffefb3] rounded-lg text-xs font-bold shadow-2xs cursor-pointer flex items-center gap-1 transition-colors"
+                      className="px-4 py-1.5 bg-brand-primary hover:bg-brand-primary-hover text-brand-btn-text rounded-lg text-xs font-bold shadow-2xs cursor-pointer flex items-center gap-1 transition-colors"
                     >
                       {isSaving ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin text-[#ffefb3]" />
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-btn-text" />
                       ) : (
                         <Check className="w-3.5 h-3.5" />
                       )}
@@ -620,7 +620,7 @@ export const LeavePolicyDetailView: React.FC<LeavePolicyDetailViewProps> = ({ on
                       value={formName}
                       onChange={(e) => setFormName(e.target.value)}
                       placeholder="e.g. Standard Company Leave Policy"
-                      className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-[#013e37]"
+                      className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-brand-primary"
                     />
                   </div>
 
@@ -634,7 +634,7 @@ export const LeavePolicyDetailView: React.FC<LeavePolicyDetailViewProps> = ({ on
                       value={formCode}
                       onChange={(e) => setFormCode(e.target.value)}
                       placeholder="e.g. STD_PL"
-                      className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-[#013e37]"
+                      className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-brand-primary"
                     />
                   </div>
 
@@ -647,7 +647,7 @@ export const LeavePolicyDetailView: React.FC<LeavePolicyDetailViewProps> = ({ on
                       value={formRemarks}
                       onChange={(e) => setFormRemarks(e.target.value)}
                       placeholder="Policy remarks or details..."
-                      className="w-full border border-slate-300 rounded-lg px-3 py-2 font-semibold text-slate-800 focus:outline-none focus:border-[#013e37]"
+                      className="w-full border border-slate-300 rounded-lg px-3 py-2 font-semibold text-slate-800 focus:outline-none focus:border-brand-primary"
                     />
                   </div>
 
@@ -658,7 +658,7 @@ export const LeavePolicyDetailView: React.FC<LeavePolicyDetailViewProps> = ({ on
                       id="policyStatus"
                       checked={formStatus}
                       onChange={(e) => setFormStatus(e.target.checked)}
-                      className="w-4 h-4 rounded-sm text-[#013e37] focus:ring-[#013e37]"
+                      className="w-4 h-4 rounded-sm text-brand-primary focus:ring-brand-primary"
                     />
                     <label htmlFor="policyStatus" className="text-slate-700 font-bold uppercase text-[10px] tracking-wider cursor-pointer">
                       Active / Status
@@ -674,7 +674,7 @@ export const LeavePolicyDetailView: React.FC<LeavePolicyDetailViewProps> = ({ on
             <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-2xs space-y-6">
               <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                 <div>
-                  <h4 className="text-xs font-extrabold text-[#013e37] uppercase tracking-wider">
+                  <h4 className="text-xs font-extrabold text-brand-primary uppercase tracking-wider">
                     Policy Rules & Constraints
                   </h4>
                   <p className="text-[10px] text-slate-500 font-semibold mt-0.5">
@@ -685,7 +685,7 @@ export const LeavePolicyDetailView: React.FC<LeavePolicyDetailViewProps> = ({ on
                 {!isRuleFormOpen && (
                   <button
                     onClick={() => handleOpenRuleForm()}
-                    className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-[#013e37]/10 hover:bg-[#013e37]/15 text-[#013e37] font-bold text-[10px] rounded-lg transition-colors cursor-pointer"
+                    className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-brand-primary/10 hover:bg-brand-primary/15 text-brand-primary font-bold text-[10px] rounded-lg transition-colors cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>Attach Leave Rule</span>
@@ -741,7 +741,7 @@ export const LeavePolicyDetailView: React.FC<LeavePolicyDetailViewProps> = ({ on
                             type="radio"
                             checked={ruleIsPaid}
                             onChange={() => setRuleIsPaid(true)}
-                            className="text-[#013e37] focus:ring-[#013e37]"
+                            className="text-brand-primary focus:ring-brand-primary"
                           />
                           Paid Leave
                         </label>
@@ -750,7 +750,7 @@ export const LeavePolicyDetailView: React.FC<LeavePolicyDetailViewProps> = ({ on
                             type="radio"
                             checked={!ruleIsPaid}
                             onChange={() => setRuleIsPaid(false)}
-                            className="text-[#013e37] focus:ring-[#013e37]"
+                            className="text-brand-primary focus:ring-brand-primary"
                           />
                           Unpaid Leave
                         </label>
@@ -899,7 +899,7 @@ export const LeavePolicyDetailView: React.FC<LeavePolicyDetailViewProps> = ({ on
                           id="ruleAllowAttachment"
                           checked={ruleAllowAttachment}
                           onChange={(e) => setRuleAllowAttachment(e.target.checked)}
-                          className="rounded-sm text-[#013e37] focus:ring-[#013e37]"
+                          className="rounded-sm text-brand-primary focus:ring-brand-primary"
                         />
                         <label htmlFor="ruleAllowAttachment" className="cursor-pointer">Permit Uploads</label>
                       </div>
@@ -932,7 +932,7 @@ export const LeavePolicyDetailView: React.FC<LeavePolicyDetailViewProps> = ({ on
                             type="checkbox"
                             checked={ruleCountHoliday}
                             onChange={(e) => setRuleCountHoliday(e.target.checked)}
-                            className="rounded-sm text-[#013e37] focus:ring-[#013e37]"
+                            className="rounded-sm text-brand-primary focus:ring-brand-primary"
                           />
                           Count Holidays during leave duration
                         </label>
@@ -941,7 +941,7 @@ export const LeavePolicyDetailView: React.FC<LeavePolicyDetailViewProps> = ({ on
                             type="checkbox"
                             checked={ruleCountHolidayBefore}
                             onChange={(e) => setRuleCountHolidayBefore(e.target.checked)}
-                            className="rounded-sm text-[#013e37] focus:ring-[#013e37]"
+                            className="rounded-sm text-brand-primary focus:ring-brand-primary"
                           />
                           Count Holidays immediately before leave
                         </label>
@@ -950,7 +950,7 @@ export const LeavePolicyDetailView: React.FC<LeavePolicyDetailViewProps> = ({ on
                             type="checkbox"
                             checked={ruleCountHolidayAfter}
                             onChange={(e) => setRuleCountHolidayAfter(e.target.checked)}
-                            className="rounded-sm text-[#013e37] focus:ring-[#013e37]"
+                            className="rounded-sm text-brand-primary focus:ring-brand-primary"
                           />
                           Count Holidays immediately after leave
                         </label>
@@ -959,7 +959,7 @@ export const LeavePolicyDetailView: React.FC<LeavePolicyDetailViewProps> = ({ on
                             type="checkbox"
                             checked={ruleOptionalHolidayOnly}
                             onChange={(e) => setRuleOptionalHolidayOnly(e.target.checked)}
-                            className="rounded-sm text-[#013e37] focus:ring-[#013e37]"
+                            className="rounded-sm text-brand-primary focus:ring-brand-primary"
                           />
                           Optional Holidays only
                         </label>
@@ -968,7 +968,7 @@ export const LeavePolicyDetailView: React.FC<LeavePolicyDetailViewProps> = ({ on
                             type="checkbox"
                             checked={ruleCountWeekoff}
                             onChange={(e) => setRuleCountWeekoff(e.target.checked)}
-                            className="rounded-sm text-[#013e37] focus:ring-[#013e37]"
+                            className="rounded-sm text-brand-primary focus:ring-brand-primary"
                           />
                           Count Weekoffs during leave duration
                         </label>
@@ -977,7 +977,7 @@ export const LeavePolicyDetailView: React.FC<LeavePolicyDetailViewProps> = ({ on
                             type="checkbox"
                             checked={ruleCountWeekoffBefore}
                             onChange={(e) => setRuleCountWeekoffBefore(e.target.checked)}
-                            className="rounded-sm text-[#013e37] focus:ring-[#013e37]"
+                            className="rounded-sm text-brand-primary focus:ring-brand-primary"
                           />
                           Count Weekoffs immediately before leave
                         </label>
@@ -986,7 +986,7 @@ export const LeavePolicyDetailView: React.FC<LeavePolicyDetailViewProps> = ({ on
                             type="checkbox"
                             checked={ruleCountWeekoffAfter}
                             onChange={(e) => setRuleCountWeekoffAfter(e.target.checked)}
-                            className="rounded-sm text-[#013e37] focus:ring-[#013e37]"
+                            className="rounded-sm text-brand-primary focus:ring-brand-primary"
                           />
                           Count Weekoffs immediately after leave
                         </label>
@@ -995,7 +995,7 @@ export const LeavePolicyDetailView: React.FC<LeavePolicyDetailViewProps> = ({ on
                             type="checkbox"
                             checked={ruleStatus}
                             onChange={(e) => setRuleStatus(e.target.checked)}
-                            className="rounded-sm text-[#013e37] focus:ring-[#013e37]"
+                            className="rounded-sm text-brand-primary focus:ring-brand-primary"
                           />
                           Rule Status (Active)
                         </label>
@@ -1015,7 +1015,7 @@ export const LeavePolicyDetailView: React.FC<LeavePolicyDetailViewProps> = ({ on
                     <button
                       type="submit"
                       disabled={isSaving}
-                      className="px-5 py-1.5 bg-[#013e37] hover:bg-[#012d28] text-[#ffefb3] rounded-lg text-xs font-bold shadow-2xs cursor-pointer flex items-center gap-1.5"
+                      className="px-5 py-1.5 bg-brand-primary hover:bg-brand-primary-hover text-brand-btn-text rounded-lg text-xs font-bold shadow-2xs cursor-pointer flex items-center gap-1.5"
                     >
                       {isSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                       Save Rule
@@ -1066,7 +1066,7 @@ export const LeavePolicyDetailView: React.FC<LeavePolicyDetailViewProps> = ({ on
                               <div className="flex items-center justify-center gap-1">
                                 <button
                                   onClick={() => handleOpenRuleForm(rule)}
-                                  className="p-1 text-slate-400 hover:text-[#013e37] hover:bg-slate-100 rounded-md transition-colors"
+                                  className="p-1 text-slate-400 hover:text-brand-primary hover:bg-slate-100 rounded-md transition-colors"
                                   title="Edit Rule"
                                 >
                                   <Edit3 className="w-3.5 h-3.5" />

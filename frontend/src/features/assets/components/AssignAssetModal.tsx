@@ -110,11 +110,11 @@ export const AssignAssetModal: React.FC<AssignAssetModalProps> = ({
 
         {/* Modal Header */}
         <div className="flex items-center gap-3.5 mb-6 pb-4 border-b border-slate-100">
-          <div className="w-11 h-11 rounded-2xl bg-[#013e37] text-[#ffefb3] flex items-center justify-center shadow-md">
+          <div className="w-11 h-11 rounded-2xl bg-brand-primary text-brand-btn-text flex items-center justify-center shadow-md">
             <UserCheck className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-[#013e37]">Assign Asset</h2>
+            <h2 className="text-lg font-bold text-brand-primary">Assign Asset</h2>
             <p className="text-xs text-slate-500 font-medium">
               Allocate <span className="font-bold text-slate-800">{assetToAssign.assetName}</span> ({assetToAssign.assetCode}) to an employee
             </p>
@@ -133,7 +133,7 @@ export const AssignAssetModal: React.FC<AssignAssetModalProps> = ({
             <label className="font-bold text-slate-700 block mb-1">Select Employee *</label>
             {isLoadingEmployees ? (
               <div className="p-3 text-slate-500 font-semibold flex items-center gap-2">
-                <Loader2 className="w-4 h-4 animate-spin text-[#013e37]" />
+                <Loader2 className="w-4 h-4 animate-spin text-brand-primary" />
                 <span>Loading company employees...</span>
               </div>
             ) : (
@@ -141,7 +141,7 @@ export const AssignAssetModal: React.FC<AssignAssetModalProps> = ({
                 required
                 value={formData.userId}
                 onChange={(e) => setFormData({ ...formData, userId: Number(e.target.value) })}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 font-semibold text-slate-900 focus:outline-none focus:border-[#013e37] transition-colors cursor-pointer"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 font-semibold text-slate-900 focus:outline-none focus:border-brand-primary transition-colors cursor-pointer"
               >
                 <option value={0}>-- Select Employee --</option>
                 {employees.map((emp) => (
@@ -162,7 +162,7 @@ export const AssignAssetModal: React.FC<AssignAssetModalProps> = ({
                 required
                 value={formData.assignedDate}
                 onChange={(e) => setFormData({ ...formData, assignedDate: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 font-semibold text-slate-900 focus:outline-none focus:border-[#013e37] transition-colors"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 font-semibold text-slate-900 focus:outline-none focus:border-brand-primary transition-colors"
               />
             </div>
             <div>
@@ -171,7 +171,7 @@ export const AssignAssetModal: React.FC<AssignAssetModalProps> = ({
                 type="date"
                 value={formData.expectedReturnDate || ""}
                 onChange={(e) => setFormData({ ...formData, expectedReturnDate: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 font-semibold text-slate-900 focus:outline-none focus:border-[#013e37] transition-colors"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 font-semibold text-slate-900 focus:outline-none focus:border-brand-primary transition-colors"
               />
             </div>
           </div>
@@ -184,7 +184,7 @@ export const AssignAssetModal: React.FC<AssignAssetModalProps> = ({
               value={formData.conditionAtAssignment || ""}
               onChange={(e) => setFormData({ ...formData, conditionAtAssignment: e.target.value })}
               placeholder="e.g. Excellent / Sealed Box / Minor Scratches"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 font-semibold text-slate-900 focus:outline-none focus:border-[#013e37] transition-colors"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 font-semibold text-slate-900 focus:outline-none focus:border-brand-primary transition-colors"
             />
           </div>
 
@@ -196,7 +196,7 @@ export const AssignAssetModal: React.FC<AssignAssetModalProps> = ({
               value={formData.remarks || ""}
               onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
               placeholder="Add purpose of issue, charger/mouse provided..."
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 font-semibold text-slate-900 focus:outline-none focus:border-[#013e37] transition-colors resize-none"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 font-semibold text-slate-900 focus:outline-none focus:border-brand-primary transition-colors resize-none"
             />
           </div>
 
@@ -212,12 +212,12 @@ export const AssignAssetModal: React.FC<AssignAssetModalProps> = ({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-5 py-2 rounded-xl bg-[#013e37] hover:bg-[#012d28] text-[#ffefb3] font-bold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer disabled:opacity-50"
+              className="px-5 py-2 rounded-xl bg-brand-primary hover:bg-brand-primary-hover text-brand-btn-text font-bold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer disabled:opacity-50"
             >
               {isSubmitting ? (
-                <Loader2 className="w-4 h-4 animate-spin text-[#ffefb3]" />
+                <Loader2 className="w-4 h-4 animate-spin text-brand-btn-text" />
               ) : (
-                <Check className="w-4 h-4 text-[#ffefb3]" />
+                <Check className="w-4 h-4 text-brand-btn-text" />
               )}
               <span>Confirm Assignment</span>
             </button>
