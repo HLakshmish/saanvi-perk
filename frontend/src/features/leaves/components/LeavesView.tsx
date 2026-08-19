@@ -227,9 +227,18 @@ export const LeavesView: React.FC = () => {
     try {
       const start = new Date(data.fromDate);
       const end = new Date(data.toDate);
-      const diffTime = Math.abs(end.getTime() - start.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-      const days = data.isHalfDay ? 0.5 : (isNaN(diffDays) ? 1 : diffDays);
+
+      let workingDays = 0;
+      let current = new Date(start);
+      while (current <= end) {
+        const dayOfWeek = current.getDay(); // 0 is Sunday, 6 is Saturday
+        if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+          workingDays++;
+        }
+        current.setDate(current.getDate() + 1);
+      }
+
+      const days = data.isHalfDay ? 0.5 : (workingDays === 0 ? 1 : workingDays);
 
       const userId = getCurrentUserId();
       const payload = {
