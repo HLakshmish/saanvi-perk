@@ -48,6 +48,9 @@ export function useLogin() {
     }
   };
 
+  const [showSplash, setShowSplash] = useState(false);
+  const [splashUser, setSplashUser] = useState<{ name?: string; role?: string } | null>(null);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSuccessMessage(null);
@@ -61,7 +64,7 @@ export function useLogin() {
     try {
       const response = await loginUser(credentials);
       if (response.success && response.user) {
-        const { role } = response.user;
+        const { role, name } = response.user;
 
         // Route mapping per role
         const routeMap: Record<string, string> = {
@@ -72,14 +75,17 @@ export function useLogin() {
         };
 
         const destination = routeMap[role] || "/admin/dashboard";
-        
-        // Keep standard UI state for backwards compatibility if needed, but primarily use toast
+
+        setSplashUser({ name, role });
+        setShowSplash(true);
         setSuccessMessage("Login successful! Redirecting...");
-        toast.success("Login successful!", { duration: 2500 });
+
+        // Preload target route for instant navigation after splash
+        router.prefetch(destination);
 
         setTimeout(() => {
           router.push(destination);
-        }, 1200); // slightly longer to let toast animate and be read
+        }, 2200);
       } else {
         const errorMsg = response.error || "Login failed";
         setErrors((prev) => ({
@@ -104,6 +110,8 @@ export function useLogin() {
     credentials,
     errors,
     isLoading,
+    showSplash,
+    splashUser,
     successMessage,
     handleChange,
     handleSubmit,
