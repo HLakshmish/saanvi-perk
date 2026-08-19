@@ -18,6 +18,7 @@ import { getHolidays } from "@/features/organization/api/calendar.api";
 import {
   createAttendanceCheckIn,
   updateAttendanceCheckOut,
+  getAttendances,
 } from "@/features/attendance/api/attendance.api";
 
 // Import modular widgets
@@ -67,42 +68,49 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
   // Greeting Message
   const [greeting, setGreeting] = useState("Hello");
 
-  // Load user token and attendance status on mount
-  useEffect(() => {
-    // 1. Resolve greeting based on time of day
-    const hrs = new Date().getHours();
-    if (hrs < 12) setGreeting("Good morning");
-    else if (hrs < 17) setGreeting("Good afternoon");
-    else setGreeting("Good evening");
+  const isDateToday = (dStr?: string | null) => {
+    if (!dStr) return false;
+    const d = new Date(dStr);
+    if (isNaN(d.getTime()) || d.getFullYear() < 2024) return false;
+    const today = new Date();
+    return (
+      d.getFullYear() === today.getFullYear() &&
+      d.getMonth() === today.getMonth() &&
+      d.getDate() === today.getDate()
+    );
+  };
 
-    // 2. Resolve user ID from JWT token
+  const getUserKey = (prefix: string, uid: number | null) => `${prefix}_${uid || "guest"}`;
+
+  // Load user token and attendance status on mount / user change
+  useEffect(() => {
+    // 1. Resolve user ID from JWT token
     const currentId = getCurrentUserId();
     setUserId(currentId);
+  }, []);
 
-    // 3. Restore persisted Check-In & Timer state
-    if (typeof window !== "undefined") {
-      const active = localStorage.getItem(CHECKIN_ACTIVE_KEY);
-      const timestamp = localStorage.getItem(CHECKIN_TIMESTAMP_KEY);
-      const displayTime = localStorage.getItem(CHECKIN_DISPLAY_KEY);
-      const coordsJson = localStorage.getItem(CHECKIN_COORDS_KEY);
-      const checkoutDisplay = localStorage.getItem(CHECKOUT_DISPLAY_KEY);
-      const checkoutTs = localStorage.getItem(CHECKOUT_TIMESTAMP_KEY);
-      const savedWorkedSeconds = localStorage.getItem(WORKED_SECONDS_KEY);
+  // Sync attendance state specifically for the current logged-in userId
+  useEffect(() => {
+    if (!userId) return;
 
+    const syncUserAttendance = async () => {
       const today = new Date();
-      const checkinDate = timestamp ? new Date(timestamp) : null;
-      const checkoutDate = checkoutTs ? new Date(checkoutTs) : null;
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, "0");
+      const day = String(today.getDate()).padStart(2, "0");
+      const todayDate = `${year}-${month}-${day}`;
 
-      const isSameDay = (d1: Date, d2: Date) =>
-        d1.getFullYear() === d2.getFullYear() &&
-        d1.getMonth() === d2.getMonth() &&
-        d1.getDate() === d2.getDate();
+      // User-scoped localStorage keys
+      const userActiveKey = getUserKey(CHECKIN_ACTIVE_KEY, userId);
+      const userTsKey = getUserKey(CHECKIN_TIMESTAMP_KEY, userId);
+      const userDisplayKey = getUserKey(CHECKIN_DISPLAY_KEY, userId);
+      const userCoordsKey = getUserKey(CHECKIN_COORDS_KEY, userId);
+      const userCheckoutDisplayKey = getUserKey(CHECKOUT_DISPLAY_KEY, userId);
+      const userCheckoutTsKey = getUserKey(CHECKOUT_TIMESTAMP_KEY, userId);
+      const userWorkedSecondsKey = getUserKey(WORKED_SECONDS_KEY, userId);
 
-      const isCheckinToday = checkinDate && !isNaN(checkinDate.getTime()) && isSameDay(checkinDate, today);
-      const isCheckoutToday = checkoutDate && !isNaN(checkoutDate.getTime()) && isSameDay(checkoutDate, today);
-
-      // If data is from a previous day, auto-reset for the new day
-      if ((timestamp && !isCheckinToday) || (checkoutTs && !isCheckoutToday)) {
+      if (typeof window !== "undefined") {
+        // Clean legacy un-scoped keys if present
         localStorage.removeItem(CHECKIN_ACTIVE_KEY);
         localStorage.removeItem(CHECKIN_TIMESTAMP_KEY);
         localStorage.removeItem(CHECKIN_DISPLAY_KEY);
@@ -110,46 +118,149 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
         localStorage.removeItem(CHECKOUT_DISPLAY_KEY);
         localStorage.removeItem(CHECKOUT_TIMESTAMP_KEY);
         localStorage.removeItem(WORKED_SECONDS_KEY);
-        setIsCheckedIn(false);
-        setCheckInTime(null);
-        setCheckOutTime(null);
-        setSeconds(0);
-      } else if (active === "true" && isCheckinToday && timestamp) {
-        setIsCheckedIn(true);
-        const formatted = new Date(timestamp).toLocaleTimeString("en-IN", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true,
-        });
-        setCheckInTime(formatted || displayTime || "--:-- --");
-        const elapsed = Math.max(
-          0,
-          Math.floor((Date.now() - new Date(timestamp).getTime()) / 1000)
-        );
-        setSeconds(elapsed);
 
-        if (coordsJson) {
-          try {
-            setLastCoords(JSON.parse(coordsJson));
-          } catch (e) {
-            // Ignore parse error
+        const active = localStorage.getItem(userActiveKey);
+        const timestamp = localStorage.getItem(userTsKey);
+        const displayTime = localStorage.getItem(userDisplayKey);
+        const coordsJson = localStorage.getItem(userCoordsKey);
+        const checkoutDisplay = localStorage.getItem(userCheckoutDisplayKey);
+        const checkoutTs = localStorage.getItem(userCheckoutTsKey);
+        const savedWorkedSeconds = localStorage.getItem(userWorkedSecondsKey);
+
+        const isCheckinToday = isDateToday(timestamp);
+        const isCheckoutToday = isDateToday(checkoutTs);
+
+        // If data is from a previous day or invalid, auto-reset for this user
+        if ((timestamp && !isCheckinToday) || (checkoutTs && !isCheckoutToday)) {
+          localStorage.removeItem(userActiveKey);
+          localStorage.removeItem(userTsKey);
+          localStorage.removeItem(userDisplayKey);
+          localStorage.removeItem(userCoordsKey);
+          localStorage.removeItem(userCheckoutDisplayKey);
+          localStorage.removeItem(userCheckoutTsKey);
+          localStorage.removeItem(userWorkedSecondsKey);
+          localStorage.removeItem(getUserKey("sa_attendance_id", userId));
+          setIsCheckedIn(false);
+          setCheckInTime(null);
+          setCheckOutTime(null);
+          setSeconds(0);
+        } else if (active === "true" && isCheckinToday && timestamp) {
+          setIsCheckedIn(true);
+          const formatted = new Date(timestamp).toLocaleTimeString("en-IN", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+          });
+          setCheckInTime(formatted || displayTime || "--:-- --");
+          const elapsed = Math.max(
+            0,
+            Math.min(24 * 3600, Math.floor((Date.now() - new Date(timestamp).getTime()) / 1000))
+          );
+          setSeconds(elapsed);
+
+          if (coordsJson) {
+            try {
+              setLastCoords(JSON.parse(coordsJson));
+            } catch (e) {
+              // Ignore parse error
+            }
           }
+        } else if (isCheckoutToday && (checkoutDisplay || checkoutTs)) {
+          const formattedOut = checkoutTs
+            ? new Date(checkoutTs).toLocaleTimeString("en-IN", {
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: true,
+              })
+            : checkoutDisplay;
+          setIsCheckedIn(false);
+          setCheckOutTime(formattedOut);
+          if (savedWorkedSeconds) {
+            setSeconds(Math.min(24 * 3600, Math.max(0, Number(savedWorkedSeconds))));
+          }
+        } else {
+          // Fresh state for this employee
+          setIsCheckedIn(false);
+          setCheckInTime(null);
+          setCheckOutTime(null);
+          setSeconds(0);
         }
-      } else if (isCheckoutToday && (checkoutDisplay || checkoutTs)) {
-        const formattedOut = checkoutTs
-          ? new Date(checkoutTs).toLocaleTimeString("en-IN", {
+      }
+
+      // Query authoritative Backend API for today's attendance for THIS employee
+      try {
+        const attRes = await getAttendances({ userId, attendanceDate: todayDate });
+        const records = Array.isArray(attRes?.data)
+          ? attRes.data
+          : Array.isArray(attRes)
+          ? attRes
+          : [];
+
+        // Strictly match records belonging to THIS user from TODAY
+        const userTodayRecord = records.find((r: any) => {
+          const matchesUser = String(r.userId) === String(userId) || Number(r.userId) === Number(userId);
+          const matchesDate = isDateToday(r.attendanceDate) || isDateToday(r.checkInTime) || isDateToday(r.createdAt);
+          return matchesUser && matchesDate;
+        });
+
+        if (userTodayRecord) {
+          if (typeof window !== "undefined") {
+            localStorage.setItem(getUserKey("sa_attendance_id", userId), String(userTodayRecord.attendanceId));
+          }
+
+          if (userTodayRecord.checkInTime && isDateToday(userTodayRecord.checkInTime)) {
+            const checkInDateObj = new Date(userTodayRecord.checkInTime);
+            const checkInFormatted = checkInDateObj.toLocaleTimeString("en-IN", {
               hour: "2-digit",
               minute: "2-digit",
               hour12: true,
-            })
-          : checkoutDisplay;
-        setCheckOutTime(formattedOut);
-        if (savedWorkedSeconds) {
-          setSeconds(Number(savedWorkedSeconds));
+            });
+            setCheckInTime(checkInFormatted);
+
+            if (userTodayRecord.checkOutTime && isDateToday(userTodayRecord.checkOutTime)) {
+              const checkOutDateObj = new Date(userTodayRecord.checkOutTime);
+              const checkOutFormatted = checkOutDateObj.toLocaleTimeString("en-IN", {
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: true,
+              });
+              setIsCheckedIn(false);
+              setCheckOutTime(checkOutFormatted);
+              const totalSecs = userTodayRecord.workingMinutes
+                ? Math.min(24 * 3600, userTodayRecord.workingMinutes * 60)
+                : Math.min(24 * 3600, Math.max(0, Math.floor((checkOutDateObj.getTime() - checkInDateObj.getTime()) / 1000)));
+              setSeconds(totalSecs);
+
+              if (typeof window !== "undefined") {
+                localStorage.removeItem(userActiveKey);
+                localStorage.setItem(userCheckoutDisplayKey, checkOutFormatted);
+                localStorage.setItem(userCheckoutTsKey, userTodayRecord.checkOutTime);
+                localStorage.setItem(userWorkedSecondsKey, String(totalSecs));
+              }
+            } else {
+              setIsCheckedIn(true);
+              setCheckOutTime(null);
+              const elapsed = Math.max(
+                0,
+                Math.min(24 * 3600, Math.floor((Date.now() - checkInDateObj.getTime()) / 1000))
+              );
+              setSeconds(elapsed);
+
+              if (typeof window !== "undefined") {
+                localStorage.setItem(userActiveKey, "true");
+                localStorage.setItem(userTsKey, userTodayRecord.checkInTime);
+                localStorage.setItem(userDisplayKey, checkInFormatted);
+              }
+            }
+          }
         }
+      } catch (err) {
+        console.warn("Could not sync today's attendance from backend:", err);
       }
-    }
-  }, []);
+    };
+
+    syncUserAttendance();
+  }, [userId]);
 
   // Clock Attendance Timer
   useEffect(() => {
@@ -201,6 +312,11 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
 
   // Handle Check-In Click
   const handleCheckIn = async () => {
+    if (checkOutTime) {
+      toast.info("You have already checked out for today. See you tomorrow! 👋");
+      return;
+    }
+
     setIsLoadingLocation(true);
     const coords = await fetchUserLocation();
     setIsLoadingLocation(false);
@@ -218,15 +334,15 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
     setSeconds(0);
     if (coords) setLastCoords(coords);
 
-    if (typeof window !== "undefined") {
-      localStorage.setItem(CHECKIN_ACTIVE_KEY, "true");
-      localStorage.setItem(CHECKIN_TIMESTAMP_KEY, now.toISOString());
-      localStorage.setItem(CHECKIN_DISPLAY_KEY, timeStr);
-      localStorage.removeItem(CHECKOUT_DISPLAY_KEY);
-      localStorage.removeItem(CHECKOUT_TIMESTAMP_KEY);
-      localStorage.removeItem(WORKED_SECONDS_KEY);
+    if (typeof window !== "undefined" && userId) {
+      localStorage.setItem(getUserKey(CHECKIN_ACTIVE_KEY, userId), "true");
+      localStorage.setItem(getUserKey(CHECKIN_TIMESTAMP_KEY, userId), now.toISOString());
+      localStorage.setItem(getUserKey(CHECKIN_DISPLAY_KEY, userId), timeStr);
+      localStorage.removeItem(getUserKey(CHECKOUT_DISPLAY_KEY, userId));
+      localStorage.removeItem(getUserKey(CHECKOUT_TIMESTAMP_KEY, userId));
+      localStorage.removeItem(getUserKey(WORKED_SECONDS_KEY, userId));
       if (coords) {
-        localStorage.setItem(CHECKIN_COORDS_KEY, JSON.stringify(coords));
+        localStorage.setItem(getUserKey(CHECKIN_COORDS_KEY, userId), JSON.stringify(coords));
       }
     }
 
@@ -246,12 +362,19 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
         attendanceStatus: "PRESENT",
       })
         .then((res) => {
-          if (res?.data?.attendanceId) {
-            localStorage.setItem("sa_attendance_id", String(res.data.attendanceId));
+          if (res?.data?.attendanceId && typeof window !== "undefined") {
+            localStorage.setItem(getUserKey("sa_attendance_id", userId), String(res.data.attendanceId));
+          } else if (res?.message?.includes("already exists") || res?.error?.includes("already exists")) {
+            toast.info("You have already checked out for today. See you tomorrow! 👋");
           }
         })
         .catch((err) => {
-          console.warn("Could not sync check-in with backend attendance table:", err);
+          const msg = err?.message || "";
+          if (msg.includes("already exists")) {
+            toast.info("You have already checked out for today. See you tomorrow! 👋");
+          } else {
+            console.warn("Could not sync check-in with backend attendance table:", err);
+          }
         });
     }
 
@@ -274,18 +397,22 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
     setIsCheckedIn(false);
     setCheckOutTime(timeStr);
 
-    if (typeof window !== "undefined") {
-      localStorage.removeItem(CHECKIN_ACTIVE_KEY);
-      localStorage.removeItem(CHECKIN_TIMESTAMP_KEY);
-      localStorage.removeItem(CHECKIN_DISPLAY_KEY);
-      localStorage.removeItem(CHECKIN_COORDS_KEY);
-      localStorage.setItem(CHECKOUT_DISPLAY_KEY, timeStr);
-      localStorage.setItem(CHECKOUT_TIMESTAMP_KEY, now.toISOString());
-      localStorage.setItem(WORKED_SECONDS_KEY, String(seconds));
+    if (typeof window !== "undefined" && userId) {
+      localStorage.removeItem(getUserKey(CHECKIN_ACTIVE_KEY, userId));
+      localStorage.removeItem(getUserKey(CHECKIN_TIMESTAMP_KEY, userId));
+      localStorage.removeItem(getUserKey(CHECKIN_DISPLAY_KEY, userId));
+      localStorage.removeItem(getUserKey(CHECKIN_COORDS_KEY, userId));
+      localStorage.setItem(getUserKey(CHECKOUT_DISPLAY_KEY, userId), timeStr);
+      localStorage.setItem(getUserKey(CHECKOUT_TIMESTAMP_KEY, userId), now.toISOString());
+      localStorage.setItem(getUserKey(WORKED_SECONDS_KEY, userId), String(seconds));
     }
 
     // Persist Check-Out in Backend Database
-    const savedAttendanceId = typeof window !== "undefined" ? localStorage.getItem("sa_attendance_id") : null;
+    const savedAttendanceId =
+      typeof window !== "undefined" && userId
+        ? localStorage.getItem(getUserKey("sa_attendance_id", userId))
+        : null;
+
     if (savedAttendanceId) {
       updateAttendanceCheckOut(Number(savedAttendanceId), {
         checkOutTime: now.toISOString(),
@@ -297,7 +424,7 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
       });
     }
 
-    toast.success(`Checked out successfully at ${timeStr}`);
+    toast.success("You've successfully checked out for today");
   };
 
   // Fetch API Data
@@ -357,9 +484,11 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
   }, [userId]);
 
   const formatTime = (totalSecs: number) => {
-    const hrs = Math.floor(totalSecs / 3600);
-    const mins = Math.floor((totalSecs % 3600) / 60);
-    const secs = totalSecs % 60;
+    if (isNaN(totalSecs) || totalSecs < 0) return "00:00:00";
+    const validSecs = Math.min(Math.max(0, Math.floor(totalSecs)), 24 * 3600);
+    const hrs = Math.floor(validSecs / 3600);
+    const mins = Math.floor((validSecs % 3600) / 60);
+    const secs = validSecs % 60;
     return `${hrs.toString().padStart(2, "0")}:${mins
       .toString()
       .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
