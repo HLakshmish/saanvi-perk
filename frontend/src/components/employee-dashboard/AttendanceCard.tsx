@@ -115,14 +115,14 @@ export const AttendanceCard: React.FC<AttendanceCardProps> = ({
         {/* Check In Button */}
         <button
           onClick={onCheckIn}
-          disabled={isCheckedIn || isLoadingLocation}
-          className={`py-3 px-3 rounded-xl font-extrabold text-xs sm:text-sm transition-all flex items-center justify-center gap-1.5 shadow-md active:scale-[0.98] cursor-pointer ${
-            isCheckedIn
+          disabled={isCheckedIn || isCheckedOut || isLoadingLocation}
+          className={`py-3 px-3 rounded-xl font-extrabold text-xs sm:text-sm transition-all flex items-center justify-center gap-1.5 shadow-md active:scale-[0.98] ${
+            isCheckedIn || isCheckedOut
               ? "bg-white/10 text-white/50 border border-white/10 cursor-not-allowed"
-              : "bg-[#ffefb3] text-[#013e37] hover:bg-[#ffe794] border border-[#ffefb3] shadow-black/20"
+              : "bg-[#ffefb3] text-[#013e37] hover:bg-[#ffe794] border border-[#ffefb3] shadow-black/20 cursor-pointer"
           }`}
         >
-          {isLoadingLocation && !isCheckedIn ? (
+          {isLoadingLocation && !isCheckedIn && !isCheckedOut ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
               <span>Checking In...</span>
@@ -144,10 +144,10 @@ export const AttendanceCard: React.FC<AttendanceCardProps> = ({
         <button
           onClick={onCheckOut}
           disabled={!isCheckedIn || isLoadingLocation}
-          className={`py-3 px-3 rounded-xl font-extrabold text-xs sm:text-sm transition-all flex items-center justify-center gap-1.5 shadow-md active:scale-[0.98] cursor-pointer ${
+          className={`py-3 px-3 rounded-xl font-extrabold text-xs sm:text-sm transition-all flex items-center justify-center gap-1.5 shadow-md active:scale-[0.98] ${
             !isCheckedIn
               ? "bg-white/10 text-white/40 border border-white/10 cursor-not-allowed"
-              : "bg-rose-600 text-white hover:bg-rose-700 border border-rose-500 shadow-rose-900/30"
+              : "bg-rose-600 text-white hover:bg-rose-700 border border-rose-500 shadow-rose-900/30 cursor-pointer"
           }`}
         >
           {isLoadingLocation && isCheckedIn ? (
@@ -163,6 +163,16 @@ export const AttendanceCard: React.FC<AttendanceCardProps> = ({
           )}
         </button>
       </div>
+
+      {/* Confirmation Message when checked out for today */}
+      {isCheckedOut && (
+        <div className="z-10 mt-3 py-2 px-3 bg-white/10 border border-[#ffefb3]/20 rounded-xl flex items-center justify-center gap-2 text-center">
+          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+          <span className="text-[11px] sm:text-xs font-semibold text-[#ffefb3]">
+            You&apos;ve successfully checked out for today
+          </span>
+        </div>
+      )}
     </div>
   );
 };

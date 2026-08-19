@@ -614,20 +614,21 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
 
       // 6. PF Details (POST if pfDetailId is null, PUT otherwise)
       if (formData.uanNumber || formData.pfNumber) {
-        const pfPayload = {
+        const pfPayload: any = {
           userId: employeeId,
-          uanNumber: formData.uanNumber || null,
-          pfNumber: formData.pfNumber || null,
-          isInternationalWorker: formData.isInternationalWorker,
-          educationLevel: (formData.educationLevel || null) as any,
+          uanNumber: formData.uanNumber?.trim() || null,
+          pfNumber: formData.pfNumber?.trim() || null,
+          isInternationalWorker: Boolean(formData.isInternationalWorker),
           pfJoiningDate: formData.pfJoiningDate ? new Date(formData.pfJoiningDate).toISOString() : null,
           pfLeavingDate: formData.pfLeavingDate ? new Date(formData.pfLeavingDate).toISOString() : null,
-          documentNumber: formData.pfDocumentNumber || null,
-          documentType: (formData.pfDocumentType || null) as any,
+          documentNumber: formData.pfDocumentNumber?.trim() || null,
           documentExpiryDate: formData.pfDocumentExpiryDate ? new Date(formData.pfDocumentExpiryDate).toISOString() : null,
-          reasonForLeaving: (formData.pfReasonForLeaving || null) as any,
-          phcCategory: (formData.pfPhcCategory || null) as any,
         };
+
+        if (formData.educationLevel) pfPayload.educationLevel = formData.educationLevel;
+        if (formData.pfDocumentType) pfPayload.documentType = formData.pfDocumentType;
+        if (formData.pfReasonForLeaving) pfPayload.reasonForLeaving = formData.pfReasonForLeaving;
+        if (formData.pfPhcCategory) pfPayload.phcCategory = formData.pfPhcCategory;
 
         if (pfDetailId) {
           const pfRes = await updatePFDetail(pfDetailId, pfPayload);
@@ -640,13 +641,14 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
 
       // 7. ESI Details (POST if esiDetailId is null, PUT otherwise)
       if (formData.esiNumber) {
-        const esiPayload = {
+        const esiPayload: any = {
           userId: employeeId,
-          esiNumber: formData.esiNumber,
+          esiNumber: formData.esiNumber.trim(),
           esiJoiningDate: formData.esiJoiningDate ? new Date(formData.esiJoiningDate).toISOString() : null,
           esiLeavingDate: formData.esiLeavingDate ? new Date(formData.esiLeavingDate).toISOString() : null,
-          reasonForLeaving: (formData.esiReasonForLeaving || null) as any,
         };
+
+        if (formData.esiReasonForLeaving) esiPayload.reasonForLeaving = formData.esiReasonForLeaving;
 
         if (esiDetailId) {
           const esiRes = await updateESIDetail(esiDetailId, esiPayload);
