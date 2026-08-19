@@ -63,6 +63,7 @@ model CompanyDetails {
   leaveAccumulations       LeaveAccumulation[]
   leaveYearEndProcesses    LeaveYearEndProcess[]
   compOffPolicies          CompOffPolicy[]
+  compOffAssigns           CompOffAssign[]
   assets              AssetDetails[]
   reimbursementClaims ReimbursementClaim[]
 
@@ -257,6 +258,9 @@ model User {
   processedYearEnds     LeaveYearEndProcess[] @relation("YearEndProcessedBy")
   createdCompOffPolicies CompOffPolicy[]      @relation("CompOffPolicyCreatedBy")
   updatedCompOffPolicies CompOffPolicy[]      @relation("CompOffPolicyUpdatedBy")
+  compOffAssigns         CompOffAssign[]
+  createdCompOffAssigns  CompOffAssign[]      @relation("CompOffAssignCreatedBy")
+  updatedCompOffAssigns  CompOffAssign[]      @relation("CompOffAssignUpdatedBy")
 
   assetAssignments AssetAssignments[]
   assetHistory     AssetHistory[]
@@ -1225,5 +1229,35 @@ model CompOffPolicy {
   createdUser User?          @relation("CompOffPolicyCreatedBy", fields: [createdBy], references: [userId])
   updatedUser User?          @relation("CompOffPolicyUpdatedBy", fields: [updatedBy], references: [userId])
 
+  compOffAssigns CompOffAssign[]
+
   @@map("comp_off_policies")
+}
+
+// ==========================
+// Comp Off Assign
+// ==========================
+model CompOffAssign {
+  id        Int      @id @default(autoincrement()) @map("id")
+  companyId Int      @map("company_id")
+  userId    Int      @map("user_id")
+  policyId  Int      @map("policy_id")
+  startDate DateTime @map("start_date") @db.Date
+  endDate   DateTime @map("end_date") @db.Date
+
+  status    Boolean  @default(true)
+
+  createdBy Int?     @map("created_by")
+  updatedBy Int?     @map("updated_by")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  company     CompanyDetails @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
+  user        User           @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  policy      CompOffPolicy  @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  createdUser User?          @relation("CompOffAssignCreatedBy", fields: [createdBy], references: [userId])
+  updatedUser User?          @relation("CompOffAssignUpdatedBy", fields: [updatedBy], references: [userId])
+
+  @@map("comp_off_assigns")
 }
