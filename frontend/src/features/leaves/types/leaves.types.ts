@@ -36,8 +36,6 @@ export interface ApplyLeaveInput {
   fromDate: string;
   toDate: string;
   reason: string;
-  notifyOthers?: string;
-  reliever?: string;
   userId?: number;
 }
 

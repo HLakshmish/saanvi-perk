@@ -38,8 +38,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
   const [fromDate, setFromDate] = useState(todayStr);
   const [toDate, setToDate] = useState(todayStr);
   const [reason, setReason] = useState("");
-  const [notifyOthers, setNotifyOthers] = useState("");
-  const [reliever, setReliever] = useState("");
+
 
   // Employee Selection (for Apply on Behalf)
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<number>(0);
@@ -81,8 +80,6 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
       fromDate,
       toDate,
       reason: reason.trim() || "Personal Reason",
-      notifyOthers: notifyOthers.trim() || undefined,
-      reliever: reliever.trim() || undefined,
       userId: selectedEmployeeId > 0 ? selectedEmployeeId : undefined,
     });
 
@@ -96,8 +93,6 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
       setFromDate(todayStr);
       setToDate(todayStr);
       setReason("");
-      setNotifyOthers("");
-      setReliever("");
       onClose();
     } else {
       setErrorMsg("Failed to submit leave request. Please check validation rules.");
@@ -215,23 +210,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
                 </div>
               </div>
 
-              {/* Notify Others (Optional) */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700 block">
-                  Notify Others (Optional)
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={notifyOthers}
-                    onChange={(e) => setNotifyOthers(e.target.value)}
-                    placeholder="Enter email or name..."
-                    disabled={isSubmitting}
-                    className="w-full text-xs font-medium text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 pl-3.5 pr-10 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary shadow-2xs transition-all placeholder:text-slate-400"
-                  />
-                  <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                </div>
-              </div>
+
             </div>
 
             {/* Right Column */}
@@ -271,23 +250,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
                 </div>
               </div>
 
-              {/* Reliever (Optional) */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700 block">
-                  Reliever (Optional)
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={reliever}
-                    onChange={(e) => setReliever(e.target.value)}
-                    placeholder="Search reliever..."
-                    disabled={isSubmitting}
-                    className="w-full text-xs font-medium text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 pl-3.5 pr-10 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary shadow-2xs transition-all placeholder:text-slate-400"
-                  />
-                  <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                </div>
-              </div>
+
             </div>
           </div>
 
