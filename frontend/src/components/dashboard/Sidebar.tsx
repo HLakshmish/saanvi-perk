@@ -70,7 +70,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Main Sidebar (Drawer on mobile, Sticky rail on desktop) */}
       <aside
-        className={`bg-sidebar-bg border-r border-sidebar-border flex flex-col h-[calc(100vh-3.5rem)] fixed md:sticky top-14 z-50 md:z-30 transition-all duration-300 select-none ${
+        className={`bg-sidebar-bg border-r border-sidebar-border flex flex-col h-[calc(100vh-3.5rem)] fixed md:sticky top-14 z-50 md:z-30 transition-all duration-300 select-none overflow-x-hidden ${
           isSidebarOpen
             ? "w-64 md:w-60 translate-x-0 shadow-2xl md:shadow-lg"
             : "-translate-x-full md:translate-x-0 md:w-14 lg:md:w-16 items-center"
@@ -87,9 +87,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </button>
         </div>
 
-        {/* Scrollable Nav Container */}
+        {/* Scrollable Nav Container with hidden scrollbars */}
         <nav
-          className={`flex-1 flex flex-col gap-1 py-3 overflow-y-auto sidebar-scroll ${
+          className={`flex-1 flex flex-col gap-1 py-3 overflow-y-auto overflow-x-hidden sidebar-scroll ${
             isSidebarOpen ? "px-3" : "px-1"
           }`}
         >
@@ -135,25 +135,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
           })}
         </nav>
 
-        {/* Slim custom scrollbar styles */}
+        {/* Hidden scrollbar styles */}
         <style jsx>{`
           .sidebar-scroll {
-            scrollbar-width: thin;
-            scrollbar-color: var(--brand-accent) transparent;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
           }
           .sidebar-scroll::-webkit-scrollbar {
-            width: 4px;
-          }
-          .sidebar-scroll::-webkit-scrollbar-track {
-            background: transparent;
-          }
-          .sidebar-scroll::-webkit-scrollbar-thumb {
-            background: var(--brand-accent);
-            opacity: 0.3;
-            border-radius: 999px;
-          }
-          .sidebar-scroll::-webkit-scrollbar-thumb:hover {
-            background: var(--brand-accent-hover);
+            display: none;
+            width: 0px;
+            height: 0px;
           }
         `}</style>
       </aside>

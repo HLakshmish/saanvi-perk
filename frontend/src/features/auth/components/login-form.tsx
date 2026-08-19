@@ -5,12 +5,15 @@ import Image from "next/image";
 
 import { useLogin } from "../hooks/use-login";
 import { Input } from "@/components/ui/input";
+import { SplashScreen } from "@/components/ui/splash-screen";
 
 export function LoginForm() {
   const {
     credentials,
     errors,
     isLoading,
+    showSplash,
+    splashUser,
     successMessage,
     handleChange,
     handleSubmit,
@@ -77,6 +80,15 @@ export function LoginForm() {
           font-weight: 700 !important;
         }
       `}</style>
+
+      {/* Post-Login Animated Splash Screen */}
+      {showSplash && (
+        <SplashScreen
+          userName={splashUser?.name}
+          role={splashUser?.role}
+          durationMs={2000}
+        />
+      )}
 
       {/* Viewport container with soft mint-tinted neutral background (#f4fbf7) */}
       <div className="min-h-screen w-full flex items-center justify-center p-3 sm:p-6 bg-[#f4fbf7] transition-colors duration-500 overflow-y-auto relative select-none forced-light-theme font-sans">
