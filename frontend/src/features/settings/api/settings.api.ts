@@ -828,3 +828,333 @@ export const deleteLeaveAccumulation = async (id: number) => {
   }
 };
 
+// ==========================================
+// LEAVE YEAR END PROCESS
+// ==========================================
+export const fetchYearEndProcesses = async (filters?: { userId?: number; year?: number }) => {
+  const token = getAuthToken();
+  const companyId = getCompanyIdCookie();
+  
+  let url = `${API_BASE_URL}/api/leave-year-end-processes`;
+  const params: string[] = [];
+  if (companyId) params.push(`companyId=${companyId}`);
+  if (filters?.userId) params.push(`userId=${filters.userId}`);
+  if (filters?.year) params.push(`year=${filters.year}`);
+  
+  if (params.length > 0) {
+    url += `?${params.join("&")}`;
+  }
+
+  try {
+    const res = await fetchDeduplicated(url, {
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    const result = await res.json();
+    if (res.ok && result.success && Array.isArray(result.data)) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, data: [], error: result.message || "Failed to fetch year end processes" };
+  } catch (error: any) {
+    return { success: false, data: [], error: error.message };
+  }
+};
+
+export const createYearEndProcessApi = async (data: Record<string, any>) => {
+  const token = getAuthToken();
+  const companyId = getCompanyIdCookie() || 4;
+  const payload = {
+    companyId: Number(companyId),
+    ...data,
+  };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/leave-year-end-processes`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(payload),
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, error: result.message || "Failed to create year end process" };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const updateYearEndProcessApi = async (id: number, data: Record<string, any>) => {
+  const token = getAuthToken();
+  const companyId = getCompanyIdCookie() || 4;
+  const payload = {
+    companyId: Number(companyId),
+    ...data,
+  };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/leave-year-end-processes/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(payload),
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, error: result.message || "Failed to update year end process" };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const deleteYearEndProcessApi = async (id: number) => {
+  const token = getAuthToken();
+  const companyId = getCompanyIdCookie();
+  const url = companyId
+    ? `${API_BASE_URL}/api/leave-year-end-processes/${id}?companyId=${companyId}`
+    : `${API_BASE_URL}/api/leave-year-end-processes/${id}`;
+
+  try {
+    const res = await fetch(url, {
+      method: "DELETE",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true };
+    }
+    return { success: false, error: result.message || "Failed to delete year end process" };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
+
+// ==========================================
+// COMP-OFF POLICIES
+// ==========================================
+export const fetchCompOffPolicies = async () => {
+  const token = getAuthToken();
+  const companyId = getCompanyIdCookie();
+  const url = companyId
+    ? `${API_BASE_URL}/api/comp-off-policies?companyId=${companyId}`
+    : `${API_BASE_URL}/api/comp-off-policies`;
+
+  try {
+    const res = await fetchDeduplicated(url, {
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    const result = await res.json();
+    if (res.ok && result.success && Array.isArray(result.data)) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, data: [], error: result.message || "Failed to fetch comp-off policies" };
+  } catch (error: any) {
+    return { success: false, data: [], error: error.message };
+  }
+};
+
+export const createCompOffPolicyApi = async (policyData: Record<string, any>) => {
+  const token = getAuthToken();
+  const companyId = getCompanyIdCookie() || 4;
+  const payload = {
+    companyId: Number(companyId),
+    ...policyData,
+  };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/comp-off-policies`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(payload),
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, error: result.message || "Failed to create comp-off policy" };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const updateCompOffPolicyApi = async (id: number, policyData: Record<string, any>) => {
+  const token = getAuthToken();
+  const companyId = getCompanyIdCookie() || 4;
+  const payload = {
+    companyId: Number(companyId),
+    ...policyData,
+  };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/comp-off-policies/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(payload),
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, error: result.message || "Failed to update comp-off policy" };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const deleteCompOffPolicyApi = async (id: number) => {
+  const token = getAuthToken();
+  const companyId = getCompanyIdCookie();
+  const url = companyId
+    ? `${API_BASE_URL}/api/comp-off-policies/${id}?companyId=${companyId}`
+    : `${API_BASE_URL}/api/comp-off-policies/${id}`;
+
+  try {
+    const res = await fetch(url, {
+      method: "DELETE",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true };
+    }
+    return { success: false, error: result.message || "Failed to delete comp-off policy" };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
+
+// ==========================================
+// COMP-OFF ASSIGNMENTS
+// ==========================================
+export const fetchCompOffAssignments = async (filters?: { userId?: number; policyId?: number }) => {
+  const token = getAuthToken();
+  const companyId = getCompanyIdCookie();
+  
+  let url = `${API_BASE_URL}/api/comp-off-assigns`;
+  const params: string[] = [];
+  if (companyId) params.push(`companyId=${companyId}`);
+  if (filters?.userId) params.push(`userId=${filters.userId}`);
+  if (filters?.policyId) params.push(`policyId=${filters.policyId}`);
+  
+  if (params.length > 0) {
+    url += `?${params.join("&")}`;
+  }
+
+  try {
+    const res = await fetchDeduplicated(url, {
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    const result = await res.json();
+    if (res.ok && result.success && Array.isArray(result.data)) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, data: [], error: result.message || "Failed to fetch comp-off assignments" };
+  } catch (error: any) {
+    return { success: false, data: [], error: error.message };
+  }
+};
+
+export const createCompOffAssignmentApi = async (data: { userIds: number[]; policyId: number; startDate: string; endDate: string; status?: boolean }) => {
+  const token = getAuthToken();
+  const companyId = getCompanyIdCookie() || 4;
+  const payload = {
+    companyId: Number(companyId),
+    ...data,
+  };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/comp-off-assigns`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(payload),
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true, count: result.count };
+    }
+    return { success: false, error: result.message || "Failed to create comp-off assignment" };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const updateCompOffAssignmentApi = async (id: number, data: { policyId?: number; startDate?: string; endDate?: string; status?: boolean }) => {
+  const token = getAuthToken();
+  const companyId = getCompanyIdCookie() || 4;
+  const payload = {
+    companyId: Number(companyId),
+    ...data,
+  };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/comp-off-assigns/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(payload),
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, error: result.message || "Failed to update comp-off assignment" };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const deleteCompOffAssignmentApi = async (id: number) => {
+  const token = getAuthToken();
+  const companyId = getCompanyIdCookie();
+  const url = companyId
+    ? `${API_BASE_URL}/api/comp-off-assigns/${id}?companyId=${companyId}`
+    : `${API_BASE_URL}/api/comp-off-assigns/${id}`;
+
+  try {
+    const res = await fetch(url, {
+      method: "DELETE",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true };
+    }
+    return { success: false, error: result.message || "Failed to delete comp-off assignment" };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
+
+
