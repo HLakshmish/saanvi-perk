@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Holiday } from "@/types/dashboard";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, Sparkles } from "lucide-react";
 import { getHolidays } from "@/features/organization/api/calendar.api";
 
 interface HolidaysWidgetProps {
@@ -24,12 +24,10 @@ export const HolidaysWidget: React.FC<HolidaysWidgetProps> = ({ holidays: propsH
     today.setHours(0, 0, 0, 0);
 
     if (res.success && res.data && res.data.length > 0) {
-      // 1. Filter out past holidays (only keep today and future dates)
       const upcomingApiHolidays = res.data.filter(
         (h) => new Date(h.startDate).setHours(0, 0, 0, 0) >= today.getTime()
       );
 
-      // 2. Sort ascending by start date
       upcomingApiHolidays.sort(
         (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
       );
@@ -52,49 +50,55 @@ export const HolidaysWidget: React.FC<HolidaysWidgetProps> = ({ holidays: propsH
   };
 
   return (
-    <div className="bg-white p-4 rounded-xl border border-brand-primary/15 shadow-2xs flex flex-col overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center gap-2 mb-3">
-        <div className="w-7 h-7 rounded-lg bg-brand-primary/10 flex items-center justify-center">
-          <CalendarDays className="w-3.5 h-3.5 text-brand-primary" />
-        </div>
-        <div>
-          <h3 className="font-bold text-brand-primary text-xs sm:text-sm">Upcoming Holidays</h3>
-          <p className="text-[10px] text-brand-primary/65 font-medium">
-            {list.length} upcoming {list.length === 1 ? "holiday" : "holidays"}
-          </p>
-        </div>
-      </div>
-
-      {/* Scrollable list with scroller flush to the right edge */}
-      <div className="space-y-2 overflow-y-auto max-h-[220px] -mr-4 pr-4 pl-0.5">
-        {list.map((item, idx) => (
-          <div
-            key={`${item.id}-${idx}`}
-            className="flex items-center gap-2.5 p-2.5 rounded-lg bg-slate-50 border border-slate-100 transition-all duration-200 hover:border-brand-primary/30 hover:bg-brand-primary/5 group mr-1.5"
-          >
-            {/* Date Badge */}
-            <div className="bg-brand-primary text-brand-btn-text rounded-lg px-2.5 py-1.5 flex flex-col items-center justify-center min-w-[46px] shadow-2xs shrink-0 font-bold">
-              <span className="text-base font-extrabold leading-none">{item.date}</span>
-              <span className="text-[8px] font-bold uppercase mt-0.5 opacity-90">
-                {item.month.substring(0, 3)}
-              </span>
+    <div className="bg-white p-5 rounded-3xl border border-slate-200/70 shadow-2xs hover:shadow-xs transition-all duration-300 flex flex-col justify-between overflow-hidden">
+      <div>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-2xl bg-brand-primary/10 text-brand-primary flex items-center justify-center font-bold shadow-2xs">
+              <CalendarDays className="w-4 h-4 text-brand-primary" />
             </div>
-
-            {/* Event Info */}
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-slate-800 leading-tight truncate group-hover:text-brand-primary transition-colors">
-                {item.title}
-              </p>
-              <p className="text-[10px] text-slate-400 font-medium mt-0.5">{item.day}</p>
+            <div>
+              <h3 className="font-extrabold text-slate-900 text-sm">Upcoming Holidays</h3>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Schedule</p>
             </div>
           </div>
-        ))}
-        {list.length === 0 && (
-          <div className="py-6 text-center text-xs text-slate-400 font-medium">
-            No upcoming holidays found.
-          </div>
-        )}
+
+          <span className="text-[10px] font-extrabold text-brand-primary bg-brand-primary-light border border-brand-primary/20 px-2.5 py-1 rounded-full">
+            {list.length} Upcoming
+          </span>
+        </div>
+
+        {/* Scrollable list */}
+        <div className="space-y-2.5 overflow-y-auto max-h-[220px] pr-1">
+          {list.map((item, idx) => (
+            <div
+              key={`${item.id}-${idx}`}
+              className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50/80 border border-slate-200/60 transition-all duration-200 hover:border-brand-primary/30 hover:bg-brand-primary-light/30 group cursor-pointer"
+            >
+              {/* Date Badge */}
+              <div className="bg-brand-primary text-brand-btn-text rounded-xl px-3 py-2 flex flex-col items-center justify-center min-w-[50px] shadow-xs shrink-0 font-bold">
+                <span className="text-lg font-black leading-none">{item.date}</span>
+                <span className="text-[9px] font-extrabold uppercase mt-0.5 opacity-90 tracking-wider">
+                  {item.month.substring(0, 3)}
+                </span>
+              </div>
+
+              {/* Event Info */}
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold text-slate-900 leading-tight truncate group-hover:text-brand-primary transition-colors">
+                  {item.title}
+                </p>
+                <p className="text-[10px] text-slate-400 font-semibold mt-0.5">{item.day}</p>
+              </div>
+            </div>
+          ))}
+          {list.length === 0 && (
+            <div className="py-8 text-center text-xs text-slate-400 font-medium">
+              No upcoming holidays scheduled.
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -534,26 +534,40 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
           onScroll={handleCarouselScroll}
           className="flex items-stretch overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] -mx-1 px-1"
         >
-          {/* Slide 0: Greeting & Workspace Status */}
+          {/* Slide 0: Executive Greeting & Workspace Status */}
           <div className="w-full shrink-0 snap-center snap-always pr-0 flex">
-            <div className="w-full flex items-center justify-between gap-3 bg-white border border-brand-primary/15 py-3 px-4 sm:py-3.5 sm:px-5 rounded-2xl sm:rounded-3xl shadow-xs">
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <h1 className="text-base sm:text-lg font-extrabold text-brand-primary tracking-tight">
-                    Hi, {employeeFullName}!
-                  </h1>
-                  <span className="text-base sm:text-lg select-none">👋</span>
+            <div className="w-full flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-brand-primary via-[#01473f] to-brand-primary text-white p-5 sm:p-6 rounded-3xl shadow-lg border border-brand-primary/30 relative overflow-hidden">
+              <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-emerald-400/10 blur-xl pointer-events-none" />
+
+              <div className="space-y-1 relative z-10">
+                <div className="flex items-center gap-2">
+                  <span className="px-2.5 py-0.5 bg-white/10 backdrop-blur-md border border-white/20 rounded-full text-[10px] font-extrabold uppercase tracking-wider text-brand-accent">
+                    Employee Portal
+                  </span>
+                  <span className="flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-500/20 border border-emerald-400/30 rounded-full text-[10px] font-bold text-emerald-200">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    Shift Active
+                  </span>
                 </div>
+
+                <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2">
+                  <span>Welcome back, {employeeFullName}!</span>
+                  <span className="select-none">👋</span>
+                </h1>
+                <p className="text-xs text-emerald-100/80 font-medium">
+                  {companyName ? `Employee at ${companyName}` : "Saanvi Perk Portal"}
+                </p>
               </div>
 
-              {/* Date Pill at Right End */}
-              <div className="px-2.5 py-1.5 bg-brand-primary-light border border-brand-primary/15 rounded-xl text-center shrink-0">
-                <p className="text-[8px] text-brand-primary/75 font-bold uppercase tracking-wider">Today</p>
-                <p className="text-xs sm:text-xs font-extrabold text-brand-primary whitespace-nowrap">
+              {/* Date Pill */}
+              <div className="px-4 py-2.5 bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl text-right shrink-0 relative z-10 self-start sm:self-auto">
+                <p className="text-[9px] text-emerald-200/70 font-extrabold uppercase tracking-wider">Today's Date</p>
+                <p className="text-xs sm:text-sm font-black text-white whitespace-nowrap">
                   {new Date().toLocaleDateString("en-IN", {
                     weekday: "short",
                     day: "numeric",
                     month: "short",
+                    year: "numeric",
                   })}
                 </p>
               </div>

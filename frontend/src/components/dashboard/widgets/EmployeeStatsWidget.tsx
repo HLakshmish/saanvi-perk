@@ -1,7 +1,6 @@
 "use client";
 
-import React from "react";
-import { Users, UserCheck, CalendarOff, UserX } from "lucide-react";
+import React, { useRef, useEffect } from "react";
 
 interface EmployeeStatsProps {
   headcount?: number;
@@ -9,6 +8,64 @@ interface EmployeeStatsProps {
   onLeave?: number;
   absent?: number;
 }
+
+interface GreenAvatarCardProps {
+  src: string;
+  alt: string;
+  className?: string;
+}
+
+const GreenAvatarCard: React.FC<GreenAvatarCardProps> = ({ src, alt, className }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const img = new Image();
+    img.src = src;
+    img.onload = () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      const size = 160; // Render resolution
+      canvas.width = size;
+      canvas.height = size;
+
+      // Draw the original image centered
+      ctx.drawImage(img, 0, 0, size, size);
+
+      // Process pixels to replace the outer white background with green #012e29
+      const imgData = ctx.getImageData(0, 0, size, size);
+      const data = imgData.data;
+      const centerX = size / 2;
+      const centerY = size / 2;
+
+      // The radius of the green circle in the original image is roughly 42.5% of the width
+      const maxRadius = size * 0.425;
+
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          const idx = (y * size + x) * 4;
+          const dx = x - centerX;
+          const dy = y - centerY;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          // If the pixel is outside the green circle, fill it with the brand green #012e29
+          if (dist > maxRadius) {
+            data[idx] = 1;     // R
+            data[idx + 1] = 46; // G
+            data[idx + 2] = 41; // B
+            data[idx + 3] = 255; // A
+          }
+        }
+      }
+
+      ctx.putImageData(imgData, 0, 0);
+    };
+  }, [src]);
+
+  return <canvas ref={canvasRef} className={className} aria-label={alt} />;
+};
 
 export const EmployeeStatsWidget: React.FC<EmployeeStatsProps> = ({
   headcount = 38,
@@ -18,49 +75,76 @@ export const EmployeeStatsWidget: React.FC<EmployeeStatsProps> = ({
 }) => {
   const stats = [
     {
-      label: "Headcount",
+      label: "Total Headcount",
       value: headcount,
-      icon: Users,
+      subtext: "+4 joined this month",
+      badge: "Active Roster",
+      avatar: "/images/avatars/headcount.jpg",
     },
     {
-      label: "At Work",
+      label: "At Work Currently",
       value: atWork,
-      icon: UserCheck,
+      subtext: "55.2% checked in today",
+      badge: "Live Clocked",
+      avatar: "/images/avatars/atwork.jpg",
+      isLive: true,
     },
     {
-      label: "On Leave",
+      label: "On Leave Today",
       value: onLeave,
-      icon: CalendarOff,
+      subtext: "No pending leave logs",
+      badge: "Approved",
+      avatar: "/images/avatars/onleave.jpg",
     },
     {
-      label: "Absent",
+      label: "Not Clocked In",
       value: absent,
-      icon: UserX,
+      subtext: "Awaiting morning punch",
+      badge: "Pending",
+      avatar: "/images/avatars/absent.jpg",
     },
   ];
 
   return (
-    <div className="col-span-1 md:col-span-2 lg:col-span-4">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+    <div className="col-span-1 md:col-span-2 lg:col-span-4 mb-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat) => {
-          const Icon = stat.icon;
           return (
             <div
               key={stat.label}
-              className="bg-white rounded-xl border border-brand-primary/15 p-3.5 sm:p-4 shadow-2xs transition-all duration-200 hover:border-brand-primary/40 hover:shadow-md group"
+              className="bg-white rounded-3xl border border-slate-200/70 p-5 shadow-2xs hover:shadow-md hover:border-brand-primary/30 transition-all duration-300 relative overflow-hidden group cursor-pointer h-36 flex flex-col justify-between"
             >
-              <div className="flex items-center justify-between mb-2">
-                <div className="w-8 h-8 rounded-lg bg-brand-primary/10 flex items-center justify-center text-brand-primary group-hover:bg-brand-primary group-hover:text-brand-btn-text transition-colors">
-                  <Icon className="w-4 h-4" />
+              {/* Rotated background processed illustration card aligned to the right */}
+              <div className="absolute top-2 -right-8 w-28 h-28 transform rotate-12 group-hover:rotate-6 group-hover:scale-105 transition-all duration-300 pointer-events-none opacity-95 group-hover:opacity-100 overflow-hidden rounded-3xl bg-brand-primary shadow-md shadow-brand-primary/50 flex items-center justify-center border border-emerald-950/20">
+                {/* Decorative subtle background pattern */}
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_10%_10%,rgba(255,255,255,0.08),transparent)] z-10" />
+                <GreenAvatarCard
+                  src={stat.avatar}
+                  alt={stat.label}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+
+              {/* Top badge */}
+              <div className="relative z-10 self-start">
+                <div className="flex items-center gap-1.5 text-[9px] font-extrabold px-2 py-0.5 rounded-full border border-brand-primary/15 bg-brand-primary-light text-brand-primary">
+                  {stat.isLive && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  )}
+                  <span>{stat.badge}</span>
                 </div>
               </div>
 
-              <div>
-                <p className="text-2xl font-extrabold text-brand-primary tracking-tight leading-none mb-1">
+              {/* Stat details on the left */}
+              <div className="relative z-10 pr-20">
+                <p className="text-2xl font-black text-slate-900 tracking-tight leading-none mb-1 group-hover:text-brand-primary transition-colors">
                   {stat.value}
                 </p>
-                <p className="text-[11px] font-bold text-brand-primary/70 uppercase tracking-wider">
+                <p className="text-[13px] font-extrabold text-slate-800 leading-tight">
                   {stat.label}
+                </p>
+                <p className="text-[10px] font-medium text-slate-400 mt-0.5 truncate">
+                  {stat.subtext}
                 </p>
               </div>
             </div>

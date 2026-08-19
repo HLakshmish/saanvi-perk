@@ -192,35 +192,52 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         }
         return (
           <>
-            {/* Welcome Greeting Banner */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+            {/* Executive Hero Greeting Banner */}
+            {/* Compact Header Greeting */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
               <div>
-                <h1 className="text-xl sm:text-2xl font-extrabold text-brand-primary tracking-tight">
-                  Dashboard
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="px-2.5 py-0.5 bg-brand-primary-light border border-brand-primary/10 rounded-full text-[10px] font-extrabold uppercase tracking-wider text-brand-primary">
+                    {role === "superadmin" ? "Super Admin Workspace" : "Admin Workspace"}
+                  </span>
+                  <span className="flex items-center gap-1 px-2.5 py-0.5 bg-emerald-50 border border-emerald-200/50 rounded-full text-[10px] font-bold text-emerald-600">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    Operational
+                  </span>
+                </div>
+                <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900">
+                  Welcome Back, {resolvedUserName || "Admin"} 👋
                 </h1>
+                <p className="text-xs text-slate-500 font-medium">
+                  Here is what is happening across {resolvedCompanyName || "Saanvi Perk"} today.
+                </p>
               </div>
 
-              <div className="flex items-center gap-3">
-                <div className="px-3.5 py-2 bg-white border border-brand-primary/20 rounded-xl shadow-2xs text-center">
-                  <p className="text-[10px] text-brand-primary/70 font-semibold uppercase tracking-wide">Today</p>
-                  <p className="text-sm font-bold text-brand-primary">
+              {/* Right side live clock & refresh button */}
+              <div className="flex items-center gap-3 shrink-0">
+                <div className="px-3.5 py-2 bg-white border border-slate-200 rounded-2xl text-right shadow-2xs">
+                  <p className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider leading-none mb-1">Today's Date</p>
+                  <p className="text-xs font-black text-slate-700">
                     {new Date().toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short", year: "numeric" })}
                   </p>
                 </div>
-                <button className="flex items-center gap-1.5 px-3.5 py-2.5 border border-brand-primary/20 text-brand-primary rounded-xl text-xs font-bold hover:bg-brand-primary hover:text-brand-btn-text transition-colors shadow-2xs bg-white cursor-pointer">
+                <button
+                  onClick={() => window.location.reload()}
+                  className="flex items-center gap-1.5 px-3.5 py-2.5 bg-brand-primary hover:bg-brand-primary/95 text-brand-btn-text font-extrabold text-xs rounded-2xl shadow-sm transition-all hover:scale-105 cursor-pointer"
+                >
                   <RefreshCw className="w-3.5 h-3.5" />
-                  <span>Refresh</span>
+                  <span className="hidden sm:inline">Refresh</span>
                 </button>
               </div>
             </div>
 
-            {/* ADMIN / SUPERADMIN DASHBOARD */}
-            <div className="space-y-4">
+            {/* ADMIN / SUPERADMIN DASHBOARD WIDGETS */}
+            <div className="space-y-5">
               {/* Row 1: Full-width stats cards */}
               <EmployeeStatsWidget />
 
               {/* Row 2: 3-column widget grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 <HolidaysWidget />
                 <QuickLinksWidget />
                 {(role === "superadmin" || role === "admin") && (
@@ -229,7 +246,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </div>
 
               {/* Row 3: 3-column widget grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 <HRPoliciesWidget />
                 <EmployeeProbationsWidget />
                 <CheersToPeersWidget />
