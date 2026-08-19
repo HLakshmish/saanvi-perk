@@ -25,7 +25,7 @@ import { ExpensesView } from "@/features/expenses";
 import { LeavesView } from "@/features/leaves";
 import { SettingsView } from "@/features/settings";
 import { AssetsView } from "@/features/assets";
-import { RefreshCw, HelpCircle } from "lucide-react";
+import { RefreshCw, HelpCircle, ArrowLeft } from "lucide-react";
 
 interface DashboardViewProps {
   initialRole?: UserRole;
@@ -245,6 +245,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* Top Navbar */}
       <Navbar
         currentRole={role}
+        activeTab={activeTab}
         onRoleChange={setRole}
         userName={resolvedUserName}
         companyName={resolvedCompanyName}

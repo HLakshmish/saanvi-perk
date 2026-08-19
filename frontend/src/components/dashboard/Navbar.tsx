@@ -5,10 +5,22 @@ import { useRouter } from "next/navigation";
 import { UserRole } from "@/types/dashboard";
 import { getCurrentUserId } from "@/features/expenses/api/expenses.api";
 import { getUserById } from "@/features/employees/api/employees.api";
-import { Menu, Bell, Headset, ChevronDown, User as UserIcon, LogOut, Lock, CircleUser, Activity } from "lucide-react";
+import {
+  Menu,
+  Bell,
+  Headset,
+  ChevronDown,
+  User as UserIcon,
+  LogOut,
+  Lock,
+  CircleUser,
+  Activity,
+  ArrowLeft,
+} from "lucide-react";
 
 interface NavbarProps {
   currentRole: UserRole;
+  activeTab?: string;
   onRoleChange?: (role: UserRole) => void;
   userName: string;
   companyName: string;
@@ -18,6 +30,8 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({
   currentRole,
+  activeTab = "dashboard",
+  onRoleChange,
   userName,
   companyName,
   onToggleSidebar,
@@ -43,30 +57,22 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           if (res.success && res.data && rolesArray.length > 0) {
             const roles: UserRole[] = rolesArray
-              .map((ur: any) => {
-                const code = (ur.roleCode || ur.roleName || ur.role?.roleCode || ur.role?.roleName || "").toUpperCase();
-                if (code.includes("SUPERADMIN") || code.includes("OWNER")) return "superadmin";
-                if (code.includes("ADMIN") || code.includes("SYSTEM ADMINISTRATOR")) return "admin";
-                if (code.includes("EMPLOYEE") || code.includes("STAFF") || code.includes("USER") || code.includes("TESTING")) return "employee";
-                return "employee" as UserRole;
-              })
-              .filter((r: UserRole | null): r is UserRole => r !== null);
-
+              .map((r: any) => (typeof r === "string" ? r.toLowerCase() : r.roleName?.toLowerCase()))
+              .filter((r: string): r is UserRole => ["superadmin", "admin", "employee"].includes(r));
             if (roles.length > 0) {
-              if (!roles.includes(currentRole)) {
-                roles.push(currentRole);
-              }
-              setAssignedRoles(roles);
-              setHasFetchedRoles(true);
+              setAssignedRoles(Array.from(new Set(roles)));
             }
           }
         }
       } catch (err) {
-        console.warn("Could not fetch assigned roles for header dropdown:", err);
+        console.error("Failed to fetch user roles:", err);
+      } finally {
+        setHasFetchedRoles(true);
       }
     };
+
     fetchUserRoles();
-  }, [currentRole, hasFetchedRoles]);
+  }, [hasFetchedRoles]);
 
   const handleLogout = () => {
     document.cookie = "auth_token=; path=/; max-age=0;";
@@ -83,25 +89,47 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   const handleRoleSwitch = (newRole: UserRole) => {
-    // Set cookie for Next.js middleware checking
+    setIsProfileOpen(false);
     document.cookie = `user_role=${newRole}; path=/; max-age=86400;`;
-    
-    // Navigate to role route
+    if (onRoleChange) {
+      onRoleChange(newRole);
+    }
     router.push(`/${newRole}/dashboard`);
   };
 
   return (
     <header className="h-14 bg-white/95 backdrop-blur-md border-b border-slate-200/80 flex items-center justify-between px-4 sticky top-0 z-40 shadow-2xs text-slate-800">
-      {/* Left section: Hamburger & Logo */}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={onToggleSidebar}
-          className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-600 focus:outline-none transition-colors cursor-pointer"
-          aria-label="Toggle Sidebar"
+      {/* Left section: Back Button / Hamburger & Logo */}
+      <div className="flex items-center gap-2 sm:gap-3">
+        {/* On Mobile: If viewing a sub-page, show Back button (hidden on desktop) */}
+        {activeTab !== "dashboard" && (
+          <button
+            onClick={() => onTabChange && onTabChange("dashboard")}
+            className="flex md:hidden items-center gap-1.5 p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-brand-primary font-bold text-xs transition-all cursor-pointer shadow-2xs"
+            aria-label="Back to Dashboard"
+            title="Back to Dashboard"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+        )}
+
+        {/* Hamburger Menu Toggle (Visible for non-employees, always on desktop) */}
+        {currentRole !== "employee" && (
+          <button
+            onClick={onToggleSidebar}
+            className={`p-1.5 rounded-lg hover:bg-slate-100 text-slate-600 focus:outline-none transition-colors cursor-pointer ${
+              activeTab !== "dashboard" ? "hidden md:block" : "block"
+            }`}
+            aria-label="Toggle Sidebar"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        )}
+
+        <div
+          onClick={() => onTabChange && onTabChange("dashboard")}
+          className="flex items-center gap-2.5 cursor-pointer"
         >
-          <Menu className="w-5 h-5" />
-        </button>
-        <div className="flex items-center gap-2.5">
           <div className="w-7 h-7 rounded-lg bg-brand-primary text-white flex items-center justify-center text-xs font-extrabold shadow-2xs">
             {companyName.charAt(0).toUpperCase()}
           </div>

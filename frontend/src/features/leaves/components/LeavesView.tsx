@@ -15,6 +15,7 @@ import { getEmployees } from "@/features/employees/api/employees.api";
 import { Employee } from "@/features/employees/types/employees.types";
 import { toast } from "sonner";
 import { Loader2, AlertCircle } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 function getUserRoleCookie(): string | null {
   if (typeof document === "undefined") return null;
@@ -349,9 +350,34 @@ export const LeavesView: React.FC = () => {
 
       {/* Render Active Tab Content */}
       {isLoading ? (
-        <div className="flex flex-col items-center justify-center py-20 text-slate-500 gap-2 bg-white rounded-2xl border border-slate-200/80 p-8 shadow-2xs animate-fade-in">
-          <Loader2 className="w-8 h-8 animate-spin text-brand-primary" />
-          <span className="text-xs font-bold">Loading leave data...</span>
+        <div className="space-y-4 animate-fade-in">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-white border border-slate-200/80 p-4 rounded-2xl shadow-2xs space-y-3">
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="w-7 h-7 rounded-lg" />
+                </div>
+                <Skeleton className="h-7 w-16" />
+                <Skeleton className="h-3 w-32" />
+              </div>
+            ))}
+          </div>
+          <div className="bg-white border border-slate-200/80 rounded-2xl sm:rounded-3xl p-5 shadow-xs space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <Skeleton className="h-5 w-32" />
+              <Skeleton className="h-8 w-28 rounded-xl" />
+            </div>
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex items-center justify-between py-2 border-b border-slate-100 last:border-none">
+                <div className="space-y-1.5">
+                  <Skeleton className="h-4 w-36" />
+                  <Skeleton className="h-3 w-24" />
+                </div>
+                <Skeleton className="h-6 w-20 rounded-full" />
+              </div>
+            ))}
+          </div>
         </div>
       ) : error ? (
         <div className="flex flex-col items-center justify-center py-12 px-6 bg-rose-50/50 border border-rose-200 rounded-2xl text-center gap-3 animate-fade-in">

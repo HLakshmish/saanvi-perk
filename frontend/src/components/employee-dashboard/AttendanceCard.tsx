@@ -1,7 +1,6 @@
 "use client";
 
-import React from "react";
-import { Play, Square, Loader2, CheckCircle2 } from "lucide-react";
+import { Loader2, CheckCircle2, Clock } from "lucide-react";
 
 interface AttendanceCardProps {
   isCheckedIn: boolean;
@@ -70,96 +69,105 @@ export const AttendanceCard: React.FC<AttendanceCardProps> = ({
   isLoadingLocation = false,
 }) => {
   const isCheckedOut = !isCheckedIn && !!checkOutTime;
-  const displayCheckInTime = formatCheckInDisplay(checkInTime);
-  const displayCheckOutTime = formatCheckInDisplay(checkOutTime);
 
   return (
-    <div className="relative overflow-hidden bg-brand-primary border border-white/20 p-4 sm:p-5 rounded-2xl sm:rounded-3xl text-brand-btn-text shadow-md flex flex-col justify-between">
-      {/* Decorative backdrop glow circles */}
-      <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-white/5 pointer-events-none" />
+    <div className="relative overflow-hidden bg-brand-primary border border-white/20 p-4 sm:p-5 rounded-2xl sm:rounded-3xl text-brand-btn-text shadow-lg flex flex-col justify-between">
+      {/* Decorative backdrop circular glow overlay */}
+      <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-emerald-400/10 pointer-events-none blur-xl" />
       <div className="absolute -bottom-8 -left-8 w-24 h-24 rounded-full bg-white/5 pointer-events-none" />
 
-      {/* Top Bar: Title */}
+      {/* Top Header */}
       <div className="flex items-center justify-between gap-2 z-10">
-        <div>
-          <h3 className="text-base sm:text-lg font-extrabold text-brand-btn-text tracking-tight">
-            Check In / Out
-          </h3>
+        <h3 className="text-sm sm:text-base font-extrabold text-white tracking-tight">
+          Check In / Out
+        </h3>
+      </div>
+
+      {/* Center Circular Timer Gauge */}
+      <div className="my-3 flex flex-col items-center justify-center z-10">
+        <div className="relative w-36 h-36 sm:w-40 sm:h-40 flex flex-col items-center justify-center rounded-full border-3 border-emerald-400/90 shadow-[0_0_30px_rgba(52,211,153,0.25)] bg-radial from-emerald-900/30 to-transparent">
+          {/* Subtle outer accent ring */}
+          <div className="absolute inset-1.5 rounded-full border border-emerald-400/30 pointer-events-none" />
+          
+          <Clock className={`w-4 h-4 text-emerald-300 mb-1.5 ${isCheckedIn ? "animate-pulse" : ""}`} />
+          <div className="text-2xl sm:text-3xl font-mono font-extrabold tracking-wider text-white select-none">
+            {formatTime(seconds)}
+          </div>
         </div>
       </div>
 
-      {/* Center Hero: Working Hours & Check-In / Check-Out Time */}
-      <div className="my-3.5 p-4 bg-white/10 rounded-2xl backdrop-blur-xs border border-white/10 z-10">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
-          {/* Left: Working Hours */}
-          <div className="text-center sm:text-left sm:border-r sm:border-white/10 sm:pr-4">
-            <div className="text-3xl sm:text-4xl font-mono font-extrabold tracking-widest text-brand-btn-text">
-              {formatTime(seconds)}
-            </div>
-          </div>
+      {/* Subtle Horizontal Divider */}
+      <div className="w-full h-px bg-white/15 my-2 z-10" />
 
-          {/* Right: Dynamic Check-In or Check-Out Time */}
-          <div className="flex flex-col items-center sm:items-start justify-center p-3 bg-black/10 sm:bg-white/5 rounded-xl border border-white/5">
-            <span className="text-[10px] text-brand-btn-text/80 font-bold uppercase tracking-wider mb-1">
-              {isCheckedOut ? "Check-Out Time" : "Check-In Time"}
-            </span>
-            <span className="text-xl sm:text-2xl font-mono font-extrabold text-white">
-              {isCheckedOut ? displayCheckOutTime : displayCheckInTime}
-            </span>
-          </div>
-        </div>
+      {/* CHECK-IN / CHECK-OUT TIME Section */}
+      <div className="flex flex-col items-center z-10 mb-1">
+        <span className="text-[9px] sm:text-[10px] font-semibold tracking-[0.15em] text-white/50 uppercase mb-0.5">
+          {isCheckedOut ? "Check-Out Time" : "Check-In Time"}
+        </span>
+        <span className="text-base sm:text-lg font-bold text-white tracking-wide">
+          {formatCheckInDisplay(isCheckedOut ? checkOutTime : checkInTime)}
+        </span>
       </div>
 
       {/* Bottom Action Buttons: Check In & Check Out */}
-      <div className="z-10 pt-1 grid grid-cols-2 gap-2.5 sm:gap-3">
+      <div className="z-10 pt-1.5 grid grid-cols-2 gap-2.5 sm:gap-3">
         {/* Check In Button */}
-        <button
-          onClick={onCheckIn}
-          disabled={isCheckedIn || isCheckedOut || isLoadingLocation}
-          className={`py-3 px-3 rounded-xl font-extrabold text-xs sm:text-sm transition-all flex items-center justify-center gap-1.5 shadow-md active:scale-[0.98] ${isCheckedIn || isCheckedOut
-            ? "bg-white/10 text-white/50 border border-white/10 cursor-not-allowed"
-            : "bg-brand-accent text-white hover:bg-brand-accent-hover border border-brand-accent shadow-black/20 cursor-pointer"
+        {isCheckedIn ? (
+          <button
+            disabled={true}
+            className="py-3 px-3 rounded-2xl font-bold text-xs sm:text-sm border border-emerald-400 bg-transparent text-emerald-300 flex items-center justify-center cursor-default"
+          >
+            <span>Checked In</span>
+          </button>
+        ) : (
+          <button
+            onClick={onCheckIn}
+            disabled={isCheckedOut || isLoadingLocation}
+            className={`py-3 px-3 rounded-2xl font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-1.5 active:scale-[0.98] ${
+              isCheckedOut
+                ? "bg-transparent text-white/30 border border-white/15 cursor-not-allowed"
+                : "bg-transparent text-emerald-300 hover:bg-emerald-400/10 border border-emerald-400 cursor-pointer"
             }`}
-        >
-          {isLoadingLocation && !isCheckedIn && !isCheckedOut ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Checking In...</span>
-            </>
-          ) : isCheckedIn ? (
-            <>
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-              <span>Checked In</span>
-            </>
-          ) : (
-            <>
-              <Play className="w-4 h-4 fill-current" />
+          >
+            {isLoadingLocation && !isCheckedOut ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
+                <span>Checking In...</span>
+              </>
+            ) : (
               <span>Check In</span>
-            </>
-          )}
-        </button>
+            )}
+          </button>
+        )}
 
         {/* Check Out Button */}
-        <button
-          onClick={onCheckOut}
-          disabled={!isCheckedIn || isLoadingLocation}
-          className={`py-3 px-3 rounded-xl font-extrabold text-xs sm:text-sm transition-all flex items-center justify-center gap-1.5 shadow-md active:scale-[0.98] ${!isCheckedIn
-            ? "bg-white/10 text-white/40 border border-white/10 cursor-not-allowed"
-            : "bg-rose-600 text-white hover:bg-rose-700 border border-rose-500 shadow-rose-900/30 cursor-pointer"
+        {isCheckedOut ? (
+          <button
+            disabled={true}
+            className="py-3 px-3 rounded-2xl font-bold text-xs sm:text-sm border border-emerald-400 bg-transparent text-emerald-300 flex items-center justify-center cursor-default"
+          >
+            <span>Checked Out</span>
+          </button>
+        ) : (
+          <button
+            onClick={onCheckOut}
+            disabled={!isCheckedIn || isLoadingLocation}
+            className={`py-3 px-3 rounded-2xl font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-1.5 active:scale-[0.98] ${
+              !isCheckedIn
+                ? "bg-transparent text-white/30 border border-white/15 cursor-not-allowed"
+                : "bg-transparent text-emerald-300 hover:bg-emerald-400/10 border border-emerald-400 cursor-pointer"
             }`}
-        >
-          {isLoadingLocation && isCheckedIn ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Checking Out...</span>
-            </>
-          ) : (
-            <>
-              <Square className="w-4 h-4 fill-current" />
+          >
+            {isLoadingLocation && isCheckedIn ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
+                <span>Checking Out...</span>
+              </>
+            ) : (
               <span>Check Out</span>
-            </>
-          )}
-        </button>
+            )}
+          </button>
+        )}
       </div>
 
       {/* Confirmation Message when checked out for today */}
@@ -174,3 +182,4 @@ export const AttendanceCard: React.FC<AttendanceCardProps> = ({
     </div>
   );
 };
+

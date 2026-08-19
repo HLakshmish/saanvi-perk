@@ -9,6 +9,7 @@ import { OrganizationChart } from "./organization-chart";
 import { Employee } from "../types/employees.types";
 import { getEmployees, deleteUser } from "../api/employees.api";
 import { LayoutGrid, List, Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { EmployeeEditModal } from "./employee-edit-modal";
 
 interface EmployeeListProps {
@@ -114,9 +115,26 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
 
   if (isLoading) {
     return (
-      <div className="w-full h-64 flex flex-col items-center justify-center gap-3">
-        <Loader2 className="w-8 h-8 text-brand-primary animate-spin" />
-        <span className="text-slate-500 text-xs font-semibold">Loading employee directory...</span>
+      <div className="w-full bg-white border border-slate-200/80 rounded-3xl p-5 shadow-xs space-y-4 animate-fade-in">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+          <Skeleton className="h-8 w-48 rounded-xl" />
+          <Skeleton className="h-8 w-32 rounded-xl" />
+        </div>
+        {[1, 2, 3, 4, 5].map((i) => (
+          <div key={i} className="flex items-center justify-between gap-4 py-2 border-b border-slate-100 last:border-none">
+            <div className="flex items-center gap-3 w-56">
+              <Skeleton className="w-9 h-9 rounded-xl shrink-0" />
+              <div className="space-y-1.5 w-full">
+                <Skeleton className="h-3.5 w-28" />
+                <Skeleton className="h-2.5 w-20" />
+              </div>
+            </div>
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-4 w-28" />
+            <Skeleton className="h-6 w-20 rounded-full" />
+            <Skeleton className="h-8 w-16 rounded-xl" />
+          </div>
+        ))}
       </div>
     );
   }
