@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
-import { Loader2 } from "lucide-react";
+import { Loader2, WifiOff, RefreshCw } from "lucide-react";
 
 interface SplashScreenProps {
   userName?: string;
@@ -15,15 +15,38 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
   onFinished,
   durationMs = 2000,
 }) => {
+  const [isSlowNetwork, setIsSlowNetwork] = useState(false);
+  const [showRefresh, setShowRefresh] = useState(false);
+
   useEffect(() => {
-    const timer = setTimeout(() => {
+    // Detect slow page load / network delay (> 3.5s)
+    const slowTimer = setTimeout(() => {
+      setIsSlowNetwork(true);
+    }, 3500);
+
+    // Show refresh option if taking very long (> 9s)
+    const refreshTimer = setTimeout(() => {
+      setShowRefresh(true);
+    }, 9000);
+
+    const finishTimer = setTimeout(() => {
       if (onFinished) {
         onFinished();
       }
     }, durationMs);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(slowTimer);
+      clearTimeout(refreshTimer);
+      clearTimeout(finishTimer);
+    };
   }, [durationMs, onFinished]);
+
+  const handleRefresh = () => {
+    if (typeof window !== "undefined") {
+      window.location.reload();
+    }
+  };
 
   return (
     <div
@@ -62,6 +85,25 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
         <div className="flex items-center justify-center">
           <Loader2 className="w-6 h-6 sm:w-7 sm:h-7 text-emerald-400 animate-spin drop-shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
         </div>
+
+        {/* Unstable Network Warning Message */}
+        {isSlowNetwork && (
+          <div className="mt-5 flex flex-col items-center gap-2 animate-fade-in">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/15 text-emerald-200 text-xs font-medium backdrop-blur-sm shadow-xs">
+              <span>Please Wait...</span>
+            </div>
+
+            {showRefresh && (
+              <button
+                onClick={handleRefresh}
+                className="mt-1 inline-flex items-center gap-1.5 text-xs text-emerald-300 hover:text-white underline underline-offset-4 font-semibold transition-colors cursor-pointer"
+              >
+                <RefreshCw className="w-3 h-3" />
+                <span>Tap to refresh</span>
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

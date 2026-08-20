@@ -113,18 +113,14 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
         )}
 
-        {/* Hamburger Menu Toggle (Visible for non-employees, always on desktop) */}
-        {currentRole !== "employee" && (
-          <button
-            onClick={onToggleSidebar}
-            className={`p-1.5 rounded-lg hover:bg-slate-100 text-slate-600 focus:outline-none transition-colors cursor-pointer ${
-              activeTab !== "dashboard" ? "hidden md:block" : "block"
-            }`}
-            aria-label="Toggle Sidebar"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
-        )}
+        {/* Hamburger Menu Toggle (Hidden on mobile, visible on desktop) */}
+        <button
+          onClick={onToggleSidebar}
+          className="hidden md:block p-1.5 rounded-lg hover:bg-slate-100 text-slate-600 focus:outline-none transition-colors cursor-pointer"
+          aria-label="Toggle Sidebar"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
 
         <div
           onClick={() => onTabChange && onTabChange("dashboard")}
