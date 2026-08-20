@@ -530,7 +530,7 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
     const { scrollLeft, clientWidth } = carouselRef.current;
     if (clientWidth > 0) {
       const newIndex = Math.round(scrollLeft / clientWidth);
-      if (newIndex !== activeSlide && newIndex >= 0 && newIndex <= 2) {
+      if (newIndex !== activeSlide && newIndex >= 0 && newIndex <= 1) {
         setActiveSlide(newIndex);
       }
     }
@@ -552,54 +552,14 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
 
   return (
     <div className="space-y-4 sm:space-y-6 animate-fade-in text-slate-800 pb-8">
-      {/* 1. Swipeable Hero Carousel (Greeting -> Leave Summary -> Upcoming Holidays) */}
+      {/* 1. Swipeable Hero Carousel (Leave Summary -> Upcoming Holidays) */}
       <div className="relative">
         <div
           ref={carouselRef}
           onScroll={handleCarouselScroll}
           className="flex items-stretch overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] -mx-1 px-1"
         >
-          {/* Slide 0: Executive Greeting & Workspace Status */}
-          <div className="w-full shrink-0 snap-center snap-always pr-0 flex">
-            <div className="w-full flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-brand-primary via-[#01473f] to-brand-primary text-white p-5 sm:p-6 rounded-3xl shadow-lg border border-brand-primary/30 relative overflow-hidden">
-              <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-emerald-400/10 blur-xl pointer-events-none" />
-
-              <div className="space-y-1 relative z-10">
-                <div className="flex items-center gap-2">
-                  <span className="px-2.5 py-0.5 bg-white/10 backdrop-blur-md border border-white/20 rounded-full text-[10px] font-extrabold uppercase tracking-wider text-brand-accent">
-                    Employee Portal
-                  </span>
-                  <span className="flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-500/20 border border-emerald-400/30 rounded-full text-[10px] font-bold text-emerald-200">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    Shift Active
-                  </span>
-                </div>
-
-                <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2">
-                  <span>Welcome back, {employeeFullName}!</span>
-                  <span className="select-none">👋</span>
-                </h1>
-                <p className="text-xs text-emerald-100/80 font-medium">
-                  {companyName ? `Employee at ${companyName}` : "Saanvi Perk Portal"}
-                </p>
-              </div>
-
-              {/* Date Pill */}
-              <div className="px-4 py-2.5 bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl text-right shrink-0 relative z-10 self-start sm:self-auto">
-                <p className="text-[9px] text-emerald-200/70 font-extrabold uppercase tracking-wider">Today's Date</p>
-                <p className="text-xs sm:text-sm font-black text-white whitespace-nowrap">
-                  {new Date().toLocaleDateString("en-IN", {
-                    weekday: "short",
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                  })}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Slide 1: Leave Balances Summary */}
+          {/* Slide 0: Leave Balances Summary */}
           <div className="w-full shrink-0 snap-center snap-always pr-0 flex">
             <div className="w-full bg-white border border-slate-200/80 p-3 sm:p-4 rounded-2xl sm:rounded-3xl shadow-xs flex flex-col justify-between">
               <div className="flex items-center justify-between mb-1.5">
@@ -647,7 +607,7 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
             </div>
           </div>
 
-          {/* Slide 2: Upcoming Holidays */}
+          {/* Slide 1: Upcoming Holidays */}
           <div className="w-full shrink-0 snap-center snap-always pr-0 flex">
             <div className="w-full bg-white border border-slate-200/80 p-3 sm:p-4 rounded-2xl sm:rounded-3xl shadow-xs flex flex-col justify-between">
               <div className="flex items-center justify-between mb-1.5">
@@ -700,7 +660,7 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
 
         {/* Carousel Navigation Dots */}
         <div className="flex items-center justify-center gap-2 pt-1.5 pb-0">
-          {[0, 1, 2].map((idx) => (
+          {[0, 1].map((idx) => (
             <button
               key={idx}
               onClick={() => scrollToSlide(idx)}
