@@ -23,6 +23,7 @@ app.get("/", async (request, reply) => {
 });
 
 app.register(require("./auth/auth.route"), { prefix: "/api/auth" });
+app.register(require("./superAdmin/superAdmin.route"), { prefix: "/api/super-admin" });
 app.register(require("./Organisation/company/company.route"), { prefix: "/api/companies" });
 app.register(require("./Organisation/role/role.route"), { prefix: "/api/roles" });
 app.register(require("./Organisation/department/department.route"), { prefix: "/api/departments" });

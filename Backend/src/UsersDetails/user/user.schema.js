@@ -21,6 +21,7 @@ const userResponseProperties = {
     profilePic: { type: 'string', nullable: true },
     createdAt: { type: 'string', format: 'date-time' },
     updatedAt: { type: 'string', format: 'date-time' },
+    dateOfBirth: { type: 'string', format: 'date-time', nullable: true },
     roles: {
         type: 'array',
         nullable: true,
@@ -54,9 +55,10 @@ const createUserSchema = {
     summary: 'Create a user',
     body: {
         type: 'object',
-        required: ['employeeCode', 'roleIds', 'firstName', 'lastName', 'officialEmail', 'password', 'employmentType', 'joiningDate'],
+        required: ['employeeCode', 'roleIds', 'firstName', 'lastName', 'officialEmail', 'password', 'employmentType', 'joiningDate', 'dateOfBirth'],
         properties: {
             employeeCode: { type: 'string' },
+            dateOfBirth: { type: 'string', format: 'date' },
             roleIds: { type: 'array', items: { type: 'number' } },
             departmentId: { type: 'number', nullable: true },
             designationId: { type: 'number', nullable: true },
@@ -234,10 +236,69 @@ const deleteUserSchema = {
     }
 };
 
+const getEventsSchema = {
+    description: 'Get upcoming birthdays and anniversaries',
+    tags: ['User'],
+    summary: 'List birthdays and anniversaries based on date',
+    querystring: {
+        type: 'object',
+        properties: {
+            companyId: { type: 'number', description: 'Required for OWNER' },
+            date: { type: 'string', description: 'Target date (defaults to today)', format: 'date-time' }
+        }
+    },
+    response: {
+        200: {
+            description: 'Successful response',
+            type: 'object',
+            properties: {
+                success: { type: 'boolean' },
+                data: {
+                    type: 'object',
+                    properties: {
+                        birthdays: {
+                            type: 'array',
+                            items: {
+                                type: 'object',
+                                properties: {
+                                    userId: { type: 'number' },
+                                    firstName: { type: 'string' },
+                                    lastName: { type: 'string' },
+                                    employeeCode: { type: 'string' },
+                                    designation: { type: 'string', nullable: true },
+                                    profilePic: { type: 'string', nullable: true },
+                                    dateOfBirth: { type: 'string', format: 'date-time' }
+                                }
+                            }
+                        },
+                        anniversaries: {
+                            type: 'array',
+                            items: {
+                                type: 'object',
+                                properties: {
+                                    userId: { type: 'number' },
+                                    firstName: { type: 'string' },
+                                    lastName: { type: 'string' },
+                                    employeeCode: { type: 'string' },
+                                    designation: { type: 'string', nullable: true },
+                                    profilePic: { type: 'string', nullable: true },
+                                    joiningDate: { type: 'string', format: 'date-time' },
+                                    years: { type: 'number' }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+};
+
 module.exports = {
     createUserSchema,
     getUserByIdSchema,
     getAllUsersSchema,
     updateUserSchema,
-    deleteUserSchema
+    deleteUserSchema,
+    getEventsSchema
 };
