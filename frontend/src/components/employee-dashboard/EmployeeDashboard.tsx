@@ -278,26 +278,36 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
   const fetchUserLocation = (): Promise<{ latitude: number; longitude: number } | null> => {
     return new Promise((resolve) => {
       if (typeof window === "undefined" || !navigator.geolocation) {
-        toast.error("Geolocation is not supported by your browser");
+        toast.error("GPS location is strictly required to punch attendance, but Geolocation is not supported by your browser.");
         resolve(null);
         return;
       }
 
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          resolve({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          });
+          if (
+            position &&
+            position.coords &&
+            typeof position.coords.latitude === "number" &&
+            typeof position.coords.longitude === "number"
+          ) {
+            resolve({
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+            });
+          } else {
+            toast.error("Could not obtain valid GPS coordinates. Please ensure your device GPS is turned on.");
+            resolve(null);
+          }
         },
         (error) => {
-          let msg = "Could not get your location.";
+          let msg = "Could not obtain your GPS location.";
           if (error.code === error.PERMISSION_DENIED) {
-            msg = "Location permission denied. Please allow location access in your browser to record punch coordinates.";
+            msg = "Location permission denied. GPS location is strictly required to check in/out. Please enable location access in your browser settings.";
           } else if (error.code === error.POSITION_UNAVAILABLE) {
-            msg = "Location information is unavailable.";
+            msg = "GPS location is currently unavailable. Please enable device location / GPS.";
           } else if (error.code === error.TIMEOUT) {
-            msg = "Location request timed out.";
+            msg = "GPS location request timed out. Please check your GPS signal and try again.";
           }
           toast.error(msg);
           resolve(null);
@@ -322,6 +332,12 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
     const coords = await fetchUserLocation();
     setIsLoadingLocation(false);
 
+    // Strictly enforce GPS requirement: Do not proceed without coordinates
+    if (!coords || typeof coords.latitude !== "number" || typeof coords.longitude !== "number") {
+      toast.error("Check-in blocked: GPS location is mandatory to punch in.");
+      return;
+    }
+
     const now = new Date();
     const timeStr = now.toLocaleTimeString("en-IN", {
       hour: "2-digit",
@@ -333,7 +349,7 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
     setCheckInTime(timeStr);
     setCheckOutTime(null);
     setSeconds(0);
-    if (coords) setLastCoords(coords);
+    setLastCoords(coords);
 
     if (typeof window !== "undefined" && userId) {
       localStorage.setItem(getUserKey(CHECKIN_ACTIVE_KEY, userId), "true");
@@ -342,9 +358,7 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
       localStorage.removeItem(getUserKey(CHECKOUT_DISPLAY_KEY, userId));
       localStorage.removeItem(getUserKey(CHECKOUT_TIMESTAMP_KEY, userId));
       localStorage.removeItem(getUserKey(WORKED_SECONDS_KEY, userId));
-      if (coords) {
-        localStorage.setItem(getUserKey(CHECKIN_COORDS_KEY, userId), JSON.stringify(coords));
-      }
+      localStorage.setItem(getUserKey(CHECKIN_COORDS_KEY, userId), JSON.stringify(coords));
     }
 
     // Persist to Backend Database for Admin records
@@ -358,8 +372,8 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
         userId,
         attendanceDate: todayDate,
         checkInTime: now.toISOString(),
-        checkInLatitude: coords ? coords.latitude : undefined,
-        checkInLongitude: coords ? coords.longitude : undefined,
+        checkInLatitude: coords.latitude,
+        checkInLongitude: coords.longitude,
         attendanceStatus: "PRESENT",
       })
         .then((res) => {
@@ -387,6 +401,12 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
     setIsLoadingLocation(true);
     const coords = await fetchUserLocation();
     setIsLoadingLocation(false);
+
+    // Strictly enforce GPS requirement: Do not proceed without coordinates
+    if (!coords || typeof coords.latitude !== "number" || typeof coords.longitude !== "number") {
+      toast.error("Check-out blocked: GPS location is mandatory to punch out.");
+      return;
+    }
 
     const now = new Date();
     const timeStr = now.toLocaleTimeString("en-IN", {
@@ -417,8 +437,8 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
     if (savedAttendanceId) {
       updateAttendanceCheckOut(Number(savedAttendanceId), {
         checkOutTime: now.toISOString(),
-        checkOutLatitude: coords ? coords.latitude : undefined,
-        checkOutLongitude: coords ? coords.longitude : undefined,
+        checkOutLatitude: coords.latitude,
+        checkOutLongitude: coords.longitude,
         workingMinutes: Math.round(seconds / 60),
       }).catch((err) => {
         console.warn("Could not sync check-out with backend attendance table:", err);
