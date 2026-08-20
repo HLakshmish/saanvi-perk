@@ -1,5 +1,14 @@
-import { SplashScreen } from "@/components/ui/splash-screen";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Loading() {
-  return <SplashScreen />;
+  return (
+    <div className="min-h-screen bg-[#f4fbf7] p-4 sm:p-6 max-w-7xl mx-auto space-y-4">
+      <Skeleton className="h-10 w-48" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <Skeleton key={i} className="h-40 rounded-2xl" />
+        ))}
+      </div>
+    </div>
+  );
 }

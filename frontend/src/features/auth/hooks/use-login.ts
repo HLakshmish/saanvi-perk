@@ -80,7 +80,7 @@ export function useLogin() {
         setShowSplash(true);
         setSuccessMessage("Login successful! Redirecting...");
 
-        // Preload target route and navigate immediately while splash screen covers loading
+        // Preload and navigate immediately so the dashboard data fetch completes under the splash screen
         router.prefetch(destination);
         router.push(destination);
       } else {
