@@ -46,6 +46,10 @@ class UserService {
         }
     }
 
+    async getEvents(companyId, targetDateString) {
+        return await userRepository.getEvents(companyId, targetDateString);
+    }
+
     async deleteUser(userId, companyId) {
         return await userRepository.deleteUser(userId, companyId);
     }

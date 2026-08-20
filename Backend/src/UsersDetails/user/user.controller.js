@@ -26,7 +26,7 @@ class UserController {
 
             const user = await userService.createUser(userData);
             
-            const { password, userRoles, ...userWithoutPassword } = user;
+            const { password, userRoles, personalInformation, ...userWithoutPassword } = user;
             if (userRoles && userRoles.length > 0) {
                 userWithoutPassword.roles = userRoles.map(ur => ({
                     roleId: ur.role.roleId,
@@ -34,6 +34,9 @@ class UserController {
                 }));
             } else {
                 userWithoutPassword.roles = [];
+            }
+            if (personalInformation && personalInformation.dateOfBirth) {
+                userWithoutPassword.dateOfBirth = personalInformation.dateOfBirth;
             }
             
             reply.code(201).send({ success: true, message: "User created successfully", data: userWithoutPassword });
@@ -135,6 +138,23 @@ class UserController {
             reply.code(200).send({ success: true, message: "User updated successfully", data: userWithoutPassword });
         } catch (error) {
             reply.code(400).send({ success: false, message: error.message });
+        }
+    }
+
+    async getEvents(request, reply) {
+        try {
+            let companyId = request.user.companyId;
+            if (request.user.role === 'OWNER') {
+                companyId = request.query.companyId ? Number(request.query.companyId) : undefined;
+            }
+
+            const { date } = request.query;
+
+            const events = await userService.getEvents(companyId, date);
+
+            reply.code(200).send({ success: true, data: events });
+        } catch (error) {
+            reply.code(500).send({ success: false, message: error.message });
         }
     }
 

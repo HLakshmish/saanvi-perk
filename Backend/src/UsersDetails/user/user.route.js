@@ -5,7 +5,8 @@ const {
     getUserByIdSchema, 
     getAllUsersSchema, 
     updateUserSchema, 
-    deleteUserSchema 
+    deleteUserSchema,
+    getEventsSchema
 } = require("./user.schema");
 
 async function userRoutes(fastify, options) {
@@ -15,6 +16,7 @@ async function userRoutes(fastify, options) {
     });
 
     fastify.post("/", opts(createUserSchema, 'MANAGE_USERS'), userController.createUser.bind(userController));
+    fastify.get("/events", opts(getEventsSchema, 'VIEW_USERS'), userController.getEvents.bind(userController));
     fastify.get("/:id", opts(getUserByIdSchema, 'VIEW_USERS'), userController.getUserById.bind(userController));
     fastify.get("/", opts(getAllUsersSchema, 'VIEW_USERS'), userController.getAllUsers.bind(userController));
     fastify.put("/:id", opts(updateUserSchema, 'MANAGE_USERS'), userController.updateUser.bind(userController));
