@@ -25,6 +25,7 @@ import { ExpensesView } from "@/features/expenses";
 import { LeavesView } from "@/features/leaves";
 import { SettingsView } from "@/features/settings";
 import { AssetsView } from "@/features/assets";
+import { SplashScreen } from "@/components/ui/splash-screen";
 import { RefreshCw, HelpCircle, ArrowLeft } from "lucide-react";
 
 interface DashboardViewProps {
@@ -38,6 +39,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   userName = "",
   companyName = "",
 }) => {
+  const [isInitializing, setIsInitializing] = useState<boolean>(true);
   const [role, setRole] = useState<UserRole>(initialRole);
   const [activeTab, setActiveTab] = useState<string>("dashboard");
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
@@ -119,6 +121,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         }
       } catch (err) {
         console.warn("Could not load dynamic dashboard metadata:", err);
+      } finally {
+        setIsInitializing(false);
       }
     };
     loadCompanyMetadata();
@@ -246,8 +250,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     }
   };
 
+  if (isInitializing) {
+    return <SplashScreen />;
+  }
+
   return (
-    <div className="min-h-screen bg-[#f4fbf7] flex flex-col font-sans">
+    <div className="min-h-screen bg-[#f4fbf7] flex flex-col font-sans animate-fade-in">
       {/* Top Navbar */}
       <Navbar
         currentRole={role}
