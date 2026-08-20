@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X, Loader2 } from "lucide-react";
 
 interface RejectLeaveModalProps {
@@ -16,6 +17,17 @@ export const RejectLeaveModal: React.FC<RejectLeaveModalProps> = ({
   const [remarks, setRemarks] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -44,7 +56,7 @@ export const RejectLeaveModal: React.FC<RejectLeaveModalProps> = ({
     }
   };
 
-  return (
+  return typeof document !== "undefined" ? createPortal(
     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fade-in">
       <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/80 w-full max-w-[480px] overflow-hidden flex flex-col relative animate-scale-in">
         {/* Close Button */}
@@ -126,6 +138,7 @@ export const RejectLeaveModal: React.FC<RejectLeaveModalProps> = ({
           </div>
         </form>
       </div>
-    </div>
-  );
+    </div>,
+    document.body
+  ) : null;
 };

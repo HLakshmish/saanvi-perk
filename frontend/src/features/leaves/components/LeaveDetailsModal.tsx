@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X, Loader2, Calendar, User, CheckCircle2, XCircle, Clock, Trash2 } from "lucide-react";
 import { fetchLeaveRequestById, deleteLeaveRequest } from "../api/leaves.api";
 import { toast } from "sonner";
@@ -56,6 +57,17 @@ export const LeaveDetailsModal: React.FC<LeaveDetailsModalProps> = ({
       setDetails(null);
     }
   }, [isOpen, leaveRequestId]);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -159,7 +171,7 @@ export const LeaveDetailsModal: React.FC<LeaveDetailsModalProps> = ({
     }
   };
 
-  return (
+  return typeof document !== "undefined" ? createPortal(
     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fade-in">
       <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/80 w-full max-w-[520px] overflow-hidden flex flex-col relative animate-scale-in">
         {/* Close Button */}
@@ -330,6 +342,7 @@ export const LeaveDetailsModal: React.FC<LeaveDetailsModalProps> = ({
           </button>
         </div>
       </div>
-    </div>
-  );
+    </div>,
+    document.body
+  ) : null;
 };
