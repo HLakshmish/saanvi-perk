@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Calendar as CalendarIcon, Loader2, Search, X } from "lucide-react";
 import { ApplyLeaveInput } from "../types/leaves.types";
+import { getCurrentUserId } from "../api/leaves.api";
 
 interface ApplyLeaveModalProps {
   isOpen: boolean;
@@ -8,6 +10,12 @@ interface ApplyLeaveModalProps {
   onSubmit: (data: ApplyLeaveInput) => Promise<boolean>;
   leaveTypes?: any[];
   employees?: any[];
+  getUserBalances?: (userId: number) => {
+    sick: number;
+    comp: number;
+    earned: number;
+    lop: number;
+  };
 }
 
 interface LeaveType {
@@ -28,6 +36,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
   onSubmit,
   leaveTypes = [],
   employees = [],
+  getUserBalances,
 }) => {
   const todayStr = new Date().toISOString().slice(0, 10);
   const userRole = getUserRoleCookie();
@@ -51,6 +60,72 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
     name: emp.name,
   }));
 
+  const getRequestedDaysCount = (): number => {
+    if (isHalfDay) return 0.5;
+    const start = new Date(fromDate);
+    const end = new Date(toDate);
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) return 0;
+
+    let workingDays = 0;
+    let current = new Date(start);
+    while (current <= end) {
+      const dayOfWeek = current.getDay();
+      if (dayOfWeek !== 0 && dayOfWeek !== 6) { // 0 is Sunday, 6 is Saturday
+        workingDays++;
+      }
+      current.setDate(current.getDate() + 1);
+    }
+    return workingDays === 0 ? 1 : workingDays;
+  };
+
+  const getSelectedLeaveBalance = () => {
+    const selectedType = leaveTypes.find((t) => Number(t.leaveTypeId) === Number(leaveTypeId));
+    if (!selectedType) return { balance: 0, categoryName: "" };
+
+    const targetUserId = isAdminOrSuperAdmin && Number(selectedEmployeeId) > 0
+      ? Number(selectedEmployeeId)
+      : (getCurrentUserId() || 0);
+
+    const balances = getUserBalances ? getUserBalances(targetUserId) : { sick: 12, comp: 0, earned: 0, lop: 0 };
+    const name = selectedType.leaveName.toLowerCase();
+    const code = selectedType.leaveCode.toLowerCase();
+
+    if (name.includes("sick") || name.includes("casual") || code.includes("sl") || code.includes("cl")) {
+      return { balance: balances.sick, categoryName: "Sick Leave/Casual Leave" };
+    } else if (name.includes("comp") || code.includes("comp")) {
+      return { balance: balances.comp, categoryName: "Comp-Off" };
+    } else if (name.includes("earned") || code.includes("el")) {
+      return { balance: balances.earned, categoryName: "Earned Leave" };
+    } else if (name.includes("loss") || name.includes("lop") || code.includes("lop")) {
+      return { balance: balances.lop, categoryName: "Loss of Pay" };
+    }
+
+    return { balance: 0, categoryName: "Leave" };
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setLeaveTypeId(0);
+      setSelectedEmployeeId(0);
+      setIsHalfDay(false);
+      setFromDate(todayStr);
+      setToDate(todayStr);
+      setReason("");
+      setErrorMsg(null);
+    }
+  }, [isOpen, todayStr]);
+
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -68,6 +143,16 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
 
     if (new Date(fromDate) > new Date(toDate)) {
       setErrorMsg("From date cannot be after to date.");
+      return;
+    }
+
+    const requestedDays = getRequestedDaysCount();
+    const { balance, categoryName } = getSelectedLeaveBalance();
+
+    if (requestedDays > balance) {
+      setErrorMsg(
+        `Insufficient balance. The request is for ${requestedDays} ${requestedDays === 1 ? "day" : "days"} but there are only ${balance} ${balance === 1 ? "day" : "days"} remaining for ${categoryName}.`
+      );
       return;
     }
 
@@ -99,7 +184,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
     }
   };
 
-  return (
+  return typeof document !== "undefined" ? createPortal(
     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fade-in">
       <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/80 w-full max-w-[640px] overflow-hidden flex flex-col relative animate-scale-in">
         {/* Close Button */}
@@ -174,6 +259,20 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
                       </option>
                     ))}
                   </select>
+                  {leaveTypeId > 0 && (
+                    <div className="mt-1.5 flex items-center justify-between bg-slate-50 border border-slate-200/60 p-2.5 rounded-xl">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+                        Available Balance:
+                      </span>
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-md border ${
+                        getSelectedLeaveBalance().balance > 0
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                          : "bg-rose-50 text-rose-700 border-rose-200"
+                      }`}>
+                        {getSelectedLeaveBalance().balance} {getSelectedLeaveBalance().balance === 1 ? "Day" : "Days"}
+                      </span>
+                    </div>
+                  )}
               </div>
 
               {/* Half Day Checkbox */}
@@ -275,6 +374,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
           </div>
         </form>
       </div>
-    </div>
-  );
+    </div>,
+    document.body
+  ) : null;
 };

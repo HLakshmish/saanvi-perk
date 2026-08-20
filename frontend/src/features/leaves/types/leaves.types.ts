@@ -1,4 +1,4 @@
-export type LeaveTab = "summary" | "request" | "holiday";
+export type LeaveTab = "summary" | "request" | "holiday" | "calendar";
 
 export interface LeaveBalance {
   accumulated: number;
@@ -19,6 +19,8 @@ export interface LeaveRequest {
   days: number;
   remarks: string;
   status: "Approved" | "Pending" | "Rejected" | "Cancelled";
+  employeeName?: string;
+  rawLeaveType?: string;
 }
 
 export interface Holiday {

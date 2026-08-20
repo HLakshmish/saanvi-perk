@@ -5,7 +5,7 @@ import { LeaveTab, LeaveRequest, ApplyLeaveInput, CompOffInput } from "../types/
 import { LeavesSummaryTab } from "./LeavesSummaryTab";
 import { LeavesRequestTab } from "./LeavesRequestTab";
 import { LeavesHolidayTab } from "./LeavesHolidayTab";
-import { RequestCompOffModal } from "./RequestCompOffModal";
+import { LeavesCalendarTab } from "./LeavesCalendarTab";
 import { ApplyLeaveModal } from "./ApplyLeaveModal";
 import { RejectLeaveModal } from "./RejectLeaveModal";
 import { LeaveDetailsModal } from "./LeaveDetailsModal";
@@ -25,7 +25,6 @@ function getUserRoleCookie(): string | null {
 
 export const LeavesView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<LeaveTab>("summary");
-  const [isCompOffModalOpen, setIsCompOffModalOpen] = useState(false);
   const [isApplyLeaveModalOpen, setIsApplyLeaveModalOpen] = useState(false);
   
   const [requests, setRequests] = useState<LeaveRequest[]>([]);
@@ -44,6 +43,12 @@ export const LeavesView: React.FC = () => {
   const [selectedLeaveId, setSelectedLeaveId] = useState<string | number | null>(null);
   const [rejectLeaveId, setRejectLeaveId] = useState<string | number | null>(null);
 
+  // Raw database tables for dynamic balance calculations (e.g. for target employee selection by Admin)
+  const [rawRequests, setRawRequests] = useState<any[]>([]);
+  const [allAllocations, setAllAllocations] = useState<any[]>([]);
+  const [activeRulesState, setActiveRulesState] = useState<any[]>([]);
+  const [activeAccsState, setActiveAccsState] = useState<any[]>([]);
+
   const userRole = getUserRoleCookie();
   const isAdminOrSuperAdmin = userRole === "superadmin" || userRole === "admin";
 
@@ -54,15 +59,37 @@ export const LeavesView: React.FC = () => {
       const filterUserId = isAdminOrSuperAdmin ? undefined : (getCurrentUserId() || undefined);
       const currentUserId = getCurrentUserId();
 
+      const requestsPromise = fetchLeaveRequests(filterUserId);
+      const typesPromise = fetchLeaveTypes().catch(() => ({ success: false, data: [] }));
+      const empListPromise = getEmployees().catch(() => [] as Employee[]);
+      const empAccsPromise = fetchLeaveAccumulations().catch(() => ({ success: false, data: [] }));
+
+      let policiesPromise = Promise.resolve({ success: false, data: [] as any[] });
+      let rulesPromise = Promise.resolve({ success: false, data: [] as any[] });
+      let accsPromise = Promise.resolve({ success: false, data: [] as any[] });
+
+      if (isAdminOrSuperAdmin) {
+        policiesPromise = fetchLeavePolicies().catch(() => ({ success: false, data: [] }));
+        rulesPromise = fetchLeavePolicyRules().catch(() => ({ success: false, data: [] }));
+        accsPromise = fetchLeavePolicyAccumulations().catch(() => ({ success: false, data: [] }));
+      }
+
       const [res, typesRes, empList, policiesRes, rulesRes, accsRes, empAccsRes] = await Promise.all([
-        fetchLeaveRequests(filterUserId),
-        fetchLeaveTypes(),
-        getEmployees().catch(() => [] as Employee[]),
-        fetchLeavePolicies().catch(() => ({ success: false, data: [] })),
-        fetchLeavePolicyRules().catch(() => ({ success: false, data: [] })),
-        fetchLeavePolicyAccumulations().catch(() => ({ success: false, data: [] })),
-        fetchLeaveAccumulations().catch(() => ({ success: false, data: [] })),
+        requestsPromise,
+        typesPromise,
+        empListPromise,
+        policiesPromise,
+        rulesPromise,
+        accsPromise,
+        empAccsPromise,
       ]);
+
+      if (res.success && Array.isArray(res.data)) {
+        setRawRequests(res.data);
+      }
+      if (empAccsRes.success && Array.isArray(empAccsRes.data)) {
+        setAllAllocations(empAccsRes.data);
+      }
 
       const DEFAULT_LEAVE_TYPES = [
         { leaveTypeId: 1, leaveName: "Sick Leave/Casual Leave", leaveCode: "SL+CL", status: true },
@@ -96,6 +123,13 @@ export const LeavesView: React.FC = () => {
       const activeAccs = accsRes.success && Array.isArray(accsRes.data)
         ? accsRes.data.filter((a: any) => a.status && activePolicies.some((p: any) => p.leavePolicyId === a.leavePolicyId))
         : [];
+
+      if (rulesRes.success && Array.isArray(rulesRes.data)) {
+        setActiveRulesState(rulesRes.data.filter((r: any) => r.status && activePolicies.some((p: any) => p.leavePolicyId === r.leavePolicyId)));
+      }
+      if (accsRes.success && Array.isArray(accsRes.data)) {
+        setActiveAccsState(accsRes.data.filter((a: any) => a.status && activePolicies.some((p: any) => p.leavePolicyId === a.leavePolicyId)));
+      }
 
       let dynamicSick = 0;
       let dynamicComp = 0;
@@ -207,6 +241,8 @@ export const LeavesView: React.FC = () => {
             days: item.numberOfDays,
             remarks: item.reason,
             status: statusText,
+            employeeName: empName,
+            rawLeaveType: leaveTypeName,
           };
         });
         setRequests(mapped);
@@ -310,6 +346,123 @@ export const LeavesView: React.FC = () => {
     toast.info("Comp-Off accrual request functionality is not supported by the backend yet.");
   };
 
+  let availedSick = 0;
+  let availedComp = 0;
+  let availedEarned = 0;
+  let availedLop = 0;
+
+  requests.forEach((req) => {
+    if (req.status === "Approved") {
+      const type = req.leaveType.toLowerCase();
+      if (type.includes("sick") || type.includes("casual")) {
+        availedSick += req.days;
+      } else if (type.includes("comp")) {
+        availedComp += req.days;
+      } else if (type.includes("earned")) {
+        availedEarned += req.days;
+      } else if (type.includes("loss") || type.includes("lop")) {
+        availedLop += req.days;
+      }
+    }
+  });
+
+  const balanceSick = Math.max(0, accumulatedSick - availedSick);
+  const balanceComp = Math.max(0, accumulatedComp - availedComp);
+  const balanceEarned = Math.max(0, accumulatedEarned - availedEarned);
+  const balanceLop = Math.max(0, accumulatedLop - availedLop);
+
+  const getUserBalances = (targetUserId: number) => {
+    // 1. Filter allocations for target employee
+    const userAllocations = allAllocations.filter(
+      (a: any) => Number(a.userId) === Number(targetUserId) && a.status
+    );
+
+    let sickLimit = 0;
+    let compLimit = 0;
+    let earnedLimit = 0;
+    let lopLimit = 0;
+    let hasAccumulations = userAllocations.length > 0;
+    let hasRules = false;
+
+    leaveTypes.forEach((lt: any) => {
+      const alloc = userAllocations.find((a: any) => Number(a.leaveTypeId) === Number(lt.leaveTypeId));
+      let limit = 0;
+      if (alloc) {
+        limit = Number(alloc.numberOfLeaves);
+      } else {
+        const rule = activeRulesState.find((r: any) => Number(r.leaveTypeId) === Number(lt.leaveTypeId));
+        const acc = activeAccsState.find((a: any) => Number(a.leaveTypeId) === Number(lt.leaveTypeId));
+
+        if (rule && rule.annualRequestLimit !== null) {
+          limit = Number(rule.annualRequestLimit);
+          hasRules = true;
+        } else if (acc) {
+          if (acc.maxAccumulationPerYear !== null) {
+            limit = Number(acc.maxAccumulationPerYear);
+            hasRules = true;
+          } else if (acc.maxLeaveBalance !== null) {
+            limit = Number(acc.maxLeaveBalance);
+            hasRules = true;
+          }
+        }
+      }
+
+      const name = lt.leaveName.toLowerCase();
+      const code = lt.leaveCode.toLowerCase();
+      if (name.includes("sick") || name.includes("casual") || code.includes("sl") || code.includes("cl")) {
+        sickLimit += limit;
+      } else if (name.includes("comp") || code.includes("comp")) {
+        compLimit += limit;
+      } else if (name.includes("earned") || code.includes("el")) {
+        earnedLimit += limit;
+      } else if (name.includes("loss") || name.includes("lop") || code.includes("lop")) {
+        lopLimit += limit;
+      }
+    });
+
+    if (!hasAccumulations && !hasRules) {
+      sickLimit = 12.00;
+      compLimit = 0.00;
+      earnedLimit = 0.00;
+      lopLimit = 0.00;
+    }
+
+    // 2. Filter approved requests for target employee to calculate availed leaves
+    let availedSick = 0;
+    let availedComp = 0;
+    let availedEarned = 0;
+    let availedLop = 0;
+
+    rawRequests
+      .filter((r: any) => Number(r.userId) === Number(targetUserId) && String(r.status).toUpperCase() === "APPROVED")
+      .forEach((item: any) => {
+        let leaveTypeName = "Leave";
+        if (item.leaveType) {
+          leaveTypeName = item.leaveType.leaveName;
+        } else {
+          const lt = leaveTypes.find((t: any) => Number(t.leaveTypeId) === Number(item.leaveTypeId));
+          if (lt) leaveTypeName = lt.leaveName;
+        }
+        const name = leaveTypeName.toLowerCase();
+        if (name.includes("sick") || name.includes("casual")) {
+          availedSick += item.numberOfDays;
+        } else if (name.includes("comp")) {
+          availedComp += item.numberOfDays;
+        } else if (name.includes("earned")) {
+          availedEarned += item.numberOfDays;
+        } else if (name.includes("loss") || name.includes("lop")) {
+          availedLop += item.numberOfDays;
+        }
+      });
+
+    return {
+      sick: Math.max(0, sickLimit - availedSick),
+      comp: Math.max(0, compLimit - availedComp),
+      earned: Math.max(0, earnedLimit - availedEarned),
+      lop: Math.max(0, lopLimit - availedLop),
+    };
+  };
+
   return (
     <div className="w-full space-y-6">
       {/* Upper Navigation Header Bar: Summary | Request | Holiday */}
@@ -344,6 +497,16 @@ export const LeavesView: React.FC = () => {
             }`}
           >
             Holiday
+          </button>
+          <button
+            onClick={() => setActiveTab("calendar")}
+            className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 cursor-pointer ${
+              activeTab === "calendar"
+                ? "bg-brand-primary text-brand-btn-text shadow-2xs border border-brand-primary"
+                : "text-slate-500 hover:text-brand-primary"
+            }`}
+          >
+            Leave Calendar
           </button>
         </div>
       </div>
@@ -419,6 +582,13 @@ export const LeavesView: React.FC = () => {
           )}
 
           {activeTab === "holiday" && <LeavesHolidayTab />}
+
+          {activeTab === "calendar" && (
+            <LeavesCalendarTab
+              requests={requests}
+              onRowClick={(id: string) => setSelectedLeaveId(id)}
+            />
+          )}
         </>
       )}
 
@@ -431,6 +601,7 @@ export const LeavesView: React.FC = () => {
         onSubmit={handleApplyLeaveSubmit}
         leaveTypes={leaveTypes}
         employees={employees}
+        getUserBalances={getUserBalances}
       />
 
       {/* Leave Details Modal */}
