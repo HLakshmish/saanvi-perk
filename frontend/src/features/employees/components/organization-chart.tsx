@@ -3,7 +3,7 @@ import { Employee } from "../types/employees.types";
 import { EmployeeCard } from "./employee-card";
 import { Search, Loader2, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getCompanySuperAdmin } from "../api/employees.api";
+import { getCompanySuperAdmin, getSuperAdminDetails } from "../api/employees.api";
 import { cn } from "@/lib/utils";
 
 interface OrganizationChartProps {
@@ -44,11 +44,17 @@ export const OrganizationChart: React.FC<OrganizationChartProps> = ({
         const res = await getCompanySuperAdmin();
         if (res.success && res.data) {
           const comp = res.data;
-          const sa = comp.superAdmin;
-
           const companyLocation = comp.city
             ? (comp.state ? `${comp.city}, ${comp.state}` : comp.city)
             : (currentCompanyName || "Headquarters");
+
+          let sa = comp.superAdmin;
+          if (!sa) {
+            const directSaRes = await getSuperAdminDetails();
+            if (directSaRes.success && directSaRes.data) {
+              sa = directSaRes.data;
+            }
+          }
 
           if (sa) {
             const rootEmp: Employee = {

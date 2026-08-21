@@ -45,10 +45,18 @@ export interface CreateEmployeeInput {
   phoneNumber?: string | null;
   employmentType: "FULL_TIME" | "PART_TIME" | "CONTRACT" | "INTERN";
   joiningDate: string;
-  roleId: number | string;
+  dateOfBirth?: string;
+  roleId?: number | string;
+  roleIds?: number[];
   departmentId?: number | string | null;
   designationId?: number | string | null;
+  probationEndDate?: string | null;
+  reportingToId?: number | null;
+  shiftId?: number | null;
   status?: "ACTIVE" | "INACTIVE" | "RESIGNED" | "TERMINATED";
+  profilePic?: string;
+  companyId?: number;
+  locationId?: number | string | null;
 }
 
 export interface CreatePFDetailInput {
@@ -95,5 +103,16 @@ export interface EmployeeDocumentResponse {
   mimeType?: string;
   fileSize?: number;
 }
-
-
+export interface SuperAdminDetails {
+  superAdminId: number;
+  companyId: number;
+  email: string;
+  firstName: string;
+  lastName?: string | null;
+  profilePic?: string | null;
+  phoneNumber?: string | null;
+  status: boolean;
+  lastLogin?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}

@@ -8,7 +8,8 @@ import {
   getDepartments,
   getEmployees,
   createEmployee,
-  createPersonalInfo,
+  getPersonalInfoByUserId,
+  updatePersonalInfo,
   createParentInfo,
   createAddressInfo,
   createBankDetails,
@@ -306,6 +307,10 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
           setErrorMsg("Last Name is required.");
           return false;
         }
+        if (!formData.dateOfBirth) {
+          setErrorMsg("Date of Birth is required.");
+          return false;
+        }
         if (formData.personalEmail && !validateEmail(formData.personalEmail)) {
           setErrorMsg("Personal Email address format is invalid.");
           return false;
@@ -494,7 +499,10 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
       // 1. Create Base User Profile
       const baseUserData = {
         employeeCode: formData.employeeCode,
-        roleIds: formData.roleIds.length > 0 ? formData.roleIds : (formData.roleId ? [Number(formData.roleId)] : []),
+        dateOfBirth: formData.dateOfBirth
+          ? (formData.dateOfBirth.includes("T") ? formData.dateOfBirth.split("T")[0] : formData.dateOfBirth)
+          : undefined,
+        roleIds: formData.roleIds.length > 0 ? formData.roleIds.map(Number) : (formData.roleId ? [Number(formData.roleId)] : []),
         departmentId: formData.departmentId ? Number(formData.departmentId) : null,
         designationId: formData.designationId ? Number(formData.designationId) : null,
         firstName: formData.firstName,
@@ -502,12 +510,13 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
         officialEmail: formData.officialEmail,
         phoneNumber: formData.fatherMobile || null,
         password: formData.password,
-        employmentType: formData.employmentType,
+        employmentType: formData.employmentType || "FULL_TIME",
         joiningDate: new Date(formData.joiningDate).toISOString(),
         probationEndDate: formData.probationEndDate ? new Date(formData.probationEndDate).toISOString() : null,
         reportingToId: formData.reportingToId ? Number(formData.reportingToId) : null,
         status: formData.status || "ACTIVE",
         locationId: formData.locationId ? Number(formData.locationId) : null,
+        profilePic: formData.profilePhoto || undefined,
       };
 
       const userRes = await createEmployee(baseUserData);
@@ -519,7 +528,9 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
       createdUserId = userRes.data.userId;
       const targetUserId = userRes.data.userId;
 
-      // 2. Create Personal Information Record (if any personal field is provided)
+      // 2. Update Personal Information Record
+      // The createUser endpoint already creates a personalInformation record
+      // with dateOfBirth, so we fetch it and update with remaining fields.
       const personalData = {
         userId: targetUserId,
         dateOfBirth: formData.dateOfBirth ? new Date(formData.dateOfBirth).toISOString() : null,
@@ -536,9 +547,18 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
         personalEmail: formData.personalEmail || null,
         officialEmail: formData.officialEmail || null,
       };
-      const personalRes = await createPersonalInfo(personalData);
-      if (!personalRes.success) {
-        throw new Error(personalRes.error || "Failed to save personal details.");
+
+      // Fetch the auto-created personal info record to get its ID, then update it
+      const existingPI = await getPersonalInfoByUserId(targetUserId);
+      // API returns data as an array, pick first record
+      const piRecord = Array.isArray(existingPI.data) ? existingPI.data[0] : existingPI.data;
+      if (existingPI.success && piRecord?.personalInfoId) {
+        const personalRes = await updatePersonalInfo(piRecord.personalInfoId, personalData);
+        if (!personalRes.success) {
+          console.warn("Personal info update warning:", personalRes.error);
+        }
+      } else {
+        console.warn("No existing personal info record found to update.");
       }
 
       // 3. Create Parent Info Record (if any parent field is provided)
@@ -948,10 +968,11 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
                     </div>
 
                     <Input
-                      label="Date of Birth"
+                      label="Date of Birth *"
                       type="date"
                       value={formData.dateOfBirth}
                       onChange={(e) => handleChange("dateOfBirth", e.target.value)}
+                      required
                     />
 
                     <div className="flex flex-col gap-1.5">
