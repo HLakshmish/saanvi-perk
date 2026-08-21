@@ -89,6 +89,12 @@ async function main() {
       description: 'Allows managing and approving leave requests'
     },
     {
+      permissionName: 'View Leave Types',
+      permissionCode: 'VIEW_LEAVE_TYPES',
+      module: 'Leave Management',
+      description: 'Allows viewing leave types'
+    },
+    {
       permissionName: 'Manage Leave Types',
       permissionCode: 'MANAGE_LEAVE_TYPES',
       module: 'Leave Management',
@@ -161,6 +167,45 @@ async function main() {
       permissionCode: 'MANAGE_REIMBURSEMENTS',
       module: 'Reimbursement Management',
       description: 'Allows managing and approving reimbursement claims'
+    },
+    // Leave Policies
+    {
+      permissionName: 'View Leave Policies',
+      permissionCode: 'VIEW_LEAVE_POLICIES',
+      module: 'Leave Management',
+      description: 'Allows viewing leave policies'
+    },
+    {
+      permissionName: 'Manage Leave Policies',
+      permissionCode: 'MANAGE_LEAVE_POLICIES',
+      module: 'Leave Management',
+      description: 'Allows managing leave policies'
+    },
+    // Comp-Off Policies
+    {
+      permissionName: 'View Comp-Off Policies',
+      permissionCode: 'VIEW_COMP_OFF_POLICIES',
+      module: 'Leave Management',
+      description: 'Allows viewing comp-off policies'
+    },
+    {
+      permissionName: 'Manage Comp-Off Policies',
+      permissionCode: 'MANAGE_COMP_OFF_POLICIES',
+      module: 'Leave Management',
+      description: 'Allows managing comp-off policies'
+    },
+    // Assets
+    {
+      permissionName: 'View Assets',
+      permissionCode: 'VIEW_ASSETS',
+      module: 'Asset Management',
+      description: 'Allows viewing company assets'
+    },
+    {
+      permissionName: 'Manage Assets',
+      permissionCode: 'MANAGE_ASSETS',
+      module: 'Asset Management',
+      description: 'Allows managing company assets'
     }
   ];
 
