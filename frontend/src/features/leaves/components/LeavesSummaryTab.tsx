@@ -48,27 +48,31 @@ export const LeavesSummaryTab: React.FC<LeavesSummaryTabProps> = ({
   // 1. Dynamic Balance Calculations
   const totalAccumulated = accumulatedSick + accumulatedComp + accumulatedEarned + accumulatedLop;
 
+  let totalAvailed = 0;
   let availedSick = 0;
   let availedComp = 0;
   let availedEarned = 0;
   let availedLop = 0;
 
   requests.forEach((req) => {
-    if (req.status === "Approved") {
-      const type = req.leaveType.toLowerCase();
-      if (type.includes("sick") || type.includes("casual")) {
-        availedSick += req.days;
+    if (req.status === "Approved" || (req.status as any) === "APPROVED") {
+      const type = (req.leaveType || "").toLowerCase();
+      const days = Number(req.days ?? 1);
+      totalAvailed += days;
+
+      if (type.includes("sick") || type.includes("casual") || type.includes("sl") || type.includes("cl")) {
+        availedSick += days;
       } else if (type.includes("comp")) {
-        availedComp += req.days;
-      } else if (type.includes("earned")) {
-        availedEarned += req.days;
+        availedComp += days;
+      } else if (type.includes("earned") || type.includes("annual") || type.includes("privilege") || type.includes("el") || type.includes("al") || type.includes("pl")) {
+        availedEarned += days;
       } else if (type.includes("loss") || type.includes("lop")) {
-        availedLop += req.days;
+        availedLop += days;
+      } else {
+        availedSick += days;
       }
     }
   });
-
-  const totalAvailed = availedSick + availedComp + availedEarned + availedLop;
 
   const balanceSick = Math.max(0, accumulatedSick - availedSick);
   const balanceComp = Math.max(0, accumulatedComp - availedComp);

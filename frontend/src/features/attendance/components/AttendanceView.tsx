@@ -271,23 +271,15 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
     return (
       <div className="space-y-5 animate-fade-in text-slate-800 pb-10">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xs">
+        <div className="flex items-center justify-between bg-white p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xs">
           <div>
             <h1 className="text-lg sm:text-xl font-extrabold text-brand-primary tracking-tight">
               My Attendance Logs
             </h1>
             <p className="text-xs text-slate-500 font-medium mt-0.5">
-              Daily date-wise check-in, check-out times and total hours.
+              Daily date-wise check-in and check-out times.
             </p>
           </div>
-
-          <button
-            onClick={loadData}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 text-slate-700 hover:text-brand-primary rounded-xl text-xs font-bold transition-all shadow-2xs cursor-pointer hover:border-brand-primary/30"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            <span>Refresh</span>
-          </button>
         </div>
 
         {/* Quick KPI Overview */}
@@ -333,15 +325,10 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                     <Skeleton className="w-8 h-8 rounded-xl" />
                     <Skeleton className="h-4 w-28" />
                   </div>
-                  <Skeleton className="h-5 w-16 rounded-full" />
                 </div>
                 <div className="grid grid-cols-2 gap-2.5">
                   <Skeleton className="h-14 rounded-xl" />
                   <Skeleton className="h-14 rounded-xl" />
-                </div>
-                <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-                  <Skeleton className="h-3 w-20" />
-                  <Skeleton className="h-6 w-16 rounded-lg" />
                 </div>
               </div>
             ))}
@@ -357,21 +344,14 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
             {sortedEmployeeRows.map((row) => {
-              const workingHrs = row.workingMinutes
-                ? `${Math.floor(row.workingMinutes / 60)}h ${row.workingMinutes % 60}m`
-                : row.checkInTime && !row.checkOutTime
-                ? "In Progress"
-                : "--";
-
               const isToday = isTodayDate(row.attendanceDate || row.checkInTime);
-              const isActive = row.checkInTime && !row.checkOutTime;
 
               return (
                 <div
                   key={row.attendanceId}
                   className="bg-white border border-slate-200/85 hover:border-brand-primary/40 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between gap-3 group"
                 >
-                  {/* Card Top: Date Header & Status Pill */}
+                  {/* Card Top: Date Header */}
                   <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                     <div className="flex items-center gap-2.5">
                       <div className="w-8 h-8 rounded-xl bg-brand-primary/10 text-brand-primary flex items-center justify-center font-bold text-xs shrink-0">
@@ -388,20 +368,6 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                         )}
                       </div>
                     </div>
-
-                    <span
-                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide border shrink-0 ${
-                        isActive
-                          ? "bg-amber-50 text-amber-800 border-amber-200 animate-pulse"
-                          : row.attendanceStatus === "PRESENT"
-                          ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                          : row.attendanceStatus === "HALF_DAY"
-                          ? "bg-amber-100 text-amber-800 border-amber-200"
-                          : "bg-slate-100 text-slate-700 border-slate-200"
-                      }`}
-                    >
-                      {isActive ? "Active Shift" : row.attendanceStatus || "Present"}
-                    </span>
                   </div>
 
                   {/* Card Center: Check-In & Check-Out Times */}
@@ -428,23 +394,9 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                         </span>
                       </div>
                       <p className="font-mono text-xs sm:text-sm font-extrabold text-slate-900">
-                        {row.checkOutTime ? (
-                          formatTime(row.checkOutTime)
-                        ) : (
-                          <span className="text-amber-600 font-bold text-xs bg-amber-50 px-1.5 py-0.5 rounded">
-                            Active
-                          </span>
-                        )}
+                        {row.checkOutTime ? formatTime(row.checkOutTime) : "--:--"}
                       </p>
                     </div>
-                  </div>
-
-                  {/* Card Bottom: Total Hours Worked */}
-                  <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between">
-                    <span className="text-[11px] font-semibold text-slate-500">Total Worked</span>
-                    <span className="font-mono text-xs sm:text-sm font-extrabold text-brand-primary bg-brand-primary-light px-2.5 py-0.5 rounded-lg border border-brand-primary/15">
-                      {workingHrs}
-                    </span>
                   </div>
                 </div>
               );

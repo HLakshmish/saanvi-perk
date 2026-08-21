@@ -1,4 +1,4 @@
-import { Employee, CreatePFDetailInput, CreateESIDetailInput, CreateInsuranceDetailInput, Designation } from "../types/employees.types";
+import { Employee, CreatePFDetailInput, CreateESIDetailInput, CreateInsuranceDetailInput, Designation, SuperAdminDetails } from "../types/employees.types";
 import { getDepartments as getDepartmentsFromApi } from "../../settings/api/department.api";
 import { toast } from "sonner";
 
@@ -255,15 +255,25 @@ export const getDepartments = async (): Promise<any[]> => {
 export const createEmployee = async (data: any): Promise<{ success: boolean; data?: any; error?: string; message?: string }> => {
   const token = getAuthToken();
   try {
-    const { roleId, roleIds, ...rest } = data;
+    const { roleId, roleIds, dateOfBirth, ...rest } = data;
     const resolvedRoleIds = Array.isArray(roleIds)
       ? roleIds.map(Number)
       : roleId !== undefined && roleId !== null && roleId !== ""
       ? [Number(roleId)]
       : [];
 
+    let formattedDateOfBirth = dateOfBirth;
+    if (formattedDateOfBirth) {
+      if (typeof formattedDateOfBirth === "string" && formattedDateOfBirth.includes("T")) {
+        formattedDateOfBirth = formattedDateOfBirth.split("T")[0];
+      } else if (formattedDateOfBirth instanceof Date) {
+        formattedDateOfBirth = formattedDateOfBirth.toISOString().split("T")[0];
+      }
+    }
+
     const payload = {
       ...rest,
+      dateOfBirth: formattedDateOfBirth,
       roleIds: resolvedRoleIds,
     };
     const res = await fetchDeduplicated(`${API_BASE_URL}/api/users`, {
@@ -943,6 +953,87 @@ export const getOfficeLocations = async (): Promise<any[]> => {
     return [];
   }
 };
+export const getSuperAdminDetails = async (): Promise<{ success: boolean; data?: SuperAdminDetails; error?: string }> => {
+  const token = getAuthToken();
+  try {
+    const res = await fetchDeduplicated(`${API_BASE_URL}/api/super-admin`, {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    const result = await res.json();
+    if (res.ok && result.success && result.data) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, error: result.message || "Super admin details not found" };
+  } catch (error: any) {
+    return { success: false, error: formatBackendError(error.message) };
+  }
+};
 
+/**
+ * Fetch birthday and work anniversary events for a specific date.
+ * GET /api/users/events?date=YYYY-MM-DDTHH:mm:ss.sssZ
+ */
+export const getEvents = async (date?: string): Promise<{ success: boolean; data?: { birthdays: any[]; anniversaries: any[] }; error?: string }> => {
+  const token = getAuthToken();
+  try {
+    const queryDate = date || new Date().toISOString();
+    const res = await fetch(`${API_BASE_URL}/api/users/events?date=${encodeURIComponent(queryDate)}`, {
+      method: "GET",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    const result = await res.json();
+    if (res.ok && result.success) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, error: result.message || "Failed to fetch events" };
+  } catch (error: any) {
+    return { success: false, error: formatBackendError(error.message) };
+  }
+};
 
+/**
+ * Fetch events for upcoming N days (today + next N-1 days).
+ * Aggregates results from multiple single-day calls.
+ */
+export const getUpcomingEvents = async (days: number = 7): Promise<{ success: boolean; data?: { birthdays: any[]; anniversaries: any[] }; error?: string }> => {
+  try {
+    const allBirthdays: any[] = [];
+    const allAnniversaries: any[] = [];
+    const seenBirthdayIds = new Set<number>();
+    const seenAnniversaryIds = new Set<number>();
+
+    const promises = [];
+    for (let i = 0; i < days; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() + i);
+      promises.push(getEvents(d.toISOString()).then(res => ({ res, dateOffset: i, date: d })));
+    }
+
+    const results = await Promise.all(promises);
+    for (const { res, dateOffset, date } of results) {
+      if (res.success && res.data) {
+        for (const b of res.data.birthdays) {
+          if (!seenBirthdayIds.has(b.userId)) {
+            seenBirthdayIds.add(b.userId);
+            allBirthdays.push({ ...b, isToday: dateOffset === 0, eventDate: date.toISOString() });
+          }
+        }
+        for (const a of res.data.anniversaries) {
+          if (!seenAnniversaryIds.has(a.userId)) {
+            seenAnniversaryIds.add(a.userId);
+            allAnniversaries.push({ ...a, isToday: dateOffset === 0, eventDate: date.toISOString() });
+          }
+        }
+      }
+    }
+
+    return { success: true, data: { birthdays: allBirthdays, anniversaries: allAnniversaries } };
+  } catch (error: any) {
+    return { success: false, error: formatBackendError(error.message) };
+  }
+};
 

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { UserRole } from "@/types/dashboard";
-import { getCompanySuperAdmin, getUserById } from "@/features/employees/api/employees.api";
+import { getCompanySuperAdmin, getUserById, getSuperAdminDetails } from "@/features/employees/api/employees.api";
 import { getCurrentUserId } from "@/features/expenses/api/expenses.api";
 import { EmployeeDashboard } from "@/components/employee-dashboard/EmployeeDashboard";
 import { EmployeeProfile } from "@/features/employees/components/employee-profile";
@@ -74,13 +74,25 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             setResolvedCompanyName(comp.companyName);
           }
 
-          if (role === "superadmin" && comp.superAdmin) {
-            const sa = comp.superAdmin;
-            const fullName = `${sa.firstName || ""} ${sa.lastName || ""}`.trim();
-            if (fullName) {
-              setResolvedUserName(fullName);
-              if (typeof window !== "undefined") {
-                localStorage.setItem("user_name", fullName);
+          if (role === "superadmin") {
+            const superAdminRes = await getSuperAdminDetails();
+            if (superAdminRes.success && superAdminRes.data) {
+              const sa = superAdminRes.data;
+              const fullName = `${sa.firstName || ""} ${sa.lastName || ""}`.trim();
+              if (fullName) {
+                setResolvedUserName(fullName);
+                if (typeof window !== "undefined") {
+                  localStorage.setItem("user_name", fullName);
+                }
+              }
+            } else if (comp.superAdmin) {
+              const sa = comp.superAdmin;
+              const fullName = `${sa.firstName || ""} ${sa.lastName || ""}`.trim();
+              if (fullName) {
+                setResolvedUserName(fullName);
+                if (typeof window !== "undefined") {
+                  localStorage.setItem("user_name", fullName);
+                }
               }
             }
           } else {
@@ -102,16 +114,30 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           }
         } else {
           // Fallback if company API is unavailable
-          const loggedInUserId = getCurrentUserId();
-          if (loggedInUserId) {
-            const userRes = await getUserById(loggedInUserId);
-            if (userRes.success && userRes.data) {
-              const u = userRes.data;
-              const fullName = `${u.firstName || ""} ${u.lastName || ""}`.trim();
+          if (role === "superadmin") {
+            const superAdminRes = await getSuperAdminDetails();
+            if (superAdminRes.success && superAdminRes.data) {
+              const sa = superAdminRes.data;
+              const fullName = `${sa.firstName || ""} ${sa.lastName || ""}`.trim();
               if (fullName) {
                 setResolvedUserName(fullName);
                 if (typeof window !== "undefined") {
                   localStorage.setItem("user_name", fullName);
+                }
+              }
+            }
+          } else {
+            const loggedInUserId = getCurrentUserId();
+            if (loggedInUserId) {
+              const userRes = await getUserById(loggedInUserId);
+              if (userRes.success && userRes.data) {
+                const u = userRes.data;
+                const fullName = `${u.firstName || ""} ${u.lastName || ""}`.trim();
+                if (fullName) {
+                  setResolvedUserName(fullName);
+                  if (typeof window !== "undefined") {
+                    localStorage.setItem("user_name", fullName);
+                  }
                 }
               }
             }

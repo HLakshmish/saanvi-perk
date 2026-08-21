@@ -20,12 +20,15 @@ import {
   updateAttendanceCheckOut,
   getAttendances,
 } from "@/features/attendance/api/attendance.api";
+import { fetchLeaveRequests } from "@/features/leaves/api/leaves.api";
+import { fetchLeaveTypes, fetchLeaveAccumulations } from "@/features/settings/api/settings.api";
 
 // Import modular widgets
 import { AttendanceCard } from "./AttendanceCard";
 import { QuickActions } from "./QuickActions";
 import { LeaveSummary } from "./LeaveSummary";
 import { EmployeeDashboardSkeleton } from "./EmployeeDashboardSkeleton";
+import { CheersToPeersWidget } from "@/components/dashboard/widgets/CheersToPeersWidget";
 
 interface EmployeeDashboardProps {
   userName: string;
@@ -57,6 +60,17 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
   // Holidays State
   const [holidays, setHolidays] = useState<any[]>([]);
   const [isLoadingHolidays, setIsLoadingHolidays] = useState(true);
+
+  // Leave Summary State (Real dynamic data)
+  const [leaveSummary, setLeaveSummary] = useState({
+    available: 12.0,
+    used: 0.0,
+    pending: 0.0,
+    sickBal: 12.0,
+    earnedBal: 0.0,
+    compBal: 0.0,
+    isLoading: true,
+  });
 
   // Attendance Widget State (with persistence)
   const [isCheckedIn, setIsCheckedIn] = useState<boolean>(false);
@@ -457,13 +471,16 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
       setIsLoadingHolidays(true);
 
       try {
-        const [desData, userRes, holidaysRes] = await Promise.all([
+        const [desData, userRes, holidaysRes, leaveReqsRes, leaveTypesRes, leaveAccsRes] = await Promise.all([
           getDesignations(),
           getUserById(userId),
           getHolidays().catch((err) => {
             console.error("Error loading holidays:", err);
             return { success: false, data: [] };
           }),
+          fetchLeaveRequests(userId).catch(() => ({ success: false, data: [] })),
+          fetchLeaveTypes().catch(() => ({ success: false, data: [] })),
+          fetchLeaveAccumulations().catch(() => ({ success: false, data: [] })),
         ]);
 
         setDesignations(desData || []);
@@ -471,6 +488,89 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
         if (userRes.success && userRes.data) {
           setUserProfile(userRes.data);
         }
+
+        // Process real Leave Summary Data
+        const types = (leaveTypesRes.success && Array.isArray(leaveTypesRes.data)) ? leaveTypesRes.data : [];
+        const userAccs = (leaveAccsRes.success && Array.isArray(leaveAccsRes.data))
+          ? leaveAccsRes.data.filter((a: any) => Number(a.userId) === Number(userId) && a.status)
+          : [];
+
+        let dynamicSick = 0;
+        let dynamicComp = 0;
+        let dynamicEarned = 0;
+        let dynamicLop = 0;
+
+        types.forEach((lt: any) => {
+          const alloc = userAccs.find((a: any) => Number(a.leaveTypeId) === Number(lt.leaveTypeId));
+          const limit = alloc ? Number(alloc.numberOfLeaves) : 0;
+          const name = (lt.leaveName || "").toLowerCase();
+          const code = (lt.leaveCode || "").toLowerCase();
+
+          if (name.includes("sick") || name.includes("casual") || code.includes("sl") || code.includes("cl")) {
+            dynamicSick += limit;
+          } else if (name.includes("comp") || code.includes("comp")) {
+            dynamicComp += limit;
+          } else if (name.includes("earned") || name.includes("annual") || name.includes("privilege") || code.includes("el") || code.includes("al") || code.includes("pl")) {
+            dynamicEarned += limit;
+          } else if (name.includes("loss") || name.includes("lop") || code.includes("lop")) {
+            dynamicLop += limit;
+          }
+        });
+
+        // Default to standard 12 sick/casual if no custom allocation configured yet
+        const accumulatedSick = userAccs.length > 0 ? dynamicSick : 12.0;
+        const accumulatedComp = dynamicComp;
+        const accumulatedEarned = dynamicEarned;
+        const accumulatedLop = dynamicLop;
+        const totalAccumulated = accumulatedSick + accumulatedComp + accumulatedEarned + accumulatedLop;
+
+        const reqs = (leaveReqsRes.success && Array.isArray(leaveReqsRes.data)) ? leaveReqsRes.data : [];
+        let availedSick = 0;
+        let availedComp = 0;
+        let availedEarned = 0;
+        let availedLop = 0;
+        let totalUsed = 0;
+        let pendingDays = 0;
+
+        reqs.forEach((r: any) => {
+          const status = (r.status || "").toUpperCase();
+          const days = Number(r.numberOfDays ?? r.days ?? 1);
+          const lt = r.leaveType || {};
+          const typeName = (lt.leaveName || r.leaveTypeName || r.leaveType || "").toLowerCase();
+          const typeCode = (lt.leaveCode || "").toLowerCase();
+
+          if (status === "APPROVED") {
+            totalUsed += days;
+            if (typeName.includes("sick") || typeName.includes("casual") || typeCode.includes("sl") || typeCode.includes("cl")) {
+              availedSick += days;
+            } else if (typeName.includes("comp") || typeCode.includes("comp")) {
+              availedComp += days;
+            } else if (typeName.includes("earned") || typeName.includes("annual") || typeName.includes("privilege") || typeCode.includes("el") || typeCode.includes("al") || typeCode.includes("pl")) {
+              availedEarned += days;
+            } else if (typeName.includes("loss") || typeName.includes("lop") || typeCode.includes("lop")) {
+              availedLop += days;
+            } else {
+              availedSick += days;
+            }
+          } else if (status === "PENDING") {
+            pendingDays += days;
+          }
+        });
+
+        const balanceSick = Math.max(0, accumulatedSick - availedSick);
+        const balanceEarned = Math.max(0, accumulatedEarned - availedEarned);
+        const balanceComp = Math.max(0, accumulatedComp - availedComp);
+        const totalAvailable = Math.max(0, totalAccumulated - totalUsed);
+
+        setLeaveSummary({
+          available: Number(totalAvailable.toFixed(1)),
+          used: Number(totalUsed.toFixed(1)),
+          pending: Number(pendingDays.toFixed(1)),
+          sickBal: Number(balanceSick.toFixed(1)),
+          earnedBal: Number(balanceEarned.toFixed(1)),
+          compBal: Number(balanceComp.toFixed(1)),
+          isLoading: false,
+        });
 
         if (holidaysRes.success && Array.isArray(holidaysRes.data)) {
           const today = new Date();
@@ -578,30 +678,36 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
               <div className="grid grid-cols-3 gap-2 text-center my-1">
                 <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-xl p-1.5">
                   <p className="text-[8px] text-emerald-800 font-bold uppercase tracking-wider">Available</p>
-                  <p className="text-xs sm:text-sm font-extrabold text-emerald-950 mt-0.5">12.0</p>
+                  <p className="text-xs sm:text-sm font-extrabold text-emerald-950 mt-0.5">
+                    {leaveSummary.isLoading ? "--" : leaveSummary.available.toFixed(1)}
+                  </p>
                 </div>
                 <div className="bg-brand-primary-light border border-brand-primary/15 rounded-xl p-1.5">
                   <p className="text-[8px] text-brand-primary/80 font-bold uppercase tracking-wider">Used</p>
-                  <p className="text-xs sm:text-sm font-extrabold text-brand-primary mt-0.5">3.0</p>
+                  <p className="text-xs sm:text-sm font-extrabold text-brand-primary mt-0.5">
+                    {leaveSummary.isLoading ? "--" : leaveSummary.used.toFixed(1)}
+                  </p>
                 </div>
                 <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-1.5">
                   <p className="text-[8px] text-slate-500 font-bold uppercase tracking-wider">Pending</p>
-                  <p className="text-xs sm:text-sm font-extrabold text-slate-900 mt-0.5">0.0</p>
+                  <p className="text-xs sm:text-sm font-extrabold text-slate-900 mt-0.5">
+                    {leaveSummary.isLoading ? "--" : leaveSummary.pending.toFixed(1)}
+                  </p>
                 </div>
               </div>
 
               <div className="flex items-center justify-between text-[9px] sm:text-[10px] font-semibold text-slate-500 pt-0.5">
                 <span className="flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
-                  Sick/Casual: 9 Bal
+                  Sick/Casual: {leaveSummary.isLoading ? "--" : `${leaveSummary.sickBal} Bal`}
                 </span>
                 <span className="flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  Earned: 0 Bal
+                  Earned: {leaveSummary.isLoading ? "--" : `${leaveSummary.earnedBal} Bal`}
                 </span>
                 <span className="flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-teal-500" />
-                  Comp-Off: 0
+                  Comp-Off: {leaveSummary.isLoading ? "--" : `${leaveSummary.compBal} Bal`}
                 </span>
               </div>
             </div>
@@ -689,6 +795,9 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
 
       {/* 3. App Services Hub: Sidebar Sections in 3 or 4 Column Grid */}
       <QuickActions onTabChange={onTabChange} />
+
+      {/* 4. Cheers To Peers Celebrations Widget */}
+      <CheersToPeersWidget />
     </div>
   );
 };
