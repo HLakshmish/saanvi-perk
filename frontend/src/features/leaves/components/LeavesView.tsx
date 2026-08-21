@@ -91,20 +91,13 @@ export const LeavesView: React.FC = () => {
         setAllAllocations(empAccsRes.data);
       }
 
-      const DEFAULT_LEAVE_TYPES = [
-        { leaveTypeId: 1, leaveName: "Sick Leave/Casual Leave", leaveCode: "SL+CL", status: true },
-        { leaveTypeId: 2, leaveName: "Earned Leave", leaveCode: "EL", status: true },
-        { leaveTypeId: 3, leaveName: "Loss of Pay", leaveCode: "LOP", status: true },
-        { leaveTypeId: 4, leaveName: "COMPOFF", leaveCode: "COFF", status: true },
-      ];
-
       let resolvedTypes = [] as any[];
       if (typesRes.success && Array.isArray(typesRes.data) && typesRes.data.length > 0) {
         setLeaveTypes(typesRes.data);
         resolvedTypes = typesRes.data;
       } else {
-        setLeaveTypes(DEFAULT_LEAVE_TYPES);
-        resolvedTypes = DEFAULT_LEAVE_TYPES;
+        setLeaveTypes([]);
+        resolvedTypes = [];
       }
 
       if (Array.isArray(empList)) {
@@ -175,7 +168,12 @@ export const LeavesView: React.FC = () => {
         }
       });
 
-      if (hasAccumulations || hasRules) {
+      if (resolvedTypes.length === 0) {
+        setAccumulatedSick(0.00);
+        setAccumulatedComp(0.00);
+        setAccumulatedEarned(0.00);
+        setAccumulatedLop(0.00);
+      } else if (hasAccumulations || hasRules) {
         setAccumulatedSick(dynamicSick);
         setAccumulatedComp(dynamicComp);
         setAccumulatedEarned(dynamicEarned);
@@ -420,7 +418,7 @@ export const LeavesView: React.FC = () => {
       }
     });
 
-    if (!hasAccumulations && !hasRules) {
+    if (leaveTypes.length > 0 && !hasAccumulations && !hasRules) {
       sickLimit = 12.00;
       compLimit = 0.00;
       earnedLimit = 0.00;
@@ -558,6 +556,14 @@ export const LeavesView: React.FC = () => {
         </div>
       ) : (
         <>
+          {leaveTypes.length === 0 && (
+            <div className="flex items-center gap-3 p-4 bg-amber-50 border border-amber-200/80 rounded-2xl text-amber-800 animate-fade-in mb-6">
+              <AlertCircle className="w-5 h-5 text-amber-500 shrink-0" />
+              <div className="text-xs font-semibold">
+                No active leave types are configured in the system. Please configure them in settings.
+              </div>
+            </div>
+          )}
           {activeTab === "summary" && (
             <LeavesSummaryTab
               onOpenApplyLeaveModal={() => setIsApplyLeaveModalOpen(true)}

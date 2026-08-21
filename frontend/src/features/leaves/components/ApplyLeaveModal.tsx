@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Calendar as CalendarIcon, Loader2, Search, X } from "lucide-react";
+import { Calendar as CalendarIcon, Loader2, Search, X, AlertCircle } from "lucide-react";
 import { ApplyLeaveInput } from "../types/leaves.types";
 import { getCurrentUserId } from "../api/leaves.api";
 
@@ -207,12 +207,17 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
           </p>
         </div>
 
-        {errorMsg && (
+        {leaveTypes.length === 0 ? (
+          <div className="mx-6 mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 font-bold text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
+            <span>No active leave types are configured in the system. You cannot apply for leave.</span>
+          </div>
+        ) : errorMsg ? (
           <div className="mx-6 mt-4 p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 font-bold text-xs flex items-center gap-2">
             <X className="w-4 h-4 text-rose-500 shrink-0" />
             <span>{errorMsg}</span>
           </div>
-        )}
+        ) : null}
 
         {/* Modal Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
@@ -365,7 +370,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || leaveTypes.length === 0}
               className="px-6 py-2 bg-brand-primary hover:bg-brand-primary-hover text-brand-btn-text font-bold text-xs rounded-xl shadow-2xs transition-all hover:shadow-xs cursor-pointer disabled:opacity-60 flex items-center gap-1.5"
             >
               {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-btn-text" />}
