@@ -273,7 +273,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-[#f4fbf7] flex flex-col font-sans animate-fade-in">
+    <div className="min-h-screen bg-[#e6eef5] flex flex-col font-sans animate-fade-in">
       {/* Top Navbar */}
       <Navbar
         currentRole={role}
