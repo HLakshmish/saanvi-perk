@@ -57,6 +57,7 @@ app.register(require("./UsersDetails/employeedocument/employeedocument.route"), 
     prefix: "/api/employee-documents"
 });
 app.register(require("./Attendance/attendance.route"), { prefix: "/api/attendances" });
+app.register(require("./Attendance/weekOff/weekOff.route"), { prefix: "/api/week-offs" });
 app.register(require("./Leave/leaveType/leaveType.route"), { prefix: "/api/leave-types" });
 app.register(require("./Leave/leaveRequest/leaveRequest.route"), { prefix: "/api/leave-requests" });
 app.register(require("./Leave/leavePolicies/leavePolicy.route"), { prefix: "/api/leave-policies" });
