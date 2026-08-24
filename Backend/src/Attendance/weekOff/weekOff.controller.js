@@ -3,7 +3,9 @@ const weekOffService = require("./weekOff.service");
 class WeekOffController {
     async createWeekOff(request, reply) {
         try {
-            const data = { ...request.body, companyId: request.user.companyId, createdBy: request.user.userId };
+            const data = { ...request.body, companyId: request.user.companyId };
+            data.createdBy = (request.user.role === 'SUPERADMIN' || request.user.role === 'OWNER') ? null : request.user.userId;
+            
             if (request.user.role === 'OWNER' && request.body.companyId) {
                 data.companyId = request.body.companyId;
             }
@@ -36,7 +38,9 @@ class WeekOffController {
 
     async updateWeekOff(request, reply) {
         try {
-            const data = { ...request.body, updatedBy: request.user.userId };
+            const data = { ...request.body };
+            data.updatedBy = (request.user.role === 'SUPERADMIN' || request.user.role === 'OWNER') ? null : request.user.userId;
+            
             let companyId = request.user.companyId;
             if (request.user.role === 'OWNER' && request.body.companyId) {
                 companyId = request.body.companyId;
@@ -59,7 +63,9 @@ class WeekOffController {
 
     async assignWeekOff(request, reply) {
         try {
-            const data = { ...request.body, companyId: request.user.companyId, createdBy: request.user.userId };
+            const data = { ...request.body, companyId: request.user.companyId };
+            data.createdBy = (request.user.role === 'SUPERADMIN' || request.user.role === 'OWNER') ? null : request.user.userId;
+            
             if (request.user.role === 'OWNER' && request.body.companyId) {
                 data.companyId = request.body.companyId;
             }
