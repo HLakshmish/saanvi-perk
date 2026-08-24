@@ -57,6 +57,7 @@ model CompanyDetails {
   calendars           Calendar[]
   holidays            Holiday[]
   attendances         Attendance[]
+  attendanceRequests  AttendanceRequest[]
   leaveTypes          LeaveType[]
   leaveRequests       LeaveRequest[]
   leavePolicies       LeavePolicy[]
@@ -252,6 +253,8 @@ model User {
   esiDetail           ESIDetail?
   insuranceDetail     InsuranceDetail?
   attendances         Attendance[]
+  attendanceRequests  AttendanceRequest[]  @relation("AttendanceRequestUser")
+  approvedAttendanceReqs AttendanceRequest[] @relation("AttendanceRequestApprovedBy")
   createdLeaveTypes   LeaveType[]          @relation("LeaveTypeCreatedBy")
   leaveRequests       LeaveRequest[]       @relation("LeaveRequestUser")
   approvedLeaves      LeaveRequest[]       @relation("LeaveRequestApprovedBy")
@@ -753,6 +756,52 @@ model Attendance {
   user    User           @relation(fields: [userId], references: [userId], onDelete: Cascade)
 
   @@map("attendances")
+}
+
+// ==========================
+// Attendance Request
+// ==========================
+model AttendanceRequest {
+  requestId    Int @id @default(autoincrement()) @map("request_id")
+  companyId    Int @map("company_id")
+  userId       Int @map("user_id")
+
+  shiftDate    DateTime  @map("shift_date") @db.Date
+  reason       AttendanceRequestReason @map("reason")
+  checkInTime  DateTime? @map("check_in_time") @db.Time
+  checkOutTime DateTime? @map("check_out_time") @db.Time
+  isNextDay    Boolean   @default(false) @map("is_next_day")
+  remarks      String    @map("remarks")
+  
+  status       AttendanceRequestStatus @default(PENDING)
+  
+  approvedBy      Int?      @map("approved_by")
+  approvedAt      DateTime? @map("approved_at")
+  rejectionReason String?   @map("rejection_reason")
+
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  company      CompanyDetails @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
+  user         User           @relation("AttendanceRequestUser", fields: [userId], references: [userId], onDelete: Cascade)
+  approvedUser User?          @relation("AttendanceRequestApprovedBy", fields: [approvedBy], references: [userId])
+
+  @@map("attendance_requests")
+}
+
+enum AttendanceRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum AttendanceRequestReason {
+  BUSINESS_TOUR
+  FORGOT_ID
+  NEW_JOINEE
+  ON_DUTY
+  OTHERS
 }
 
 enum AttendanceStatus {

@@ -69,6 +69,32 @@ async function main() {
       module: 'Attendance Management',
       description: 'Allows managing attendance records'
     },
+    // Attendance Requests
+    {
+      permissionName: 'View Attendance Requests',
+      permissionCode: 'VIEW_ATTENDANCE_REQUESTS',
+      module: 'Attendance Management',
+      description: 'Allows viewing attendance regularization requests'
+    },
+    {
+      permissionName: 'Manage Attendance Requests',
+      permissionCode: 'MANAGE_ATTENDANCE_REQUESTS',
+      module: 'Attendance Management',
+      description: 'Allows approving or rejecting attendance requests'
+    },
+    // Week-Off
+    {
+      permissionName: 'View Week-Offs',
+      permissionCode: 'VIEW_WEEK_OFFS',
+      module: 'Attendance Management',
+      description: 'Allows viewing week-off policies and assignments'
+    },
+    {
+      permissionName: 'Manage Week-Offs',
+      permissionCode: 'MANAGE_WEEK_OFFS',
+      module: 'Attendance Management',
+      description: 'Allows creating and assigning week-off policies'
+    },
     // Leave Management
     {
       permissionName: 'Apply Leave',
