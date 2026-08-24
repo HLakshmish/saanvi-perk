@@ -5,7 +5,9 @@ const {
     getLeaveRequestByIdSchema, 
     getAllLeaveRequestsSchema, 
     updateLeaveRequestStatusSchema, 
-    deleteLeaveRequestSchema 
+    deleteLeaveRequestSchema,
+    downloadLeaveReportSchema,
+    viewLeaveReportSchema
 } = require("./leaveRequest.schema");
 
 async function leaveRequestRoutes(fastify, options) {
@@ -15,6 +17,8 @@ async function leaveRequestRoutes(fastify, options) {
     });
 
     // APPLY_LEAVE is a typical permission for applying
+    fastify.get("/report/view", opts(viewLeaveReportSchema, 'VIEW_LEAVES'), leaveRequestController.viewReport.bind(leaveRequestController));
+    fastify.get("/report/download", opts(downloadLeaveReportSchema, 'VIEW_LEAVES'), leaveRequestController.downloadReport.bind(leaveRequestController));
     fastify.post("/", opts(createLeaveRequestSchema, 'APPLY_LEAVE'), leaveRequestController.createLeaveRequest.bind(leaveRequestController));
     
     // VIEW_LEAVES or VIEW_OWN_LEAVE (checked in controller)

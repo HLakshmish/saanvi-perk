@@ -134,6 +134,62 @@ class LeaveRequestController {
             reply.code(400).send({ success: false, message: error.message });
         }
     }
+
+    async downloadReport(request, reply) {
+        try {
+            let companyId = request.user.companyId;
+            let filterUserId = request.query.userId ? Number(request.query.userId) : undefined;
+
+            if (request.user.role === 'OWNER') {
+                companyId = request.query.companyId ? Number(request.query.companyId) : undefined;
+            } else if (request.user.role === 'USER') {
+                filterUserId = request.user.userId;
+            }
+
+            const leaveRequests = await leaveRequestService.getAllLeaveRequests(companyId, filterUserId);
+            
+            const headers = ['Leave Request ID', 'User ID', 'Leave Type ID', 'From Date', 'To Date', 'Number Of Days', 'Status', 'Reason', 'Remarks', 'Approved By'];
+            
+            const csvRows = leaveRequests.map(l => [
+                l.leaveRequestId,
+                l.userId,
+                l.leaveTypeId,
+                l.fromDate ? new Date(l.fromDate).toISOString().split('T')[0] : '',
+                l.toDate ? new Date(l.toDate).toISOString().split('T')[0] : '',
+                l.numberOfDays || 0,
+                l.status || '',
+                `"${(l.reason || '').replace(/"/g, '""')}"`,
+                `"${(l.remarks || '').replace(/"/g, '""')}"`,
+                l.approvedBy || ''
+            ]);
+
+            const csvString = [headers.join(','), ...csvRows.map(row => row.join(','))].join('\n');
+
+            reply.header('Content-Type', 'text/csv');
+            reply.header('Content-Disposition', 'attachment; filename="leave_report.csv"');
+            return reply.send(csvString);
+        } catch (error) {
+            reply.code(500).send({ success: false, message: error.message });
+        }
+    }
+
+    async viewReport(request, reply) {
+        try {
+            let companyId = request.user.companyId;
+            let filterUserId = request.query.userId ? Number(request.query.userId) : undefined;
+
+            if (request.user.role === 'OWNER') {
+                companyId = request.query.companyId ? Number(request.query.companyId) : undefined;
+            } else if (request.user.role === 'USER') {
+                filterUserId = request.user.userId;
+            }
+
+            const leaveRequests = await leaveRequestService.getAllLeaveRequests(companyId, filterUserId);
+            reply.code(200).send({ success: true, data: leaveRequests });
+        } catch (error) {
+            reply.code(500).send({ success: false, message: error.message });
+        }
+    }
 }
 
 module.exports = new LeaveRequestController();

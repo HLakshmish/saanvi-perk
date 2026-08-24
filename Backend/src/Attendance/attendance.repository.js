@@ -16,7 +16,19 @@ class AttendanceRepository {
         });
     }
     async getAllAttendances(query = {}) {
-        return await prisma.attendance.findMany({ where: query });
+        return await prisma.attendance.findMany({ 
+            where: query,
+            include: {
+                user: {
+                    select: {
+                        userId: true,
+                        firstName: true,
+                        lastName: true,
+                        employeeCode: true
+                    }
+                }
+            }
+        });
     }
     async updateAttendance(id, data) {
         return await prisma.attendance.update({ where: { attendanceId: id }, data });

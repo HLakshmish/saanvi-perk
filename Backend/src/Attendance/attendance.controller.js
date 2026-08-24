@@ -38,5 +38,39 @@ class AttendanceController {
             reply.code(200).send({ success: true, message: "Attendance record deleted" });
         } catch (error) { reply.code(400).send({ success: false, message: error.message }); }
     }
+    async downloadReport(request, reply) {
+        try {
+            const query = { ...request.query, companyId: request.user.companyId };
+            const attendances = await attendanceService.getAllAttendances(query);
+            
+            const headers = ['Attendance ID', 'User ID', 'Date', 'Status', 'Check In Time', 'Check Out Time', 'Working Minutes', 'Overtime Minutes', 'Remarks'];
+            
+            const csvRows = attendances.map(a => [
+                a.attendanceId,
+                a.userId,
+                a.attendanceDate ? new Date(a.attendanceDate).toISOString().split('T')[0] : '',
+                a.attendanceStatus || '',
+                a.checkInTime ? new Date(a.checkInTime).toISOString() : '',
+                a.checkOutTime ? new Date(a.checkOutTime).toISOString() : '',
+                a.workingMinutes || 0,
+                a.overtimeMinutes || 0,
+                `"${(a.remarks || '').replace(/"/g, '""')}"`
+            ]);
+
+            const csvString = [headers.join(','), ...csvRows.map(row => row.join(','))].join('\n');
+            
+            reply.header('Content-Type', 'text/csv');
+            reply.header('Content-Disposition', 'attachment; filename="attendance_report.csv"');
+            return reply.send(csvString);
+        } catch (error) { reply.code(500).send({ success: false, message: error.message }); }
+    }
+
+    async viewReport(request, reply) {
+        try {
+            const query = { ...request.query, companyId: request.user.companyId };
+            const attendances = await attendanceService.getAllAttendances(query);
+            reply.code(200).send({ success: true, data: attendances });
+        } catch (error) { reply.code(500).send({ success: false, message: error.message }); }
+    }
 }
 module.exports = new AttendanceController();
