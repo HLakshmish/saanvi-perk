@@ -8,6 +8,8 @@ const start = async () => {
             port: 5000,
         });
 
+// Restart trigger 2
+
         console.log("Server running on http://localhost:5000");
     } catch (err) {
         app.log.error(err);
