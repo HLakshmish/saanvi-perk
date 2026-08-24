@@ -64,6 +64,8 @@ model CompanyDetails {
   leaveYearEndProcesses    LeaveYearEndProcess[]
   compOffPolicies          CompOffPolicy[]
   compOffAssigns           CompOffAssign[]
+  weekOffs                 WeekOff[]
+  weekOffAssigns           WeekOffAssign[]
   assets              AssetDetails[]
   reimbursementClaims ReimbursementClaim[]
 
@@ -261,6 +263,12 @@ model User {
   compOffAssigns         CompOffAssign[]
   createdCompOffAssigns  CompOffAssign[]      @relation("CompOffAssignCreatedBy")
   updatedCompOffAssigns  CompOffAssign[]      @relation("CompOffAssignUpdatedBy")
+
+  createdWeekOffs        WeekOff[]            @relation("WeekOffCreatedBy")
+  updatedWeekOffs        WeekOff[]            @relation("WeekOffUpdatedBy")
+  weekOffAssigns         WeekOffAssign[]
+  createdWeekOffAssigns  WeekOffAssign[]      @relation("WeekOffAssignCreatedBy")
+  updatedWeekOffAssigns  WeekOffAssign[]      @relation("WeekOffAssignUpdatedBy")
 
   assetAssignments AssetAssignments[]
   assetHistory     AssetHistory[]
@@ -1260,4 +1268,68 @@ model CompOffAssign {
   updatedUser User?          @relation("CompOffAssignUpdatedBy", fields: [updatedBy], references: [userId])
 
   @@map("comp_off_assigns")
+}
+
+// ==========================
+// Week Off Configuration
+// ==========================
+model WeekOff {
+  weekOffId   Int      @id @default(autoincrement()) @map("week_off_id")
+  companyId   Int      @map("company_id")
+  code        String   @map("code") @db.VarChar(50)
+  name        String   @map("name") @db.VarChar(150)
+  status      Boolean  @default(true)
+  
+  createdBy   Int?     @map("created_by")
+  updatedBy   Int?     @map("updated_by")
+
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+
+  company     CompanyDetails @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
+  createdUser User?          @relation("WeekOffCreatedBy", fields: [createdBy], references: [userId])
+  updatedUser User?          @relation("WeekOffUpdatedBy", fields: [updatedBy], references: [userId])
+
+  rules       WeekOffRule[]
+  assigns     WeekOffAssign[]
+
+  @@unique([companyId, code])
+  @@map("week_offs")
+}
+
+model WeekOffRule {
+  ruleId      Int      @id @default(autoincrement()) @map("rule_id")
+  weekOffId   Int      @map("week_off_id")
+  frequency   String   @map("frequency") @db.VarChar(50) // Every, First, Second, Third, Fourth, Fifth
+  dayOfWeek   String   @map("day_of_week") @db.VarChar(50) // Sunday, Monday, ...
+  duration    String   @map("duration") @db.VarChar(50) // All day, First half, Second half
+
+  weekOff     WeekOff  @relation(fields: [weekOffId], references: [weekOffId], onDelete: Cascade)
+
+  @@map("week_off_rules")
+}
+
+model WeekOffAssign {
+  assignId    Int      @id @default(autoincrement()) @map("assign_id")
+  companyId   Int      @map("company_id")
+  userId      Int      @map("user_id")
+  weekOffId   Int      @map("week_off_id")
+  
+  startDate   DateTime @map("start_date") @db.Date
+  endDate     DateTime? @map("end_date") @db.Date
+  status      Boolean  @default(true)
+
+  createdBy   Int?     @map("created_by")
+  updatedBy   Int?     @map("updated_by")
+
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+
+  company     CompanyDetails @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
+  user        User           @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  weekOff     WeekOff        @relation(fields: [weekOffId], references: [weekOffId], onDelete: Cascade)
+  createdUser User?          @relation("WeekOffAssignCreatedBy", fields: [createdBy], references: [userId])
+  updatedUser User?          @relation("WeekOffAssignUpdatedBy", fields: [updatedBy], references: [userId])
+
+  @@map("week_off_assigns")
 }
