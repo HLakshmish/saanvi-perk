@@ -85,11 +85,11 @@ export const AttendanceCard: React.FC<AttendanceCardProps> = ({
 
       {/* Center Circular Timer Gauge */}
       <div className="my-3 flex flex-col items-center justify-center z-10">
-        <div className="relative w-36 h-36 sm:w-40 sm:h-40 flex flex-col items-center justify-center rounded-full border-3 border-brand-accent/90 shadow-[0_0_30px_rgba(251,106,34,0.25)] bg-radial from-brand-accent/20 to-transparent">
+        <div className="relative w-36 h-36 sm:w-40 sm:h-40 flex flex-col items-center justify-center rounded-full border-3 border-white/90 shadow-[0_0_30px_rgba(251,106,34,0.25)] bg-radial from-white/10 to-transparent">
           {/* Subtle outer accent ring */}
-          <div className="absolute inset-1.5 rounded-full border border-brand-accent/30 pointer-events-none" />
+          <div className="absolute inset-1.5 rounded-full border border-white/30 pointer-events-none" />
 
-          <Clock className={`w-4 h-4 text-brand-accent mb-1.5 ${isCheckedIn ? "animate-pulse" : ""}`} />
+          <Clock className={`w-4 h-4 text-white mb-1.5 ${isCheckedIn ? "animate-pulse" : ""}`} />
           <div className="text-[1.3rem] sm:text-2xl font-mono font-extrabold tracking-wider text-white select-none">
             {formatTime(seconds)}
           </div>
