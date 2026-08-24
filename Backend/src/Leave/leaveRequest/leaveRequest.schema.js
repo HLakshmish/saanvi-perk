@@ -13,7 +13,25 @@ const leaveRequestResponseProperties = {
     rejectionReason: { type: 'string', nullable: true },
     remarks: { type: 'string', nullable: true },
     createdAt: { type: 'string', format: 'date-time' },
-    updatedAt: { type: 'string', format: 'date-time' }
+    updatedAt: { type: 'string', format: 'date-time' },
+    user: {
+        type: 'object',
+        nullable: true,
+        properties: {
+            userId: { type: 'number' },
+            firstName: { type: 'string' },
+            lastName: { type: 'string', nullable: true }
+        }
+    },
+    leaveType: {
+        type: 'object',
+        nullable: true,
+        properties: {
+            leaveTypeId: { type: 'number' },
+            leaveName: { type: 'string' },
+            leaveCode: { type: 'string' }
+        }
+    }
 };
 
 const createLeaveRequestSchema = {
@@ -181,10 +199,54 @@ const deleteLeaveRequestSchema = {
     }
 };
 
+const downloadLeaveReportSchema = {
+    description: 'Download leave requests report',
+    tags: ['LeaveRequest'],
+    summary: 'Downloads a CSV report of leave requests',
+    querystring: {
+        type: 'object',
+        properties: {
+            companyId: { type: 'number', description: 'Required for OWNER' },
+            userId: { type: 'number', description: 'Filter by specific user' }
+        }
+    }
+};
+
+const viewLeaveReportSchema = {
+    description: 'View leave requests report data',
+    tags: ['LeaveRequest'],
+    summary: 'Retrieves leave requests data for report viewing',
+    querystring: {
+        type: 'object',
+        properties: {
+            companyId: { type: 'number', description: 'Required for OWNER' },
+            userId: { type: 'number', description: 'Filter by specific user' }
+        }
+    },
+    response: {
+        200: {
+            description: 'Successful response',
+            type: 'object',
+            properties: {
+                success: { type: 'boolean' },
+                data: {
+                    type: 'array',
+                    items: {
+                        type: 'object',
+                        properties: leaveRequestResponseProperties
+                    }
+                }
+            }
+        }
+    }
+};
+
 module.exports = {
     createLeaveRequestSchema,
     getLeaveRequestByIdSchema,
     getAllLeaveRequestsSchema,
     updateLeaveRequestStatusSchema,
-    deleteLeaveRequestSchema
+    deleteLeaveRequestSchema,
+    downloadLeaveReportSchema,
+    viewLeaveReportSchema
 };

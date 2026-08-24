@@ -175,6 +175,72 @@ class UserController {
             reply.code(400).send({ success: false, message: error.message });
         }
     }
+
+    async downloadReport(request, reply) {
+        try {
+            let companyId = request.user.companyId;
+            if (request.user.role === 'OWNER') {
+                companyId = request.query.companyId ? Number(request.query.companyId) : undefined;
+            }
+
+            const users = await userService.getAllUsers(companyId);
+
+            const headers = ['User ID', 'Employee Code', 'First Name', 'Last Name', 'Official Email', 'Phone Number', 'Employment Type', 'Joining Date', 'Status', 'Roles', 'Department'];
+
+            const csvRows = users.map(u => {
+                const roles = u.userRoles ? u.userRoles.map(ur => ur.role.roleName).join(' | ') : '';
+                return [
+                    u.userId,
+                    u.employeeCode,
+                    u.firstName,
+                    u.lastName || '',
+                    u.officialEmail,
+                    u.phoneNumber || '',
+                    u.employmentType || '',
+                    u.joiningDate ? new Date(u.joiningDate).toISOString().split('T')[0] : '',
+                    u.status || '',
+                    `"${roles}"`,
+                    u.department ? u.department.departmentName : ''
+                ];
+            });
+
+            const csvString = [headers.join(','), ...csvRows.map(row => row.join(','))].join('\n');
+            
+            reply.header('Content-Type', 'text/csv');
+            reply.header('Content-Disposition', 'attachment; filename="users_report.csv"');
+            return reply.send(csvString);
+        } catch (error) {
+            reply.code(500).send({ success: false, message: error.message });
+        }
+    }
+
+    async viewReport(request, reply) {
+        try {
+            let companyId = request.user.companyId;
+            if (request.user.role === 'OWNER') {
+                companyId = request.query.companyId ? Number(request.query.companyId) : undefined;
+            }
+
+            const users = await userService.getAllUsers(companyId);
+            
+            const formattedUsers = users.map(u => {
+                const { password, userRoles, ...rest } = u;
+                if (userRoles && userRoles.length > 0) {
+                    rest.roles = userRoles.map(ur => ({
+                        roleId: ur.role.roleId,
+                        roleName: ur.role.roleName
+                    }));
+                } else {
+                    rest.roles = [];
+                }
+                return rest;
+            });
+
+            reply.code(200).send({ success: true, data: formattedUsers });
+        } catch (error) {
+            reply.code(500).send({ success: false, message: error.message });
+        }
+    }
 }
 
 module.exports = new UserController();

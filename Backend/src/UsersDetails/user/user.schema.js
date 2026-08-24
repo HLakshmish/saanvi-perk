@@ -294,11 +294,53 @@ const getEventsSchema = {
     }
 };
 
+const downloadReportSchema = {
+    description: 'Download users report',
+    tags: ['User'],
+    summary: 'Downloads a CSV report of users',
+    querystring: {
+        type: 'object',
+        properties: {
+            companyId: { type: 'number', description: 'Required for OWNER' }
+        }
+    }
+};
+
+const viewReportSchema = {
+    description: 'View users report data',
+    tags: ['User'],
+    summary: 'Retrieves users data for report viewing',
+    querystring: {
+        type: 'object',
+        properties: {
+            companyId: { type: 'number', description: 'Required for OWNER' }
+        }
+    },
+    response: {
+        200: {
+            description: 'Successful response',
+            type: 'object',
+            properties: {
+                success: { type: 'boolean' },
+                data: {
+                    type: 'array',
+                    items: {
+                        type: 'object',
+                        properties: userResponseProperties
+                    }
+                }
+            }
+        }
+    }
+};
+
 module.exports = {
     createUserSchema,
     getUserByIdSchema,
     getAllUsersSchema,
     updateUserSchema,
     deleteUserSchema,
-    getEventsSchema
+    getEventsSchema,
+    downloadReportSchema,
+    viewReportSchema
 };

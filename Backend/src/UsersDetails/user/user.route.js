@@ -6,7 +6,9 @@ const {
     getAllUsersSchema, 
     updateUserSchema, 
     deleteUserSchema,
-    getEventsSchema
+    getEventsSchema,
+    downloadReportSchema,
+    viewReportSchema
 } = require("./user.schema");
 
 async function userRoutes(fastify, options) {
@@ -15,6 +17,8 @@ async function userRoutes(fastify, options) {
         preValidation: [fastify.authenticate, requirePermission(permissionCode)]
     });
 
+    fastify.get("/report/view", opts(viewReportSchema, 'VIEW_USERS'), userController.viewReport.bind(userController));
+    fastify.get("/report/download", opts(downloadReportSchema, 'VIEW_USERS'), userController.downloadReport.bind(userController));
     fastify.post("/", opts(createUserSchema, 'MANAGE_USERS'), userController.createUser.bind(userController));
     fastify.get("/events", opts(getEventsSchema, 'VIEW_USERS'), userController.getEvents.bind(userController));
     fastify.get("/:id", opts(getUserByIdSchema, 'VIEW_USERS'), userController.getUserById.bind(userController));

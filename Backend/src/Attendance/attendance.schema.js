@@ -11,7 +11,17 @@ const properties = {
     overtimeMinutes: { type: 'number', nullable: true },
     earlyCheckoutMinutes: { type: 'number', nullable: true },
     attendanceStatus: { type: 'string', enum: ['PRESENT', 'HALF_DAY', 'ABSENT', 'WEEK_OFF', 'HOLIDAY'] },
-    remarks: { type: 'string', nullable: true }
+    remarks: { type: 'string', nullable: true },
+    user: {
+        type: 'object',
+        nullable: true,
+        properties: {
+            userId: { type: 'number' },
+            firstName: { type: 'string' },
+            lastName: { type: 'string', nullable: true },
+            employeeCode: { type: 'string' }
+        }
+    }
 };
 
 const createSchema = {
@@ -55,4 +65,19 @@ const deleteSchema = {
     response: { 200: { type: 'object', properties: { success: { type: 'boolean' }, message: { type: 'string' } } } }
 };
 
-module.exports = { createSchema, updateSchema, getByIdSchema, getAllSchema, deleteSchema };
+const downloadReportSchema = {
+    description: 'Download attendance report',
+    tags: ['Attendance'],
+    summary: 'Downloads a CSV report of attendance records',
+    querystring: { type: 'object', properties: { userId: { type: 'number' }, attendanceStatus: { type: 'string' }, attendanceDate: { type: 'string' } } }
+};
+
+const viewReportSchema = {
+    description: 'View attendance report data',
+    tags: ['Attendance'],
+    summary: 'Retrieves attendance records data for report viewing',
+    querystring: { type: 'object', properties: { userId: { type: 'number' }, attendanceStatus: { type: 'string' }, attendanceDate: { type: 'string' } } },
+    response: { 200: { type: 'object', properties: { success: { type: 'boolean' }, data: { type: 'array', items: { type: 'object', properties: { attendanceId: { type: 'number' }, companyId: { type: 'number' }, ...properties } } } } } }
+};
+
+module.exports = { createSchema, updateSchema, getByIdSchema, getAllSchema, deleteSchema, downloadReportSchema, viewReportSchema };
