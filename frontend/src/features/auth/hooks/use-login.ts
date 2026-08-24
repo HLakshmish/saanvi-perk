@@ -80,9 +80,11 @@ export function useLogin() {
         setShowSplash(true);
         setSuccessMessage("Login successful! Redirecting...");
 
-        // Preload and navigate immediately so the dashboard data fetch completes under the splash screen
+        // Preload and navigate after a brief delay so the splash screen animation plays fully
         router.prefetch(destination);
-        router.push(destination);
+        setTimeout(() => {
+          router.push(destination);
+        }, 1600);
       } else {
         const errorMsg = response.error || "Login failed";
         setErrors((prev) => ({

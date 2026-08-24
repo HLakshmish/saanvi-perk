@@ -71,9 +71,9 @@ export const AttendanceCard: React.FC<AttendanceCardProps> = ({
   const isCheckedOut = !isCheckedIn && !!checkOutTime;
 
   return (
-    <div className="relative overflow-hidden bg-brand-primary border border-white/20 p-4 sm:p-5 rounded-2xl sm:rounded-3xl text-brand-btn-text shadow-lg flex flex-col justify-between">
+    <div className="relative overflow-hidden bg-brand-primary border border-white/20 p-4 sm:p-5 rounded-2xl sm:rounded-3xl text-white shadow-lg flex flex-col justify-between">
       {/* Decorative backdrop circular glow overlay */}
-      <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-emerald-400/10 pointer-events-none blur-xl" />
+      <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-brand-accent/10 pointer-events-none blur-xl" />
       <div className="absolute -bottom-8 -left-8 w-24 h-24 rounded-full bg-white/5 pointer-events-none" />
 
       {/* Top Header */}
@@ -85,12 +85,12 @@ export const AttendanceCard: React.FC<AttendanceCardProps> = ({
 
       {/* Center Circular Timer Gauge */}
       <div className="my-3 flex flex-col items-center justify-center z-10">
-        <div className="relative w-36 h-36 sm:w-40 sm:h-40 flex flex-col items-center justify-center rounded-full border-3 border-emerald-400/90 shadow-[0_0_30px_rgba(52,211,153,0.25)] bg-radial from-emerald-900/30 to-transparent">
+        <div className="relative w-36 h-36 sm:w-40 sm:h-40 flex flex-col items-center justify-center rounded-full border-3 border-brand-accent/90 shadow-[0_0_30px_rgba(251,106,34,0.25)] bg-radial from-brand-accent/20 to-transparent">
           {/* Subtle outer accent ring */}
-          <div className="absolute inset-1.5 rounded-full border border-emerald-400/30 pointer-events-none" />
-          
-          <Clock className={`w-4 h-4 text-emerald-300 mb-1.5 ${isCheckedIn ? "animate-pulse" : ""}`} />
-          <div className="text-2xl sm:text-3xl font-mono font-extrabold tracking-wider text-white select-none">
+          <div className="absolute inset-1.5 rounded-full border border-brand-accent/30 pointer-events-none" />
+
+          <Clock className={`w-4 h-4 text-brand-accent mb-1.5 ${isCheckedIn ? "animate-pulse" : ""}`} />
+          <div className="text-[1.3rem] sm:text-2xl font-mono font-extrabold tracking-wider text-white select-none">
             {formatTime(seconds)}
           </div>
         </div>
@@ -115,7 +115,7 @@ export const AttendanceCard: React.FC<AttendanceCardProps> = ({
         {isCheckedIn ? (
           <button
             disabled={true}
-            className="py-3 px-3 rounded-2xl font-bold text-xs sm:text-sm border border-emerald-400 bg-transparent text-emerald-300 flex items-center justify-center cursor-default"
+            className="py-3 px-3 rounded-2xl font-bold text-xs sm:text-sm border border-brand-accent bg-transparent text-brand-accent flex items-center justify-center cursor-default"
           >
             <span>Checked In</span>
           </button>
@@ -123,15 +123,14 @@ export const AttendanceCard: React.FC<AttendanceCardProps> = ({
           <button
             onClick={onCheckIn}
             disabled={isCheckedOut || isLoadingLocation}
-            className={`py-3 px-3 rounded-2xl font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-1.5 active:scale-[0.98] ${
-              isCheckedOut
-                ? "bg-transparent text-white/30 border border-white/15 cursor-not-allowed"
-                : "bg-transparent text-emerald-300 hover:bg-emerald-400/10 border border-emerald-400 cursor-pointer"
-            }`}
+            className={`py-3 px-3 rounded-2xl font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-1.5 active:scale-[0.98] ${isCheckedOut
+              ? "bg-transparent text-white/30 border border-white/15 cursor-not-allowed"
+              : "bg-transparent text-brand-accent hover:bg-brand-accent/10 border border-brand-accent cursor-pointer"
+              }`}
           >
             {isLoadingLocation && !isCheckedOut ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
+                <Loader2 className="w-4 h-4 animate-spin text-brand-accent" />
                 <span>Checking In...</span>
               </>
             ) : (
@@ -144,7 +143,7 @@ export const AttendanceCard: React.FC<AttendanceCardProps> = ({
         {isCheckedOut ? (
           <button
             disabled={true}
-            className="py-3 px-3 rounded-2xl font-bold text-xs sm:text-sm border border-emerald-400 bg-transparent text-emerald-300 flex items-center justify-center cursor-default"
+            className="py-3 px-3 rounded-2xl font-bold text-xs sm:text-sm border border-brand-accent bg-transparent text-brand-accent flex items-center justify-center cursor-default"
           >
             <span>Checked Out</span>
           </button>
@@ -152,15 +151,14 @@ export const AttendanceCard: React.FC<AttendanceCardProps> = ({
           <button
             onClick={onCheckOut}
             disabled={!isCheckedIn || isLoadingLocation}
-            className={`py-3 px-3 rounded-2xl font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-1.5 active:scale-[0.98] ${
-              !isCheckedIn
-                ? "bg-transparent text-white/30 border border-white/15 cursor-not-allowed"
-                : "bg-transparent text-emerald-300 hover:bg-emerald-400/10 border border-emerald-400 cursor-pointer"
-            }`}
+            className={`py-3 px-3 rounded-2xl font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-1.5 active:scale-[0.98] ${!isCheckedIn
+              ? "bg-transparent text-white/30 border border-white/15 cursor-not-allowed"
+              : "bg-transparent text-brand-accent hover:bg-brand-accent/10 border border-brand-accent cursor-pointer"
+              }`}
           >
             {isLoadingLocation && isCheckedIn ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
+                <Loader2 className="w-4 h-4 animate-spin text-brand-accent" />
                 <span>Checking Out...</span>
               </>
             ) : (
@@ -173,7 +171,7 @@ export const AttendanceCard: React.FC<AttendanceCardProps> = ({
       {/* Confirmation Message when checked out for today */}
       {isCheckedOut && (
         <div className="z-10 mt-3 py-2 px-3 bg-white/10 border border-white/10 rounded-xl flex items-center justify-center gap-2 text-center">
-          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+          <CheckCircle2 className="w-3.5 h-3.5 text-brand-accent shrink-0" />
           <span className="text-[11px] sm:text-xs font-semibold text-white">
             You&apos;ve successfully checked out for today
           </span>
