@@ -16,7 +16,25 @@ const claimResponseProperties = {
     paymentDate: { type: 'string', format: 'date-time', nullable: true },
     remarks: { type: 'string', nullable: true },
     createdAt: { type: 'string', format: 'date-time' },
-    updatedAt: { type: 'string', format: 'date-time' }
+    updatedAt: { type: 'string', format: 'date-time' },
+    user: {
+        type: 'object',
+        properties: {
+            userId: { type: 'number' },
+            firstName: { type: 'string' },
+            lastName: { type: 'string' }
+        },
+        nullable: true
+    },
+    approver: {
+        type: 'object',
+        properties: {
+            userId: { type: 'number' },
+            firstName: { type: 'string' },
+            lastName: { type: 'string' }
+        },
+        nullable: true
+    }
 };
 
 const createClaimSchema = {

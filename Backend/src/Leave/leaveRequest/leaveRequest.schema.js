@@ -23,6 +23,15 @@ const leaveRequestResponseProperties = {
             lastName: { type: 'string', nullable: true }
         }
     },
+    approvedUser: {
+        type: 'object',
+        nullable: true,
+        properties: {
+            userId: { type: 'number' },
+            firstName: { type: 'string' },
+            lastName: { type: 'string', nullable: true }
+        }
+    },
     leaveType: {
         type: 'object',
         nullable: true,
