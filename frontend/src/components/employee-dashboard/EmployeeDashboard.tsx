@@ -449,158 +449,162 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
         : null;
 
     if (savedAttendanceId) {
-      updateAttendanceCheckOut(Number(savedAttendanceId), {
-        checkOutTime: now.toISOString(),
-        checkOutLatitude: coords.latitude,
-        checkOutLongitude: coords.longitude,
-        workingMinutes: Math.round(seconds / 60),
-      }).catch((err) => {
+      try {
+        await updateAttendanceCheckOut(Number(savedAttendanceId), {
+          checkOutTime: now.toISOString(),
+          checkOutLatitude: coords.latitude,
+          checkOutLongitude: coords.longitude,
+          workingMinutes: Math.round(seconds / 60),
+        });
+        // Immediately refresh leave balances & attendance records
+        await loadDashboardData();
+      } catch (err) {
         console.warn("Could not sync check-out with backend attendance table:", err);
-      });
+      }
     }
 
     toast.success("You've successfully checked out for today");
   };
 
+  // Load dashboard profile, holidays, and live leave summary data
+  const loadDashboardData = async () => {
+    if (!userId) return;
+    setIsLoadingProfile(true);
+    setIsLoadingHolidays(true);
+
+    try {
+      const [desData, userRes, holidaysRes, leaveReqsRes, leaveTypesRes, leaveAccsRes] = await Promise.all([
+        getDesignations(),
+        getUserById(userId),
+        getHolidays().catch((err) => {
+          console.error("Error loading holidays:", err);
+          return { success: false, data: [] };
+        }),
+        fetchLeaveRequests(userId).catch(() => ({ success: false, data: [] })),
+        fetchLeaveTypes().catch(() => ({ success: false, data: [] })),
+        fetchLeaveAccumulations().catch(() => ({ success: false, data: [] })),
+      ]);
+
+      setDesignations(desData || []);
+
+      if (userRes.success && userRes.data) {
+        setUserProfile(userRes.data);
+      }
+
+      // Process real Leave Summary Data
+      const types = (leaveTypesRes.success && Array.isArray(leaveTypesRes.data)) ? leaveTypesRes.data : [];
+      const userAccs = (leaveAccsRes.success && Array.isArray(leaveAccsRes.data))
+        ? leaveAccsRes.data.filter((a: any) => Number(a.userId) === Number(userId) && a.status)
+        : [];
+
+      let dynamicSick = 0;
+      let dynamicComp = 0;
+      let dynamicEarned = 0;
+      let dynamicLop = 0;
+
+      types.forEach((lt: any) => {
+        const alloc = userAccs.find((a: any) => Number(a.leaveTypeId) === Number(lt.leaveTypeId));
+        const limit = alloc ? Number(alloc.numberOfLeaves) : 0;
+        const name = (lt.leaveName || "").toLowerCase();
+        const code = (lt.leaveCode || "").toLowerCase();
+
+        if (name.includes("sick") || name.includes("casual") || code.includes("sl") || code.includes("cl")) {
+          dynamicSick += limit;
+        } else if (name.includes("comp") || code.includes("comp")) {
+          dynamicComp += limit;
+        } else if (name.includes("earned") || name.includes("annual") || name.includes("privilege") || code.includes("el") || code.includes("al") || code.includes("pl")) {
+          dynamicEarned += limit;
+        } else if (name.includes("loss") || name.includes("lop") || code.includes("lop")) {
+          dynamicLop += limit;
+        }
+      });
+
+      // Default to standard 12 sick/casual if no custom allocation configured yet
+      const accumulatedSick = userAccs.length > 0 ? dynamicSick : 12.0;
+      const accumulatedComp = dynamicComp;
+      const accumulatedEarned = dynamicEarned;
+      const accumulatedLop = dynamicLop;
+      const totalAccumulated = accumulatedSick + accumulatedComp + accumulatedEarned + accumulatedLop;
+
+      const reqs = (leaveReqsRes.success && Array.isArray(leaveReqsRes.data)) ? leaveReqsRes.data : [];
+      let availedSick = 0;
+      let availedComp = 0;
+      let availedEarned = 0;
+      let availedLop = 0;
+      let totalUsed = 0;
+      let pendingDays = 0;
+
+      reqs.forEach((r: any) => {
+        const status = (r.status || "").toUpperCase();
+        const days = Number(r.numberOfDays ?? r.days ?? 1);
+        const lt = r.leaveType || {};
+        const typeName = (lt.leaveName || r.leaveTypeName || r.leaveType || "").toLowerCase();
+        const typeCode = (lt.leaveCode || "").toLowerCase();
+
+        if (status === "APPROVED") {
+          totalUsed += days;
+          if (typeName.includes("sick") || typeName.includes("casual") || typeCode.includes("sl") || typeCode.includes("cl")) {
+            availedSick += days;
+          } else if (typeName.includes("comp") || typeCode.includes("comp")) {
+            availedComp += days;
+          } else if (typeName.includes("earned") || typeName.includes("annual") || typeName.includes("privilege") || typeCode.includes("el") || typeCode.includes("al") || typeCode.includes("pl")) {
+            availedEarned += days;
+          } else if (typeName.includes("loss") || typeName.includes("lop") || typeCode.includes("lop")) {
+            availedLop += days;
+          } else {
+            availedSick += days;
+          }
+        } else if (status === "PENDING") {
+          pendingDays += days;
+        }
+      });
+
+      const balanceSick = Math.max(0, accumulatedSick - availedSick);
+      const balanceEarned = Math.max(0, accumulatedEarned - availedEarned);
+      const balanceComp = Math.max(0, accumulatedComp - availedComp);
+      const totalAvailable = Math.max(0, totalAccumulated - totalUsed);
+
+      setLeaveSummary({
+        available: Number(totalAvailable.toFixed(1)),
+        used: Number(totalUsed.toFixed(1)),
+        pending: Number(pendingDays.toFixed(1)),
+        sickBal: Number(balanceSick.toFixed(1)),
+        earnedBal: Number(balanceEarned.toFixed(1)),
+        compBal: Number(balanceComp.toFixed(1)),
+        isLoading: false,
+      });
+
+      if (holidaysRes.success && Array.isArray(holidaysRes.data)) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const upcoming = holidaysRes.data
+          .filter((h: any) => new Date(h.startDate).setHours(0, 0, 0, 0) >= today.getTime())
+          .sort((a: any, b: any) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+          .slice(0, 3)
+          .map((h: any) => {
+            const d = new Date(h.startDate);
+            return {
+              id: h.holidayId,
+              date: d.getDate(),
+              month: d.toLocaleString("en-US", { month: "short" }),
+              day: d.toLocaleString("en-US", { weekday: "long" }),
+              title: h.holidayName,
+            };
+          });
+        setHolidays(upcoming);
+      }
+      setIsLoadingHolidays(false);
+    } catch (err) {
+      console.error("Error loading dashboard details:", err);
+      setIsLoadingHolidays(false);
+    } finally {
+      setIsLoadingProfile(false);
+    }
+  };
+
   // Fetch API Data
   useEffect(() => {
-    if (!userId) return;
-
-    const loadDashboardData = async () => {
-      setIsLoadingProfile(true);
-      setIsLoadingHolidays(true);
-
-      try {
-        const [desData, userRes, holidaysRes, leaveReqsRes, leaveTypesRes, leaveAccsRes] = await Promise.all([
-          getDesignations(),
-          getUserById(userId),
-          getHolidays().catch((err) => {
-            console.error("Error loading holidays:", err);
-            return { success: false, data: [] };
-          }),
-          fetchLeaveRequests(userId).catch(() => ({ success: false, data: [] })),
-          fetchLeaveTypes().catch(() => ({ success: false, data: [] })),
-          fetchLeaveAccumulations().catch(() => ({ success: false, data: [] })),
-        ]);
-
-        setDesignations(desData || []);
-
-        if (userRes.success && userRes.data) {
-          setUserProfile(userRes.data);
-        }
-
-        // Process real Leave Summary Data
-        const types = (leaveTypesRes.success && Array.isArray(leaveTypesRes.data)) ? leaveTypesRes.data : [];
-        const userAccs = (leaveAccsRes.success && Array.isArray(leaveAccsRes.data))
-          ? leaveAccsRes.data.filter((a: any) => Number(a.userId) === Number(userId) && a.status)
-          : [];
-
-        let dynamicSick = 0;
-        let dynamicComp = 0;
-        let dynamicEarned = 0;
-        let dynamicLop = 0;
-
-        types.forEach((lt: any) => {
-          const alloc = userAccs.find((a: any) => Number(a.leaveTypeId) === Number(lt.leaveTypeId));
-          const limit = alloc ? Number(alloc.numberOfLeaves) : 0;
-          const name = (lt.leaveName || "").toLowerCase();
-          const code = (lt.leaveCode || "").toLowerCase();
-
-          if (name.includes("sick") || name.includes("casual") || code.includes("sl") || code.includes("cl")) {
-            dynamicSick += limit;
-          } else if (name.includes("comp") || code.includes("comp")) {
-            dynamicComp += limit;
-          } else if (name.includes("earned") || name.includes("annual") || name.includes("privilege") || code.includes("el") || code.includes("al") || code.includes("pl")) {
-            dynamicEarned += limit;
-          } else if (name.includes("loss") || name.includes("lop") || code.includes("lop")) {
-            dynamicLop += limit;
-          }
-        });
-
-        // Default to standard 12 sick/casual if no custom allocation configured yet
-        const accumulatedSick = userAccs.length > 0 ? dynamicSick : 12.0;
-        const accumulatedComp = dynamicComp;
-        const accumulatedEarned = dynamicEarned;
-        const accumulatedLop = dynamicLop;
-        const totalAccumulated = accumulatedSick + accumulatedComp + accumulatedEarned + accumulatedLop;
-
-        const reqs = (leaveReqsRes.success && Array.isArray(leaveReqsRes.data)) ? leaveReqsRes.data : [];
-        let availedSick = 0;
-        let availedComp = 0;
-        let availedEarned = 0;
-        let availedLop = 0;
-        let totalUsed = 0;
-        let pendingDays = 0;
-
-        reqs.forEach((r: any) => {
-          const status = (r.status || "").toUpperCase();
-          const days = Number(r.numberOfDays ?? r.days ?? 1);
-          const lt = r.leaveType || {};
-          const typeName = (lt.leaveName || r.leaveTypeName || r.leaveType || "").toLowerCase();
-          const typeCode = (lt.leaveCode || "").toLowerCase();
-
-          if (status === "APPROVED") {
-            totalUsed += days;
-            if (typeName.includes("sick") || typeName.includes("casual") || typeCode.includes("sl") || typeCode.includes("cl")) {
-              availedSick += days;
-            } else if (typeName.includes("comp") || typeCode.includes("comp")) {
-              availedComp += days;
-            } else if (typeName.includes("earned") || typeName.includes("annual") || typeName.includes("privilege") || typeCode.includes("el") || typeCode.includes("al") || typeCode.includes("pl")) {
-              availedEarned += days;
-            } else if (typeName.includes("loss") || typeName.includes("lop") || typeCode.includes("lop")) {
-              availedLop += days;
-            } else {
-              availedSick += days;
-            }
-          } else if (status === "PENDING") {
-            pendingDays += days;
-          }
-        });
-
-        const balanceSick = Math.max(0, accumulatedSick - availedSick);
-        const balanceEarned = Math.max(0, accumulatedEarned - availedEarned);
-        const balanceComp = Math.max(0, accumulatedComp - availedComp);
-        const totalAvailable = Math.max(0, totalAccumulated - totalUsed);
-
-        setLeaveSummary({
-          available: Number(totalAvailable.toFixed(1)),
-          used: Number(totalUsed.toFixed(1)),
-          pending: Number(pendingDays.toFixed(1)),
-          sickBal: Number(balanceSick.toFixed(1)),
-          earnedBal: Number(balanceEarned.toFixed(1)),
-          compBal: Number(balanceComp.toFixed(1)),
-          isLoading: false,
-        });
-
-        if (holidaysRes.success && Array.isArray(holidaysRes.data)) {
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-
-          const upcoming = holidaysRes.data
-            .filter((h: any) => new Date(h.startDate).setHours(0, 0, 0, 0) >= today.getTime())
-            .sort((a: any, b: any) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
-            .slice(0, 3)
-            .map((h: any) => {
-              const d = new Date(h.startDate);
-              return {
-                id: h.holidayId,
-                date: d.getDate(),
-                month: d.toLocaleString("en-US", { month: "short" }),
-                day: d.toLocaleString("en-US", { weekday: "long" }),
-                title: h.holidayName,
-              };
-            });
-          setHolidays(upcoming);
-        }
-        setIsLoadingHolidays(false);
-      } catch (err) {
-        console.error("Error loading dashboard details:", err);
-        setIsLoadingHolidays(false);
-      } finally {
-        setIsLoadingProfile(false);
-      }
-    };
-
     loadDashboardData();
   }, [userId]);
 
