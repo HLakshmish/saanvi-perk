@@ -103,6 +103,24 @@ export async function getAttendanceReportView(params: {
   return json;
 }
 
+export async function fetchAttendanceRequests(filterUserId?: number) {
+  const token = getAuthToken();
+  const query = new URLSearchParams();
+  if (filterUserId) query.append("userId", String(filterUserId));
+
+  const url = `${API_BASE_URL}/api/attendance-requests${query.toString() ? `?${query.toString()}` : ""}`;
+  const res = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  const json = await res.json();
+  return json;
+}
+
 // 5. Download attendance CSV report
 export async function downloadAttendanceReport(params: {
   userId?: number;

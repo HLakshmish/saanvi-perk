@@ -432,3 +432,51 @@ export const getExpenseStats = async (period?: string, trendOffset: number = 0):
     };
   }
 };
+
+export const fetchReimbursementClaims = async (companyId: number, userId?: number | null) => {
+  const token = getAuthToken();
+  let url = `${API_BASE_URL}/api/reimbursements?companyId=${companyId}`;
+  if (userId) {
+    url += `&userId=${userId}`;
+  }
+  const res = await fetch(url, {
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+  const result = await res.json();
+  return result;
+};
+
+export const fetchReimbursementById = async (claimId: number | string) => {
+  const token = getAuthToken();
+  const companyId = getCompanyIdCookie();
+  const url = companyId 
+    ? `${API_BASE_URL}/api/reimbursements/${claimId}?companyId=${companyId}`
+    : `${API_BASE_URL}/api/reimbursements/${claimId}`;
+
+  const res = await fetch(url, {
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+  const result = await res.json();
+  return result;
+};
+
+export const fetchReimbursementHistory = async (claimId: number | string) => {
+  const token = getAuthToken();
+  const companyId = getCompanyIdCookie();
+  const url = companyId 
+    ? `${API_BASE_URL}/api/reimbursements/${claimId}/history?companyId=${companyId}`
+    : `${API_BASE_URL}/api/reimbursements/${claimId}/history`;
+
+  const res = await fetch(url, {
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+  const result = await res.json();
+  return result;
+};
+
