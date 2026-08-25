@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Image from "next/image";
 import { RefreshCw } from "lucide-react";
 
 interface SplashScreenProps {
@@ -52,34 +51,99 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
     <div
       className="fixed inset-0 z-[9999] flex flex-col items-center justify-center select-none overflow-hidden"
       style={{
-        background: "linear-gradient(to bottom, #091421ff 0%, #092848ff 70%, #143a62ff 100%, #ffffff 100%)",
+        background:
+          "linear-gradient(to bottom, #091421ff 0%, #092848ff 70%, #143a62ff 100%, #ffffff 100%)",
       }}
     >
-      {/* Centered Minimalist Brand Logo & Name */}
-      <div className="flex items-center gap-2.5 animate-scale-in">
-        <img
-          src="/icon1.png"
-          alt="Nexus Logo"
-          className="w-9 h-9 object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.1)]"
-        />
-        <h2 className="text-3xl font-extrabold tracking-tight text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.1)] font-sans">
-          Nexus
-        </h2>
+      <style>{`
+        @keyframes splashScaleInOut {
+          0%, 100% {
+            transform: scale(0.95);
+            filter: drop-shadow(0 4px 14px rgba(0,0,0,0.25));
+          }
+          50% {
+            transform: scale(1.12);
+            filter: drop-shadow(0 0 25px rgba(56,189,248,0.45));
+          }
+        }
+
+        @keyframes splashRippleRing {
+          0% {
+            transform: scale(0.7);
+            opacity: 0.8;
+          }
+          100% {
+            transform: scale(1.9);
+            opacity: 0;
+          }
+        }
+
+        @keyframes splashAura {
+          0%, 100% {
+            opacity: 0.25;
+            transform: scale(0.85);
+          }
+          50% {
+            opacity: 0.6;
+            transform: scale(1.3);
+          }
+        }
+
+        .splash-icon-anim {
+          animation: splashScaleInOut 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+
+        .splash-ripple-1 {
+          animation: splashRippleRing 2.4s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+        }
+
+        .splash-ripple-2 {
+          animation: splashRippleRing 2.4s cubic-bezier(0.2, 0.8, 0.2, 1) infinite 1.2s;
+        }
+
+        .splash-aura-glow {
+          animation: splashAura 2.2s ease-in-out infinite;
+        }
+      `}</style>
+
+      {/* Ambient background glow behind logo */}
+      <div className="relative flex items-center justify-center">
+        {/* Expanding pulse ripple rings */}
+        <div className="absolute w-28 h-28 rounded-full border border-sky-400/30 splash-ripple-1 pointer-events-none" />
+        <div className="absolute w-28 h-28 rounded-full border border-sky-300/20 splash-ripple-2 pointer-events-none" />
+
+        {/* Soft radial glow aura */}
+        <div className="absolute w-36 h-36 rounded-full bg-sky-500/20 blur-2xl splash-aura-glow pointer-events-none" />
+
+        {/* Centered Minimalist Brand Logo & Name with Scale In/Out */}
+        <div className="relative z-10 flex items-center gap-3.5 splash-icon-anim">
+          <div className="relative flex items-center justify-center">
+            <img
+              src="/icon1.png"
+              alt="Nexus Logo"
+              className="w-11 h-11 object-contain drop-shadow-[0_4px_12px_rgba(0,0,0,0.3)] transition-transform duration-300"
+            />
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.2)] font-sans">
+            Nexus
+          </h2>
+        </div>
       </div>
 
-      {/* Subtle Slow Network Messages (Absolute positioned at the bottom, so they don't disrupt center alignment) */}
+      {/* Subtle Slow Network Messages */}
       {isSlowNetwork && (
         <div className="absolute bottom-12 flex flex-col items-center gap-2 animate-fade-in px-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 border border-slate-200/80 text-[#0b2544] text-[10px] font-bold shadow-2xs backdrop-blur-xs">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 border border-slate-200 text-[#0b2544] text-[11px] font-bold shadow-md backdrop-blur-xs">
+            <span className="w-2 h-2 rounded-full bg-sky-500 animate-ping" />
             <span>Loading Workspace...</span>
           </div>
 
           {showRefresh && (
             <button
               onClick={handleRefresh}
-              className="inline-flex items-center gap-1 text-[11px] text-[#184474] hover:text-[#0b2544] underline underline-offset-4 font-bold transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 text-xs text-sky-200 hover:text-white underline underline-offset-4 font-bold transition-colors cursor-pointer"
             >
-              <RefreshCw className="w-3 h-3" />
+              <RefreshCw className="w-3.5 h-3.5" />
               <span>Tap to refresh</span>
             </button>
           )}
