@@ -20,6 +20,7 @@ export const ApprovalsInsights: React.FC<ApprovalsInsightsProps> = ({ onNavigate
     rejected: 0,
     leavesPending: 0,
     reimbursementsPending: 0,
+    attendancePending: 0,
   });
   const [recentPending, setRecentPending] = useState<UnifiedApprovalItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
