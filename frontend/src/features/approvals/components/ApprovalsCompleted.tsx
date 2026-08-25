@@ -28,16 +28,17 @@ export const ApprovalsCompleted: React.FC<ApprovalsCompletedProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
-  const [selectedType, setSelectedType] = useState<"All" | "LEAVE" | "REIMBURSEMENT">("All");
+  const [selectedType, setSelectedType] = useState<"All" | "LEAVE" | "REIMBURSEMENT" | "ATTENDANCE">("All");
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [dateRange, setDateRange] = useState("Select Date");
   const [selectedItem, setSelectedItem] = useState<UnifiedApprovalItem | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
-  const approvalTypes: Array<"All" | "LEAVE" | "REIMBURSEMENT"> = [
+  const approvalTypes: Array<"All" | "LEAVE" | "REIMBURSEMENT" | "ATTENDANCE"> = [
     "All",
     "LEAVE",
     "REIMBURSEMENT",
+    "ATTENDANCE",
   ];
 
   const loadData = async () => {

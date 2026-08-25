@@ -16,7 +16,7 @@ export const ApprovalsPending: React.FC<ApprovalsPendingProps> = ({ onDataChange
   const [items, setItems] = useState<UnifiedApprovalItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [typeFilter, setTypeFilter] = useState<"ALL" | "LEAVE" | "REIMBURSEMENT">("ALL");
+  const [typeFilter, setTypeFilter] = useState<"ALL" | "LEAVE" | "REIMBURSEMENT" | "ATTENDANCE">("ALL");
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
 
   // Modals state
@@ -78,7 +78,7 @@ export const ApprovalsPending: React.FC<ApprovalsPendingProps> = ({ onDataChange
         <div>
           <h2 className="text-base font-bold text-brand-primary">Pending Approvals</h2>
           <p className="text-xs text-slate-500 font-semibold mt-0.5">
-            Review and approve leave applications and reimbursement claims.
+            Review and approve leave applications, reimbursement claims, and attendance requests.
           </p>
         </div>
 
@@ -97,7 +97,15 @@ export const ApprovalsPending: React.FC<ApprovalsPendingProps> = ({ onDataChange
               onClick={() => setShowTypeDropdown(!showTypeDropdown)}
               className="flex items-center gap-2 text-xs font-bold border border-slate-300 rounded-xl px-3.5 py-2 bg-white text-slate-700 hover:bg-slate-50 cursor-pointer shadow-2xs transition-colors"
             >
-              <span>{typeFilter === "ALL" ? "All Types" : typeFilter === "LEAVE" ? "Leaves Only" : "Reimbursements"}</span>
+              <span>
+                {typeFilter === "ALL"
+                  ? "All Types"
+                  : typeFilter === "LEAVE"
+                  ? "Leaves"
+                  : typeFilter === "REIMBURSEMENT"
+                  ? "Reimbursements"
+                  : "Attendance"}
+              </span>
               <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
             </button>
 
@@ -107,6 +115,7 @@ export const ApprovalsPending: React.FC<ApprovalsPendingProps> = ({ onDataChange
                   { key: "ALL", label: "All Types" },
                   { key: "LEAVE", label: "Leaves Only" },
                   { key: "REIMBURSEMENT", label: "Reimbursements" },
+                  { key: "ATTENDANCE", label: "Attendance" },
                 ].map((t) => (
                   <button
                     key={t.key}

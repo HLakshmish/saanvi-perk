@@ -18,8 +18,10 @@ import {
   Coffee,
   Sparkles,
   Layers,
+  FileText,
 } from "lucide-react";
 import { getAttendances } from "../api/attendance.api";
+import { AttendanceRegularizeModal } from "./AttendanceRegularizeModal";
 import { getEmployees } from "@/features/employees/api/employees.api";
 import { getCurrentUserId } from "@/features/expenses/api/expenses.api";
 import { getHolidays, HolidayRecord } from "@/features/organization/api/calendar.api";
@@ -60,6 +62,15 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
   const [selectedDate, setSelectedDate] = useState<string>(
     () => new Date().toISOString().split("T")[0]
   );
+
+  // Attendance Regularize Modal State (for employee date clicks)
+  const [regularizeLog, setRegularizeLog] = useState<any | null>(null);
+  const [isRegularizeModalOpen, setIsRegularizeModalOpen] = useState(false);
+
+  const handleOpenRegularizeModal = (log: any) => {
+    setRegularizeLog(log);
+    setIsRegularizeModalOpen(true);
+  };
 
   const loggedInUserId = getCurrentUserId();
 
@@ -688,13 +699,15 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                 return (
                   <div
                     key={log.dateKey}
-                    className={`p-4 rounded-2xl border shadow-2xs transition-all space-y-3 bg-white ${
+                    onClick={() => handleOpenRegularizeModal(log)}
+                    className={`p-4 rounded-2xl border shadow-2xs transition-all space-y-3 cursor-pointer hover:shadow-md hover:border-brand-primary/50 group bg-white ${
                       isWO
-                        ? "border-slate-200/70 bg-slate-50/40"
+                        ? "border-slate-200/70 bg-slate-50/40 hover:bg-slate-50/80"
                         : isHoliday
-                        ? "border-purple-200/80 bg-purple-50/20"
+                        ? "border-purple-200/80 bg-purple-50/20 hover:bg-purple-50/40"
                         : "border-slate-200/80"
                     }`}
+                    title="Click to request attendance correction"
                   >
                     {/* Top Header: Date & Status */}
                     <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
@@ -794,7 +807,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                       <TableHead>Check In</TableHead>
                       <TableHead>Check Out</TableHead>
                       <TableHead>Total Worked</TableHead>
-                      <TableHead className="text-center">Status</TableHead>
+                      <TableHead className="text-center sm:pr-6">Status</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -808,15 +821,17 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                       return (
                         <TableRow
                           key={log.dateKey}
-                          className={`transition-colors ${
+                          onClick={() => handleOpenRegularizeModal(log)}
+                          className={`transition-colors cursor-pointer hover:bg-brand-primary-light/40 group ${
                             isWO
-                              ? "bg-slate-50/30 text-slate-500 hover:bg-slate-100/50"
+                              ? "bg-slate-50/30 text-slate-500 hover:bg-slate-100/70"
                               : isHoliday
-                              ? "bg-purple-50/20 hover:bg-purple-50/40"
+                              ? "bg-purple-50/20 hover:bg-purple-50/50"
                               : log.isToday
-                              ? "bg-brand-primary-light/40"
+                              ? "bg-brand-primary-light/40 hover:bg-brand-primary-light/60"
                               : ""
                           }`}
+                          title="Click row to request attendance correction"
                         >
                           {/* Date Column */}
                           <TableCell className="sm:px-6">
@@ -881,7 +896,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                           </TableCell>
 
                           {/* Status Badge */}
-                          <TableCell className="text-center">
+                          <TableCell className="text-center sm:pr-6">
                             {log.statusLabel !== "--" && (
                               <span
                                 className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider inline-block ${
@@ -911,6 +926,17 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
             </div>
           </div>
         )}
+
+        {/* Attendance Regularize Request Modal */}
+        <AttendanceRegularizeModal
+          isOpen={isRegularizeModalOpen}
+          onClose={() => setIsRegularizeModalOpen(false)}
+          onSuccess={() => loadData()}
+          selectedDate={regularizeLog?.date || null}
+          currentCheckIn={regularizeLog?.checkInTime}
+          currentCheckOut={regularizeLog?.checkOutTime}
+          currentStatusLabel={regularizeLog?.statusLabel}
+        />
       </div>
     );
   }

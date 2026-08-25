@@ -13,7 +13,6 @@ import {
   Receipt,
   Laptop,
   TrendingUp,
-  ShieldAlert,
   Settings,
   X,
 } from "lucide-react";
@@ -45,7 +44,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: "expenses", label: "Expenses", icon: Receipt, roles: ["superadmin", "admin"] },
     { id: "assets", label: "Assets", icon: Laptop, roles: ["superadmin", "admin", "employee"] },
     { id: "reports", label: "Reports", icon: TrendingUp, roles: ["superadmin", "admin"] },
-    { id: "tenant-settings", label: "Superadmin Control", icon: ShieldAlert, roles: ["superadmin"] },
     { id: "settings", label: "Settings", icon: Settings, roles: ["superadmin", "admin"] },
   ];
 
