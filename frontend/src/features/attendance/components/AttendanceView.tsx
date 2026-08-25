@@ -18,8 +18,10 @@ import {
   Coffee,
   Sparkles,
   Layers,
+  FileText,
 } from "lucide-react";
 import { getAttendances } from "../api/attendance.api";
+import { AttendanceRegularizeModal } from "./AttendanceRegularizeModal";
 import { getEmployees } from "@/features/employees/api/employees.api";
 import { getCurrentUserId } from "@/features/expenses/api/expenses.api";
 import { getHolidays, HolidayRecord } from "@/features/organization/api/calendar.api";
@@ -60,6 +62,15 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
   const [selectedDate, setSelectedDate] = useState<string>(
     () => new Date().toISOString().split("T")[0]
   );
+
+  // Attendance Regularize Modal State (for employee date clicks)
+  const [regularizeLog, setRegularizeLog] = useState<any | null>(null);
+  const [isRegularizeModalOpen, setIsRegularizeModalOpen] = useState(false);
+
+  const handleOpenRegularizeModal = (log: any) => {
+    setRegularizeLog(log);
+    setIsRegularizeModalOpen(true);
+  };
 
   const loggedInUserId = getCurrentUserId();
 
@@ -316,39 +327,20 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
         const remMins = mins % 60;
         const workStr = mins > 0 ? `${hrs}h ${remMins}m` : "--";
 
-        // Hours-based status thresholds:
-        // >= 8h 30m (510 mins) => Present
-        // >= 4h 0m (240 mins) & < 8h 30m => Half Day
-        // < 4h 0m => Half Day (clocked in but very short)
-        // If today & no checkout yet => show status based on elapsed so far
-        const PRESENT_THRESHOLD = 510; // 8h 30m
-        const HALF_DAY_THRESHOLD = 240; // 4h 0m
+        // Directly use attendanceStatus calculated and returned from backend
+        const rawStatus = String(matchedPunch.attendanceStatus || "PRESENT").toUpperCase();
+        let dayStatus: "PRESENT" | "HALF_DAY" | "ABSENT" = "PRESENT";
+        let dayStatusLabel = isWeekend ? "Present (WO Worked)" : "Present";
 
-        let dayStatus: "PRESENT" | "HALF_DAY" | "ABSENT" = "ABSENT";
-        let dayStatusLabel = "Absent";
-
-        if (isToday && matchedPunch.checkInTime && !matchedPunch.checkOutTime) {
-          // Still active today — show current elapsed status
-          if (mins >= PRESENT_THRESHOLD) {
-            dayStatus = "PRESENT";
-            dayStatusLabel = isWeekend ? "Present (WO Worked)" : "Present";
-          } else if (mins >= HALF_DAY_THRESHOLD) {
-            dayStatus = "HALF_DAY";
-            dayStatusLabel = "Half Day";
-          } else {
-            dayStatus = "PRESENT";
-            dayStatusLabel = isWeekend ? "Present (WO Worked)" : "Present";
-          }
-        } else if (mins >= PRESENT_THRESHOLD) {
+        if (rawStatus === "HALF_DAY") {
+          dayStatus = "HALF_DAY";
+          dayStatusLabel = "Half Day";
+        } else if (rawStatus === "ABSENT") {
+          dayStatus = "ABSENT";
+          dayStatusLabel = "Absent";
+        } else {
           dayStatus = "PRESENT";
           dayStatusLabel = isWeekend ? "Present (WO Worked)" : "Present";
-        } else if (mins >= HALF_DAY_THRESHOLD) {
-          dayStatus = "HALF_DAY";
-          dayStatusLabel = "Half Day";
-        } else {
-          // Clocked in but less than 4h
-          dayStatus = "HALF_DAY";
-          dayStatusLabel = "Half Day";
         }
 
         logs.push({
@@ -508,6 +500,29 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
         (e) => String(e.id) === String(att.userId) || Number(e.id) === Number(att.userId)
       );
 
+      const isRowToday = att.attendanceDate
+        ? isTodayDate(new Date(att.attendanceDate))
+        : att.checkInTime
+        ? isTodayDate(new Date(att.checkInTime))
+        : false;
+      const mins = computeDayWorkingMinutes(att, isRowToday);
+
+      // Directly use attendanceStatus calculated and returned from backend
+      const rawStatus = String(att.attendanceStatus || "PRESENT").toUpperCase();
+      let computedStatus: "PRESENT" | "HALF_DAY" | "ABSENT" = "PRESENT";
+      let computedStatusLabel = "Present";
+
+      if (rawStatus === "HALF_DAY") {
+        computedStatus = "HALF_DAY";
+        computedStatusLabel = "Half Day";
+      } else if (rawStatus === "ABSENT") {
+        computedStatus = "ABSENT";
+        computedStatusLabel = "Absent";
+      } else {
+        computedStatus = "PRESENT";
+        computedStatusLabel = "Present";
+      }
+
       return {
         ...att,
         employeeName: emp?.name || currentUserName || `Employee #${att.userId}`,
@@ -515,6 +530,9 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
         department: emp?.department || "General",
         designation: emp?.designation || "Staff",
         profilePic: emp?.profilePic,
+        computedStatus,
+        computedStatusLabel,
+        computedMins: mins,
       };
     });
   }, [attendances, employees, currentUserName]);
@@ -536,7 +554,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
 
       const matchesStatus =
         statusFilter === "ALL" ||
-        row.attendanceStatus?.toUpperCase() === statusFilter.toUpperCase();
+        row.computedStatus === statusFilter;
 
       return matchesDate && matchesSearch && matchesStatus;
     });
@@ -681,13 +699,15 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                 return (
                   <div
                     key={log.dateKey}
-                    className={`p-4 rounded-2xl border shadow-2xs transition-all space-y-3 bg-white ${
+                    onClick={() => handleOpenRegularizeModal(log)}
+                    className={`p-4 rounded-2xl border shadow-2xs transition-all space-y-3 cursor-pointer hover:shadow-md hover:border-brand-primary/50 group bg-white ${
                       isWO
-                        ? "border-slate-200/70 bg-slate-50/40"
+                        ? "border-slate-200/70 bg-slate-50/40 hover:bg-slate-50/80"
                         : isHoliday
-                        ? "border-purple-200/80 bg-purple-50/20"
+                        ? "border-purple-200/80 bg-purple-50/20 hover:bg-purple-50/40"
                         : "border-slate-200/80"
                     }`}
+                    title="Click to request attendance correction"
                   >
                     {/* Top Header: Date & Status */}
                     <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
@@ -787,7 +807,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                       <TableHead>Check In</TableHead>
                       <TableHead>Check Out</TableHead>
                       <TableHead>Total Worked</TableHead>
-                      <TableHead className="text-center">Status</TableHead>
+                      <TableHead className="text-center sm:pr-6">Status</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -801,15 +821,17 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                       return (
                         <TableRow
                           key={log.dateKey}
-                          className={`transition-colors ${
+                          onClick={() => handleOpenRegularizeModal(log)}
+                          className={`transition-colors cursor-pointer hover:bg-brand-primary-light/40 group ${
                             isWO
-                              ? "bg-slate-50/30 text-slate-500 hover:bg-slate-100/50"
+                              ? "bg-slate-50/30 text-slate-500 hover:bg-slate-100/70"
                               : isHoliday
-                              ? "bg-purple-50/20 hover:bg-purple-50/40"
+                              ? "bg-purple-50/20 hover:bg-purple-50/50"
                               : log.isToday
-                              ? "bg-brand-primary-light/40"
+                              ? "bg-brand-primary-light/40 hover:bg-brand-primary-light/60"
                               : ""
                           }`}
+                          title="Click row to request attendance correction"
                         >
                           {/* Date Column */}
                           <TableCell className="sm:px-6">
@@ -874,7 +896,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                           </TableCell>
 
                           {/* Status Badge */}
-                          <TableCell className="text-center">
+                          <TableCell className="text-center sm:pr-6">
                             {log.statusLabel !== "--" && (
                               <span
                                 className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider inline-block ${
@@ -904,6 +926,17 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
             </div>
           </div>
         )}
+
+        {/* Attendance Regularize Request Modal */}
+        <AttendanceRegularizeModal
+          isOpen={isRegularizeModalOpen}
+          onClose={() => setIsRegularizeModalOpen(false)}
+          onSuccess={() => loadData()}
+          selectedDate={regularizeLog?.date || null}
+          currentCheckIn={regularizeLog?.checkInTime}
+          currentCheckOut={regularizeLog?.checkOutTime}
+          currentStatusLabel={regularizeLog?.statusLabel}
+        />
       </div>
     );
   }
@@ -1022,7 +1055,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
 
         {/* Status Filter Tabs */}
         <div className="flex items-center gap-1.5 self-stretch sm:self-auto overflow-x-auto">
-          {["ALL", "PRESENT", "HALF_DAY"].map((status) => (
+          {["ALL", "PRESENT", "HALF_DAY", "ABSENT"].map((status) => (
             <button
               key={status}
               onClick={() => setStatusFilter(status)}
@@ -1032,7 +1065,13 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
             >
-              {status === "ALL" ? "All Logs" : status === "PRESENT" ? "Present" : "Half Day"}
+              {status === "ALL"
+                ? "All Logs"
+                : status === "PRESENT"
+                ? "Present"
+                : status === "HALF_DAY"
+                ? "Half Day"
+                : "Absent"}
             </button>
           ))}
         </div>
@@ -1116,12 +1155,14 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
 
                       <span
                         className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
-                          row.attendanceStatus?.toUpperCase() === "PRESENT"
+                          row.computedStatus === "PRESENT"
                             ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
-                            : "bg-slate-100 text-slate-700"
+                            : row.computedStatus === "HALF_DAY"
+                            ? "bg-amber-100 text-amber-800 border border-amber-200"
+                            : "bg-rose-100 text-rose-800 border border-rose-200"
                         }`}
                       >
-                        {row.attendanceStatus || "PRESENT"}
+                        {row.computedStatusLabel}
                       </span>
                     </div>
 
@@ -1302,12 +1343,14 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                           <TableCell className="text-center">
                             <span
                               className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                                row.attendanceStatus?.toUpperCase() === "PRESENT"
+                                row.computedStatus === "PRESENT"
                                   ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
-                                  : "bg-slate-100 text-slate-700"
+                                  : row.computedStatus === "HALF_DAY"
+                                  ? "bg-amber-100 text-amber-800 border border-amber-200"
+                                  : "bg-rose-100 text-rose-800 border border-rose-200"
                               }`}
                             >
-                              {row.attendanceStatus || "PRESENT"}
+                              {row.computedStatusLabel}
                             </span>
                           </TableCell>
                         </TableRow>

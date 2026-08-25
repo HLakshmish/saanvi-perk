@@ -15,7 +15,7 @@ function getCompanyIdCookie(): number | null {
 }
 
 /**
- * Fetch all unified approvals (Leaves & Reimbursements)
+ * Fetch all unified approvals (Leaves, Reimbursements, and Attendance Requests)
  */
 export const fetchAllApprovals = async (): Promise<{
   success: boolean;
@@ -39,10 +39,13 @@ export const fetchAllApprovals = async (): Promise<{
     ? `${API_BASE_URL}/api/reimbursements?companyId=${companyId}`
     : `${API_BASE_URL}/api/reimbursements`;
 
+  const attUrl = `${API_BASE_URL}/api/attendance-requests`;
+
   try {
-    const [leaveRes, reimbRes] = await Promise.all([
+    const [leaveRes, reimbRes, attRes] = await Promise.all([
       fetch(leaveUrl, { headers }).then((r) => r.json()).catch(() => ({ success: false, data: [] })),
       fetch(reimbUrl, { headers }).then((r) => r.json()).catch(() => ({ success: false, data: [] })),
+      fetch(attUrl, { headers }).then((r) => r.json()).catch(() => ({ success: false, data: [] })),
     ]);
 
     const items: UnifiedApprovalItem[] = [];
@@ -112,6 +115,53 @@ export const fetchAllApprovals = async (): Promise<{
       });
     }
 
+    // 3. Process Attendance Requests
+    if (attRes.success && Array.isArray(attRes.data)) {
+      attRes.data.forEach((a: any) => {
+        const status = (a.status || "PENDING").toUpperCase();
+        const shiftDateStr = a.shiftDate ? new Date(a.shiftDate).toLocaleDateString("en-GB").replace(/\//g, "-") : "";
+        const empName = a.user ? `${a.user.firstName} ${a.user.lastName || ""}`.trim() : `Employee #${a.userId}`;
+        
+        const formatT = (t?: string) => {
+          if (!t) return "--:--";
+          try {
+            return new Date(t).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
+          } catch {
+            return "--:--";
+          }
+        };
+        const timeRange = `${formatT(a.checkInTime)} - ${formatT(a.checkOutTime)}`;
+        const reasonLabels: Record<string, string> = {
+          FORGOT_ID: "Forgot ID / Tech Issue",
+          ON_DUTY: "On Duty / Client Visit",
+          BUSINESS_TOUR: "Business Tour / Travel",
+          NEW_JOINEE: "New Joinee Regularization",
+          OTHERS: "Other Reason",
+        };
+        const reasonLabel = reasonLabels[a.reason] || a.reason || "Attendance Regularization";
+
+        items.push({
+          id: `attendance-${a.requestId}`,
+          rawId: a.requestId,
+          moduleType: "ATTENDANCE",
+          employeeId: a.userId,
+          employeeName: empName,
+          requestDate: a.createdAt ? new Date(a.createdAt).toLocaleDateString("en-GB").replace(/\//g, "-") : shiftDateStr,
+          title: `Attendance: ${reasonLabel}`,
+          category: "Attendance",
+          amountOrDays: timeRange,
+          numericValue: 1,
+          periodOrDate: shiftDateStr || "N/A",
+          reason: a.remarks || "No remarks provided",
+          status: status as any,
+          approvedBy: a.approvedBy ? String(a.approvedBy) : undefined,
+          approvedAt: a.approvedAt ? new Date(a.approvedAt).toLocaleDateString("en-GB").replace(/\//g, "-") : undefined,
+          remarks: a.remarks,
+          rejectionReason: a.rejectionReason,
+        });
+      });
+    }
+
     // Sort by latest request date / ID descending
     items.sort((a, b) => b.rawId - a.rawId);
 
@@ -125,6 +175,7 @@ export const fetchAllApprovals = async (): Promise<{
     const reimbursementsPending = items.filter(
       (i) => i.moduleType === "REIMBURSEMENT" && (i.status === "PENDING" || i.status === "UNDER_REVIEW")
     ).length;
+    const attendancePending = items.filter((i) => i.moduleType === "ATTENDANCE" && i.status === "PENDING").length;
 
     const stats: ApprovalStats = {
       total,
@@ -134,6 +185,7 @@ export const fetchAllApprovals = async (): Promise<{
       rejected,
       leavesPending,
       reimbursementsPending,
+      attendancePending,
     };
 
     return { success: true, data: items, stats };
@@ -149,6 +201,7 @@ export const fetchAllApprovals = async (): Promise<{
         rejected: 0,
         leavesPending: 0,
         reimbursementsPending: 0,
+        attendancePending: 0,
       },
       error: error.message || "Failed to fetch approvals",
     };
@@ -156,7 +209,7 @@ export const fetchAllApprovals = async (): Promise<{
 };
 
 /**
- * Update single approval status (Leave or Reimbursement)
+ * Update single approval status (Leave, Reimbursement, or Attendance)
  */
 export const updateApprovalStatus = async (
   item: UnifiedApprovalItem,
@@ -190,6 +243,21 @@ export const updateApprovalStatus = async (
         return { success: true, message: result.message || `Leave request ${payload.status.toLowerCase()} successfully` };
       }
       return { success: false, error: result.message || "Failed to update leave status" };
+    } else if (item.moduleType === "ATTENDANCE") {
+      const url = `${API_BASE_URL}/api/attendance-requests/${item.rawId}/status`;
+      const res = await fetch(url, {
+        method: "PUT",
+        headers,
+        body: JSON.stringify({
+          status: payload.status,
+          rejectionReason: payload.rejectionReason || undefined,
+        }),
+      });
+      const result = await res.json();
+      if (res.ok && result.success) {
+        return { success: true, message: result.message || `Attendance request ${payload.status.toLowerCase()} successfully` };
+      }
+      return { success: false, error: result.message || "Failed to update attendance request status" };
     } else {
       // Reimbursement Claim
       const url = companyId

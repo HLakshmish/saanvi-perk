@@ -103,6 +103,30 @@ export async function getAttendanceReportView(params: {
   return json;
 }
 
+export interface AttendanceRequestPayload {
+  shiftDate: string; // ISO string or YYYY-MM-DD
+  reason: "BUSINESS_TOUR" | "FORGOT_ID" | "NEW_JOINEE" | "ON_DUTY" | "OTHERS";
+  checkInTime?: string | null;
+  checkOutTime?: string | null;
+  isNextDay?: boolean;
+  remarks: string;
+}
+
+export async function createAttendanceRequest(data: AttendanceRequestPayload) {
+  const token = getAuthToken();
+  const res = await fetch(`${API_BASE_URL}/api/attendance-requests`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(data),
+  });
+
+  const json = await res.json();
+  return json;
+}
+
 export async function fetchAttendanceRequests(filterUserId?: number) {
   const token = getAuthToken();
   const query = new URLSearchParams();
