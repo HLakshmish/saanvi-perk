@@ -10,14 +10,48 @@ class AttendanceRequestService {
         return await attendanceRequestRepository.createRequest(data);
     }
 
+    async mapSuperAdminApprovers(requests) {
+        const prisma = require("../../config/prisma");
+        let superAdmins = {};
+
+        const mapRequest = async (req) => {
+            if ((req.status === 'APPROVED' || req.status === 'REJECTED') && !req.approvedBy && req.companyId) {
+                if (!superAdmins[req.companyId]) {
+                    superAdmins[req.companyId] = await prisma.superAdmin.findUnique({ where: { companyId: req.companyId } });
+                }
+                const superAdmin = superAdmins[req.companyId];
+                if (superAdmin) {
+                    req.approvedUser = {
+                        userId: superAdmin.superAdminId,
+                        firstName: superAdmin.firstName,
+                        lastName: superAdmin.lastName
+                    };
+                    req.approvedBy = superAdmin.superAdminId;
+                }
+            }
+            return req;
+        };
+
+        if (Array.isArray(requests)) {
+            for (let req of requests) {
+                await mapRequest(req);
+            }
+        } else if (requests) {
+            await mapRequest(requests);
+        }
+
+        return requests;
+    }
+
     async getRequestById(id) {
         const req = await attendanceRequestRepository.getRequestById(id);
         if (!req) throw new Error("Attendance Request not found");
-        return req;
+        return await this.mapSuperAdminApprovers(req);
     }
 
     async getAllRequests(query) {
-        return await attendanceRequestRepository.getAllRequests(query);
+        const reqs = await attendanceRequestRepository.getAllRequests(query);
+        return await this.mapSuperAdminApprovers(reqs);
     }
 
     async updateRequestStatus(id, data) {
@@ -54,7 +88,7 @@ class AttendanceRequestService {
             }
         }
 
-        return updatedReq;
+        return await this.mapSuperAdminApprovers(updatedReq);
     }
 }
 

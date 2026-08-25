@@ -8,7 +8,10 @@ class AttendanceRequestRepository {
     async getRequestById(requestId) {
         return await prisma.attendanceRequest.findUnique({
             where: { requestId },
-            include: { user: true }
+            include: { 
+                user: { select: { firstName: true, lastName: true, employeeCode: true } },
+                approvedUser: { select: { firstName: true, lastName: true } }
+            }
         });
     }
 
@@ -26,7 +29,11 @@ class AttendanceRequestRepository {
     async updateRequest(requestId, data) {
         return await prisma.attendanceRequest.update({
             where: { requestId },
-            data
+            data,
+            include: {
+                user: { select: { firstName: true, lastName: true, employeeCode: true } },
+                approvedUser: { select: { firstName: true, lastName: true } }
+            }
         });
     }
 

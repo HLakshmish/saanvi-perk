@@ -33,7 +33,7 @@ class AttendanceRequestController {
             const data = {
                 status: request.body.status,
                 rejectionReason: request.body.rejectionReason,
-                approvedBy: request.user.userId
+                approvedBy: ['SUPERADMIN', 'OWNER'].includes(request.user.role) ? null : request.user.userId
             };
             const req = await attendanceRequestService.updateRequestStatus(Number(request.params.id), data);
             reply.code(200).send({ success: true, message: "Request status updated successfully", data: req });
