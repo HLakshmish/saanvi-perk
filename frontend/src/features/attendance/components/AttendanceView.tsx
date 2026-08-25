@@ -316,32 +316,20 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
         const remMins = mins % 60;
         const workStr = mins > 0 ? `${hrs}h ${remMins}m` : "--";
 
-        // Hours-based status thresholds:
-        // >= 8h 30m (510 mins) => Present
-        // >= 4h 0m (240 mins) & < 8h 30m => Half Day
-        // < 4h 0m (e.g. 34 mins) => Absent
-        const PRESENT_THRESHOLD = 510; // 8h 30m
-        const HALF_DAY_THRESHOLD = 240; // 4h 0m
+        // Directly use attendanceStatus calculated and returned from backend
+        const rawStatus = String(matchedPunch.attendanceStatus || "PRESENT").toUpperCase();
+        let dayStatus: "PRESENT" | "HALF_DAY" | "ABSENT" = "PRESENT";
+        let dayStatusLabel = isWeekend ? "Present (WO Worked)" : "Present";
 
-        let dayStatus: "PRESENT" | "HALF_DAY" | "ABSENT" = "ABSENT";
-        let dayStatusLabel = "Absent";
-
-        if (isToday && matchedPunch.checkInTime && !matchedPunch.checkOutTime) {
-          // 1. Actively working right now today (shift in progress)
-          dayStatus = "PRESENT";
-          dayStatusLabel = isWeekend ? "Present (WO Worked)" : "Present";
-        } else if (mins >= PRESENT_THRESHOLD) {
-          // 2. Completed >= 8h 30m
-          dayStatus = "PRESENT";
-          dayStatusLabel = isWeekend ? "Present (WO Worked)" : "Present";
-        } else if (mins >= HALF_DAY_THRESHOLD) {
-          // 3. Completed >= 4h & < 8h 30m
+        if (rawStatus === "HALF_DAY") {
           dayStatus = "HALF_DAY";
           dayStatusLabel = "Half Day";
-        } else {
-          // 4. Completed < 4h (or historical uncompleted punch) => Absent
+        } else if (rawStatus === "ABSENT") {
           dayStatus = "ABSENT";
           dayStatusLabel = "Absent";
+        } else {
+          dayStatus = "PRESENT";
+          dayStatusLabel = isWeekend ? "Present (WO Worked)" : "Present";
         }
 
         logs.push({
@@ -508,22 +496,20 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
         : false;
       const mins = computeDayWorkingMinutes(att, isRowToday);
 
-      let computedStatus: "PRESENT" | "HALF_DAY" | "ABSENT" = "ABSENT";
-      let computedStatusLabel = "Absent";
+      // Directly use attendanceStatus calculated and returned from backend
+      const rawStatus = String(att.attendanceStatus || "PRESENT").toUpperCase();
+      let computedStatus: "PRESENT" | "HALF_DAY" | "ABSENT" = "PRESENT";
+      let computedStatusLabel = "Present";
 
-      if (isRowToday && att.checkInTime && !att.checkOutTime) {
-        // Active shift today (in progress)
-        computedStatus = "PRESENT";
-        computedStatusLabel = "Present";
-      } else if (mins >= 510) {
-        computedStatus = "PRESENT";
-        computedStatusLabel = "Present";
-      } else if (mins >= 240) {
+      if (rawStatus === "HALF_DAY") {
         computedStatus = "HALF_DAY";
         computedStatusLabel = "Half Day";
-      } else {
+      } else if (rawStatus === "ABSENT") {
         computedStatus = "ABSENT";
         computedStatusLabel = "Absent";
+      } else {
+        computedStatus = "PRESENT";
+        computedStatusLabel = "Present";
       }
 
       return {
