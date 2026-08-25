@@ -1037,3 +1037,56 @@ export const getUpcomingEvents = async (days: number = 7): Promise<{ success: bo
   }
 };
 
+// Fetch users report data
+export const getUsersReportView = async (params: { companyId?: number }) => {
+  const token = getAuthToken();
+  const query = new URLSearchParams();
+  if (params.companyId) query.append("companyId", String(params.companyId));
+
+  const url = `${API_BASE_URL}/api/users/report/view?${query.toString()}`;
+  try {
+    const res = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    const result = await res.json();
+    return result;
+  } catch (error: any) {
+    return { success: false, error: formatBackendError(error.message) };
+  }
+};
+
+// Download users CSV report
+export const downloadUsersReport = async (params: { companyId?: number }) => {
+  const token = getAuthToken();
+  const query = new URLSearchParams();
+  if (params.companyId) query.append("companyId", String(params.companyId));
+
+  const url = `${API_BASE_URL}/api/users/report/download?${query.toString()}`;
+  try {
+    const res = await fetch(url, {
+      method: "GET",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+
+    if (!res.ok) throw new Error("Failed to download users CSV report");
+
+    const blob = await res.blob();
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = downloadUrl;
+    link.setAttribute("download", "users_report.csv");
+    document.body.appendChild(link);
+    link.click();
+    link.parentNode?.removeChild(link);
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: formatBackendError(error.message) };
+  }
+};
+

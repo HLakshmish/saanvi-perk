@@ -77,3 +77,60 @@ export async function getAttendances(params?: {
   const json = await res.json();
   return json;
 }
+
+// 4. Fetch attendance report data
+export async function getAttendanceReportView(params: {
+  userId?: number;
+  attendanceStatus?: string;
+  attendanceDate?: string;
+}) {
+  const token = getAuthToken();
+  const query = new URLSearchParams();
+  if (params.userId) query.append("userId", String(params.userId));
+  if (params.attendanceStatus) query.append("attendanceStatus", params.attendanceStatus);
+  if (params.attendanceDate) query.append("attendanceDate", params.attendanceDate);
+
+  const url = `${API_BASE_URL}/api/attendances/report/view?${query.toString()}`;
+  const res = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  const json = await res.json();
+  return json;
+}
+
+// 5. Download attendance CSV report
+export async function downloadAttendanceReport(params: {
+  userId?: number;
+  attendanceStatus?: string;
+  attendanceDate?: string;
+}) {
+  const token = getAuthToken();
+  const query = new URLSearchParams();
+  if (params.userId) query.append("userId", String(params.userId));
+  if (params.attendanceStatus) query.append("attendanceStatus", params.attendanceStatus);
+  if (params.attendanceDate) query.append("attendanceDate", params.attendanceDate);
+
+  const url = `${API_BASE_URL}/api/attendances/report/download?${query.toString()}`;
+  const res = await fetch(url, {
+    method: "GET",
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  if (!res.ok) throw new Error("Failed to download file");
+
+  const blob = await res.blob();
+  const downloadUrl = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = downloadUrl;
+  link.setAttribute("download", "attendance_report.csv");
+  document.body.appendChild(link);
+  link.click();
+  link.parentNode?.removeChild(link);
+}
