@@ -34,11 +34,12 @@ class ReimbursementService {
         if (!claim) {
             throw new Error("Reimbursement claim not found");
         }
-        return claim;
+        return await this.mapSuperAdminApprovers(claim, companyId);
     }
 
     async getAllClaims(companyId, userId) {
-        return await reimbursementRepository.getAllClaims(companyId, userId);
+        const claims = await reimbursementRepository.getAllClaims(companyId, userId);
+        return await this.mapSuperAdminApprovers(claims, companyId);
     }
 
     async updateClaim(claimId, companyId, data, user) {
@@ -63,7 +64,7 @@ class ReimbursementService {
             });
         }
 
-        return updatedClaim;
+        return await this.mapSuperAdminApprovers(updatedClaim, companyId);
     }
 
     async updateClaimStatus(claimId, companyId, data, user) {
@@ -105,7 +106,7 @@ class ReimbursementService {
             remarks: data.remarks || `Status updated to ${newStatus}`
         });
 
-        return updatedClaim;
+        return await this.mapSuperAdminApprovers(updatedClaim, companyId);
     }
 
     async deleteClaim(claimId, companyId) {
@@ -167,11 +168,60 @@ class ReimbursementService {
 
         return { message: "Bill deleted successfully" };
     }
+    async mapSuperAdminApprovers(claims, companyId) {
+        const prisma = require("../config/prisma");
+        let superAdmin = null;
+
+        const mapClaim = async (claim) => {
+            if ((claim.status === 'APPROVED' || claim.status === 'REJECTED' || claim.status === 'PAID') && !claim.approvedBy && claim.companyId) {
+                if (!superAdmin) {
+                    superAdmin = await prisma.superAdmin.findUnique({ where: { companyId: claim.companyId } });
+                }
+                if (superAdmin) {
+                    claim.approver = {
+                        userId: superAdmin.superAdminId,
+                        firstName: superAdmin.firstName,
+                        lastName: superAdmin.lastName
+                    };
+                    claim.approvedBy = superAdmin.superAdminId;
+                }
+            }
+            return claim;
+        };
+
+        if (Array.isArray(claims)) {
+            for (let claim of claims) {
+                await mapClaim(claim);
+            }
+        } else if (claims) {
+            await mapClaim(claims);
+        }
+
+        return claims;
+    }
+
     async getClaimHistory(claimId, companyId) {
         // First verify the claim belongs to this company/user
         await this.getClaimById(claimId, companyId);
         
-        return await reimbursementRepository.getClaimHistory(claimId);
+        const history = await reimbursementRepository.getClaimHistory(claimId);
+        const prisma = require("../config/prisma");
+        const superAdmin = await prisma.superAdmin.findUnique({ where: { companyId } });
+        
+        if (superAdmin) {
+            for (let record of history) {
+                if (!record.actionBy) {
+                    record.actionBy = superAdmin.superAdminId;
+                    record.user = {
+                        userId: superAdmin.superAdminId,
+                        firstName: superAdmin.firstName,
+                        lastName: superAdmin.lastName
+                    };
+                }
+            }
+        }
+        
+        return history;
     }
 }
 

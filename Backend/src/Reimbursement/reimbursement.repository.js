@@ -61,6 +61,9 @@ class ReimbursementRepository {
             include: {
                 user: {
                     select: { userId: true, firstName: true, lastName: true }
+                },
+                approver: {
+                    select: { userId: true, firstName: true, lastName: true }
                 }
             }
         });
@@ -78,6 +81,9 @@ class ReimbursementRepository {
             data,
             include: {
                 user: {
+                    select: { userId: true, firstName: true, lastName: true }
+                },
+                approver: {
                     select: { userId: true, firstName: true, lastName: true }
                 }
             }

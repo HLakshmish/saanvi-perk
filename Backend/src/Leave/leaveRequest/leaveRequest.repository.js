@@ -61,6 +61,13 @@ class LeaveRequestRepository {
                         firstName: true,
                         lastName: true
                     }
+                },
+                approvedUser: {
+                    select: {
+                        userId: true,
+                        firstName: true,
+                        lastName: true
+                    }
                 }
             }
         });
@@ -79,6 +86,13 @@ class LeaveRequestRepository {
             include: {
                 leaveType: true,
                 user: {
+                    select: {
+                        userId: true,
+                        firstName: true,
+                        lastName: true
+                    }
+                },
+                approvedUser: {
                     select: {
                         userId: true,
                         firstName: true,
