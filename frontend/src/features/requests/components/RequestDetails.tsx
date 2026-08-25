@@ -7,7 +7,7 @@ import { ArrowLeft, CheckCircle2, XCircle, Clock, Loader2, Calendar, FileText } 
 import { fetchAttendanceRequests } from "@/features/attendance/api/attendance.api";
 import { fetchLeaveRequests } from "@/features/leaves/api/leaves.api";
 import { fetchReimbursementClaims, fetchReimbursementHistory, getCompanyIdCookie, getCurrentUserId } from "@/features/expenses/api/expenses.api";
-import { getUserById } from "@/features/employees/api/employees.api";
+import { getUserById, getEmployees } from "@/features/employees/api/employees.api";
 
 interface RequestDetailsProps {
   requestId: string;
@@ -23,6 +23,7 @@ export const RequestDetails: React.FC<RequestDetailsProps> = ({
   const [userProfile, setUserProfile] = useState<any>(null);
   const [history, setHistory] = useState<any[]>([]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [employeesMap, setEmployeesMap] = useState<Map<string, string>>(new Map());
 
   // Parse source and database ID
   const dashIndex = requestId.indexOf("-");
@@ -92,6 +93,18 @@ export const RequestDetails: React.FC<RequestDetailsProps> = ({
         let fetchedDetails: any = null;
         let fetchedHistory: any[] = [];
         let userId: number | null = null;
+
+        // Fetch employees list to map IDs to names
+        try {
+          const emps = await getEmployees();
+          const empMap = new Map<string, string>();
+          emps.forEach(emp => {
+            empMap.set(String(emp.id), emp.name);
+          });
+          setEmployeesMap(empMap);
+        } catch (err) {
+          console.warn("Failed to load employees for name mapping", err);
+        }
 
         const companyId = getCompanyIdCookie();
         const userIdToken = getCurrentUserId();
@@ -410,7 +423,8 @@ export const RequestDetails: React.FC<RequestDetailsProps> = ({
               if (hist.user) {
                 actor = `${hist.user.firstName || ""} ${hist.user.lastName || ""}`.trim() || "—";
               } else if (hist.actionBy) {
-                actor = `User ID: ${hist.actionBy}`;
+                const name = employeesMap.get(String(hist.actionBy));
+                actor = name || `User ID: ${hist.actionBy}`;
               }
 
               const actionName = hist.action 
@@ -446,9 +460,11 @@ export const RequestDetails: React.FC<RequestDetailsProps> = ({
     const isProcessed = details.status === "APPROVED" || details.status === "REJECTED";
     const approverName = details.approvedUser
       ? `${details.approvedUser.firstName} ${details.approvedUser.lastName || ""}`.trim()
-      : details.approvedBy
-        ? `User ID: ${details.approvedBy}`
-        : "System / Admin";
+      : details.approver
+        ? `${details.approver.firstName} ${details.approver.lastName || ""}`.trim()
+        : details.approvedBy
+          ? (employeesMap.get(String(details.approvedBy)) || `User ID: ${details.approvedBy}`)
+          : "System / Admin";
 
     return (
       <div className="border border-gray-200 rounded-xl p-5 sm:p-6 bg-white space-y-6">
