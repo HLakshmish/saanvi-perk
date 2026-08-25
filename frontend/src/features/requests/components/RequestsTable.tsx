@@ -26,6 +26,7 @@ import {
 import { fetchAttendanceRequests } from "@/features/attendance/api/attendance.api";
 import { fetchLeaveRequests } from "@/features/leaves/api/leaves.api";
 import { fetchReimbursementClaims, getCompanyIdCookie, getCurrentUserId } from "@/features/expenses/api/expenses.api";
+import { getEmployees } from "@/features/employees/api/employees.api";
 
 export interface RequestHistoryItem {
   id: string; // "source-id", e.g., "attendance-5"
@@ -143,6 +144,23 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
       const normalizedItems: RequestHistoryItem[] = [];
       const errorsList: string[] = [];
 
+      // Fetch employees list to map IDs to names
+      const employeeMap = new Map<string, string>();
+      try {
+        const emps = await getEmployees();
+        emps.forEach(emp => {
+          employeeMap.set(String(emp.id), emp.name);
+        });
+      } catch (err) {
+        console.warn("Failed to load employees for name mapping", err);
+      }
+
+      const formatApproverNameLocal = (approvedById: number | string | null | undefined): string => {
+        if (!approvedById) return "—";
+        const empName = employeeMap.get(String(approvedById));
+        return empName || `User ID: ${approvedById}`;
+      };
+
       // Process Attendance Requests
       const attRes = results[0];
       if (attRes.status === "fulfilled") {
@@ -153,7 +171,7 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
             if (req.approvedUser) {
               lastAction = `${req.approvedUser.firstName} ${req.approvedUser.lastName || ""}`.trim();
             } else if (req.approvedBy) {
-              lastAction = formatApproverName(req.approvedBy);
+              lastAction = formatApproverNameLocal(req.approvedBy);
             }
             normalizedItems.push({
               id: `attendance-${req.requestId}`,
@@ -179,8 +197,10 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
         if (val.success && Array.isArray(val.data)) {
           val.data.forEach((req: any) => {
             let lastAction = "—";
-            if (req.approvedBy) {
-              lastAction = formatApproverName(req.approvedBy);
+            if (req.approvedUser) {
+              lastAction = `${req.approvedUser.firstName} ${req.approvedUser.lastName || ""}`.trim();
+            } else if (req.approvedBy) {
+              lastAction = formatApproverNameLocal(req.approvedBy);
             }
             normalizedItems.push({
               id: `leave-${req.leaveRequestId}`,
@@ -206,8 +226,10 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
         if (val.success && Array.isArray(val.data)) {
           val.data.forEach((req: any) => {
             let lastAction = "—";
-            if (req.approvedBy) {
-              lastAction = formatApproverName(req.approvedBy);
+            if (req.approver) {
+              lastAction = `${req.approver.firstName} ${req.approver.lastName || ""}`.trim();
+            } else if (req.approvedBy) {
+              lastAction = formatApproverNameLocal(req.approvedBy);
             }
             normalizedItems.push({
               id: `reimbursement-${req.claimId}`,
