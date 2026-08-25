@@ -799,7 +799,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
 
             {/* Desktop Table View (hidden on mobile, visible md and up) */}
             <div className="hidden md:block">
-              <TableContainer className="rounded-3xl border-slate-200/80 shadow-2xs">
+              <TableContainer>
                 <Table>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent">
@@ -1078,9 +1078,9 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
       </div>
 
       {/* 4. Live Attendance Records Table */}
-      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+      <div>
         {isLoading ? (
-          <div className="p-5 space-y-4">
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 space-y-4 shadow-2xs">
             {[1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="flex items-center justify-between gap-4 py-2 border-b border-slate-100 last:border-none">
                 <div className="flex items-center gap-3 w-48">
@@ -1101,7 +1101,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
             ))}
           </div>
         ) : filteredAdminRows.length === 0 ? (
-          <div className="py-20 text-center space-y-2">
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-8 shadow-2xs py-20 text-center space-y-2">
             <Clock className="w-10 h-10 text-slate-300 mx-auto" />
             <h4 className="text-sm font-bold text-slate-700">No Attendance Records Found</h4>
             <p className="text-xs text-slate-400 max-w-sm mx-auto">
@@ -1229,7 +1229,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
 
             {/* Admin Desktop Table (hidden md:block) */}
             <div className="hidden md:block">
-              <TableContainer className="rounded-3xl border-slate-200/80 shadow-2xs">
+              <TableContainer>
                 <Table>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent">

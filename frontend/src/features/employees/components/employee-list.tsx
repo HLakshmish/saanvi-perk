@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import { SearchBox } from "@/components/ui/search-box";
-import { toast } from "sonner";
+import { snackbar as toast } from "@/components/ui/snackbar";
 import { Pagination } from "./pagination";
 import { EmployeeTable } from "./employee-table";
 import { OrganizationChart } from "./organization-chart";

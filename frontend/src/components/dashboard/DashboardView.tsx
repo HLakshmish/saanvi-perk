@@ -26,6 +26,7 @@ import { LeavesView } from "@/features/leaves";
 import { SettingsView } from "@/features/settings";
 import { AssetsView } from "@/features/assets";
 import { ReportsView } from "./ReportsView";
+import { UsersManagementView } from "@/features/users/components/UsersManagementView";
 import { RefreshCw, HelpCircle, ArrowLeft } from "lucide-react";
 
 interface DashboardViewProps {
@@ -188,6 +189,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         return <AssetsView currentRole={role} />;
       case "reports":
         return <ReportsView />;
+      case "users":
+        return <UsersManagementView />;
       case "settings":
         if (role === "employee") {
           return <div className="text-sm font-semibold text-slate-500">Access Denied.</div>;
