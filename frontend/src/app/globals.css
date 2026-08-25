@@ -17,6 +17,10 @@
   /* Unified Button & High-Contrast Text Tokens */
   --color-brand-btn-text: var(--brand-btn-text);
 
+  /* Table Header Tokens */
+  --color-table-header-bg: var(--table-header-bg);
+  --color-table-header-text: var(--table-header-text);
+
   /* Sidebar Tokens (Referencing the single palette directly - no duplicate hex codes) */
   --color-sidebar-bg: var(--brand-primary);
   --color-sidebar-border: rgba(255, 255, 255, 0.1);
@@ -48,6 +52,10 @@
 
   /* 3. Global Primary Button / Icon Text Color (White) */
   --brand-btn-text: #ffffff;
+
+  /* 4. Global Table Header Color Tokens */
+  --table-header-bg: #274b75;
+  --table-header-text: #d7d7d7;
 }
 
 body {

@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { X, Loader2, ShieldAlert, CheckCircle2, User as UserIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { snackbar as toast } from "@/components/ui/snackbar";
 import {
   getUserById,
   getPersonalInfoByUserId,
@@ -54,8 +55,18 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
   const [activeTab, setActiveTab] = useState<TabType>("account");
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsgState] = useState<string | null>(null);
+  const [successMsg, setSuccessMsgState] = useState<string | null>(null);
+
+  const setErrorMsg = (msg: string | null) => {
+    setErrorMsgState(msg);
+    if (msg) toast.error(msg);
+  };
+
+  const setSuccessMsg = (msg: string | null) => {
+    setSuccessMsgState(msg);
+    if (msg) toast.success(msg);
+  };
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -403,7 +414,7 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
 
     // Validation helpers
     const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    const validatePhone = (phone: string) => /^\+?[0-9\s-]{10,15}$/.test(phone);
+    const validatePhone = (phone: string) => /^\d{10}$/.test(phone);
     const validatePAN = (pan: string) => /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(pan.toUpperCase());
     const validateAadhaar = (aadhaar: string) => /^\d{12}$/.test(aadhaar);
     const validateIFSC = (ifsc: string) => /^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc.toUpperCase());
@@ -684,7 +695,8 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
         onClose();
       }, 1500);
     } catch (err: any) {
-      setErrorMsg(err.message || "An unexpected error occurred during save.");
+      const msg = err.message || "An unexpected error occurred during save.";
+      setErrorMsg(msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -766,20 +778,6 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
               
-              {errorMsg && (
-                <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2.5">
-                  <ShieldAlert className="w-5 h-5 shrink-0" />
-                  <span>{errorMsg}</span>
-                </div>
-              )}
-
-              {successMsg && (
-                <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs flex items-center gap-2.5">
-                  <CheckCircle2 className="w-5 h-5 shrink-0" />
-                  <span>{successMsg}</span>
-                </div>
-              )}
-
               {/* TAB 1: ACCOUNT PROFILE */}
               {activeTab === "account" && (
                 <div className="space-y-4">
@@ -1134,7 +1132,11 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
                       <Input
                         label="Father Mobile"
                         value={formData.fatherMobile}
-                        onChange={(e) => handleChange("fatherMobile", e.target.value)}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, "");
+                          if (val.length <= 10) handleChange("fatherMobile", val);
+                        }}
+                        maxLength={10}
                       />
                       <Input
                         label="Father Occupation"
@@ -1151,7 +1153,11 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
                       <Input
                         label="Mother Mobile"
                         value={formData.motherMobile}
-                        onChange={(e) => handleChange("motherMobile", e.target.value)}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, "");
+                          if (val.length <= 10) handleChange("motherMobile", val);
+                        }}
+                        maxLength={10}
                       />
                       <Input
                         label="Mother Occupation"
@@ -1168,7 +1174,11 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
                       <Input
                         label="Guardian Mobile"
                         value={formData.guardianMobile}
-                        onChange={(e) => handleChange("guardianMobile", e.target.value)}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, "");
+                          if (val.length <= 10) handleChange("guardianMobile", val);
+                        }}
+                        maxLength={10}
                       />
                       <Input
                         label="Guardian Relationship"

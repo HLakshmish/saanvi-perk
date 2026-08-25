@@ -21,7 +21,7 @@ import {
   ChevronRight,
   ClipboardList
 } from "lucide-react";
-import { toast } from "sonner";
+import { snackbar as toast } from "@/components/ui/snackbar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {

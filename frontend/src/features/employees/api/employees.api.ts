@@ -259,8 +259,8 @@ export const createEmployee = async (data: any): Promise<{ success: boolean; dat
     const resolvedRoleIds = Array.isArray(roleIds)
       ? roleIds.map(Number)
       : roleId !== undefined && roleId !== null && roleId !== ""
-      ? [Number(roleId)]
-      : [];
+        ? [Number(roleId)]
+        : [];
 
     let formattedDateOfBirth = dateOfBirth;
     if (formattedDateOfBirth) {

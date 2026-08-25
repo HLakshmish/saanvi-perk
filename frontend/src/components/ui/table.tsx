@@ -6,7 +6,7 @@ export const TableContainer: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
   ...props
 }) => (
   <div
-    className={`w-full overflow-hidden rounded-[10px] border border-slate-200/60 bg-white shadow-2xs hover:shadow-xs transition-all duration-300 ${className}`}
+    className={`w-full overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-2xs hover:shadow-xs transition-all duration-300 ${className}`}
     {...props}
   >
     <div className="overflow-x-auto">{children}</div>
@@ -32,7 +32,7 @@ export const TableHeader: React.FC<React.HTMLAttributes<HTMLTableSectionElement>
   ...props
 }) => (
   <thead
-    className={`bg-[#274b75] border-b border-[#0b2544]/10 font-bold text-[#d7d7d7] select-none ${className}`}
+    className={`bg-table-header-bg border-b border-[#0b2544]/10 font-bold text-table-header-text select-none ${className}`}
     {...props}
   >
     {children}
@@ -45,7 +45,7 @@ export const TableHead: React.FC<React.ThHTMLAttributes<HTMLTableCellElement>> =
   ...props
 }) => (
   <th
-    className={`py-2.5 px-5 text-[10px] font-extrabold text-[#d7d7d7] uppercase tracking-wider ${className}`}
+    className={`py-2.5 px-5 text-[10px] font-extrabold text-table-header-text uppercase tracking-wider ${className}`}
     {...props}
   >
     {children}

@@ -19,6 +19,8 @@ export const metadata: Metadata = {
   description: "Enterprise Executive HRMS Portal",
 };
 
+import { SnackbarProvider } from "@/components/ui/snackbar";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -32,7 +34,9 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Libertinus+Math&display=swap" rel="stylesheet" />
       </head>
       <body suppressHydrationWarning>
-        {children}
+        <SnackbarProvider>
+          {children}
+        </SnackbarProvider>
         <Toaster position="top-center" richColors />
       </body>
     </html>

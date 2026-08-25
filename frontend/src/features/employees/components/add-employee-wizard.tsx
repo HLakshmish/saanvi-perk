@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { snackbar as toast } from "@/components/ui/snackbar";
 import {
   getRoles,
   getDepartments,
@@ -56,8 +57,18 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
   const [activeSubTab, setActiveSubTab] = useState<"profile" | "address" | "family" | "statutory">("profile");
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsgState] = useState<string | null>(null);
+  const [successMsg, setSuccessMsgState] = useState<string | null>(null);
+
+  const setErrorMsg = (msg: string | null) => {
+    setErrorMsgState(msg);
+    if (msg) toast.error(msg);
+  };
+
+  const setSuccessMsg = (msg: string | null) => {
+    setSuccessMsgState(msg);
+    if (msg) toast.success(msg);
+  };
 
   // Master Data State
   const [roles, setRoles] = useState<any[]>([]);
@@ -289,7 +300,7 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
 
   // Field validations
   const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const validatePhone = (phone: string) => /^\+?[0-9\s-]{10,15}$/.test(phone);
+  const validatePhone = (phone: string) => /^\d{10}$/.test(phone);
   const validatePAN = (pan: string) => /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(pan.toUpperCase());
   const validateAadhaar = (aadhaar: string) => /^\d{12}$/.test(aadhaar);
   const validateIFSC = (ifsc: string) => /^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc.toUpperCase());
@@ -729,7 +740,8 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
           console.error("Cleanup error deleting partial user:", cleanupErr);
         }
       }
-      setErrorMsg(err.message || "An unexpected error occurred during submission.");
+      const msg = err.message || "An unexpected error occurred during submission.";
+      setErrorMsg(msg);
     } finally {
       setIsLoading(false);
     }
@@ -837,21 +849,6 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
             );
           })}
         </div>
-
-        {/* Alerts */}
-        {errorMsg && (
-          <div className="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs sm:text-sm flex items-start gap-2.5">
-            <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-            <span>{errorMsg}</span>
-          </div>
-        )}
-
-        {successMsg && (
-          <div className="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs sm:text-sm flex items-start gap-2.5">
-            <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" />
-            <span>{successMsg}</span>
-          </div>
-        )}
 
         {/* Form Container */}
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -1166,9 +1163,13 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
                       />
                       <Input
                         label="Father Mobile"
-                        placeholder="e.g. +91 9876543210"
+                        placeholder="e.g. 9876543210"
                         value={formData.fatherMobile}
-                        onChange={(e) => handleChange("fatherMobile", e.target.value)}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, "");
+                          if (val.length <= 10) handleChange("fatherMobile", val);
+                        }}
+                        maxLength={10}
                       />
                       <Input
                         label="Father Occupation"
@@ -1191,9 +1192,13 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
                       />
                       <Input
                         label="Mother Mobile"
-                        placeholder="e.g. +91 9876543210"
+                        placeholder="e.g. 9876543210"
                         value={formData.motherMobile}
-                        onChange={(e) => handleChange("motherMobile", e.target.value)}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, "");
+                          if (val.length <= 10) handleChange("motherMobile", val);
+                        }}
+                        maxLength={10}
                       />
                       <Input
                         label="Mother Occupation"
@@ -1216,9 +1221,13 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
                       />
                       <Input
                         label="Guardian Mobile"
-                        placeholder="e.g. +91 9876543210"
+                        placeholder="e.g. 9876543210"
                         value={formData.guardianMobile}
-                        onChange={(e) => handleChange("guardianMobile", e.target.value)}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, "");
+                          if (val.length <= 10) handleChange("guardianMobile", val);
+                        }}
+                        maxLength={10}
                       />
                       <Input
                         label="Relationship"
@@ -1894,9 +1903,13 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
 
                 <Input
                   label="Emergency Contact Mobile"
-                  placeholder="e.g. +91 9876543210"
+                  placeholder="e.g. 9876543210"
                   value={formData.emergencyMobile}
-                  onChange={(e) => handleChange("emergencyMobile", e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, "");
+                    if (val.length <= 10) handleChange("emergencyMobile", val);
+                  }}
+                  maxLength={10}
                 />
               </div>
 
