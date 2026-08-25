@@ -1821,7 +1821,7 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
                       />
                       <label 
                         htmlFor="wizardDocFile"
-                        className="text-[10px] font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg px-2.5 py-1.5 cursor-pointer select-none"
+                        className="text-[10px] font-bold text-brand-primary bg-brand-primary-light/15 hover:bg-brand-primary-light/25 rounded-lg px-2.5 py-1.5 cursor-pointer select-none transition-colors"
                       >
                         Choose File
                       </label>
@@ -1832,7 +1832,7 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
                     <button
                       type="button"
                       onClick={handleDocumentAdd}
-                      className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                      className="w-full h-11 bg-brand-primary hover:bg-brand-primary-hover text-brand-btn-text rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                     >
                       <UploadCloud className="w-4 h-4" />
                       <span>Attach Document</span>
@@ -1853,7 +1853,7 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
                     {formData.uploadedDocs.map((doc, index) => (
                       <div key={index} className="flex items-center justify-between p-3 border border-slate-200/80 rounded-xl bg-white shadow-2xs">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 text-xs font-bold">
+                          <div className="w-8 h-8 rounded-lg bg-brand-primary-light/15 flex items-center justify-center text-brand-primary text-xs font-bold">
                             PDF
                           </div>
                           <div>

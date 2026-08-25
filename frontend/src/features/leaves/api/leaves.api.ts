@@ -211,3 +211,86 @@ export const fetchLeaveRequestById = async (id: number | string) => {
     return { success: false, error: error.message || "Network error" };
   }
 };
+
+// Fetch leave requests report data
+export const getLeaveRequestReportView = async (params: {
+  companyId?: number;
+  userId?: number;
+}) => {
+  const token = getAuthToken();
+  const query = new URLSearchParams();
+  if (params.companyId) query.append("companyId", String(params.companyId));
+  if (params.userId) query.append("userId", String(params.userId));
+
+  const url = `${API_BASE_URL}/api/leave-requests/report/view?${query.toString()}`;
+  try {
+    const res = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    const result = await res.json();
+    return result;
+  } catch (error: any) {
+    return { success: false, error: error.message || "Network error" };
+  }
+};
+
+// Download leave requests CSV report
+export const downloadLeaveRequestReport = async (params: {
+  companyId?: number;
+  userId?: number;
+}) => {
+  const token = getAuthToken();
+  const query = new URLSearchParams();
+  if (params.companyId) query.append("companyId", String(params.companyId));
+  if (params.userId) query.append("userId", String(params.userId));
+
+  const url = `${API_BASE_URL}/api/leave-requests/report/download?${query.toString()}`;
+  try {
+    const res = await fetch(url, {
+      method: "GET",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+
+    if (!res.ok) throw new Error("Failed to download file");
+
+    const blob = await res.blob();
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = downloadUrl;
+    link.setAttribute("download", "leave_report.csv");
+    document.body.appendChild(link);
+    link.click();
+    link.parentNode?.removeChild(link);
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message || "Network error" };
+  }
+};
+
+// Fetch all configured leave types
+export const fetchLeaveTypes = async () => {
+  const token = getAuthToken();
+  const companyId = getCompanyIdCookie();
+  const url = companyId
+    ? `${API_BASE_URL}/api/leave-types?companyId=${companyId}`
+    : `${API_BASE_URL}/api/leave-types`;
+
+  try {
+    const res = await fetchDeduplicated(url, {
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    const result = await res.json();
+    return result;
+  } catch (error: any) {
+    return { success: false, error: error.message || "Network error" };
+  }
+};
