@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { UserRole } from "@/types/dashboard";
 import { getCurrentUserId } from "@/features/expenses/api/expenses.api";
@@ -16,6 +16,11 @@ import {
   CircleUser,
   Activity,
   ArrowLeft,
+  Shield,
+  ShieldAlert,
+  Briefcase,
+  Check,
+  Sparkles,
 } from "lucide-react";
 
 interface NavbarProps {
@@ -38,41 +43,82 @@ export const Navbar: React.FC<NavbarProps> = ({
   onTabChange,
 }) => {
   const router = useRouter();
-  const [isProfileOpen, setIsProfileOpen] = React.useState(false);
-  const [isQuickActionsOpen, setIsQuickActionsOpen] = React.useState(false);
-  const [assignedRoles, setAssignedRoles] = React.useState<UserRole[]>([currentRole]);
-  const [hasFetchedRoles, setHasFetchedRoles] = React.useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(false);
+  const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
+  const [assignedRoles, setAssignedRoles] = useState<UserRole[]>([currentRole]);
+  const [hasFetchedRoles, setHasFetchedRoles] = useState(false);
 
-  React.useEffect(() => {
+  const normalizeRole = (codeOrName?: string): UserRole | null => {
+    if (!codeOrName) return null;
+    const s = String(codeOrName).toLowerCase().replace(/[\s_-]+/g, "");
+    if (s.includes("superadmin") || s.includes("super")) return "superadmin";
+    if (s.includes("admin") || s.includes("hr") || s.includes("manager")) return "admin";
+    if (s.includes("employee") || s.includes("user") || s.includes("staff")) return "employee";
+    if (s.includes("owner")) return "owner";
+    return null;
+  };
+
+  useEffect(() => {
     if (hasFetchedRoles) return;
 
     const fetchUserRoles = async () => {
       try {
         const userId = getCurrentUserId();
+        const detectedRoles: UserRole[] = [currentRole];
+
+        if (currentRole === "superadmin") {
+          detectedRoles.push("superadmin", "admin", "employee");
+        }
+
         if (userId) {
           const res = await getUserById(userId);
-          const rolesArray = Array.isArray(res.data?.roles) && res.data.roles.length > 0
-            ? res.data.roles
-            : (Array.isArray(res.data?.userRoles) ? res.data.userRoles : []);
+          if (res.success && res.data) {
+            // Check userRoles relation
+            const userRolesArray = Array.isArray(res.data.userRoles) ? res.data.userRoles : [];
+            userRolesArray.forEach((ur: any) => {
+              const rawRole =
+                ur.role?.roleCode ||
+                ur.role?.roleName ||
+                ur.roleCode ||
+                ur.roleName ||
+                (typeof ur === "string" ? ur : "");
+              const normalized = normalizeRole(rawRole);
+              if (normalized) detectedRoles.push(normalized);
+            });
 
-          if (res.success && res.data && rolesArray.length > 0) {
-            const roles: UserRole[] = rolesArray
-              .map((r: any) => (typeof r === "string" ? r.toLowerCase() : r.roleName?.toLowerCase()))
-              .filter((r: string): r is UserRole => ["superadmin", "admin", "employee"].includes(r));
-            if (roles.length > 0) {
-              setAssignedRoles(Array.from(new Set(roles)));
+            // Check roles field if array of strings
+            if (Array.isArray(res.data.roles)) {
+              res.data.roles.forEach((r: any) => {
+                const normalized = normalizeRole(typeof r === "string" ? r : r.roleName);
+                if (normalized) detectedRoles.push(normalized);
+              });
+            }
+
+            // Check single role field
+            if (res.data.role) {
+              const normalized = normalizeRole(res.data.role);
+              if (normalized) detectedRoles.push(normalized);
             }
           }
         }
+
+        const uniqueRoles = Array.from(new Set(detectedRoles)).filter((r): r is UserRole =>
+          ["superadmin", "admin", "employee", "owner"].includes(r)
+        );
+
+        if (uniqueRoles.length > 0) {
+          setAssignedRoles(uniqueRoles);
+        }
       } catch (err) {
-        console.error("Failed to fetch user roles:", err);
+        console.error("Failed to fetch user roles in Navbar:", err);
       } finally {
         setHasFetchedRoles(true);
       }
     };
 
     fetchUserRoles();
-  }, [hasFetchedRoles]);
+  }, [currentRole, hasFetchedRoles]);
 
   const handleLogout = () => {
     document.cookie = "auth_token=; path=/; max-age=0;";
@@ -90,12 +136,49 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const handleRoleSwitch = (newRole: UserRole) => {
     setIsProfileOpen(false);
+    setIsRoleDropdownOpen(false);
     document.cookie = `user_role=${newRole}; path=/; max-age=86400;`;
+    if (typeof window !== "undefined") {
+      localStorage.setItem("user_role", newRole);
+    }
     if (onRoleChange) {
       onRoleChange(newRole);
     }
     router.push(`/${newRole}/dashboard`);
   };
+
+  const getRoleBadgeInfo = (role: UserRole) => {
+    switch (role) {
+      case "superadmin":
+        return {
+          label: "Super Admin",
+          icon: <ShieldAlert className="w-3.5 h-3.5 text-purple-600" />,
+          colorClass: "bg-purple-50 text-purple-800 border-purple-200/80",
+        };
+      case "admin":
+        return {
+          label: "Admin",
+          icon: <Shield className="w-3.5 h-3.5 text-emerald-600" />,
+          colorClass: "bg-emerald-50 text-emerald-800 border-emerald-200/80",
+        };
+      case "owner":
+        return {
+          label: "Owner",
+          icon: <Sparkles className="w-3.5 h-3.5 text-amber-600" />,
+          colorClass: "bg-amber-50 text-amber-800 border-amber-200/80",
+        };
+      case "employee":
+      default:
+        return {
+          label: "Employee",
+          icon: <UserIcon className="w-3.5 h-3.5 text-brand-primary" />,
+          colorClass: "bg-brand-primary-light text-brand-primary border-brand-primary/20",
+        };
+    }
+  };
+
+  const currentRoleInfo = getRoleBadgeInfo(currentRole);
+  const showRoleSwitcher = assignedRoles.length > 1;
 
   return (
     <header className="h-14 bg-white/95 backdrop-blur-md border-b border-slate-200/80 flex items-center justify-between px-4 sticky top-0 z-40 shadow-2xs text-slate-800">
@@ -127,10 +210,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           className="flex items-center gap-2.5 cursor-pointer"
         >
           <div className="w-7 h-7 rounded-lg bg-brand-primary text-white flex items-center justify-center text-xs font-extrabold shadow-2xs">
-            {companyName.charAt(0).toUpperCase()}
+            {companyName ? companyName.charAt(0).toUpperCase() : "S"}
           </div>
           <span className="font-extrabold text-brand-primary text-sm sm:text-base tracking-tight">
-            {companyName}
+            {companyName || "Saanvi Perk"}
           </span>
         </div>
       </div>
@@ -138,13 +221,19 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Right section: Actions & User Info */}
       <div className="flex items-center gap-2 sm:gap-3.5 text-xs sm:text-sm">
         {/* Notifications Icon */}
-        <button className="p-2 text-slate-600 hover:text-brand-primary rounded-full hover:bg-slate-100 transition-colors cursor-pointer relative">
+        <button
+          className="p-2 text-slate-600 hover:text-brand-primary rounded-full hover:bg-slate-100 transition-colors cursor-pointer relative"
+          aria-label="Notifications"
+        >
           <Bell className="w-4 h-4" />
           <span className="w-2 h-2 rounded-full bg-emerald-500 absolute top-1.5 right-1.5 ring-2 ring-white" />
         </button>
 
         {/* Support Icon */}
-        <button className="p-2 text-slate-600 hover:text-brand-primary rounded-full hover:bg-slate-100 transition-colors cursor-pointer hidden sm:flex">
+        <button
+          className="p-2 text-slate-600 hover:text-brand-primary rounded-full hover:bg-slate-100 transition-colors cursor-pointer hidden sm:flex"
+          aria-label="Support"
+        >
           <Headset className="w-4 h-4" />
         </button>
 
@@ -155,12 +244,19 @@ export const Navbar: React.FC<NavbarProps> = ({
             className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200/90 rounded-xl text-brand-primary bg-slate-50 hover:bg-slate-100 text-xs font-bold shadow-2xs transition-colors cursor-pointer"
           >
             <span>Quick Actions</span>
-            <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform ${isQuickActionsOpen ? "rotate-180" : ""}`} />
+            <ChevronDown
+              className={`w-3.5 h-3.5 text-slate-500 transition-transform ${
+                isQuickActionsOpen ? "rotate-180" : ""
+              }`}
+            />
           </button>
-          
+
           {isQuickActionsOpen && (
             <>
-              <div className="fixed inset-0 z-40" onClick={() => setIsQuickActionsOpen(false)} />
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setIsQuickActionsOpen(false)}
+              />
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-200/90 overflow-hidden z-50 py-1.5 animate-in fade-in slide-in-from-top-2 duration-200">
                 <button
                   onClick={() => {
@@ -179,15 +275,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                   className="w-full text-left px-4 py-2 hover:bg-slate-50 text-xs font-semibold text-slate-700 hover:text-brand-primary transition-colors cursor-pointer"
                 >
                   Leaves
-                </button>
-                <button
-                  onClick={() => {
-                    onTabChange?.("attendance");
-                    setIsQuickActionsOpen(false);
-                  }}
-                  className="w-full text-left px-4 py-2 hover:bg-slate-50 text-xs font-semibold text-slate-700 hover:text-brand-primary transition-colors cursor-pointer"
-                >
-                  Over Time
                 </button>
                 <button
                   onClick={() => {
@@ -212,20 +299,23 @@ export const Navbar: React.FC<NavbarProps> = ({
           )}
         </div>
 
-        {/* Role Selector Dropdown (Hidden for employees) */}
-        {currentRole !== "employee" && (
+        {/* Role Selector Dropdown (Shown right after Quick Actions whenever user has multiple assigned roles) */}
+        {showRoleSwitcher && (
           <div className="relative">
             <select
               value={currentRole}
               onChange={(e) => handleRoleSwitch(e.target.value as UserRole)}
               className="appearance-none px-3 py-1.5 pr-7 border border-slate-200/90 rounded-xl text-brand-primary bg-slate-50 hover:bg-slate-100 font-bold text-xs focus:ring-2 focus:ring-brand-primary/20 focus:outline-none cursor-pointer capitalize shadow-2xs"
             >
-              {(currentRole === "superadmin"
-                ? (["superadmin", "admin", "employee"] as UserRole[])
-                : assignedRoles
-              ).map((r) => (
+              {assignedRoles.map((r) => (
                 <option key={r} value={r} className="bg-white text-slate-800 capitalize">
-                  {r === "superadmin" ? "Superadmin" : r === "admin" ? "Admin" : "Employee"}
+                  {r === "superadmin"
+                    ? "Superadmin"
+                    : r === "admin"
+                    ? "Admin"
+                    : r === "owner"
+                    ? "Owner"
+                    : "Employee"}
                 </option>
               ))}
             </select>
@@ -235,7 +325,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* User Profile Pill */}
         <div className="relative pl-3 border-l border-slate-200">
-          <button 
+          <button
             onClick={() => setIsProfileOpen(!isProfileOpen)}
             className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-slate-100 border border-transparent transition-colors cursor-pointer"
           >
@@ -243,9 +333,13 @@ export const Navbar: React.FC<NavbarProps> = ({
               <UserIcon className="w-4 h-4 text-white" />
             </div>
             <span className="font-bold text-slate-800 text-xs hidden sm:inline">
-              {userName}
+              {userName || "User"}
             </span>
-            <ChevronDown className={`w-3.5 h-3.5 text-slate-500 hidden sm:inline transition-transform ${isProfileOpen ? "rotate-180" : ""}`} />
+            <ChevronDown
+              className={`w-3.5 h-3.5 text-slate-500 hidden sm:inline transition-transform ${
+                isProfileOpen ? "rotate-180" : ""
+              }`}
+            />
           </button>
 
           {/* Profile Dropdown Menu */}

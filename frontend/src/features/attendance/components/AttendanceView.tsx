@@ -13,10 +13,16 @@ import {
   Loader2,
   CheckCircle2,
   CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  Coffee,
+  Sparkles,
+  Layers,
 } from "lucide-react";
 import { getAttendances } from "../api/attendance.api";
 import { getEmployees } from "@/features/employees/api/employees.api";
 import { getCurrentUserId } from "@/features/expenses/api/expenses.api";
+import { getHolidays, HolidayRecord } from "@/features/organization/api/calendar.api";
 import { Employee } from "@/features/employees/types/employees.types";
 import { UserRole } from "@/types/dashboard";
 import {
@@ -42,27 +48,36 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
   const isEmployee = currentRole === "employee";
   const [attendances, setAttendances] = useState<any[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [holidays, setHolidays] = useState<HolidayRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("ALL");
+
+  // Selected Month for Overview & Daily Logs (Default: current month)
+  const [currentMonthDate, setCurrentMonthDate] = useState<Date>(() => new Date());
+  
+  // Selected Single Date Filter for Admin table
   const [selectedDate, setSelectedDate] = useState<string>(
     () => new Date().toISOString().split("T")[0]
   );
-  const [statusFilter, setStatusFilter] = useState<string>("ALL");
 
   const loggedInUserId = getCurrentUserId();
 
-  // Load Attendances and Employees list
+  // Load Attendances, Holidays, and Employees list
   const loadData = async () => {
     setIsLoading(true);
     try {
       if (isEmployee) {
-        // Employees: only load their own attendance logs
-        const attRes = await getAttendances({
-          userId: loggedInUserId || undefined,
-        }).catch((err) => {
-          console.error("Error loading personal attendance:", err);
-          return { success: false, data: [] };
-        });
+        // Employees: load their attendance logs + company holidays
+        const [attRes, holRes] = await Promise.all([
+          getAttendances({
+            userId: loggedInUserId || undefined,
+          }).catch((err) => {
+            console.error("Error loading personal attendance:", err);
+            return { success: false, data: [] };
+          }),
+          getHolidays().catch(() => ({ success: false, data: [] })),
+        ]);
 
         const attList = Array.isArray(attRes?.data)
           ? attRes.data
@@ -70,9 +85,12 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
           ? attRes
           : [];
         setAttendances(attList);
+        if (holRes.success && holRes.data) {
+          setHolidays(holRes.data);
+        }
       } else {
-        // SuperAdmin / Admin: load all records and employees list
-        const [attRes, empRes] = await Promise.all([
+        // SuperAdmin / Admin: load all records, holidays, and employees list
+        const [attRes, empRes, holRes] = await Promise.all([
           getAttendances().catch((err) => {
             console.error("Error loading attendances:", err);
             return { success: false, data: [] };
@@ -81,6 +99,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
             console.error("Error loading employees:", err);
             return [];
           }),
+          getHolidays().catch(() => ({ success: false, data: [] })),
         ]);
 
         const attList = Array.isArray(attRes?.data)
@@ -90,6 +109,9 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
           : [];
         setAttendances(attList);
         setEmployees(Array.isArray(empRes) ? empRes : []);
+        if (holRes.success && holRes.data) {
+          setHolidays(holRes.data);
+        }
       }
     } catch (err) {
       console.error("Error loading attendance view data:", err);
@@ -104,7 +126,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
 
   // Format Helper for Time (hh:mm AM/PM)
   const formatTime = (timeStr?: string | null) => {
-    if (!timeStr) return "--:-- --";
+    if (!timeStr) return "--:--";
     try {
       const d = new Date(timeStr);
       if (!isNaN(d.getTime())) {
@@ -135,7 +157,351 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
     }
   };
 
-  // Combine attendance records with employee details
+  // Format Helper for Card Date Header (e.g. "Wed, 19 Aug 2026")
+  const formatCardDate = (date: Date) => {
+    return date.toLocaleDateString("en-IN", {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  // Check if date is today
+  const isTodayDate = (date: Date) => {
+    const today = new Date();
+    return (
+      date.getFullYear() === today.getFullYear() &&
+      date.getMonth() === today.getMonth() &&
+      date.getDate() === today.getDate()
+    );
+  };
+
+  // Check if currentMonthDate is the current or a future month
+  const isCurrentOrFutureMonth = useMemo(() => {
+    const today = new Date();
+    return (
+      currentMonthDate.getFullYear() > today.getFullYear() ||
+      (currentMonthDate.getFullYear() === today.getFullYear() &&
+        currentMonthDate.getMonth() >= today.getMonth())
+    );
+  }, [currentMonthDate]);
+
+  // Month navigation (cannot go forward beyond the current month)
+  const navigateMonth = (direction: "prev" | "next") => {
+    if (direction === "next" && isCurrentOrFutureMonth) return;
+    setCurrentMonthDate((prev) => {
+      const nextDate = new Date(prev);
+      if (direction === "prev") {
+        nextDate.setMonth(nextDate.getMonth() - 1);
+      } else {
+        nextDate.setMonth(nextDate.getMonth() + 1);
+      }
+      return nextDate;
+    });
+  };
+
+  // Safe calculation for daily working minutes (prevents runaway numbers if date parsing fallback occurs)
+  const computeDayWorkingMinutes = (matchedPunch?: any, isToday?: boolean): number => {
+    if (!matchedPunch || !matchedPunch.checkInTime) return 0;
+
+    // 1. Direct workingMinutes from database (if valid and capped)
+    if (
+      matchedPunch.workingMinutes !== null &&
+      matchedPunch.workingMinutes !== undefined &&
+      !isNaN(Number(matchedPunch.workingMinutes)) &&
+      Number(matchedPunch.workingMinutes) > 0
+    ) {
+      return Math.min(Number(matchedPunch.workingMinutes), 1440); // Cap to 24h per day
+    }
+
+    // 2. Calculated from checkInTime and checkOutTime
+    if (matchedPunch.checkInTime && matchedPunch.checkOutTime) {
+      try {
+        const inDate = new Date(matchedPunch.checkInTime);
+        const outDate = new Date(matchedPunch.checkOutTime);
+        if (!isNaN(inDate.getTime()) && !isNaN(outDate.getTime())) {
+          const diffMs = outDate.getTime() - inDate.getTime();
+          if (diffMs > 0 && diffMs <= 86400000) {
+            return Math.floor(diffMs / 60000);
+          }
+        }
+      } catch {
+        // ignore
+      }
+    }
+
+    // 3. If today and actively clocked in (no checkout yet, cap to 12h)
+    if (isToday && matchedPunch.checkInTime && !matchedPunch.checkOutTime) {
+      try {
+        const inDate = new Date(matchedPunch.checkInTime);
+        if (!isNaN(inDate.getTime())) {
+          const now = new Date();
+          const diffMs = now.getTime() - inDate.getTime();
+          if (diffMs > 0 && diffMs <= 43200000) {
+            return Math.floor(diffMs / 60000);
+          }
+        }
+      } catch {
+        // ignore
+      }
+    }
+
+    return 0;
+  };
+
+  // =========================================================================
+  // Full Date-wise Month Generator (Latest Date at Top, Saturdays & Sundays as WO)
+  // =========================================================================
+  const employeeMonthLogs = useMemo(() => {
+    const year = currentMonthDate.getFullYear();
+    const month = currentMonthDate.getMonth(); // 0-indexed
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const today = new Date();
+
+    const isCurrentMonth =
+      today.getFullYear() === year && today.getMonth() === month;
+    const maxDay = isCurrentMonth ? today.getDate() : daysInMonth;
+
+    const logs: Array<{
+      date: Date;
+      dateKey: string; // YYYY-MM-DD
+      displayDate: string;
+      isToday: boolean;
+      isWeekend: boolean;
+      dayOfWeek: string;
+      status: "PRESENT" | "HALF_DAY" | "WO" | "HOLIDAY" | "ABSENT" | "NOT_CLOCKED_IN";
+      statusLabel: string;
+      checkInTime?: string | null;
+      checkOutTime?: string | null;
+      workingMinutes?: number | null;
+      workingHoursStr: string;
+      holidayName?: string;
+      rawAttendance?: any;
+    }> = [];
+
+    // Loop from maxDay down to 1 (Latest Date at the Top)
+    for (let day = maxDay; day >= 1; day--) {
+      const cellDate = new Date(year, month, day);
+      const dateKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      const dayOfWeekIdx = cellDate.getDay(); // 0 = Sun, 6 = Sat
+      const isWeekend = dayOfWeekIdx === 0 || dayOfWeekIdx === 6;
+      const isToday = isTodayDate(cellDate);
+
+      // Check if employee has a raw attendance punch for this date
+      const matchedPunch = attendances.find((att) => {
+        const attDateStr = att.attendanceDate
+          ? new Date(att.attendanceDate).toISOString().split("T")[0]
+          : att.checkInTime
+          ? new Date(att.checkInTime).toISOString().split("T")[0]
+          : "";
+        return attDateStr === dateKey;
+      });
+
+      // Check if holiday
+      const matchedHoliday = holidays.find((h) => {
+        if (h.holidayType === "WEEK_OFF") return false;
+        const checkTime = new Date(year, month, day).getTime();
+        const start = new Date(h.startDate);
+        const startTime = new Date(start.getFullYear(), start.getMonth(), start.getDate()).getTime();
+        const end = new Date(h.endDate || h.startDate);
+        const endTime = new Date(end.getFullYear(), end.getMonth(), end.getDate()).getTime();
+        return checkTime >= startTime && checkTime <= endTime;
+      });
+
+      if (matchedPunch && matchedPunch.checkInTime) {
+        // Employee worked on this day (whether weekday or weekend) -> Determine status by hours
+        const mins = computeDayWorkingMinutes(matchedPunch, isToday);
+        const hrs = Math.floor(mins / 60);
+        const remMins = mins % 60;
+        const workStr = mins > 0 ? `${hrs}h ${remMins}m` : "--";
+
+        // Hours-based status thresholds:
+        // >= 8h 30m (510 mins) => Present
+        // >= 4h 0m (240 mins) & < 8h 30m => Half Day
+        // < 4h 0m => Half Day (clocked in but very short)
+        // If today & no checkout yet => show status based on elapsed so far
+        const PRESENT_THRESHOLD = 510; // 8h 30m
+        const HALF_DAY_THRESHOLD = 240; // 4h 0m
+
+        let dayStatus: "PRESENT" | "HALF_DAY" | "ABSENT" = "ABSENT";
+        let dayStatusLabel = "Absent";
+
+        if (isToday && matchedPunch.checkInTime && !matchedPunch.checkOutTime) {
+          // Still active today — show current elapsed status
+          if (mins >= PRESENT_THRESHOLD) {
+            dayStatus = "PRESENT";
+            dayStatusLabel = isWeekend ? "Present (WO Worked)" : "Present";
+          } else if (mins >= HALF_DAY_THRESHOLD) {
+            dayStatus = "HALF_DAY";
+            dayStatusLabel = "Half Day";
+          } else {
+            dayStatus = "PRESENT";
+            dayStatusLabel = isWeekend ? "Present (WO Worked)" : "Present";
+          }
+        } else if (mins >= PRESENT_THRESHOLD) {
+          dayStatus = "PRESENT";
+          dayStatusLabel = isWeekend ? "Present (WO Worked)" : "Present";
+        } else if (mins >= HALF_DAY_THRESHOLD) {
+          dayStatus = "HALF_DAY";
+          dayStatusLabel = "Half Day";
+        } else {
+          // Clocked in but less than 4h
+          dayStatus = "HALF_DAY";
+          dayStatusLabel = "Half Day";
+        }
+
+        logs.push({
+          date: cellDate,
+          dateKey,
+          displayDate: formatCardDate(cellDate),
+          isToday,
+          isWeekend,
+          dayOfWeek: cellDate.toLocaleDateString("en-US", { weekday: "short" }),
+          status: dayStatus,
+          statusLabel: dayStatusLabel,
+          checkInTime: matchedPunch.checkInTime,
+          checkOutTime: matchedPunch.checkOutTime,
+          workingMinutes: mins,
+          workingHoursStr: workStr,
+          rawAttendance: matchedPunch,
+        });
+      } else if (isWeekend) {
+        // Saturday or Sunday without punch -> SHOW AS WEEK-OFF (WO)
+        logs.push({
+          date: cellDate,
+          dateKey,
+          displayDate: formatCardDate(cellDate),
+          isToday,
+          isWeekend: true,
+          dayOfWeek: cellDate.toLocaleDateString("en-US", { weekday: "short" }),
+          status: "WO",
+          statusLabel: "Week-Off",
+          checkInTime: null,
+          checkOutTime: null,
+          workingMinutes: 0,
+          workingHoursStr: "--",
+        });
+      } else if (matchedHoliday) {
+        // Holiday
+        logs.push({
+          date: cellDate,
+          dateKey,
+          displayDate: formatCardDate(cellDate),
+          isToday,
+          isWeekend: false,
+          dayOfWeek: cellDate.toLocaleDateString("en-US", { weekday: "short" }),
+          status: "HOLIDAY",
+          statusLabel: "Holiday",
+          holidayName: matchedHoliday.holidayName,
+          checkInTime: null,
+          checkOutTime: null,
+          workingMinutes: 0,
+          workingHoursStr: "--",
+        });
+      } else if (isToday) {
+        // Today weekday, not yet clocked in
+        logs.push({
+          date: cellDate,
+          dateKey,
+          displayDate: formatCardDate(cellDate),
+          isToday: true,
+          isWeekend: false,
+          dayOfWeek: cellDate.toLocaleDateString("en-US", { weekday: "short" }),
+          status: "NOT_CLOCKED_IN",
+          statusLabel: "--",
+          checkInTime: null,
+          checkOutTime: null,
+          workingMinutes: 0,
+          workingHoursStr: "--",
+        });
+      } else {
+        // Past weekday without punch -> Absent
+        logs.push({
+          date: cellDate,
+          dateKey,
+          displayDate: formatCardDate(cellDate),
+          isToday: false,
+          isWeekend: false,
+          dayOfWeek: cellDate.toLocaleDateString("en-US", { weekday: "short" }),
+          status: "ABSENT",
+          statusLabel: "Absent",
+          checkInTime: null,
+          checkOutTime: null,
+          workingMinutes: 0,
+          workingHoursStr: "--",
+        });
+      }
+    }
+
+    return logs;
+  }, [currentMonthDate, attendances, holidays]);
+
+  // Month-wise Overview Stats
+  const monthOverviewStats = useMemo(() => {
+    let presentCount = 0;
+    let weekOffCount = 0;
+    let holidayCount = 0;
+    let absentCount = 0;
+    let totalMinutes = 0;
+
+    employeeMonthLogs.forEach((log) => {
+      if (log.status === "PRESENT") {
+        presentCount++;
+        if (log.workingMinutes) totalMinutes += log.workingMinutes;
+      } else if (log.status === "HALF_DAY") {
+        presentCount++; // Count as a worked day for avg calculation
+        if (log.workingMinutes) totalMinutes += log.workingMinutes;
+      } else if (log.status === "WO") {
+        weekOffCount++;
+      } else if (log.status === "HOLIDAY") {
+        holidayCount++;
+      } else if (log.status === "ABSENT") {
+        absentCount++;
+      }
+    });
+
+    const totalHours = Math.floor(totalMinutes / 60);
+    const remMins = totalMinutes % 60;
+    const avgMins = presentCount > 0 ? Math.round(totalMinutes / presentCount) : 0;
+    const avgHrs = Math.floor(avgMins / 60);
+    const avgRemMins = avgMins % 60;
+
+    return {
+      totalLoggedDays: employeeMonthLogs.length,
+      presentCount,
+      weekOffCount,
+      holidayCount,
+      absentCount,
+      totalWorkingHoursStr: `${totalHours}h ${remMins}m`,
+      avgDailyHoursStr: `${avgHrs}h ${avgRemMins}m`,
+    };
+  }, [employeeMonthLogs]);
+
+  // Filtered employee logs by search / status
+  const filteredEmployeeLogs = useMemo(() => {
+    return employeeMonthLogs.filter((log) => {
+      // Status filter
+      if (statusFilter !== "ALL") {
+        if (statusFilter === "PRESENT" && log.status !== "PRESENT") return false;
+        if (statusFilter === "WO" && log.status !== "WO") return false;
+        if (statusFilter === "HOLIDAY" && log.status !== "HOLIDAY") return false;
+        if (statusFilter === "ABSENT" && log.status !== "ABSENT") return false;
+      }
+      // Search query
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        return (
+          log.displayDate.toLowerCase().includes(q) ||
+          log.statusLabel.toLowerCase().includes(q) ||
+          (log.holidayName && log.holidayName.toLowerCase().includes(q))
+        );
+      }
+      return true;
+    });
+  }, [employeeMonthLogs, statusFilter, searchQuery]);
+
+  // Combine attendance records with employee details for Admin view
   const attendanceRows = useMemo(() => {
     return attendances.map((att) => {
       const emp = employees.find(
@@ -153,16 +519,14 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
     });
   }, [attendances, employees, currentUserName]);
 
-  // Filtered rows by search and date
-  const filteredRows = useMemo(() => {
+  // Filtered rows for Admin Table
+  const filteredAdminRows = useMemo(() => {
     return attendanceRows.filter((row) => {
-      // For employee view, don't strictly require date filter to let them see their recent history
       const rowDate = row.attendanceDate
         ? new Date(row.attendanceDate).toISOString().split("T")[0]
         : "";
-      const matchesDate = isEmployee || !selectedDate || rowDate === selectedDate;
+      const matchesDate = !selectedDate || rowDate === selectedDate;
 
-      // Search filter
       const q = searchQuery.toLowerCase().trim();
       const matchesSearch =
         !q ||
@@ -170,17 +534,16 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
         row.employeeCode.toLowerCase().includes(q) ||
         row.department.toLowerCase().includes(q);
 
-      // Status filter
       const matchesStatus =
         statusFilter === "ALL" ||
         row.attendanceStatus?.toUpperCase() === statusFilter.toUpperCase();
 
       return matchesDate && matchesSearch && matchesStatus;
     });
-  }, [attendanceRows, selectedDate, searchQuery, statusFilter, isEmployee]);
+  }, [attendanceRows, selectedDate, searchQuery, statusFilter]);
 
   // Admin KPI Metrics
-  const metrics = useMemo(() => {
+  const adminMetrics = useMemo(() => {
     const today = new Date().toISOString().split("T")[0];
     const todayRecords = attendanceRows.filter((r) => {
       const d = r.attendanceDate ? new Date(r.attendanceDate).toISOString().split("T")[0] : "";
@@ -199,208 +562,346 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
     };
   }, [attendanceRows, employees]);
 
-  // Format Helper for Card Date Header (e.g. "Wed, 19 Aug 2026")
-  const formatCardDate = (dateStr?: string | null) => {
-    if (!dateStr) return "--";
-    try {
-      const d = new Date(dateStr);
-      return d.toLocaleDateString("en-IN", {
-        weekday: "short",
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      });
-    } catch (e) {
-      return dateStr;
-    }
-  };
-
-  // Check if date string is today
-  const isTodayDate = (dateStr?: string | null) => {
-    if (!dateStr) return false;
-    try {
-      const d = new Date(dateStr);
-      const today = new Date();
-      return (
-        d.getFullYear() === today.getFullYear() &&
-        d.getMonth() === today.getMonth() &&
-        d.getDate() === today.getDate()
-      );
-    } catch {
-      return false;
-    }
-  };
-
-  // Sorted employee rows (newest first)
-  const sortedEmployeeRows = useMemo(() => {
-    return [...filteredRows].sort((a, b) => {
-      const da = new Date(a.attendanceDate || a.checkInTime || 0).getTime();
-      const db = new Date(b.attendanceDate || b.checkInTime || 0).getTime();
-      return db - da;
-    });
-  }, [filteredRows]);
-
-  // Employee aggregate stats
-  const employeeStats = useMemo(() => {
-    let totalMinutes = 0;
-    let daysCount = sortedEmployeeRows.length;
-
-    sortedEmployeeRows.forEach((r) => {
-      if (r.workingMinutes) {
-        totalMinutes += Number(r.workingMinutes);
-      }
-    });
-
-    const totalHours = Math.floor(totalMinutes / 60);
-    const remainingMins = totalMinutes % 60;
-    const avgMinutes = daysCount > 0 ? Math.round(totalMinutes / daysCount) : 0;
-    const avgHours = Math.floor(avgMinutes / 60);
-    const avgRemainingMins = avgMinutes % 60;
-
-    return {
-      daysCount,
-      totalWorkingHours: `${totalHours}h ${remainingMins}m`,
-      avgHours: `${avgHours}h ${avgRemainingMins}m`,
-    };
-  }, [sortedEmployeeRows]);
-
   // ==========================================
-  // 1. EMPLOYEE PERSONAL ATTENDANCE VIEW (Date-wise Cards)
+  // 1. EMPLOYEE PERSONAL ATTENDANCE VIEW (Date-wise with WO, Latest at Top, Month Overview)
   // ==========================================
   if (isEmployee) {
     return (
-      <div className="space-y-5 animate-fade-in text-slate-800 pb-10">
-        {/* Header */}
-        <div className="flex items-center justify-between bg-white p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xs">
+      <div className="space-y-6 animate-fade-in text-slate-800 pb-10">
+        {/* Header & Month Selector */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-3xl border border-slate-200/80 shadow-2xs">
           <div>
-            <h1 className="text-lg sm:text-xl font-extrabold text-brand-primary tracking-tight">
+            <h1 className="text-xl font-bold text-brand-primary tracking-tight">
               My Attendance Logs
             </h1>
-            <p className="text-xs text-slate-500 font-medium mt-0.5">
-              Daily date-wise check-in and check-out times.
+            <p className="text-xs text-slate-500 font-semibold mt-0.5">
+              Daily date-wise attendance records with latest dates at the top.
+            </p>
+          </div>
+
+          {/* Month Switcher Controls */}
+          <div className="flex items-center gap-2 bg-slate-100/80 border border-slate-200/60 rounded-2xl p-1 shrink-0 self-start sm:self-auto shadow-3xs">
+            <button
+              onClick={() => navigateMonth("prev")}
+              className="p-1.5 rounded-xl hover:bg-white hover:shadow-3xs text-slate-600 hover:text-slate-900 transition-all cursor-pointer"
+              aria-label="Previous Month"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            <span className="px-3 py-1 font-extrabold text-xs text-slate-800 min-w-[130px] text-center">
+              {currentMonthDate.toLocaleString("en-US", { month: "long", year: "numeric" })}
+            </span>
+
+            <button
+              onClick={() => navigateMonth("next")}
+              disabled={isCurrentOrFutureMonth}
+              className={`p-1.5 rounded-xl transition-all ${
+                isCurrentOrFutureMonth
+                  ? "opacity-25 cursor-not-allowed text-slate-400"
+                  : "hover:bg-white hover:shadow-3xs text-slate-600 hover:text-slate-900 cursor-pointer"
+              }`}
+              aria-label="Next Month"
+              title={isCurrentOrFutureMonth ? "Cannot navigate to future months" : "Next Month"}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Month-Wise Attendance Overview Metrics */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          {/* Total Working Hours */}
+          <div className="bg-white border border-slate-200/80 p-4 rounded-2xl shadow-2xs space-y-1">
+            <span className="text-[10px] font-extrabold text-brand-primary uppercase tracking-wider block">
+              Total Working Hours
+            </span>
+            <p className="text-2xl font-black text-brand-primary">
+              {monthOverviewStats.totalWorkingHoursStr}
+            </p>
+          </div>
+
+          {/* Avg Daily */}
+          <div className="bg-white border border-slate-200/80 p-4 rounded-2xl shadow-2xs space-y-1">
+            <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider block">
+              Avg Daily Hours
+            </span>
+            <p className="text-2xl font-black text-slate-800">
+              {monthOverviewStats.avgDailyHoursStr}
             </p>
           </div>
         </div>
 
-        {/* Quick KPI Overview */}
-        <div className="grid grid-cols-3 gap-2.5 sm:gap-3.5">
-          <div className="bg-white border border-slate-200/80 p-3 sm:p-4 rounded-xl sm:rounded-2xl shadow-2xs">
-            <span className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-              Total Days
-            </span>
-            <p className="text-base sm:text-xl font-extrabold text-slate-900 mt-1">
-              {employeeStats.daysCount} <span className="text-xs font-semibold text-slate-400">Days</span>
-            </p>
-          </div>
-
-          <div className="bg-white border border-slate-200/80 p-3 sm:p-4 rounded-xl sm:rounded-2xl shadow-2xs">
-            <span className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-              Total Hours
-            </span>
-            <p className="text-base sm:text-xl font-extrabold text-brand-primary mt-1">
-              {employeeStats.totalWorkingHours}
-            </p>
-          </div>
-
-          <div className="bg-white border border-slate-200/80 p-3 sm:p-4 rounded-xl sm:rounded-2xl shadow-2xs">
-            <span className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-              Avg. Daily
-            </span>
-            <p className="text-base sm:text-xl font-extrabold text-emerald-700 mt-1">
-              {employeeStats.avgHours}
-            </p>
+        {/* Search Bar */}
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs flex items-center justify-between gap-3">
+          <div className="relative w-full max-w-md">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Search date..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:bg-white focus:border-brand-primary"
+            />
           </div>
         </div>
 
-        {/* Date-wise Attendance Cards Grid */}
+        {/* Date-wise Attendance Logs (Latest Date at Top) */}
         {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div className="space-y-3">
+            {[1, 2, 3, 4, 5].map((i) => (
               <div
                 key={i}
-                className="bg-white border border-slate-200/80 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs space-y-3.5"
+                className="bg-white border border-slate-200/80 rounded-2xl p-4 animate-pulse flex items-center justify-between"
               >
-                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                  <div className="flex items-center gap-2.5">
-                    <Skeleton className="w-8 h-8 rounded-xl" />
-                    <Skeleton className="h-4 w-28" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2.5">
-                  <Skeleton className="h-14 rounded-xl" />
-                  <Skeleton className="h-14 rounded-xl" />
-                </div>
+                <div className="h-4 bg-slate-200 rounded w-36" />
+                <div className="h-6 bg-slate-200 rounded-full w-20" />
               </div>
             ))}
           </div>
-        ) : sortedEmployeeRows.length === 0 ? (
+        ) : filteredEmployeeLogs.length === 0 ? (
           <div className="py-16 text-center space-y-2 bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6">
             <Clock className="w-10 h-10 text-slate-300 mx-auto" />
-            <h4 className="text-sm font-bold text-slate-700">No Attendance Records Yet</h4>
+            <h4 className="text-sm font-bold text-slate-700">No Logs for Selected Month</h4>
             <p className="text-xs text-slate-400 max-w-sm mx-auto">
-              Your daily check-in and check-out cards will automatically appear here once you clock in.
+              Attendance records for this month will appear here automatically.
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
-            {sortedEmployeeRows.map((row) => {
-              const isToday = isTodayDate(row.attendanceDate || row.checkInTime);
+          <div className="space-y-4">
+            {/* Mobile Card Grid (Visible on mobile/tablet screens: md:hidden) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 md:hidden">
+              {filteredEmployeeLogs.map((log) => {
+                const isWO = log.status === "WO";
+                const isHoliday = log.status === "HOLIDAY";
+                const isPresent = log.status === "PRESENT";
+                const isHalfDay = log.status === "HALF_DAY";
+                const isAbsent = log.status === "ABSENT";
 
-              return (
-                <div
-                  key={row.attendanceId}
-                  className="bg-white border border-slate-200/85 hover:border-brand-primary/40 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between gap-3 group"
-                >
-                  {/* Card Top: Date Header */}
-                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-xl bg-brand-primary/10 text-brand-primary flex items-center justify-center font-bold text-xs shrink-0">
-                        <Calendar className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <p className="text-xs sm:text-sm font-extrabold text-brand-primary leading-tight">
-                          {formatCardDate(row.attendanceDate || row.checkInTime)}
-                        </p>
-                        {isToday && (
-                          <span className="inline-block text-[9px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded-md uppercase tracking-wider mt-0.5">
-                            Today
+                return (
+                  <div
+                    key={log.dateKey}
+                    className={`p-4 rounded-2xl border shadow-2xs transition-all space-y-3 bg-white ${
+                      isWO
+                        ? "border-slate-200/70 bg-slate-50/40"
+                        : isHoliday
+                        ? "border-purple-200/80 bg-purple-50/20"
+                        : "border-slate-200/80"
+                    }`}
+                  >
+                    {/* Top Header: Date & Status */}
+                    <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
+                      <div className="flex items-center gap-2.5">
+                        <div
+                          className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${
+                            isPresent
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                              : isHalfDay
+                              ? "bg-amber-50 text-amber-700 border border-amber-200"
+                              : isWO
+                              ? "bg-slate-100 text-slate-500 border border-slate-200"
+                              : isHoliday
+                              ? "bg-purple-50 text-purple-700 border border-purple-200"
+                              : "bg-slate-100 text-slate-400"
+                          }`}
+                        >
+                          <Calendar className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="font-extrabold text-slate-900 text-xs block leading-tight">
+                            {log.displayDate}
                           </span>
-                        )}
+                          {log.holidayName && (
+                            <span className="text-[10px] font-bold text-purple-700 block mt-0.5">
+                              ✨ {log.holidayName}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </div>
 
-                  {/* Card Center: Check-In & Check-Out Times */}
-                  <div className="grid grid-cols-2 gap-2.5">
-                    {/* Check In */}
-                    <div className="bg-slate-50/80 border border-slate-100 rounded-xl p-2.5">
-                      <div className="flex items-center gap-1 text-slate-400 mb-1">
-                        <Clock className="w-3 h-3 text-emerald-600" />
-                        <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
-                          Check In
+                      {log.statusLabel !== "--" && (
+                        <span
+                          className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
+                            isPresent
+                              ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                              : isHalfDay
+                              ? "bg-amber-100 text-amber-800 border border-amber-200"
+                              : isWO
+                              ? "bg-slate-100 text-slate-700 border border-slate-300 font-extrabold"
+                              : isHoliday
+                              ? "bg-purple-100 text-purple-800 border border-purple-200"
+                              : isAbsent
+                              ? "bg-rose-100 text-rose-800 border border-rose-200"
+                              : "bg-slate-100 text-slate-600 border border-slate-200"
+                          }`}
+                        >
+                          {log.statusLabel}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Punches Grid: Check In & Check Out */}
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                        <div className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">
+                          <Clock className="w-3 h-3 text-emerald-600" />
+                          <span>Check In</span>
+                        </div>
+                        <span className="font-mono font-bold text-slate-800 text-xs">
+                          {formatTime(log.checkInTime)}
                         </span>
                       </div>
-                      <p className="font-mono text-xs sm:text-sm font-extrabold text-slate-900">
-                        {formatTime(row.checkInTime)}
-                      </p>
-                    </div>
 
-                    {/* Check Out */}
-                    <div className="bg-slate-50/80 border border-slate-100 rounded-xl p-2.5">
-                      <div className="flex items-center gap-1 text-slate-400 mb-1">
-                        <Clock className="w-3 h-3 text-rose-500" />
-                        <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
-                          Check Out
+                      <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                        <div className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">
+                          <Clock className="w-3 h-3 text-rose-500" />
+                          <span>Check Out</span>
+                        </div>
+                        <span className="font-mono font-bold text-slate-800 text-xs">
+                          {formatTime(log.checkOutTime)}
                         </span>
                       </div>
-                      <p className="font-mono text-xs sm:text-sm font-extrabold text-slate-900">
-                        {row.checkOutTime ? formatTime(row.checkOutTime) : "--:--"}
-                      </p>
+                    </div>
+
+                    {/* Bottom Bar: Total Worked */}
+                    <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        Total Worked
+                      </span>
+                      <span className="font-extrabold text-brand-primary">
+                        {log.workingHoursStr}
+                      </span>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+
+            {/* Desktop Table View (hidden on mobile, visible md and up) */}
+            <div className="hidden md:block">
+              <TableContainer className="rounded-3xl border-slate-200/80 shadow-2xs">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead className="sm:px-6">Date</TableHead>
+                      <TableHead>Check In</TableHead>
+                      <TableHead>Check Out</TableHead>
+                      <TableHead>Total Worked</TableHead>
+                      <TableHead className="text-center">Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredEmployeeLogs.map((log) => {
+                      const isWO = log.status === "WO";
+                      const isHoliday = log.status === "HOLIDAY";
+                      const isPresent = log.status === "PRESENT";
+                      const isHalfDay = log.status === "HALF_DAY";
+                      const isAbsent = log.status === "ABSENT";
+
+                      return (
+                        <TableRow
+                          key={log.dateKey}
+                          className={`transition-colors ${
+                            isWO
+                              ? "bg-slate-50/30 text-slate-500 hover:bg-slate-100/50"
+                              : isHoliday
+                              ? "bg-purple-50/20 hover:bg-purple-50/40"
+                              : log.isToday
+                              ? "bg-brand-primary-light/40"
+                              : ""
+                          }`}
+                        >
+                          {/* Date Column */}
+                          <TableCell className="sm:px-6">
+                            <div className="flex items-center gap-2.5">
+                              <div
+                                className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${
+                                  isPresent
+                                    ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                    : isHalfDay
+                                    ? "bg-amber-50 text-amber-700 border border-amber-200"
+                                    : isWO
+                                    ? "bg-slate-100 text-slate-500 border border-slate-200"
+                                    : isHoliday
+                                    ? "bg-purple-50 text-purple-700 border border-purple-200"
+                                    : "bg-slate-100 text-slate-400"
+                                }`}
+                              >
+                                <Calendar className="w-4 h-4" />
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-extrabold text-slate-900 text-xs">
+                                    {log.displayDate}
+                                  </span>
+                                </div>
+                                {log.holidayName && (
+                                  <span className="text-[10px] font-bold text-purple-700 block mt-0.5">
+                                    ✨ {log.holidayName}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </TableCell>
+
+                          {/* Check In */}
+                          <TableCell className="font-mono font-bold text-slate-800">
+                            {log.checkInTime ? (
+                              <span className="text-emerald-700 flex items-center gap-1.5">
+                                <Clock className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                                {formatTime(log.checkInTime)}
+                              </span>
+                            ) : (
+                              <span className="text-slate-400">--:--</span>
+                            )}
+                          </TableCell>
+
+                          {/* Check Out */}
+                          <TableCell className="font-mono font-bold text-slate-800">
+                            {log.checkOutTime ? (
+                              <span className="text-slate-800 flex items-center gap-1.5">
+                                <Clock className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                                {formatTime(log.checkOutTime)}
+                              </span>
+                            ) : (
+                              <span className="text-slate-400">--:--</span>
+                            )}
+                          </TableCell>
+
+                          {/* Total Worked */}
+                          <TableCell className="font-bold text-brand-primary">
+                            {log.workingHoursStr}
+                          </TableCell>
+
+                          {/* Status Badge */}
+                          <TableCell className="text-center">
+                            {log.statusLabel !== "--" && (
+                              <span
+                                className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider inline-block ${
+                                  isPresent
+                                    ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                                    : isHalfDay
+                                    ? "bg-amber-100 text-amber-800 border border-amber-200"
+                                    : isWO
+                                    ? "bg-slate-100 text-slate-700 border border-slate-300 font-extrabold"
+                                    : isHoliday
+                                    ? "bg-purple-100 text-purple-800 border border-purple-200"
+                                    : isAbsent
+                                    ? "bg-rose-100 text-rose-800 border border-rose-200"
+                                    : "bg-slate-100 text-slate-600 border border-slate-200"
+                                }`}
+                              >
+                                {log.statusLabel}
+                              </span>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </div>
           </div>
         )}
       </div>
@@ -430,6 +931,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
             <input
               type="date"
               value={selectedDate}
+              max={new Date().toISOString().split("T")[0]}
               onChange={(e) => setSelectedDate(e.target.value)}
               className="bg-transparent focus:outline-none text-xs font-bold text-slate-800 cursor-pointer"
             />
@@ -457,8 +959,8 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
             </div>
           </div>
           <p className="text-xl sm:text-2xl font-extrabold text-slate-900 mt-2">
-            {metrics.present}
-            <span className="text-xs font-medium text-slate-400 ml-1">/ {metrics.totalEmployees}</span>
+            {adminMetrics.present}
+            <span className="text-xs font-medium text-slate-400 ml-1">/ {adminMetrics.totalEmployees}</span>
           </p>
         </div>
 
@@ -472,7 +974,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
             </div>
           </div>
           <p className="text-xl sm:text-2xl font-extrabold text-brand-primary mt-2">
-            {metrics.active}
+            {adminMetrics.active}
           </p>
         </div>
 
@@ -486,7 +988,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
             </div>
           </div>
           <p className="text-xl sm:text-2xl font-extrabold text-slate-900 mt-2">
-            {metrics.completed}
+            {adminMetrics.completed}
           </p>
         </div>
 
@@ -500,7 +1002,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
             </div>
           </div>
           <p className="text-xl sm:text-2xl font-extrabold text-slate-900 mt-2">
-            {Math.max(0, metrics.totalEmployees - metrics.present)}
+            {Math.max(0, adminMetrics.totalEmployees - adminMetrics.present)}
           </p>
         </div>
       </div>
@@ -559,7 +1061,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
               </div>
             ))}
           </div>
-        ) : filteredRows.length === 0 ? (
+        ) : filteredAdminRows.length === 0 ? (
           <div className="py-20 text-center space-y-2">
             <Clock className="w-10 h-10 text-slate-300 mx-auto" />
             <h4 className="text-sm font-bold text-slate-700">No Attendance Records Found</h4>
@@ -568,149 +1070,254 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
             </p>
           </div>
         ) : (
-        <TableContainer className="rounded-2xl border-none shadow-none">
-          <Table>
-            <TableHeader>
-              <tr>
-                <TableHead className="sm:px-6">Employee</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Check In</TableHead>
-                <TableHead>Check-In GPS Location</TableHead>
-                <TableHead>Check Out</TableHead>
-                <TableHead>Check-Out GPS Location</TableHead>
-                <TableHead>Total Worked</TableHead>
-                <TableHead className="text-center">Status</TableHead>
-              </tr>
-            </TableHeader>
-            <TableBody>
-                {filteredRows.map((row) => {
-                  const checkInLat = row.checkInLatitude ? Number(row.checkInLatitude) : null;
-                  const checkInLng = row.checkInLongitude ? Number(row.checkInLongitude) : null;
-                  const checkOutLat = row.checkOutLatitude ? Number(row.checkOutLatitude) : null;
-                  const checkOutLng = row.checkOutLongitude ? Number(row.checkOutLongitude) : null;
+          <div className="space-y-4">
+            {/* Admin Mobile Card Grid (md:hidden) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 md:hidden">
+              {filteredAdminRows.map((row) => {
+                const checkInLat = row.checkInLatitude ? Number(row.checkInLatitude) : null;
+                const checkInLng = row.checkInLongitude ? Number(row.checkInLongitude) : null;
+                const checkOutLat = row.checkOutLatitude ? Number(row.checkOutLatitude) : null;
+                const checkOutLng = row.checkOutLongitude ? Number(row.checkOutLongitude) : null;
 
-                  const hasCheckInLocation = checkInLat !== null && checkInLng !== null;
-                  const hasCheckOutLocation = checkOutLat !== null && checkOutLng !== null;
+                const hasCheckInLocation = checkInLat !== null && checkInLng !== null;
+                const hasCheckOutLocation = checkOutLat !== null && checkOutLng !== null;
 
-                  const workingHrs = row.workingMinutes
-                    ? `${Math.floor(row.workingMinutes / 60)}h ${row.workingMinutes % 60}m`
-                    : row.checkInTime && !row.checkOutTime
-                    ? "In Progress"
+                const isRowToday = row.attendanceDate
+                  ? isTodayDate(new Date(row.attendanceDate))
+                  : row.checkInTime
+                  ? isTodayDate(new Date(row.checkInTime))
+                  : false;
+                const rowMins = computeDayWorkingMinutes(row, isRowToday);
+                const workingHrs =
+                  rowMins > 0
+                    ? `${Math.floor(rowMins / 60)}h ${rowMins % 60}m`
                     : "--";
 
-                  return (
-                    <TableRow key={row.attendanceId}>
-                      {/* Employee Column */}
-                      <TableCell className="sm:px-6">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-brand-primary text-brand-btn-text flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden">
-                            {row.profilePic ? (
-                              <img
-                                src={row.profilePic}
-                                alt={row.employeeName}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <span>{row.employeeName.charAt(0).toUpperCase()}</span>
-                            )}
-                          </div>
-                          <div>
-                            <p className="font-extrabold text-slate-900 text-xs leading-tight">
-                              {row.employeeName}
-                            </p>
-                            <p className="text-[10px] text-slate-400 font-medium mt-0.5">
-                              <span className="font-mono text-slate-500 font-bold">{row.employeeCode}</span> • {row.designation}
-                            </p>
-                          </div>
+                return (
+                  <div
+                    key={row.attendanceId}
+                    className="p-4 rounded-2xl border border-slate-200/80 bg-white shadow-2xs space-y-3"
+                  >
+                    {/* Header: Employee Profile & Status */}
+                    <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-xl bg-brand-primary text-brand-btn-text flex items-center justify-center font-black text-xs shrink-0">
+                          {row.employeeName.charAt(0)}
                         </div>
-                      </TableCell>
+                        <div>
+                          <span className="font-extrabold text-slate-900 text-xs block leading-tight">
+                            {row.employeeName}
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-semibold">
+                            {row.employeeCode} · {row.department}
+                          </span>
+                        </div>
+                      </div>
 
-                      {/* Date */}
-                      <TableCell className="font-semibold text-slate-800 whitespace-nowrap">
-                        {formatDate(row.attendanceDate)}
-                      </TableCell>
+                      <span
+                        className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
+                          row.attendanceStatus?.toUpperCase() === "PRESENT"
+                            ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                            : "bg-slate-100 text-slate-700"
+                        }`}
+                      >
+                        {row.attendanceStatus || "PRESENT"}
+                      </span>
+                    </div>
 
-                      {/* Check-In Time */}
-                      <TableCell className="font-mono font-bold text-slate-900 whitespace-nowrap">
-                        {formatTime(row.checkInTime)}
-                      </TableCell>
-
-                      {/* Check-In GPS Coordinates & Maps Link */}
-                      <TableCell className="whitespace-nowrap">
-                        {hasCheckInLocation ? (
+                    {/* Punches Grid: Check In & Check Out with Location */}
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      {/* Check In */}
+                      <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 space-y-1">
+                        <div className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-slate-400">
+                          <Clock className="w-3 h-3 text-emerald-600" />
+                          <span>Check In</span>
+                        </div>
+                        <span className="font-mono font-bold text-slate-900 text-xs block">
+                          {formatTime(row.checkInTime)}
+                        </span>
+                        {hasCheckInLocation && (
                           <a
                             href={`https://www.google.com/maps?q=${checkInLat},${checkInLng}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 text-[10px] font-mono font-bold transition-colors"
-                            title="Click to view exact punch location on Google Maps"
+                            className="inline-flex items-center gap-1 text-[10px] text-emerald-700 font-semibold hover:underline mt-0.5"
                           >
-                            <MapPin className="w-3 h-3 text-emerald-600" />
-                            <span>
-                              {checkInLat?.toFixed(4)}, {checkInLng?.toFixed(4)}
-                            </span>
-                            <ExternalLink className="w-2.5 h-2.5 text-emerald-500 ml-0.5" />
+                            <MapPin className="w-2.5 h-2.5 text-emerald-600 shrink-0" />
+                            <span>GPS Location</span>
                           </a>
-                        ) : (
-                          <span className="text-[11px] text-slate-400 font-mono italic">No GPS</span>
                         )}
-                      </TableCell>
+                      </div>
 
-                      {/* Check-Out Time */}
-                      <TableCell className="font-mono font-bold text-slate-900 whitespace-nowrap">
-                        {row.checkOutTime ? formatTime(row.checkOutTime) : (
-                          <span className="text-amber-600 text-[11px] font-bold bg-amber-50 px-2 py-0.5 rounded-md">
-                            Active
-                          </span>
-                        )}
-                      </TableCell>
-
-                      {/* Check-Out GPS Coordinates & Maps Link */}
-                      <TableCell className="whitespace-nowrap">
-                        {hasCheckOutLocation ? (
+                      {/* Check Out */}
+                      <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 space-y-1">
+                        <div className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-slate-400">
+                          <Clock className="w-3 h-3 text-rose-500" />
+                          <span>Check Out</span>
+                        </div>
+                        <span className="font-mono font-bold text-slate-900 text-xs block">
+                          {formatTime(row.checkOutTime)}
+                        </span>
+                        {hasCheckOutLocation && (
                           <a
                             href={`https://www.google.com/maps?q=${checkOutLat},${checkOutLng}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-sky-50 text-sky-800 border border-sky-200 hover:bg-sky-100 text-[10px] font-mono font-bold transition-colors"
-                            title="Click to view checkout location on Google Maps"
+                            className="inline-flex items-center gap-1 text-[10px] text-rose-700 font-semibold hover:underline mt-0.5"
                           >
-                            <MapPin className="w-3 h-3 text-sky-600" />
-                            <span>
-                              {checkOutLat?.toFixed(4)}, {checkOutLng?.toFixed(4)}
-                            </span>
-                            <ExternalLink className="w-2.5 h-2.5 text-sky-500 ml-0.5" />
+                            <MapPin className="w-2.5 h-2.5 text-rose-600 shrink-0" />
+                            <span>GPS Location</span>
                           </a>
-                        ) : (
-                          <span className="text-[11px] text-slate-400 font-mono italic">--</span>
                         )}
-                      </TableCell>
+                      </div>
+                    </div>
 
-                      {/* Total Duration */}
-                      <TableCell className="font-mono font-extrabold text-brand-primary whitespace-nowrap">
+                    {/* Bottom: Date & Total Worked */}
+                    <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                      <span className="text-slate-500 font-semibold text-[11px]">
+                        {formatDate(row.attendanceDate || row.checkInTime)}
+                      </span>
+                      <span className="font-extrabold text-brand-primary">
                         {workingHrs}
-                      </TableCell>
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
 
-                      {/* Status */}
-                      <TableCell className="text-center whitespace-nowrap">
-                        <span
-                          className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide border ${
-                            row.attendanceStatus === "PRESENT"
-                              ? "bg-emerald-100 text-emerald-800 border-emerald-200"
-                              : row.attendanceStatus === "HALF_DAY"
-                              ? "bg-amber-100 text-amber-800 border-amber-200"
-                              : "bg-slate-100 text-slate-700 border-slate-200"
-                          }`}
-                        >
-                          {row.attendanceStatus || "PRESENT"}
-                        </span>
-                      </TableCell>
+            {/* Admin Desktop Table (hidden md:block) */}
+            <div className="hidden md:block">
+              <TableContainer className="rounded-3xl border-slate-200/80 shadow-2xs">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead className="sm:px-6">Employee</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Check In</TableHead>
+                      <TableHead>Check-In GPS Location</TableHead>
+                      <TableHead>Check Out</TableHead>
+                      <TableHead>Check-Out GPS Location</TableHead>
+                      <TableHead>Total Worked</TableHead>
+                      <TableHead className="text-center">Status</TableHead>
                     </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredAdminRows.map((row) => {
+                      const checkInLat = row.checkInLatitude ? Number(row.checkInLatitude) : null;
+                      const checkInLng = row.checkInLongitude ? Number(row.checkInLongitude) : null;
+                      const checkOutLat = row.checkOutLatitude ? Number(row.checkOutLatitude) : null;
+                      const checkOutLng = row.checkOutLongitude ? Number(row.checkOutLongitude) : null;
+
+                      const hasCheckInLocation = checkInLat !== null && checkInLng !== null;
+                      const hasCheckOutLocation = checkOutLat !== null && checkOutLng !== null;
+
+                      const isRowToday = row.attendanceDate
+                        ? isTodayDate(new Date(row.attendanceDate))
+                        : row.checkInTime
+                        ? isTodayDate(new Date(row.checkInTime))
+                        : false;
+                      const rowMins = computeDayWorkingMinutes(row, isRowToday);
+                      const workingHrs =
+                        rowMins > 0
+                          ? `${Math.floor(rowMins / 60)}h ${rowMins % 60}m`
+                          : "--";
+
+                      return (
+                        <TableRow key={row.attendanceId} className="hover:bg-slate-50/80 transition-colors">
+                          {/* Employee Column */}
+                          <TableCell className="sm:px-6">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-xl bg-brand-primary text-brand-btn-text flex items-center justify-center font-black text-xs shrink-0">
+                                {row.employeeName.charAt(0)}
+                              </div>
+                              <div>
+                                <span className="font-extrabold text-slate-900 block leading-tight">
+                                  {row.employeeName}
+                                </span>
+                                <span className="text-[10px] text-slate-400 font-semibold">
+                                  {row.employeeCode} · {row.department}
+                                </span>
+                              </div>
+                            </div>
+                          </TableCell>
+
+                          {/* Date */}
+                          <TableCell className="font-semibold text-slate-800">
+                            {formatDate(row.attendanceDate || row.checkInTime)}
+                          </TableCell>
+
+                          {/* Check In Time */}
+                          <TableCell className="font-mono font-bold text-slate-900">
+                            {formatTime(row.checkInTime)}
+                          </TableCell>
+
+                          {/* Check In Location */}
+                          <TableCell>
+                            {hasCheckInLocation ? (
+                              <a
+                                href={`https://www.google.com/maps?q=${checkInLat},${checkInLng}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 text-[11px] font-semibold hover:bg-emerald-100 transition-colors"
+                              >
+                                <MapPin className="w-3 h-3 text-emerald-600 shrink-0" />
+                                <span>{checkInLat?.toFixed(4)}, {checkInLng?.toFixed(4)}</span>
+                                <ExternalLink className="w-2.5 h-2.5 opacity-60" />
+                              </a>
+                            ) : (
+                              <span className="text-slate-400 text-xs">No GPS Log</span>
+                            )}
+                          </TableCell>
+
+                          {/* Check Out Time */}
+                          <TableCell className="font-mono font-bold text-slate-900">
+                            {formatTime(row.checkOutTime)}
+                          </TableCell>
+
+                          {/* Check Out Location */}
+                          <TableCell>
+                            {hasCheckOutLocation ? (
+                              <a
+                                href={`https://www.google.com/maps?q=${checkOutLat},${checkOutLng}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-50 text-rose-800 border border-rose-200 text-[11px] font-semibold hover:bg-rose-100 transition-colors"
+                              >
+                                <MapPin className="w-3 h-3 text-rose-600 shrink-0" />
+                                <span>{checkOutLat?.toFixed(4)}, {checkOutLng?.toFixed(4)}</span>
+                                <ExternalLink className="w-2.5 h-2.5 opacity-60" />
+                              </a>
+                            ) : (
+                              <span className="text-slate-400 text-xs">No GPS Log</span>
+                            )}
+                          </TableCell>
+
+                          {/* Total Worked */}
+                          <TableCell className="font-bold text-brand-primary font-mono">
+                            {workingHrs}
+                          </TableCell>
+
+                          {/* Status Badge */}
+                          <TableCell className="text-center">
+                            <span
+                              className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                                row.attendanceStatus?.toUpperCase() === "PRESENT"
+                                  ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                                  : "bg-slate-100 text-slate-700"
+                              }`}
+                            >
+                              {row.attendanceStatus || "PRESENT"}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </div>
+          </div>
         )}
       </div>
     </div>

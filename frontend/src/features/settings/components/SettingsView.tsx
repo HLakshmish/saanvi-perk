@@ -7,6 +7,7 @@ import { OthersTab } from "./OthersTab";
 import { PlaceholderConfigTab } from "./PlaceholderConfigTab";
 import { DepartmentTab } from "./DepartmentTab";
 import { LeaveTab } from "./LeaveTab";
+import { AttendanceTab } from "./AttendanceTab";
 
 export const SettingsView: React.FC = () => {
   const [activeSubTab, setActiveSubTab] = useState<SettingsSubTab>("account-info");
@@ -127,10 +128,7 @@ export const SettingsView: React.FC = () => {
           )}
 
           {activeSubTab === "attendance" && (
-            <PlaceholderConfigTab
-              title="Attendance"
-              description="Set up shift timings, overtime rules, geolocation boundaries, and check-in rules."
-            />
+            <AttendanceTab />
           )}
 
           {activeSubTab === "leave" && (

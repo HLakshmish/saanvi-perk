@@ -18,7 +18,7 @@ export const ApprovalsView: React.FC = () => {
         return <ApprovalsCompleted onFilterClick={() => setIsSearchOpen(true)} />;
       case "insights":
       default:
-        return <ApprovalsInsights />;
+        return <ApprovalsInsights onNavigateToTab={(tab) => setActiveTab(tab)} />;
     }
   };
 
