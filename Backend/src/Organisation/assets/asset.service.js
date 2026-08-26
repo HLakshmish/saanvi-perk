@@ -14,9 +14,12 @@ class AssetService {
         if (existing) throw new Error(`Asset with code '${data.assetCode}' already exists`);
 
         // Parse dates
-        if (data.purchaseDate) data.purchaseDate = new Date(data.purchaseDate);
-        if (data.warrantyStartDate) data.warrantyStartDate = new Date(data.warrantyStartDate);
-        if (data.warrantyEndDate) data.warrantyEndDate = new Date(data.warrantyEndDate);
+        if (data.purchaseDate === "") data.purchaseDate = null;
+        else if (data.purchaseDate) data.purchaseDate = new Date(data.purchaseDate);
+        if (data.warrantyStartDate === "") data.warrantyStartDate = null;
+        else if (data.warrantyStartDate) data.warrantyStartDate = new Date(data.warrantyStartDate);
+        if (data.warrantyEndDate === "") data.warrantyEndDate = null;
+        else if (data.warrantyEndDate) data.warrantyEndDate = new Date(data.warrantyEndDate);
 
         // Default status
         if (!data.assetStatus) data.assetStatus = 'AVAILABLE';
@@ -41,9 +44,12 @@ class AssetService {
 
     async updateAsset(id, data) {
         await this.getAssetById(id);
-        if (data.purchaseDate) data.purchaseDate = new Date(data.purchaseDate);
-        if (data.warrantyStartDate) data.warrantyStartDate = new Date(data.warrantyStartDate);
-        if (data.warrantyEndDate) data.warrantyEndDate = new Date(data.warrantyEndDate);
+        if (data.purchaseDate === "") data.purchaseDate = null;
+        else if (data.purchaseDate) data.purchaseDate = new Date(data.purchaseDate);
+        if (data.warrantyStartDate === "") data.warrantyStartDate = null;
+        else if (data.warrantyStartDate) data.warrantyStartDate = new Date(data.warrantyStartDate);
+        if (data.warrantyEndDate === "") data.warrantyEndDate = null;
+        else if (data.warrantyEndDate) data.warrantyEndDate = new Date(data.warrantyEndDate);
         return await assetRepository.updateAsset(id, data);
     }
 
@@ -72,8 +78,10 @@ class AssetAssignmentService {
         const activeAssignment = await assetAssignmentRepository.getActiveAssignmentForAsset(data.assetId);
         if (activeAssignment) throw new Error("Asset already has an active assignment");
 
-        if (data.assignedDate) data.assignedDate = new Date(data.assignedDate);
-        if (data.expectedReturnDate) data.expectedReturnDate = new Date(data.expectedReturnDate);
+        if (data.assignedDate === "") data.assignedDate = null;
+        else if (data.assignedDate) data.assignedDate = new Date(data.assignedDate);
+        if (data.expectedReturnDate === "") data.expectedReturnDate = null;
+        else if (data.expectedReturnDate) data.expectedReturnDate = new Date(data.expectedReturnDate);
 
         if (!data.assignmentStatus) data.assignmentStatus = 'ACTIVE';
 
@@ -121,9 +129,12 @@ class AssetAssignmentService {
     async updateAssignment(id, data) {
         const assignment = await this.getAssignmentById(id);
 
-        if (data.assignedDate) data.assignedDate = new Date(data.assignedDate);
-        if (data.expectedReturnDate) data.expectedReturnDate = new Date(data.expectedReturnDate);
-        if (data.returnedDate) data.returnedDate = new Date(data.returnedDate);
+        if (data.assignedDate === "") data.assignedDate = null;
+        else if (data.assignedDate) data.assignedDate = new Date(data.assignedDate);
+        if (data.expectedReturnDate === "") data.expectedReturnDate = null;
+        else if (data.expectedReturnDate) data.expectedReturnDate = new Date(data.expectedReturnDate);
+        if (data.returnedDate === "") data.returnedDate = null;
+        else if (data.returnedDate) data.returnedDate = new Date(data.returnedDate);
 
         const updated = await assetAssignmentRepository.updateAssignment(id, data);
 

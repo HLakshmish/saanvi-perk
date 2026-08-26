@@ -66,23 +66,22 @@ class AttendanceRequestService {
         });
 
         if (data.status === 'APPROVED') {
+            const attendanceService = require("../attendance.service");
             const existingAttendance = await attendanceRepository.getAttendanceByUserAndDate(req.companyId, req.userId, req.shiftDate);
             
             if (existingAttendance) {
                 const updateData = {};
                 if (req.checkInTime) updateData.checkInTime = req.checkInTime;
                 if (req.checkOutTime) updateData.checkOutTime = req.checkOutTime;
-                updateData.attendanceStatus = 'PRESENT';
                 
-                await attendanceRepository.updateAttendance(existingAttendance.attendanceId, updateData);
+                await attendanceService.updateAttendance(existingAttendance.attendanceId, updateData);
             } else {
-                await attendanceRepository.createAttendance({
+                await attendanceService.createAttendance({
                     companyId: req.companyId,
                     userId: req.userId,
                     attendanceDate: req.shiftDate,
                     checkInTime: req.checkInTime,
                     checkOutTime: req.checkOutTime,
-                    attendanceStatus: 'PRESENT',
                     remarks: req.remarks
                 });
             }
