@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { X, Check, Loader2 } from "lucide-react";
 import { Employee } from "@/features/employees/types/employees.types";
+import { snackbar as toast } from "@/components/ui/snackbar";
 
 interface LeaveType {
   leaveTypeId: number;
@@ -70,7 +71,11 @@ export const LeaveAllocationFormModal: React.FC<LeaveAllocationFormModalProps> =
   const [note, setNote] = useState<string>("");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsgState] = useState<string | null>(null);
+  const setErrorMsg = (msg: string | null) => {
+    setErrorMsgState(msg);
+    if (msg) toast.error(msg);
+  };
 
   // Search filter for employees selection
   const [employeeSearch, setEmployeeSearch] = useState("");
@@ -229,11 +234,6 @@ export const LeaveAllocationFormModal: React.FC<LeaveAllocationFormModalProps> =
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1 text-xs">
-          {errorMsg && (
-            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 font-bold">
-              {errorMsg}
-            </div>
-          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* Employee Selector */}

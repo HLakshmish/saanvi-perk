@@ -1,6 +1,6 @@
 import { Employee, CreatePFDetailInput, CreateESIDetailInput, CreateInsuranceDetailInput, Designation, SuperAdminDetails } from "../types/employees.types";
 import { getDepartments as getDepartmentsFromApi } from "../../settings/api/department.api";
-import { toast } from "sonner";
+import { snackbar as toast } from "@/components/ui/snackbar";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 

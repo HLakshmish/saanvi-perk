@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { AssetAssignment, ReturnAssetInput } from "../types/assets.types";
 import { updateAssignment } from "../api/assets.api";
 import { X, RotateCcw, Check, Loader2 } from "lucide-react";
+import { snackbar as toast } from "@/components/ui/snackbar";
 
 interface ReturnAssetModalProps {
   isOpen: boolean;
@@ -25,7 +26,12 @@ export const ReturnAssetModal: React.FC<ReturnAssetModalProps> = ({
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsgState] = useState<string | null>(null);
+
+  const setErrorMsg = (msg: string | null) => {
+    setErrorMsgState(msg);
+    if (msg) toast.error(msg);
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -49,13 +55,18 @@ export const ReturnAssetModal: React.FC<ReturnAssetModalProps> = ({
       const res = await updateAssignment(assignmentToReturn.assignmentId, formData);
 
       if (res.success) {
+        toast.success("Asset return logged successfully!");
         onSuccess();
         onClose();
       } else {
-        setErrorMsg(res.message || "Failed to process asset return");
+        const msg = res.message || "Failed to process asset return";
+        setErrorMsg(msg);
+        toast.error(msg);
       }
     } catch (err: any) {
-      setErrorMsg(err.message || "An error occurred during asset return");
+      const msg = err.message || "An error occurred during asset return";
+      setErrorMsg(msg);
+      toast.error(msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -84,12 +95,6 @@ export const ReturnAssetModal: React.FC<ReturnAssetModalProps> = ({
             </p>
           </div>
         </div>
-
-        {errorMsg && (
-          <div className="mb-5 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold">
-            {errorMsg}
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
           {/* Return Date */}

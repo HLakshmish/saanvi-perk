@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X, Loader2, Calendar, User, CheckCircle2, XCircle, Clock, Trash2 } from "lucide-react";
 import { fetchLeaveRequestById, deleteLeaveRequest } from "../api/leaves.api";
-import { toast } from "sonner";
+import { snackbar as toast } from "@/components/ui/snackbar";
 
 interface LeaveDetailsModalProps {
   isOpen: boolean;

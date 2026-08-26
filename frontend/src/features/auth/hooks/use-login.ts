@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { snackbar as toast } from "@/components/ui/snackbar";
 import { LoginCredentials, LoginErrors } from "../types/auth.types";
 import { loginUser } from "../api/auth.api";
 

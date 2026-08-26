@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Company } from "../../company/types/company.types";
 import { getAllCompanies, updateCompany } from "../../company/api/company.api";
 import { fetchLocations, updateLocation } from "../api/settings.api";
+import { snackbar as toast } from "@/components/ui/snackbar";
 
 interface OrganizationDetailViewProps {
   onBack: () => void;
@@ -58,8 +59,19 @@ export const OrganizationDetailView: React.FC<OrganizationDetailViewProps> = ({ 
   const [orgData, setOrgData] = useState<OrgData>(EMPTY_ORG_DATA);
   const [formData, setFormData] = useState<OrgData>(EMPTY_ORG_DATA);
   const [activeLocationId, setActiveLocationId] = useState<number | null>(null);
-  const [saveSuccessMsg, setSaveSuccessMsg] = useState("");
-  const [errorMsg, setErrorMsg] = useState("");
+
+  const [saveSuccessMsg, setSaveSuccessMsgState] = useState("");
+  const [errorMsg, setErrorMsgState] = useState("");
+
+  const setSaveSuccessMsg = (msg: string) => {
+    setSaveSuccessMsgState(msg);
+    if (msg) toast.success(msg);
+  };
+
+  const setErrorMsg = (msg: string) => {
+    setErrorMsgState(msg);
+    if (msg) toast.error(msg);
+  };
 
   // Load companies list on mount
   useEffect(() => {
@@ -238,19 +250,6 @@ export const OrganizationDetailView: React.FC<OrganizationDetailViewProps> = ({ 
           </button>
         )}
       </div>
-
-      {saveSuccessMsg && (
-        <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 font-bold text-xs flex items-center gap-2 animate-fade-in">
-          <Check className="w-4 h-4" />
-          <span>{saveSuccessMsg}</span>
-        </div>
-      )}
-
-      {errorMsg && (
-        <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 font-bold text-xs flex items-center gap-2 animate-fade-in">
-          <span>{errorMsg}</span>
-        </div>
-      )}
 
       {/* Main Grid: Left List Column + Right Form/Details Panel */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">

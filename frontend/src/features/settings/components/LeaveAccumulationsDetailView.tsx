@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ChevronRight, Edit3, Plus, Trash2, Check, Loader2, ArrowLeft, X, ShieldAlert, UserPlus, Search } from "lucide-react";
+import { ChevronRight, Edit3, Plus, Trash2, Check, Loader2, ArrowLeft, X, ShieldAlert, UserPlus, Search, Users, Calendar, SlidersHorizontal } from "lucide-react";
+import { snackbar as toast } from "@/components/ui/snackbar";
 import {
   fetchLeavePolicies,
   fetchLeaveTypes,
@@ -110,8 +111,18 @@ export const LeaveAccumulationsDetailView: React.FC<LeaveAccumulationsDetailView
   const [formRemainingLeaveAction, setFormRemainingLeaveAction] = useState<string>("CARRY_FORWARD");
   const [formStatus, setFormStatus] = useState<boolean>(true);
 
-  const [saveSuccessMsg, setSaveSuccessMsg] = useState("");
-  const [errorMsg, setErrorMsg] = useState("");
+  const [saveSuccessMsg, setSaveSuccessMsgState] = useState("");
+  const [errorMsg, setErrorMsgState] = useState("");
+
+  const setSaveSuccessMsg = (msg: string) => {
+    setSaveSuccessMsgState(msg);
+    if (msg) toast.success(msg);
+  };
+
+  const setErrorMsg = (msg: string) => {
+    setErrorMsgState(msg);
+    if (msg) toast.error(msg);
+  };
 
   const loadData = async (selectPolicyId?: number) => {
     setIsLoading(true);
@@ -430,20 +441,6 @@ export const LeaveAccumulationsDetailView: React.FC<LeaveAccumulationsDetailView
           </div>
         )}
       </div>
-
-      {saveSuccessMsg && (
-        <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 font-bold text-xs flex items-center gap-2 animate-fade-in">
-          <Check className="w-4 h-4" />
-          <span>{saveSuccessMsg}</span>
-        </div>
-      )}
-
-      {errorMsg && (
-        <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 font-bold text-xs flex items-center gap-2 animate-fade-in">
-          <ShieldAlert className="w-4 h-4 text-rose-500 shrink-0" />
-          <span>{errorMsg}</span>
-        </div>
-      )}
 
       {/* Main Grid Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">

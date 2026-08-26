@@ -10,7 +10,7 @@ import {
   Loader2,
   AlertCircle,
 } from "lucide-react";
-import { toast } from "sonner";
+import { snackbar as toast } from "@/components/ui/snackbar";
 import {
   createAttendanceRequest,
   AttendanceRequestPayload,

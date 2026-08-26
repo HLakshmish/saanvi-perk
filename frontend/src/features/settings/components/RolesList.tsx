@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Plus, MinusCircle, ChevronRight, Loader2 } from "lucide-react";
+import { snackbar as toast } from "@/components/ui/snackbar";
 import { RoleItem } from "../types/settings.types";
 import { fetchRoles, deleteRoleApi } from "../api/settings.api";
 import {
@@ -119,6 +120,7 @@ export const RolesList: React.FC<RolesListProps> = ({
     if (confirm("Are you sure you want to delete this role?")) {
       setRolesList((prev) => prev.filter((r) => r.id !== id));
       await deleteRoleApi(id);
+      toast.success("Role deleted successfully!");
     }
   };
 

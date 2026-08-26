@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { AssetDetails, CreateAssetInput, AssetStatus } from "../types/assets.types";
 import { createAsset, updateAsset } from "../api/assets.api";
 import { X, Laptop, Check, Loader2, Info, Cpu, Calendar, FileText } from "lucide-react";
+import { snackbar as toast } from "@/components/ui/snackbar";
 
 interface CreateAssetModalProps {
   isOpen: boolean;
@@ -35,7 +36,12 @@ export const CreateAssetModal: React.FC<CreateAssetModalProps> = ({
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsgState] = useState<string | null>(null);
+
+  const setErrorMsg = (msg: string | null) => {
+    setErrorMsgState(msg);
+    if (msg) toast.error(msg);
+  };
 
   useEffect(() => {
     if (assetToEdit) {
@@ -90,13 +96,18 @@ export const CreateAssetModal: React.FC<CreateAssetModalProps> = ({
       }
 
       if (res.success) {
+        toast.success(assetToEdit ? "Asset updated successfully!" : "Asset created successfully!");
         onSuccess();
         onClose();
       } else {
-        setErrorMsg(res.message || "Failed to save asset");
+        const msg = res.message || "Failed to save asset";
+        setErrorMsg(msg);
+        toast.error(msg);
       }
     } catch (err: any) {
-      setErrorMsg(err.message || "An error occurred");
+      const msg = err.message || "An error occurred";
+      setErrorMsg(msg);
+      toast.error(msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -127,12 +138,6 @@ export const CreateAssetModal: React.FC<CreateAssetModalProps> = ({
             </p>
           </div>
         </div>
-
-        {errorMsg && (
-          <div className="mb-5 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold">
-            {errorMsg}
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-5 text-xs">
           {/* Section 1: Basic Information */}

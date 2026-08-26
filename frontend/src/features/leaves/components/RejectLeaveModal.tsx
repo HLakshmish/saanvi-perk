@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X, Loader2 } from "lucide-react";
+import { snackbar as toast } from "@/components/ui/snackbar";
 
 interface RejectLeaveModalProps {
   isOpen: boolean;
@@ -16,7 +17,12 @@ export const RejectLeaveModal: React.FC<RejectLeaveModalProps> = ({
   const [rejectionReason, setRejectionReason] = useState("");
   const [remarks, setRemarks] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsgState] = useState<string | null>(null);
+
+  const setErrorMsg = (msg: string | null) => {
+    setErrorMsgState(msg);
+    if (msg) toast.error(msg);
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -78,13 +84,6 @@ export const RejectLeaveModal: React.FC<RejectLeaveModalProps> = ({
             Specify why you are rejecting this employee's leave request.
           </p>
         </div>
-
-        {errorMsg && (
-          <div className="mx-6 mt-4 p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 font-bold text-xs flex items-center gap-2">
-            <X className="w-4 h-4 text-rose-500 shrink-0" />
-            <span>{errorMsg}</span>
-          </div>
-        )}
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">

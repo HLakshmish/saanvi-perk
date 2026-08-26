@@ -13,7 +13,7 @@ import { fetchLeaveRequests, createLeaveRequest, getCurrentUserId, updateLeaveRe
 import { fetchLeaveTypes, fetchLeavePolicies, fetchLeavePolicyRules, fetchLeavePolicyAccumulations, fetchLeaveAccumulations } from "@/features/settings/api/settings.api";
 import { getEmployees } from "@/features/employees/api/employees.api";
 import { Employee } from "@/features/employees/types/employees.types";
-import { toast } from "sonner";
+import { snackbar as toast } from "@/components/ui/snackbar";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 

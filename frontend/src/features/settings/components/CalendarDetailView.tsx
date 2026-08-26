@@ -12,6 +12,7 @@ import {
   X,
   Check,
 } from "lucide-react";
+import { snackbar as toast } from "@/components/ui/snackbar";
 import {
   CalendarRecord,
   HolidayRecord,
@@ -53,7 +54,11 @@ export const CalendarDetailView: React.FC<CalendarDetailViewProps> = ({
   const [holidays, setHolidays] = useState<HolidayRecord[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsgState] = useState<string | null>(null);
+  const setErrorMsg = (msg: string | null) => {
+    setErrorMsgState(msg);
+    if (msg) toast.error(msg);
+  };
 
   // In-Page Form Modes (No Popups)
   const [mode, setMode] = useState<"view" | "add-calendar" | "edit-calendar">("view");
@@ -138,6 +143,7 @@ export const CalendarDetailView: React.FC<CalendarDetailViewProps> = ({
       setCalName("");
       setCalRemarks("");
       setMode("view");
+      toast.success("Holiday calendar created successfully!");
       await loadCalendars();
     } else {
       setErrorMsg(res.error || "Failed to create calendar");
@@ -158,6 +164,7 @@ export const CalendarDetailView: React.FC<CalendarDetailViewProps> = ({
 
     if (res.success) {
       setMode("view");
+      toast.success("Holiday calendar updated successfully!");
       await loadCalendars();
     } else {
       setErrorMsg(res.error || "Failed to update calendar");
@@ -174,6 +181,7 @@ export const CalendarDetailView: React.FC<CalendarDetailViewProps> = ({
 
     if (res.success) {
       setMode("view");
+      toast.success("Holiday calendar deleted successfully!");
       await loadCalendars();
     } else {
       setErrorMsg(res.error || "Failed to delete calendar");
@@ -229,6 +237,7 @@ export const CalendarDetailView: React.FC<CalendarDetailViewProps> = ({
       setIsLoading(false);
       setShowInlineAddHoliday(false);
       setHolidayRows([{ id: "1", holidayName: "", startDate: "", endDate: "" }]);
+      toast.success("Holiday(s) added successfully!");
       loadHolidays(selectedCalendar.calendarId);
     } catch (err: any) {
       setIsLoading(false);
@@ -267,6 +276,7 @@ export const CalendarDetailView: React.FC<CalendarDetailViewProps> = ({
 
     if (res.success) {
       setEditingHolidayId(null);
+      toast.success("Holiday updated successfully!");
       loadHolidays(selectedCalendar.calendarId);
     } else {
       setErrorMsg(res.error || "Failed to update holiday");
@@ -277,6 +287,7 @@ export const CalendarDetailView: React.FC<CalendarDetailViewProps> = ({
     if (!confirm("Remove this holiday?")) return;
     const res = await deleteHoliday(id);
     if (res.success && selectedCalendar) {
+      toast.success("Holiday removed successfully!");
       loadHolidays(selectedCalendar.calendarId);
     }
   };
@@ -385,12 +396,6 @@ export const CalendarDetailView: React.FC<CalendarDetailViewProps> = ({
 
         {/* RIGHT COLUMN: In-Page Content / Details / Forms */}
         <div className="flex-1 p-6 flex flex-col justify-between overflow-y-auto bg-white">
-          {errorMsg && (
-            <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{errorMsg}</span>
-            </div>
-          )}
 
           {/* MODE 1: IN-PAGE ADD NEW CALENDAR FORM */}
           {mode === "add-calendar" ? (

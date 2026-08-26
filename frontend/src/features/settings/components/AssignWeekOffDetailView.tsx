@@ -15,7 +15,7 @@ import {
   ChevronRight,
   Users,
 } from "lucide-react";
-import { toast } from "sonner";
+import { snackbar as toast } from "@/components/ui/snackbar";
 import {
   WeekOffRecord,
   WeekOffAssignRecord,
@@ -252,7 +252,7 @@ export const AssignWeekOffDetailView: React.FC<AssignWeekOffDetailViewProps> = (
                 </p>
               </div>
             ) : (
-              filteredAssignments.map((item) => {
+              filteredAssignments.map((item, index) => {
                 const isSelected =
                   viewState !== "add" &&
                   selectedAssignment?.weekOffAssignId === item.weekOffAssignId;
@@ -262,7 +262,7 @@ export const AssignWeekOffDetailView: React.FC<AssignWeekOffDetailViewProps> = (
 
                 return (
                   <div
-                    key={item.weekOffAssignId}
+                    key={item.weekOffAssignId ? `assign-${item.weekOffAssignId}` : `assign-${index}`}
                     onClick={() => handleSelectAssignment(item)}
                     className={`p-3.5 rounded-2xl border transition-all cursor-pointer select-none group ${
                       isSelected
@@ -486,13 +486,13 @@ export const AssignWeekOffDetailView: React.FC<AssignWeekOffDetailViewProps> = (
                         No employees matching filter.
                       </p>
                     ) : (
-                      filteredEmployeesForModal.map((emp) => {
+                      filteredEmployeesForModal.map((emp, index) => {
                         const empId = Number(emp.id);
                         const isChecked = formSelectedUserIds.includes(empId);
                         const empName = emp.name || `Employee #${empId}`;
                         return (
                           <label
-                            key={emp.id}
+                            key={emp.id ? `emp-${emp.id}` : `emp-${index}`}
                             className={`flex items-center gap-3 p-2.5 rounded-xl cursor-pointer select-none transition-colors ${
                               isChecked
                                 ? "bg-brand-primary-light/60 border border-brand-primary/20"

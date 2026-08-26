@@ -6,6 +6,7 @@ import { createAssignment } from "../api/assets.api";
 import { getEmployees } from "@/features/employees/api/employees.api";
 import { Employee } from "@/features/employees/types/employees.types";
 import { X, UserCheck, Check, Loader2 } from "lucide-react";
+import { snackbar as toast } from "@/components/ui/snackbar";
 
 interface AssignAssetModalProps {
   isOpen: boolean;
@@ -33,7 +34,12 @@ export const AssignAssetModal: React.FC<AssignAssetModalProps> = ({
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsgState] = useState<string | null>(null);
+
+  const setErrorMsg = (msg: string | null) => {
+    setErrorMsgState(msg);
+    if (msg) toast.error(msg);
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -71,7 +77,9 @@ export const AssignAssetModal: React.FC<AssignAssetModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.userId) {
-      setErrorMsg("Please select an employee to assign this asset.");
+      const msg = "Please select an employee to assign this asset.";
+      setErrorMsg(msg);
+      toast.error(msg);
       return;
     }
 
@@ -85,13 +93,18 @@ export const AssignAssetModal: React.FC<AssignAssetModalProps> = ({
       });
 
       if (res.success) {
+        toast.success("Asset assigned to employee successfully!");
         onSuccess();
         onClose();
       } else {
-        setErrorMsg(res.message || "Failed to assign asset");
+        const msg = res.message || "Failed to assign asset";
+        setErrorMsg(msg);
+        toast.error(msg);
       }
     } catch (err: any) {
-      setErrorMsg(err.message || "An error occurred during assignment");
+      const msg = err.message || "An error occurred during assignment";
+      setErrorMsg(msg);
+      toast.error(msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -120,12 +133,6 @@ export const AssignAssetModal: React.FC<AssignAssetModalProps> = ({
             </p>
           </div>
         </div>
-
-        {errorMsg && (
-          <div className="mb-5 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold">
-            {errorMsg}
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
           {/* Employee Selection */}

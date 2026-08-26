@@ -15,6 +15,7 @@ import { Employee } from "@/features/employees/types/employees.types";
 import { CreateAssetModal } from "./CreateAssetModal";
 import { AssignAssetModal } from "./AssignAssetModal";
 import { ReturnAssetModal } from "./ReturnAssetModal";
+import { snackbar as toast } from "@/components/ui/snackbar";
 import {
   TableContainer,
   Table,
@@ -122,6 +123,9 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ currentRole = "admin" })
       const res = await deleteAsset(id);
       if (res.success) {
         setAssets((prev) => prev.filter((a) => a.assetId !== id));
+        toast.success(`Asset "${name}" deleted successfully!`);
+      } else {
+        toast.error(res.message || "Failed to delete asset");
       }
     }
   };

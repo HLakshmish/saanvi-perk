@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ChevronRight, Plus, Trash2, Check, Loader2, ArrowLeft, X, Eye } from "lucide-react";
+import { ChevronRight, Edit3, Plus, Trash2, Check, Loader2, ArrowLeft, X, ShieldAlert, Sparkles, SlidersHorizontal, Calendar, RefreshCw } from "lucide-react";
+import { snackbar as toast } from "@/components/ui/snackbar";
 import {
   fetchYearEndProcesses,
   createYearEndProcessApi,
@@ -73,8 +74,18 @@ export const YearEndProcessDetailView: React.FC<YearEndProcessDetailViewProps> =
   const [formEncashmentAmount, setFormEncashmentAmount] = useState<string>("");
   const [formRemarks, setFormRemarks] = useState<string>("");
 
-  const [saveSuccessMsg, setSaveSuccessMsg] = useState("");
-  const [errorMsg, setErrorMsg] = useState("");
+  const [saveSuccessMsg, setSaveSuccessMsgState] = useState("");
+  const [errorMsg, setErrorMsgState] = useState("");
+
+  const setSaveSuccessMsg = (msg: string) => {
+    setSaveSuccessMsgState(msg);
+    if (msg) toast.success(msg);
+  };
+
+  const setErrorMsg = (msg: string) => {
+    setErrorMsgState(msg);
+    if (msg) toast.error(msg);
+  };
 
   const loadData = async (selectId?: number) => {
     setIsLoading(true);
@@ -265,21 +276,7 @@ export const YearEndProcessDetailView: React.FC<YearEndProcessDetailViewProps> =
         )}
       </div>
 
-      {saveSuccessMsg && (
-        <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 font-bold text-xs flex items-center gap-2 animate-fade-in">
-          <Check className="w-4 h-4" />
-          <span>{saveSuccessMsg}</span>
-        </div>
-      )}
-
-      {errorMsg && (
-        <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 font-bold text-xs flex items-center gap-2 animate-fade-in">
-          <X className="w-4 h-4 text-rose-500 shrink-0" />
-          <span>{errorMsg}</span>
-        </div>
-      )}
-
-      {/* Main Layout Grid */}
+      {/* Main Grid: Left List Column + Right Form/Details Panel */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
         {/* Left Side: List of Processed Year Ends */}
         <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs space-y-4">

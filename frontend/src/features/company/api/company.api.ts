@@ -147,15 +147,9 @@ export async function getAllCompanies(): Promise<{ success: boolean; data?: Comp
     const result = await res.json();
 
     if (res.ok && Array.isArray(result.data)) {
-      const remoteIds = new Set(result.data.map((c: Company) => c.companyId));
-      const combined = [
-        ...result.data,
-        ...localCompanies.filter((c) => !remoteIds.has(c.companyId)),
-      ];
-
       return {
         success: true,
-        data: combined,
+        data: result.data,
       };
     }
 

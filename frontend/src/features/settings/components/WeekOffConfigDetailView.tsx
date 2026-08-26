@@ -15,7 +15,7 @@ import {
   ChevronRight,
   Sparkles,
 } from "lucide-react";
-import { toast } from "sonner";
+import { snackbar as toast } from "@/components/ui/snackbar";
 import {
   WeekOffRecord,
   WeekOffRuleInput,
