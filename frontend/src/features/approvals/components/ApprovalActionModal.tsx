@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { UnifiedApprovalItem } from "../types/approvals.types";
 import { CheckCircle2, XCircle, AlertTriangle, Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import { snackbar as toast } from "@/components/ui/snackbar";
 import { updateApprovalStatus } from "../api/approvals.api";
 
 interface ApprovalActionModalProps {

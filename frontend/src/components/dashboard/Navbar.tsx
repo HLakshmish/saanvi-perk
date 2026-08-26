@@ -50,6 +50,11 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
   const [assignedRoles, setAssignedRoles] = useState<UserRole[]>([currentRole]);
   const [hasFetchedRoles, setHasFetchedRoles] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const normalizeRole = (codeOrName?: string): UserRole | null => {
     if (!codeOrName) return null;
@@ -132,6 +137,8 @@ export const Navbar: React.FC<NavbarProps> = ({
       localStorage.removeItem("user_role");
       localStorage.removeItem("user_name");
       localStorage.removeItem("company_id");
+      localStorage.removeItem("company_name");
+      localStorage.removeItem("company_logo");
     }
     window.location.href = "/";
   };
@@ -210,8 +217,9 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div
           onClick={() => onTabChange && onTabChange("dashboard")}
           className="flex items-center gap-3 cursor-pointer select-none group"
+          suppressHydrationWarning
         >
-          {companyLogo ? (
+          {isMounted && companyLogo ? (
             <div className="h-7 sm:h-8 max-w-[140px] sm:max-w-[160px] flex items-center justify-center shrink-0">
               <img
                 src={companyLogo}
@@ -219,18 +227,18 @@ export const Navbar: React.FC<NavbarProps> = ({
                 className="h-full w-auto max-w-full object-contain"
               />
             </div>
-          ) : companyName ? (
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-brand-primary text-white flex items-center justify-center text-xs font-black shadow-2xs group-hover:scale-105 transition-transform shrink-0">
-              {companyName.charAt(0).toUpperCase()}
-            </div>
+          ) : isMounted && companyName ? (
+            <>
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-brand-primary text-white flex items-center justify-center text-xs font-black shadow-2xs group-hover:scale-105 transition-transform shrink-0">
+                {companyName.charAt(0).toUpperCase()}
+              </div>
+              <div className="flex flex-col">
+                <span className="font-black text-brand-primary text-sm sm:text-base tracking-tight leading-tight line-clamp-1">
+                  {companyName}
+                </span>
+              </div>
+            </>
           ) : null}
-          {companyName && (
-            <div className="flex flex-col">
-              <span className="font-black text-brand-primary text-sm sm:text-base tracking-tight leading-tight line-clamp-1">
-                {companyName}
-              </span>
-            </div>
-          )}
         </div>
       </div>
 

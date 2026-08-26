@@ -91,6 +91,8 @@ export default function OwnerDashboardPage() {
       localStorage.removeItem("user_role");
       localStorage.removeItem("user_name");
       localStorage.removeItem("company_id");
+      localStorage.removeItem("company_name");
+      localStorage.removeItem("company_logo");
     }
     window.location.href = "/";
   };

@@ -10,7 +10,7 @@ import {
   getCurrentUserId,
   downloadBill,
 } from "../api/expenses.api";
-import { toast } from "sonner";
+import { snackbar as toast } from "@/components/ui/snackbar";
 import { Expense, ExpenseStats, ExpenseStatus } from "../types/expenses.types";
 import {
   Search,
@@ -106,8 +106,18 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
     receiptFile: null as File | null,
     receiptFileName: "",
   });
-  const [formError, setFormError] = useState<string | null>(null);
-  const [formSuccess, setFormSuccess] = useState<string | null>(null);
+  const [formError, setFormErrorState] = useState<string | null>(null);
+  const [formSuccess, setFormSuccessState] = useState<string | null>(null);
+
+  const setFormError = (msg: string | null) => {
+    setFormErrorState(msg);
+    if (msg) toast.error(msg);
+  };
+
+  const setFormSuccess = (msg: string | null) => {
+    setFormSuccessState(msg);
+    if (msg) toast.success(msg);
+  };
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Load expenses and stats
@@ -228,11 +238,8 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
           receiptFile: null,
           receiptFileName: "",
         });
-        setTimeout(() => {
-          setIsModalOpen(false);
-          setFormSuccess(null);
-          loadData();
-        }, 1500);
+        setIsModalOpen(false);
+        loadData();
       } else {
         setFormError(res.error || "Submission failed.");
       }
@@ -833,18 +840,6 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
             <form onSubmit={handleCreateSubmit} className="flex flex-col flex-1 overflow-hidden">
               {/* Scrollable Fields Container */}
               <div className="p-6 space-y-4 font-sans overflow-y-auto flex-1">
-              {formError && (
-                <div className="flex items-start gap-2.5 p-3.5 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs font-semibold">
-                  <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-                  <span>{formError}</span>
-                </div>
-              )}
-              {formSuccess && (
-                <div className="flex items-start gap-2.5 p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-semibold">
-                  <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0" />
-                  <span>{formSuccess}</span>
-                </div>
-              )}
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5 col-span-2 sm:col-span-1">

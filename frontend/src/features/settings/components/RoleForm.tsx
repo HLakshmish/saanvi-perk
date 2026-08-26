@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { ChevronLeft, Loader2, Check } from "lucide-react";
 import { RoleItem } from "../types/settings.types";
 import { fetchPermissions, createRoleApi, updateRoleApi } from "../api/settings.api";
+import { snackbar as toast } from "@/components/ui/snackbar";
 
 interface RoleFormProps {
   initialRole?: RoleItem | null;
@@ -31,7 +32,12 @@ export const RoleForm: React.FC<RoleFormProps> = ({
   const [selectedPermissionIds, setSelectedPermissionIds] = useState<number[]>([]);
   const [isLoadingPermissions, setIsLoadingPermissions] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
+  const [errorMsg, setErrorMsgState] = useState("");
+
+  const setErrorMsg = (msg: string) => {
+    setErrorMsgState(msg);
+    if (msg) toast.error(msg);
+  };
 
   useEffect(() => {
     const loadPermissions = async () => {
@@ -144,6 +150,7 @@ export const RoleForm: React.FC<RoleFormProps> = ({
     }
 
     setIsSubmitting(false);
+    toast.success(isEditMode ? "Role updated successfully!" : "Role created successfully!");
     onSaveSuccess(resultRole);
   };
 
@@ -162,12 +169,6 @@ export const RoleForm: React.FC<RoleFormProps> = ({
           {isEditMode ? "Edit Role" : "New Role"}
         </h2>
       </div>
-
-      {errorMsg && (
-        <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 font-bold text-xs">
-          {errorMsg}
-        </div>
-      )}
 
       {/* Main Form Container */}
       <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-2xs space-y-6">

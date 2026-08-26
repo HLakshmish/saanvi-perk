@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { ChevronRight, Edit3, Upload, Check, ShieldAlert, Loader2 } from "lucide-react";
 import { CompanyInfoData } from "../types/settings.types";
 import { fetchCompanyDetails, updateCompanyDetails, fetchLocations, updateLocation } from "../api/settings.api";
+import { snackbar as toast } from "@/components/ui/snackbar";
 
 interface AccountInformationDetailProps {
   onBackToAccountInfo: () => void;
@@ -30,7 +31,12 @@ export const AccountInformationDetail: React.FC<AccountInformationDetailProps> =
   const [companyData, setCompanyData] = useState<CompanyInfoData>(EMPTY_COMPANY_DATA);
   const [formData, setFormData] = useState<CompanyInfoData>(EMPTY_COMPANY_DATA);
   const [activeLocationId, setActiveLocationId] = useState<number | null>(null);
-  const [saveSuccessMsg, setSaveSuccessMsg] = useState("");
+  const [saveSuccessMsg, setSaveSuccessMsgState] = useState("");
+
+  const setSaveSuccessMsg = (msg: string) => {
+    setSaveSuccessMsgState(msg);
+    if (msg) toast.success(msg);
+  };
 
   useEffect(() => {
     const loadCompanyAndLocation = async () => {
@@ -170,13 +176,6 @@ export const AccountInformationDetail: React.FC<AccountInformationDetailProps> =
           </div>
         )}
       </div>
-
-      {saveSuccessMsg && (
-        <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 font-bold text-xs flex items-center gap-2 animate-fade-in">
-          <Check className="w-4 h-4" />
-          <span>{saveSuccessMsg}</span>
-        </div>
-      )}
 
       {/* Main Split Container: Left Sub-Menu Sidebar + Right Form Panel */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">

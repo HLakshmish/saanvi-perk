@@ -119,6 +119,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             if (typeof window !== "undefined") {
               localStorage.setItem("company_logo", comp.companyLogo);
             }
+          } else {
+            setResolvedCompanyLogo(undefined);
+            if (typeof window !== "undefined") {
+              localStorage.removeItem("company_logo");
+            }
           }
 
           if (role === "superadmin") {

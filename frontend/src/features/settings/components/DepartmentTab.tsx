@@ -14,7 +14,7 @@ import { Department } from "../types/department.types";
 import { DepartmentFormModal } from "./DepartmentFormModal";
 import { getEmployees } from "../../employees/api/employees.api";
 import { Employee } from "../../employees/types/employees.types";
-import { toast } from "sonner";
+import { snackbar as toast } from "@/components/ui/snackbar";
 import { Button } from "@/components/ui/button";
 import { SearchBox } from "@/components/ui/search-box";
 import { Skeleton } from "@/components/ui/skeleton";

@@ -16,7 +16,7 @@ import { Department } from "../types/department.types";
 import { getDesignations, createDesignation, updateDesignation, deleteDesignation } from "../api/designation.api";
 import { getDepartments } from "../api/department.api";
 import { DesignationFormModal } from "./DesignationFormModal";
-import { toast } from "sonner";
+import { snackbar as toast } from "@/components/ui/snackbar";
 import { Button } from "@/components/ui/button";
 import { SearchBox } from "@/components/ui/search-box";
 import { Skeleton } from "@/components/ui/skeleton";

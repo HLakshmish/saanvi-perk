@@ -15,7 +15,7 @@ import {
 import { OfficeLocation, CreateLocationInput } from "../types/location.types";
 import { getLocations, createLocation, updateLocation, deleteLocation } from "../api/location.api";
 import { LocationFormModal } from "./LocationFormModal";
-import { toast } from "sonner";
+import { snackbar as toast } from "@/components/ui/snackbar";
 import { Button } from "@/components/ui/button";
 import { SearchBox } from "@/components/ui/search-box";
 import { Skeleton } from "@/components/ui/skeleton";

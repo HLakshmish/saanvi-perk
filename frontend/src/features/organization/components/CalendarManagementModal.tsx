@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { X, Calendar as CalendarIcon, Plus, Trash2, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { snackbar as toast } from "@/components/ui/snackbar";
 import {
   CalendarRecord,
   HolidayRecord,
@@ -26,7 +27,11 @@ export const CalendarManagementModal: React.FC<CalendarManagementModalProps> = (
   const [selectedCalendarId, setSelectedCalendarId] = useState<number | null>(null);
   const [holidays, setHolidays] = useState<HolidayRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsgState] = useState<string | null>(null);
+  const setErrorMsg = (msg: string | null) => {
+    setErrorMsgState(msg);
+    if (msg) toast.error(msg);
+  };
 
   // New Calendar Form state
   const [showAddCalendar, setShowAddCalendar] = useState(false);
@@ -170,12 +175,6 @@ export const CalendarManagementModal: React.FC<CalendarManagementModalProps> = (
 
         {/* Modal Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {errorMsg && (
-            <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{errorMsg}</span>
-            </div>
-          )}
 
           {/* Section 1: Calendars list */}
           <div className="space-y-3">
