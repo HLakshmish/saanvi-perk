@@ -45,8 +45,24 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [profileEditOpen, setProfileEditOpen] = useState(false);
 
-  const [resolvedCompanyName, setResolvedCompanyName] = useState(companyName);
-  const [resolvedUserName, setResolvedUserName] = useState(userName);
+  const [resolvedCompanyName, setResolvedCompanyName] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("company_name") || companyName || "";
+    }
+    return companyName || "";
+  });
+  const [resolvedCompanyLogo, setResolvedCompanyLogo] = useState<string | undefined>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("company_logo") || undefined;
+    }
+    return undefined;
+  });
+  const [resolvedUserName, setResolvedUserName] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("user_name") || userName || "";
+    }
+    return userName || "";
+  });
 
   // Expand sidebar on desktop screens, keep hidden on mobile
   useEffect(() => {
@@ -65,15 +81,44 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Listen for live company updates (e.g. logo upload from settings)
+  useEffect(() => {
+    const handleCompanyUpdate = (e: any) => {
+      if (e.detail?.companyLogo) {
+        setResolvedCompanyLogo(e.detail.companyLogo);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("company_logo", e.detail.companyLogo);
+        }
+      }
+      if (e.detail?.companyName) {
+        setResolvedCompanyName(e.detail.companyName);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("company_name", e.detail.companyName);
+        }
+      }
+    };
+    window.addEventListener("company_metadata_updated", handleCompanyUpdate);
+    return () => window.removeEventListener("company_metadata_updated", handleCompanyUpdate);
+  }, []);
+
   useEffect(() => {
     const loadCompanyMetadata = async () => {
       try {
-        // Fetch company details (contains companyName & superAdmin full details)
+        // Fetch company details (contains companyName, companyLogo & superAdmin full details)
         const res = await getCompanySuperAdmin();
         if (res.success && res.data) {
           const comp = res.data;
           if (comp.companyName) {
             setResolvedCompanyName(comp.companyName);
+            if (typeof window !== "undefined") {
+              localStorage.setItem("company_name", comp.companyName);
+            }
+          }
+          if (comp.companyLogo) {
+            setResolvedCompanyLogo(comp.companyLogo);
+            if (typeof window !== "undefined") {
+              localStorage.setItem("company_logo", comp.companyLogo);
+            }
           }
 
           if (role === "superadmin") {
@@ -223,7 +268,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   Welcome Back, {resolvedUserName || "Admin"} 👋
                 </h1>
                 <p className="text-xs text-slate-500 font-medium">
-                  Here is what is happening across {resolvedCompanyName || "Saanvi Perk"} today.
+                  Here is what is happening across {resolvedCompanyName ? resolvedCompanyName : "your organization"} today.
                 </p>
               </div>
 
@@ -253,15 +298,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               {/* Row 2: 3-column widget grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 <HolidaysWidget />
-                <QuickLinksWidget />
+                <CheersToPeersWidget />
                 {(role === "superadmin" || role === "admin") && (
                   <PayrollCostWidget />
                 )}
               </div>
 
-              {/* Row 3: Cheers to Peers Widget */}
+              {/* Row 3: Quick Actions */}
               <div className="grid grid-cols-1 gap-5">
-                <CheersToPeersWidget />
+                <QuickLinksWidget />
               </div>
             </div>
           </>
@@ -278,6 +323,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         onRoleChange={setRole}
         userName={resolvedUserName}
         companyName={resolvedCompanyName}
+        companyLogo={resolvedCompanyLogo}
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         onTabChange={setActiveTab}
       />

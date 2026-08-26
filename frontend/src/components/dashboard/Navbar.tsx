@@ -29,6 +29,7 @@ interface NavbarProps {
   onRoleChange?: (role: UserRole) => void;
   userName: string;
   companyName: string;
+  companyLogo?: string;
   onToggleSidebar?: () => void;
   onTabChange?: (tab: string) => void;
 }
@@ -39,6 +40,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onRoleChange,
   userName,
   companyName,
+  companyLogo,
   onToggleSidebar,
   onTabChange,
 }) => {
@@ -207,14 +209,28 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         <div
           onClick={() => onTabChange && onTabChange("dashboard")}
-          className="flex items-center gap-2.5 cursor-pointer"
+          className="flex items-center gap-3 cursor-pointer select-none group"
         >
-          <div className="w-7 h-7 rounded-lg bg-brand-primary text-white flex items-center justify-center text-xs font-extrabold shadow-2xs">
-            {companyName ? companyName.charAt(0).toUpperCase() : "S"}
-          </div>
-          <span className="font-extrabold text-brand-primary text-sm sm:text-base tracking-tight">
-            {companyName || "Saanvi Perk"}
-          </span>
+          {companyLogo ? (
+            <div className="h-7 sm:h-8 max-w-[140px] sm:max-w-[160px] flex items-center justify-center shrink-0">
+              <img
+                src={companyLogo}
+                alt={companyName || "Organization Logo"}
+                className="h-full w-auto max-w-full object-contain"
+              />
+            </div>
+          ) : companyName ? (
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-brand-primary text-white flex items-center justify-center text-xs font-black shadow-2xs group-hover:scale-105 transition-transform shrink-0">
+              {companyName.charAt(0).toUpperCase()}
+            </div>
+          ) : null}
+          {companyName && (
+            <div className="flex flex-col">
+              <span className="font-black text-brand-primary text-sm sm:text-base tracking-tight leading-tight line-clamp-1">
+                {companyName}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
