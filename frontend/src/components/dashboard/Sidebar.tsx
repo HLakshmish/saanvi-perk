@@ -43,7 +43,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: "attendance", label: "Attendance", icon: Clock, roles: ["superadmin", "admin", "employee"] },
     { id: "holidays-leaves", label: "Leaves", icon: Umbrella, roles: ["superadmin", "admin", "employee"] },
     { id: "payroll", label: "Payroll", icon: Banknote, roles: ["superadmin", "admin", "employee"] },
-    { id: "expenses", label: "Expenses", icon: Receipt, roles: ["superadmin", "admin"] },
+    { id: "expenses", label: "Expenses", icon: Receipt, roles: ["superadmin", "admin", "employee"] },
     { id: "assets", label: "Assets", icon: Laptop, roles: ["superadmin", "admin", "employee"] },
     { id: "reports", label: "Reports", icon: TrendingUp, roles: ["superadmin", "admin"] },
     { id: "users", label: "Users", icon: UserCheck, roles: ["superadmin", "admin"] },

@@ -63,6 +63,12 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ onTabChange }) => {
       subtitle: "Payslips & Salary",
       icon: Banknote,
     },
+    {
+      id: "expenses",
+      title: "Expenses",
+      subtitle: "Claims & Receipts",
+      icon: Receipt,
+    },
   ];
 
   return (
