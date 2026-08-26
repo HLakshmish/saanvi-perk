@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   getExpenses,
   createExpense,
@@ -83,6 +84,18 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
   const [actionComments, setActionComments] = useState("");
   const [isActioning, setIsActioning] = useState(false);
 
+  // Lock body scroll when any modal is open
+  useEffect(() => {
+    if (isModalOpen || selectedExpense) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isModalOpen, selectedExpense]);
+
   // Form state for new claim
   const [formData, setFormData] = useState({
     amount: "",
@@ -99,19 +112,26 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
 
   // Load expenses and stats
   const loadData = async () => {
+    if (isEmployee && currentUserId === null) {
+      return;
+    }
     setIsLoading(true);
     setErrorMsg(null);
     try {
-      const filters = {
+      const filters: any = {
         search: searchQuery,
         category: filterCategory,
         status: filterStatus,
         period: filterPeriod,
       };
 
+      if (isEmployee && currentUserId) {
+        filters.userId = currentUserId;
+      }
+
       const [listRes, statsRes] = await Promise.all([
         getExpenses(filters),
-        getExpenseStats(cardPeriod, trendOffset),
+        getExpenseStats(cardPeriod, trendOffset, isEmployee ? currentUserId : null),
       ]);
 
       // If user is employee, filter table lists to show only their claims
@@ -640,7 +660,7 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
       </div>
 
       {/* Claim Detail / Action Modal */}
-      {selectedExpense && (
+      {selectedExpense && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/80 w-full max-w-[500px] max-h-[85vh] flex flex-col overflow-hidden relative animate-in fade-in zoom-in duration-200">
             {/* Modal Header */}
@@ -779,15 +799,16 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* New Expense Modal */}
-      {isModalOpen && (
+      {isModalOpen && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/80 w-full max-w-[500px] overflow-hidden flex flex-col relative animate-in fade-in zoom-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/80 w-full max-w-[500px] max-h-[90vh] overflow-hidden flex flex-col relative animate-in fade-in zoom-in duration-200">
             {/* Header */}
-            <div className="p-6 border-b border-brand-primary/15 bg-slate-50/50 flex justify-between items-center">
+            <div className="p-6 border-b border-brand-primary/15 bg-slate-50/50 flex justify-between items-center flex-none">
               <div>
                 <h3 className="text-base font-bold text-brand-primary font-sans">Submit Expense Claim</h3>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Enter reimbursement details</p>
@@ -804,7 +825,9 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
             </div>
 
             {/* Form */}
-            <form onSubmit={handleCreateSubmit} className="p-6 space-y-4 font-sans">
+            <form onSubmit={handleCreateSubmit} className="flex flex-col flex-1 overflow-hidden">
+              {/* Scrollable Fields Container */}
+              <div className="p-6 space-y-4 font-sans overflow-y-auto flex-1">
               {formError && (
                 <div className="flex items-start gap-2.5 p-3.5 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs font-semibold">
                   <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
@@ -907,27 +930,33 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
                   )}
                 </div>
               </div>
+            </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 border border-slate-300 text-slate-700 font-bold text-xs rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="px-5 py-2.5 bg-brand-primary hover:bg-brand-primary-hover text-brand-btn-text font-bold text-xs rounded-xl shadow-2xs hover:shadow-xs transition-all hover:-translate-y-0.5 cursor-pointer disabled:opacity-50"
-                >
-                  {isSubmitting ? "Submitting..." : "Submit Claim"}
-                </button>
-              </div>
-            </form>
-          </div>
+            {/* Fixed Footer */}
+            <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-3 flex-none">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setFormError(null);
+                }}
+                className="px-4 py-2 border border-slate-300 text-slate-700 font-bold text-xs rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="px-5 py-2.5 bg-brand-primary hover:bg-brand-primary-hover text-brand-btn-text font-bold text-xs rounded-xl shadow-2xs hover:shadow-xs transition-all hover:-translate-y-0.5 cursor-pointer disabled:opacity-50"
+              >
+                {isSubmitting ? "Submitting..." : "Submit Claim"}
+              </button>
+            </div>
+          </form>
         </div>
-      )}
+      </div>,
+      document.body
+    )}
     </div>
   );
 };
