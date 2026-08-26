@@ -112,6 +112,15 @@ export const AccountInformationDetail: React.FC<AccountInformationDetailProps> =
 
     setCompanyData(formData);
     setIsEditing(false);
+    if (typeof window !== "undefined") {
+      if (formData.companyName) localStorage.setItem("company_name", formData.companyName);
+      if (formData.logoUrl) localStorage.setItem("company_logo", formData.logoUrl);
+      window.dispatchEvent(
+        new CustomEvent("company_metadata_updated", {
+          detail: { companyName: formData.companyName, companyLogo: formData.logoUrl },
+        })
+      );
+    }
     setSaveSuccessMsg("Company & Location details updated successfully!");
     setTimeout(() => setSaveSuccessMsg(""), 4000);
   };
@@ -128,6 +137,10 @@ export const AccountInformationDetail: React.FC<AccountInformationDetailProps> =
 
       // Save logo directly to backend database
       await updateCompanyDetails({ companyLogo: base64String });
+      if (typeof window !== "undefined") {
+        localStorage.setItem("company_logo", base64String);
+        window.dispatchEvent(new CustomEvent("company_metadata_updated", { detail: { companyLogo: base64String } }));
+      }
       setSaveSuccessMsg("Company logo uploaded and saved successfully!");
       setTimeout(() => setSaveSuccessMsg(""), 4000);
     };

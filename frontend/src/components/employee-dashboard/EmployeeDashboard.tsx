@@ -353,7 +353,7 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
     }
 
     const now = new Date();
-    const timeStr = now.toLocaleTimeString("en-IN", {
+    const timeStr = now.toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",
       hour12: true,
@@ -423,7 +423,7 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
     }
 
     const now = new Date();
-    const timeStr = now.toLocaleTimeString("en-IN", {
+    const timeStr = now.toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",
       hour12: true,

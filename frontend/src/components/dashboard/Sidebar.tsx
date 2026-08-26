@@ -14,7 +14,6 @@ import {
   Laptop,
   TrendingUp,
   UserCheck,
-  ShieldAlert,
   Settings,
   X,
 } from "lucide-react";
@@ -42,19 +41,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: "approval", label: "Approval", icon: FileCheck, roles: ["superadmin", "admin", "employee"] },
     { id: "attendance", label: "Attendance", icon: Clock, roles: ["superadmin", "admin", "employee"] },
     { id: "holidays-leaves", label: "Leaves", icon: Umbrella, roles: ["superadmin", "admin", "employee"] },
-    { id: "payroll", label: "Payroll", icon: Banknote, roles: ["superadmin", "admin", "employee"] },
-    { id: "expenses", label: "Expenses", icon: Receipt, roles: ["superadmin", "admin"] },
+    { id: "payroll", label: "Payroll", icon: Banknote, roles: ["superadmin", "admin", "employee"], disabled: true },
+    { id: "expenses", label: "Expenses", icon: Receipt, roles: ["superadmin", "admin", "employee"] },
     { id: "assets", label: "Assets", icon: Laptop, roles: ["superadmin", "admin", "employee"] },
     { id: "reports", label: "Reports", icon: TrendingUp, roles: ["superadmin", "admin"] },
     { id: "users", label: "Users", icon: UserCheck, roles: ["superadmin", "admin"] },
-    { id: "tenant-settings", label: "Superadmin Control", icon: ShieldAlert, roles: ["superadmin"] },
     { id: "settings", label: "Settings", icon: Settings, roles: ["superadmin", "admin"] },
   ];
 
   const visibleItems = navItems.filter((item) => item.roles.includes(currentRole));
 
-  const handleItemClick = (id: string) => {
-    onTabChange(id);
+  const handleItemClick = (item: (typeof navItems)[0]) => {
+    if (item.disabled) return;
+    onTabChange(item.id);
     if (typeof window !== "undefined" && window.innerWidth < 768 && onCloseMobileSidebar) {
       onCloseMobileSidebar();
     }
@@ -95,35 +94,61 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {visibleItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
+            const isDisabled = !!item.disabled;
             return (
               <button
                 key={item.id}
-                onClick={() => handleItemClick(item.id)}
-                title={isSidebarOpen ? undefined : item.label}
-                className={`rounded-xl transition-all duration-200 group relative flex items-center cursor-pointer shrink-0 ${isSidebarOpen
-                  ? `w-full px-4 py-3 gap-3.5 ${isActive
-                    ? "text-sidebar-active-text bg-sidebar-active-bg shadow-md shadow-black/20 font-extrabold"
-                    : "text-sidebar-text hover:text-sidebar-text-hover hover:bg-white/10 font-semibold"
-                  }`
-                  : `p-2.5 justify-center ${isActive
-                    ? "text-sidebar-active-text bg-sidebar-active-bg shadow-md shadow-black/20 scale-105"
-                    : "text-sidebar-text hover:text-sidebar-text-hover hover:bg-white/10 hover:scale-105"
-                  }`
-                  }`}
+                onClick={() => handleItemClick(item)}
+                disabled={isDisabled}
+                title={
+                  isDisabled
+                    ? `${item.label} (Coming Soon)`
+                    : isSidebarOpen
+                    ? undefined
+                    : item.label
+                }
+                className={`rounded-xl transition-all duration-200 group relative flex items-center shrink-0 ${
+                  isDisabled
+                    ? "opacity-35 cursor-not-allowed text-sidebar-text hover:bg-transparent"
+                    : "cursor-pointer"
+                } ${
+                  isSidebarOpen
+                    ? `w-full px-4 py-3 gap-3.5 ${
+                        isActive
+                          ? "text-sidebar-active-text bg-sidebar-active-bg shadow-md shadow-black/20 font-extrabold"
+                          : !isDisabled
+                          ? "text-sidebar-text hover:text-sidebar-text-hover hover:bg-white/10 font-semibold"
+                          : ""
+                      }`
+                    : `p-2.5 justify-center ${
+                        isActive
+                          ? "text-sidebar-active-text bg-sidebar-active-bg shadow-md shadow-black/20 scale-105"
+                          : !isDisabled
+                          ? "text-sidebar-text hover:text-sidebar-text-hover hover:bg-white/10 hover:scale-105"
+                          : ""
+                      }`
+                }`}
               >
                 <Icon className="w-5 h-5 shrink-0" />
 
                 {/* Expanded sidebar labels */}
                 {isSidebarOpen && (
-                  <span className="text-xs tracking-wide animate-fade-in truncate">
-                    {item.label}
-                  </span>
+                  <div className="flex items-center justify-between flex-1 overflow-hidden">
+                    <span className="text-xs tracking-wide animate-fade-in truncate">
+                      {item.label}
+                    </span>
+                    {isDisabled && (
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-white/10 text-sidebar-text/80 uppercase tracking-wider">
+                        Soon
+                      </span>
+                    )}
+                  </div>
                 )}
 
                 {/* Collapsed sidebar Tooltips */}
                 {!isSidebarOpen && (
                   <span className="absolute left-16 bg-[#012d28] text-sidebar-active-text text-[11px] font-bold px-2.5 py-1.5 rounded-md shadow-xl border border-sidebar-border opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-50 whitespace-nowrap">
-                    {item.label}
+                    {isDisabled ? `${item.label} (Coming Soon)` : item.label}
                   </span>
                 )}
               </button>

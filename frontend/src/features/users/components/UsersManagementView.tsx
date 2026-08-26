@@ -26,10 +26,25 @@ import {
   TableRow,
   TableCell,
 } from "@/components/ui/table";
-import { getUsersReportView } from "@/features/employees/api/employees.api";
+import { getUsersReportView, getRoles, updateUser } from "@/features/employees/api/employees.api";
 
-// Available System Roles List
-const AVAILABLE_ROLES = ["Administrator", "Employee", "Edit Tax", "Manager"];
+// Fallback roles if API returns empty
+const DEFAULT_FALLBACK_ROLES = ["Administrator", "Employee", "Edit Tax", "Manager"];
+
+// Helper to deduplicate role names case-insensitively and cleanly
+const deduplicateRoles = (roles: (string | undefined | null)[]): string[] => {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  roles.forEach((r) => {
+    if (!r) return;
+    const trimmed = String(r).trim();
+    if (trimmed && !seen.has(trimmed.toLowerCase())) {
+      seen.add(trimmed.toLowerCase());
+      result.push(trimmed);
+    }
+  });
+  return result.length > 0 ? result : ["Employee"];
+};
 
 export const UsersManagementView: React.FC = () => {
   // Main Top-Right Navigation Tab ("list-of-users" | "assign-roles")
@@ -52,6 +67,9 @@ export const UsersManagementView: React.FC = () => {
   const [pageSize, setPageSize] = useState(25);
   const [currentPage, setCurrentPage] = useState(1);
 
+  // Available Roles from Backend API
+  const [availableRolesList, setAvailableRolesList] = useState<any[]>([]);
+
   // Form State for Add / Edit User
   const [formData, setFormData] = useState({
     username: "",
@@ -67,31 +85,57 @@ export const UsersManagementView: React.FC = () => {
   // Assign Roles Tab state
   const [roleToAssign, setRoleToAssign] = useState("Employee");
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
+  const [isAssigningRoles, setIsAssigningRoles] = useState(false);
 
-  // Fetch users list from backend API on mount
+  // Derived role names
+  const availableRoleNames = useMemo(() => {
+    if (availableRolesList.length > 0) {
+      return availableRolesList.map((r: any) => r.roleName);
+    }
+    return DEFAULT_FALLBACK_ROLES;
+  }, [availableRolesList]);
+
+  // Fetch users list and roles from backend API on mount
   const loadUsersData = async () => {
     setIsLoading(true);
     try {
-      const res = await getUsersReportView({ companyId: 2 });
-      if (res.success && Array.isArray(res.data) && res.data.length > 0) {
-        const mapped = res.data.map((u: any, idx: number) => ({
-          sNo: idx + 1,
-          userId: u.userId,
-          code: u.employeeCode || `ST00${String(u.userId).padStart(3, "0")}`,
-          username: u.officialEmail || `${(u.firstName || "").toLowerCase()}@saanvitechin.com`,
-          displayName: `${u.firstName || ""} ${u.lastName || ""}`.trim().toUpperCase() || "USER",
-          firstName: u.firstName,
-          lastName: u.lastName,
-          status: u.status === "INACTIVE" ? "InActive" : "Active",
-          isActive: u.status !== "INACTIVE",
-          rolesAssigned: u.roles && u.roles.length > 0
-            ? u.roles.map((r: any) => r.roleName).join(", ")
-            : "Employee",
-          rolesList: u.roles && u.roles.length > 0
-            ? u.roles.map((r: any) => r.roleName)
-            : ["Employee"],
-          note: u.note || "",
-        }));
+      const [usersRes, rolesRes] = await Promise.allSettled([
+        getUsersReportView({ companyId: 2 }),
+        getRoles(),
+      ]);
+
+      // 1. Process Roles
+      if (rolesRes.status === "fulfilled" && Array.isArray(rolesRes.value) && rolesRes.value.length > 0) {
+        setAvailableRolesList(rolesRes.value);
+        setRoleToAssign((prev) => {
+          const exists = rolesRes.value.some((r: any) => r.roleName === prev);
+          return exists ? prev : (rolesRes.value[0]?.roleName || "Employee");
+        });
+      }
+
+      // 2. Process Users
+      if (usersRes.status === "fulfilled" && usersRes.value?.success && Array.isArray(usersRes.value.data) && usersRes.value.data.length > 0) {
+        const mapped = usersRes.value.data.map((u: any, idx: number) => {
+          const rawRoles = u.roles && u.roles.length > 0
+            ? u.roles.map((r: any) => (typeof r === "string" ? r : r.roleName))
+            : ["Employee"];
+          const cleanRoles = deduplicateRoles(rawRoles);
+
+          return {
+            sNo: idx + 1,
+            userId: u.userId,
+            code: u.employeeCode || `ST00${String(u.userId).padStart(3, "0")}`,
+            username: u.officialEmail || `${(u.firstName || "").toLowerCase()}@saanvitechin.com`,
+            displayName: `${u.firstName || ""} ${u.lastName || ""}`.trim().toUpperCase() || "USER",
+            firstName: u.firstName,
+            lastName: u.lastName,
+            status: u.status === "INACTIVE" ? "InActive" : "Active",
+            isActive: u.status !== "INACTIVE",
+            rolesAssigned: cleanRoles.join(", "),
+            rolesList: cleanRoles,
+            note: u.note || "",
+          };
+        });
         setUsersList(mapped);
       } else {
         // Fallback default sample data to match screenshot
@@ -202,6 +246,8 @@ export const UsersManagementView: React.FC = () => {
       return;
     }
 
+    const cleanRoles = deduplicateRoles(formData.selectedRoles);
+
     if (selectedUser) {
       // Editing existing user
       setUsersList((prev) =>
@@ -214,8 +260,8 @@ export const UsersManagementView: React.FC = () => {
               displayName: formData.displayName.toUpperCase() || u.displayName,
               status: formData.status,
               isActive: formData.status === "Active",
-              rolesList: formData.selectedRoles,
-              rolesAssigned: formData.selectedRoles.join(", "),
+              rolesList: cleanRoles,
+              rolesAssigned: cleanRoles.join(", "),
               note: formData.note,
             };
           }
@@ -234,8 +280,8 @@ export const UsersManagementView: React.FC = () => {
         displayName: formData.displayName.toUpperCase() || "NEW USER",
         status: formData.status,
         isActive: formData.status === "Active",
-        rolesList: formData.selectedRoles,
-        rolesAssigned: formData.selectedRoles.join(", "),
+        rolesList: cleanRoles,
+        rolesAssigned: cleanRoles.join(", "),
         note: formData.note,
       };
       setUsersList((prev) => [newUser, ...prev]);
@@ -260,30 +306,56 @@ export const UsersManagementView: React.FC = () => {
     }
   };
 
-  const handleAssignRoleBatch = () => {
+  const handleAssignRoleBatch = async () => {
     if (selectedUserIds.length === 0) {
       toast.error("Please select at least one employee from the list");
       return;
     }
 
-    setUsersList((prev) =>
-      prev.map((u) => {
-        if (selectedUserIds.includes(u.userId)) {
-          const roles = new Set(u.rolesList || []);
-          roles.add(roleToAssign);
-          const updated = Array.from(roles);
-          return {
-            ...u,
-            rolesList: updated,
-            rolesAssigned: updated.join(", "),
-          };
-        }
-        return u;
-      })
-    );
+    setIsAssigningRoles(true);
+    try {
+      // Find roleId if available in availableRolesList
+      const targetRoleObj = availableRolesList.find((r) => r.roleName === roleToAssign);
+      const targetRoleId = targetRoleObj?.roleId;
 
-    toast.success(`Role '${roleToAssign}' assigned to ${selectedUserIds.length} selected employee(s)!`);
-    setSelectedUserIds([]);
+      // Update backend in parallel for selected users if roleId is resolved
+      if (targetRoleId) {
+        await Promise.allSettled(
+          selectedUserIds.map((uId) => {
+            const userObj = usersList.find((u) => u.userId === uId);
+            const currentRoleNames: string[] = userObj?.rolesList || [];
+            // Map existing role names to IDs
+            const existingRoleIds = currentRoleNames
+              .map((rName) => availableRolesList.find((r) => r.roleName === rName)?.roleId)
+              .filter(Boolean);
+            const mergedIds = Array.from(new Set([...existingRoleIds, targetRoleId]));
+            return updateUser(uId, { roleIds: mergedIds });
+          })
+        );
+      }
+
+      setUsersList((prev) =>
+        prev.map((u) => {
+          if (selectedUserIds.includes(u.userId)) {
+            const updated = deduplicateRoles([...(u.rolesList || []), roleToAssign]);
+            return {
+              ...u,
+              rolesList: updated,
+              rolesAssigned: updated.join(", "),
+            };
+          }
+          return u;
+        })
+      );
+
+      toast.success(`Role '${roleToAssign}' assigned to ${selectedUserIds.length} selected employee(s)!`);
+    } catch (err) {
+      console.error("Error assigning roles in batch:", err);
+      toast.error("Failed to assign role to all selected users.");
+    } finally {
+      setIsAssigningRoles(false);
+      setSelectedUserIds([]);
+    }
   };
 
   return (
@@ -569,17 +641,17 @@ export const UsersManagementView: React.FC = () => {
                   Roles
                 </h4>
                 <div className="space-y-2">
-                  {AVAILABLE_ROLES.map((role) => {
-                    const isAssigned = (selectedUser.rolesList || []).includes(role);
+                  {availableRoleNames.map((roleName) => {
+                    const isAssigned = (selectedUser.rolesList || []).includes(roleName);
                     return (
-                      <div key={role} className="flex items-center gap-2.5 text-xs">
+                      <div key={roleName} className="flex items-center gap-2.5 text-xs">
                         {isAssigned ? (
                           <Check className="w-4 h-4 text-emerald-500 font-bold" />
                         ) : (
                           <div className="w-4 h-4" />
                         )}
                         <span className={`font-bold ${isAssigned ? "text-slate-800" : "text-slate-400"}`}>
-                          {role}
+                          {roleName}
                         </span>
                       </div>
                     );
@@ -724,10 +796,10 @@ export const UsersManagementView: React.FC = () => {
                   Roles
                 </label>
                 <div className="space-y-2">
-                  {AVAILABLE_ROLES.map((role) => {
-                    const isChecked = formData.selectedRoles.includes(role);
+                  {availableRoleNames.map((roleName) => {
+                    const isChecked = formData.selectedRoles.includes(roleName);
                     return (
-                      <label key={role} className="flex items-center gap-2.5 cursor-pointer select-none">
+                      <label key={roleName} className="flex items-center gap-2.5 cursor-pointer select-none">
                         <input
                           type="checkbox"
                           checked={isChecked}
@@ -735,18 +807,20 @@ export const UsersManagementView: React.FC = () => {
                             if (e.target.checked) {
                               setFormData((p) => ({
                                 ...p,
-                                selectedRoles: [...p.selectedRoles, role],
+                                selectedRoles: [...p.selectedRoles, roleName],
                               }));
                             } else {
                               setFormData((p) => ({
                                 ...p,
-                                selectedRoles: p.selectedRoles.filter((r) => r !== role),
+                                selectedRoles: p.selectedRoles.filter((r) => r !== roleName),
                               }));
                             }
                           }}
-                          className="w-4 h-4 rounded border-slate-300 text-brand-primary focus:ring-brand-primary"
+                          className="w-4 h-4 rounded text-brand-primary border-slate-300 focus:ring-brand-primary cursor-pointer"
                         />
-                        <span className="text-xs font-extrabold text-slate-700">{role}</span>
+                        <span className="text-xs font-bold text-slate-700">
+                          {roleName}
+                        </span>
                       </label>
                     );
                   })}
@@ -793,7 +867,7 @@ export const UsersManagementView: React.FC = () => {
               onChange={(e) => setRoleToAssign(e.target.value)}
               className="px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:border-brand-primary shadow-2xs cursor-pointer min-w-[200px]"
             >
-              {AVAILABLE_ROLES.map((r) => (
+              {availableRoleNames.map((r) => (
                 <option key={r} value={r}>
                   {r}
                 </option>
@@ -802,9 +876,11 @@ export const UsersManagementView: React.FC = () => {
 
             <button
               onClick={handleAssignRoleBatch}
-              className="px-6 py-2.5 bg-brand-primary hover:bg-brand-primary-hover text-brand-btn-text text-xs font-extrabold rounded-xl shadow-2xs transition-all cursor-pointer"
+              disabled={isAssigningRoles}
+              className="px-6 py-2.5 bg-brand-primary hover:bg-brand-primary-hover text-brand-btn-text text-xs font-extrabold rounded-xl shadow-2xs transition-all cursor-pointer disabled:opacity-50 flex items-center gap-2"
             >
-              Assign
+              {isAssigningRoles && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              <span>{isAssigningRoles ? "Assigning..." : "Assign"}</span>
             </button>
           </div>
 

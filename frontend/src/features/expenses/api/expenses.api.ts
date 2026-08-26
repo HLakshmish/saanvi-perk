@@ -92,6 +92,7 @@ export const getExpenses = async (filters?: {
   category?: string;
   status?: string;
   period?: string;
+  userId?: number | null;
 }): Promise<Expense[]> => {
   const token = getAuthToken();
   const companyId = getCompanyIdCookie();
@@ -99,7 +100,10 @@ export const getExpenses = async (filters?: {
     throw new Error("Session expired. Please log in again.");
   }
 
-  const url = `${API_BASE_URL}/api/reimbursements?companyId=${companyId}`;
+  let url = `${API_BASE_URL}/api/reimbursements?companyId=${companyId}`;
+  if (filters?.userId) {
+    url += `&userId=${filters.userId}`;
+  }
 
   try {
     const res = await fetch(url, {
@@ -316,14 +320,17 @@ export const downloadBill = async (billId: number): Promise<Blob> => {
 /**
  * Retrieves aggregate statistics dynamically using database claims.
  */
-export const getExpenseStats = async (period?: string, trendOffset: number = 0): Promise<ExpenseStats> => {
+export const getExpenseStats = async (period?: string, trendOffset: number = 0, userId?: number | null): Promise<ExpenseStats> => {
   const token = getAuthToken();
   const companyId = getCompanyIdCookie();
   if (!companyId) {
     throw new Error("Session expired. Please log in again.");
   }
 
-  const url = `${API_BASE_URL}/api/reimbursements?companyId=${companyId}`;
+  let url = `${API_BASE_URL}/api/reimbursements?companyId=${companyId}`;
+  if (userId) {
+    url += `&userId=${userId}`;
+  }
 
   try {
     const res = await fetch(url, {

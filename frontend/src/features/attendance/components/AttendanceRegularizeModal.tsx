@@ -26,6 +26,93 @@ interface AttendanceRegularizeModalProps {
   currentStatusLabel?: string;
 }
 
+// Custom cross-browser Time Picker (12-hour format with AM/PM)
+const CustomTimePicker = ({
+  value, // "HH:MM" in 24-hr format
+  onChange,
+}: {
+  value: string;
+  onChange: (val: string) => void;
+}) => {
+  const [hStr, mStr] = value.split(":");
+  const hNum = parseInt(hStr || "09", 10);
+  const isPM = hNum >= 12;
+  const period = isPM ? "PM" : "AM";
+  const displayH = hNum % 12 || 12;
+  const displayHStr = String(displayH).padStart(2, "0");
+  const displayMStr = (mStr || "00").padStart(2, "0");
+
+  const hours = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0"));
+  const minutes = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, "0"));
+
+  const handleHourChange = (newH: string) => {
+    let rawH = parseInt(newH, 10);
+    if (period === "PM" && rawH < 12) rawH += 12;
+    if (period === "AM" && rawH === 12) rawH = 0;
+    onChange(`${String(rawH).padStart(2, "0")}:${displayMStr}`);
+  };
+
+  const handleMinuteChange = (newM: string) => {
+    onChange(`${hStr}:${newM}`);
+  };
+
+  const handlePeriodChange = (newPeriod: string) => {
+    if (newPeriod === period) return;
+    let rawH = parseInt(hStr, 10);
+    if (newPeriod === "PM" && rawH < 12) rawH += 12;
+    if (newPeriod === "AM" && rawH >= 12) rawH -= 12;
+    onChange(`${String(rawH).padStart(2, "0")}:${displayMStr}`);
+  };
+
+  return (
+    <div className="flex items-center gap-1.5 w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 focus-within:border-brand-primary focus-within:ring-2 focus-within:ring-brand-primary/20 transition-all">
+      <select
+        value={displayHStr}
+        onChange={(e) => handleHourChange(e.target.value)}
+        className="bg-transparent font-mono font-bold text-slate-800 focus:outline-none cursor-pointer appearance-none text-center hover:bg-slate-200/50 rounded p-1 text-xs"
+      >
+        {hours.map((h) => (
+          <option key={h} value={h}>
+            {h}
+          </option>
+        ))}
+      </select>
+      <span className="font-bold text-slate-400 -mx-0.5">:</span>
+      <select
+        value={displayMStr}
+        onChange={(e) => handleMinuteChange(e.target.value)}
+        className="bg-transparent font-mono font-bold text-slate-800 focus:outline-none cursor-pointer appearance-none text-center hover:bg-slate-200/50 rounded p-1 text-xs"
+      >
+        {minutes.map((m) => (
+          <option key={m} value={m}>
+            {m}
+          </option>
+        ))}
+      </select>
+      <div className="flex bg-slate-200/70 p-0.5 rounded-lg ml-auto">
+        <button
+          type="button"
+          onClick={() => handlePeriodChange("AM")}
+          className={`px-2 py-1 rounded-md text-[10px] font-black transition-colors ${
+            period === "AM" ? "bg-white text-brand-primary shadow-xs" : "text-slate-500 hover:text-slate-700"
+          }`}
+        >
+          AM
+        </button>
+        <button
+          type="button"
+          onClick={() => handlePeriodChange("PM")}
+          className={`px-2 py-1 rounded-md text-[10px] font-black transition-colors ${
+            period === "PM" ? "bg-white text-brand-primary shadow-xs" : "text-slate-500 hover:text-slate-700"
+          }`}
+        >
+          PM
+        </button>
+      </div>
+    </div>
+  );
+};
+
 export const AttendanceRegularizeModal: React.FC<AttendanceRegularizeModalProps> = ({
   isOpen,
   onClose,
@@ -36,6 +123,7 @@ export const AttendanceRegularizeModal: React.FC<AttendanceRegularizeModalProps>
   currentStatusLabel,
 }) => {
   const [mounted, setMounted] = useState(false);
+  const [modalDate, setModalDate] = useState<Date | null>(null);
   const [reason, setReason] = useState<
     "ON_DUTY" | "FORGOT_ID" | "BUSINESS_TOUR" | "NEW_JOINEE" | "OTHERS"
   >("FORGOT_ID");
@@ -52,6 +140,7 @@ export const AttendanceRegularizeModal: React.FC<AttendanceRegularizeModalProps>
   // Initialize form fields when opening modal
   useEffect(() => {
     if (isOpen && selectedDate) {
+      setModalDate(selectedDate);
       if (currentCheckIn) {
         try {
           const d = new Date(currentCheckIn);
@@ -103,14 +192,7 @@ export const AttendanceRegularizeModal: React.FC<AttendanceRegularizeModalProps>
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
-  if (!mounted || !isOpen || !selectedDate) return null;
-
-  const dateFormatted = selectedDate.toLocaleDateString("en-US", {
-    weekday: "long",
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  if (!mounted || !isOpen || !modalDate) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,9 +204,9 @@ export const AttendanceRegularizeModal: React.FC<AttendanceRegularizeModalProps>
 
     setIsSubmitting(true);
     try {
-      const year = selectedDate.getFullYear();
-      const month = selectedDate.getMonth();
-      const day = selectedDate.getDate();
+      const year = modalDate.getFullYear();
+      const month = modalDate.getMonth();
+      const day = modalDate.getDate();
 
       const [inH, inM] = checkInTime.split(":").map(Number);
       const [outH, outM] = checkOutTime.split(":").map(Number);
@@ -212,9 +294,22 @@ export const AttendanceRegularizeModal: React.FC<AttendanceRegularizeModalProps>
                 <span className="text-[10px] font-extrabold uppercase tracking-wider text-brand-primary block">
                   Selected Date
                 </span>
-                <span className="font-extrabold text-slate-900 text-xs">
-                  {dateFormatted}
-                </span>
+                <input
+                  type="date"
+                  value={
+                    modalDate
+                      ? `${modalDate.getFullYear()}-${String(modalDate.getMonth() + 1).padStart(2, "0")}-${String(modalDate.getDate()).padStart(2, "0")}`
+                      : ""
+                  }
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      const [y, m, d] = e.target.value.split("-").map(Number);
+                      setModalDate(new Date(y, m - 1, d, 0, 0, 0));
+                    }
+                  }}
+                  className="mt-0.5 px-2.5 py-1.5 rounded-lg border border-brand-primary/30 bg-white font-extrabold text-brand-primary text-xs focus:outline-none focus:ring-2 focus:ring-brand-primary/20 cursor-pointer shadow-2xs"
+                  required
+                />
               </div>
             </div>
 
@@ -247,31 +342,25 @@ export const AttendanceRegularizeModal: React.FC<AttendanceRegularizeModalProps>
           <div className="grid grid-cols-2 gap-3">
             {/* Check In */}
             <div className="space-y-1.5">
-              <label className="font-bold text-slate-700 flex items-center gap-1.5">
+              <label className="font-bold text-slate-700 flex items-center gap-1.5 mb-1.5">
                 <Clock className="w-3.5 h-3.5 text-emerald-600" />
                 Proposed Check In <span className="text-rose-500">*</span>
               </label>
-              <input
-                type="time"
+              <CustomTimePicker
                 value={checkInTime}
-                onChange={(e) => setCheckInTime(e.target.value)}
-                required
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 font-mono font-bold text-slate-800 focus:outline-none focus:bg-white focus:border-brand-primary text-xs cursor-pointer"
+                onChange={(val) => setCheckInTime(val)}
               />
             </div>
 
             {/* Check Out */}
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700 flex items-center gap-1.5">
+            <div>
+              <label className="font-bold text-slate-700 flex items-center gap-1.5 mb-1.5">
                 <Clock className="w-3.5 h-3.5 text-rose-500" />
                 Proposed Check Out <span className="text-rose-500">*</span>
               </label>
-              <input
-                type="time"
+              <CustomTimePicker
                 value={checkOutTime}
-                onChange={(e) => setCheckOutTime(e.target.value)}
-                required
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 font-mono font-bold text-slate-800 focus:outline-none focus:bg-white focus:border-brand-primary text-xs cursor-pointer"
+                onChange={(val) => setCheckOutTime(val)}
               />
             </div>
           </div>

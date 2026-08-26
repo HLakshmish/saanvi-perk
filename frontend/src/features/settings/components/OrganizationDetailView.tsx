@@ -187,6 +187,15 @@ export const OrganizationDetailView: React.FC<OrganizationDetailViewProps> = ({ 
 
       setOrgData(formData);
       setIsEditing(false);
+      if (typeof window !== "undefined") {
+        if (formData.companyName) localStorage.setItem("company_name", formData.companyName);
+        if (formData.logoUrl) localStorage.setItem("company_logo", formData.logoUrl);
+        window.dispatchEvent(
+          new CustomEvent("company_metadata_updated", {
+            detail: { companyName: formData.companyName, companyLogo: formData.logoUrl },
+          })
+        );
+      }
       setSaveSuccessMsg("Organization & location details updated successfully!");
       setTimeout(() => setSaveSuccessMsg(""), 4000);
     } catch (err: any) {
@@ -208,6 +217,10 @@ export const OrganizationDetailView: React.FC<OrganizationDetailViewProps> = ({ 
       if (selectedCompany) {
         await updateCompany(selectedCompany.companyId, { companyLogo: base64String });
         setOrgData((prev) => ({ ...prev, logoUrl: base64String }));
+        if (typeof window !== "undefined") {
+          localStorage.setItem("company_logo", base64String);
+          window.dispatchEvent(new CustomEvent("company_metadata_updated", { detail: { companyLogo: base64String } }));
+        }
         setSaveSuccessMsg("Company logo updated successfully!");
         setTimeout(() => setSaveSuccessMsg(""), 4000);
       }

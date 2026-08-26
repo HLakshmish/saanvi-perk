@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   getExpenses,
   createExpense,
@@ -83,6 +84,18 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
   const [actionComments, setActionComments] = useState("");
   const [isActioning, setIsActioning] = useState(false);
 
+  // Lock body scroll when any modal is open
+  useEffect(() => {
+    if (isModalOpen || selectedExpense) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isModalOpen, selectedExpense]);
+
   // Form state for new claim
   const [formData, setFormData] = useState({
     amount: "",
@@ -109,19 +122,26 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
 
   // Load expenses and stats
   const loadData = async () => {
+    if (isEmployee && currentUserId === null) {
+      return;
+    }
     setIsLoading(true);
     setErrorMsg(null);
     try {
-      const filters = {
+      const filters: any = {
         search: searchQuery,
         category: filterCategory,
         status: filterStatus,
         period: filterPeriod,
       };
 
+      if (isEmployee && currentUserId) {
+        filters.userId = currentUserId;
+      }
+
       const [listRes, statsRes] = await Promise.all([
         getExpenses(filters),
-        getExpenseStats(cardPeriod, trendOffset),
+        getExpenseStats(cardPeriod, trendOffset, isEmployee ? currentUserId : null),
       ]);
 
       // If user is employee, filter table lists to show only their claims
@@ -308,8 +328,8 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
         <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full overflow-visible">
           <defs>
             <linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#013e37" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#013e37" stopOpacity="0.0" />
+              <stop offset="0%" stopColor="var(--brand-primary)" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="var(--brand-primary)" stopOpacity="0.0" />
             </linearGradient>
           </defs>
 
@@ -322,13 +342,13 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
           {areaData && <path d={areaData} fill="url(#trendGradient)" />}
 
           {/* Path Stroke */}
-          {pathData && <path d={pathData} fill="none" stroke="#013e37" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />}
+          {pathData && <path d={pathData} fill="none" stroke="var(--brand-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />}
 
           {/* Point Circles */}
           {points.map((p, idx) => (
             <g key={idx} className="group/dot cursor-pointer">
-              <circle cx={p.x} cy={p.y} r="3" fill="#013e37" stroke="#ffffff" strokeWidth="1.5" />
-              <circle cx={p.x} cy={p.y} r="8" fill="#013e37" fillOpacity="0" className="hover:fill-opacity-10 transition-all" />
+              <circle cx={p.x} cy={p.y} r="3" fill="var(--brand-primary)" stroke="#ffffff" strokeWidth="1.5" />
+              <circle cx={p.x} cy={p.y} r="8" fill="var(--brand-primary)" fillOpacity="0" className="hover:fill-opacity-10 transition-all" />
               <title>{`${p.month}: ₹${p.amount.toLocaleString()}`}</title>
             </g>
           ))}
@@ -390,7 +410,7 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
       </div>
 
       {/* Summary Cards Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div className={`grid grid-cols-1 ${isEmployee ? "md:grid-cols-2" : "md:grid-cols-3"} gap-5`}>
         {/* Card 1: Total Reimbursed amount */}
         <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between min-h-[170px]">
           <div className="flex items-center justify-between">
@@ -427,7 +447,7 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
         <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between min-h-[170px]">
           <h3 className="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Overview</h3>
 
-          <div className="grid grid-cols-3 gap-2.5 my-auto">
+          <div className="grid grid-cols-4 gap-2.5 my-auto">
             <div className="bg-slate-50 border border-slate-100/50 rounded-xl p-2 text-center flex flex-col justify-center">
               <span className="text-xs font-extrabold text-slate-400 uppercase tracking-wider block">Total</span>
               <span className="text-lg font-black text-slate-800 mt-0.5">
@@ -446,45 +466,53 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
                 {stats ? stats.pendingCount : 0}
               </span>
             </div>
+            <div className="bg-rose-50/50 border border-rose-100/50 rounded-xl p-2 text-center flex flex-col justify-center">
+              <span className="text-xs font-extrabold text-rose-600 uppercase tracking-wider block">Rejected</span>
+              <span className="text-lg font-black text-rose-700 mt-0.5">
+                {stats ? stats.rejectedCount : 0}
+              </span>
+            </div>
           </div>
         </div>
 
         {/* Card 3: Trend Chart */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between min-h-[170px]">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-xs font-extrabold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-              <TrendingUp className="w-3.5 h-3.5 text-brand-primary" />
-              <span>Expense Trend</span>
-            </h3>
-            
-            {/* Shift controls */}
-            <div className="flex items-center gap-1 text-[10px] font-bold text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-2 py-0.5 select-none">
-              <button 
-                type="button"
-                onClick={() => setTrendOffset((prev) => prev - 1)}
-                className="hover:text-brand-primary transition-colors p-0.5 cursor-pointer"
-                title="Previous 6 Months"
-              >
-                <ChevronLeft className="w-3.5 h-3.5" />
-              </button>
-              <span className="uppercase tracking-wider">
-                {getTrendLabel()}
-              </span>
-              <button 
-                type="button"
-                onClick={() => setTrendOffset((prev) => Math.min(0, prev + 1))}
-                className="hover:text-brand-primary transition-colors p-0.5 cursor-pointer"
-                title="Next 6 Months"
-              >
-                <ChevronRight className="w-3.5 h-3.5" />
-              </button>
+        {!isEmployee && (
+          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between min-h-[170px]">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-xs font-extrabold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                <TrendingUp className="w-3.5 h-3.5 text-brand-primary" />
+                <span>Expense Trend</span>
+              </h3>
+              
+              {/* Shift controls */}
+              <div className="flex items-center gap-1 text-[10px] font-bold text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-2 py-0.5 select-none">
+                <button 
+                  type="button"
+                  onClick={() => setTrendOffset((prev) => prev - 1)}
+                  className="hover:text-brand-primary transition-colors p-0.5 cursor-pointer"
+                  title="Previous 6 Months"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                </button>
+                <span className="uppercase tracking-wider">
+                  {getTrendLabel()}
+                </span>
+                <button 
+                  type="button"
+                  onClick={() => setTrendOffset((prev) => Math.min(0, prev + 1))}
+                  className="hover:text-brand-primary transition-colors p-0.5 cursor-pointer"
+                  title="Next 6 Months"
+                >
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="h-28 w-full flex items-end">
+              {renderTrendChart()}
             </div>
           </div>
-
-          <div className="h-28 w-full flex items-end">
-            {renderTrendChart()}
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Filters & Data Block */}
@@ -599,11 +627,8 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
                       <TableCell className="font-extrabold text-slate-900 text-xs">
                         {exp.id}
                       </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span className="font-semibold text-slate-800 text-sm">{exp.employeeName}</span>
-                          <span className="text-[10px] text-slate-400 font-medium">ID: {exp.userId}</span>
-                        </div>
+                      <TableCell className="font-semibold text-slate-800 text-sm">
+                        {exp.employeeName}
                       </TableCell>
                       <TableCell>
                         <span className="inline-block text-xs font-semibold text-slate-700 bg-slate-100 px-2.5 py-0.5 rounded-lg border border-slate-200/50">
@@ -647,7 +672,7 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
       </div>
 
       {/* Claim Detail / Action Modal */}
-      {selectedExpense && (
+      {selectedExpense && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/80 w-full max-w-[500px] max-h-[85vh] flex flex-col overflow-hidden relative animate-in fade-in zoom-in duration-200">
             {/* Modal Header */}
@@ -786,15 +811,16 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* New Expense Modal */}
-      {isModalOpen && (
+      {isModalOpen && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/80 w-full max-w-[500px] overflow-hidden flex flex-col relative animate-in fade-in zoom-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/80 w-full max-w-[500px] max-h-[90vh] overflow-hidden flex flex-col relative animate-in fade-in zoom-in duration-200">
             {/* Header */}
-            <div className="p-6 border-b border-brand-primary/15 bg-slate-50/50 flex justify-between items-center">
+            <div className="p-6 border-b border-brand-primary/15 bg-slate-50/50 flex justify-between items-center flex-none">
               <div>
                 <h3 className="text-base font-bold text-brand-primary font-sans">Submit Expense Claim</h3>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Enter reimbursement details</p>
@@ -811,7 +837,9 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
             </div>
 
             {/* Form */}
-            <form onSubmit={handleCreateSubmit} className="p-6 space-y-4 font-sans">
+            <form onSubmit={handleCreateSubmit} className="flex flex-col flex-1 overflow-hidden">
+              {/* Scrollable Fields Container */}
+              <div className="p-6 space-y-4 font-sans overflow-y-auto flex-1">
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5 col-span-2 sm:col-span-1">
@@ -902,27 +930,33 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
                   )}
                 </div>
               </div>
+            </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 border border-slate-300 text-slate-700 font-bold text-xs rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="px-5 py-2.5 bg-brand-primary hover:bg-brand-primary-hover text-brand-btn-text font-bold text-xs rounded-xl shadow-2xs hover:shadow-xs transition-all hover:-translate-y-0.5 cursor-pointer disabled:opacity-50"
-                >
-                  {isSubmitting ? "Submitting..." : "Submit Claim"}
-                </button>
-              </div>
-            </form>
-          </div>
+            {/* Fixed Footer */}
+            <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-3 flex-none">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setFormError(null);
+                }}
+                className="px-4 py-2 border border-slate-300 text-slate-700 font-bold text-xs rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="px-5 py-2.5 bg-brand-primary hover:bg-brand-primary-hover text-brand-btn-text font-bold text-xs rounded-xl shadow-2xs hover:shadow-xs transition-all hover:-translate-y-0.5 cursor-pointer disabled:opacity-50"
+              >
+                {isSubmitting ? "Submitting..." : "Submit Claim"}
+              </button>
+            </div>
+          </form>
         </div>
-      )}
+      </div>,
+      document.body
+    )}
     </div>
   );
 };
