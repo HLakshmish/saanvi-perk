@@ -119,7 +119,7 @@ class AttendanceService {
     }
 
     calculateAttendanceStatus(data) {
-        if (data.workingMinutes === undefined && data.checkInTime && data.checkOutTime) {
+        if (data.checkInTime && data.checkOutTime) {
             const diffMs = data.checkOutTime.getTime() - data.checkInTime.getTime();
             data.workingMinutes = Math.floor(diffMs / 60000);
         }
