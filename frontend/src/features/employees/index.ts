@@ -5,5 +5,4 @@ export * from "./components/employee-table";
 export * from "./components/employee-card";
 export * from "./components/organization-chart";
 export * from "./types/employees.types";
-export * from "./data/employees.data";
 export * from "./api/employees.api";

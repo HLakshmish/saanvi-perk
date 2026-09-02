@@ -22,6 +22,10 @@ export interface Employee {
   profilePic?: string;
   designationId?: number;
   status?: string;
+  aadhaarNumber?: string;
+  panNumber?: string;
+  passportNumber?: string;
+  personalEmail?: string;
 }
 
 export interface RoleSelection {

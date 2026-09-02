@@ -12,16 +12,25 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     const generatedId = React.useId();
     const inputId = id || generatedId;
 
+    const renderLabel = () => {
+      if (!label) return null;
+      const isRequired = props.required || label.includes("*");
+      const cleanLabelText = label.replace(/\s*\*/g, "");
+
+      return (
+        <label
+          htmlFor={inputId}
+          className="text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider flex items-center gap-0.5"
+        >
+          <span>{cleanLabelText}</span>
+          {isRequired && <span className="text-red-500 font-bold ml-0.5">*</span>}
+        </label>
+      );
+    };
+
     return (
       <div className="w-full flex flex-col gap-1.5 text-left">
-        {label && (
-          <label
-            htmlFor={inputId}
-            className="text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider"
-          >
-            {label}
-          </label>
-        )}
+        {renderLabel()}
         <input
           type={type}
           id={inputId}
