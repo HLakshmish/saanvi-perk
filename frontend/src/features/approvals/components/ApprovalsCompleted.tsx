@@ -229,6 +229,8 @@ export const ApprovalsCompleted: React.FC<ApprovalsCompletedProps> = ({
                         className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md ${
                           item.moduleType === "LEAVE"
                             ? "bg-purple-100 text-purple-800"
+                            : item.moduleType === "ATTENDANCE"
+                            ? "bg-amber-100 text-amber-800"
                             : "bg-emerald-100 text-emerald-800"
                         }`}
                       >

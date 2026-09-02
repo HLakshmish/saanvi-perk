@@ -122,6 +122,10 @@ export const ApprovalsInsights: React.FC<ApprovalsInsightsProps> = ({ onNavigate
               <span className="font-bold text-slate-900">{stats.leavesPending}</span>
             </div>
             <div className="flex items-center justify-between">
+              <span className="text-slate-600 font-medium">Attendance Requests:</span>
+              <span className="font-bold text-slate-900">{stats.attendancePending}</span>
+            </div>
+            <div className="flex items-center justify-between">
               <span className="text-slate-600 font-medium">Expense Claims:</span>
               <span className="font-bold text-slate-900">{stats.reimbursementsPending}</span>
             </div>

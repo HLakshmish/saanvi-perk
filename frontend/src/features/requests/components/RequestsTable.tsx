@@ -36,6 +36,7 @@ export interface RequestHistoryItem {
   status: string;
   source: "attendance" | "leave" | "reimbursement";
   rawDate: Date; // Keep raw Date for chronological sorting
+  employeeName?: string; // For search filtering without adding extra UI column
 }
 
 interface RequestsTableProps {
@@ -161,6 +162,21 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
         return empName || `User ID: ${approvedById}`;
       };
 
+      const getReqEmployeeName = (req: any): string => {
+        if (req.user) {
+          const name = `${req.user.firstName || ""} ${req.user.lastName || ""}`.trim();
+          if (name) return name;
+        }
+        if (req.employeeName) {
+          return req.employeeName;
+        }
+        if (req.userId) {
+          const name = employeeMap.get(String(req.userId));
+          if (name) return name;
+        }
+        return "";
+      };
+
       // Process Attendance Requests
       const attRes = results[0];
       if (attRes.status === "fulfilled") {
@@ -181,6 +197,7 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
               status: normalizeStatus(req.status),
               source: "attendance",
               rawDate: req.shiftDate ? new Date(req.shiftDate) : new Date(req.createdAt || Date.now()),
+              employeeName: getReqEmployeeName(req),
             });
           });
         } else if (val.success === false) {
@@ -210,6 +227,7 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
               status: normalizeStatus(req.status),
               source: "leave",
               rawDate: req.createdAt ? new Date(req.createdAt) : new Date(req.fromDate || Date.now()),
+              employeeName: getReqEmployeeName(req),
             });
           });
         } else if (val.success === false) {
@@ -239,6 +257,7 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
               status: normalizeStatus(req.status),
               source: "reimbursement",
               rawDate: req.claimDate ? new Date(req.claimDate) : new Date(req.createdAt || Date.now()),
+              employeeName: getReqEmployeeName(req),
             });
           });
         } else if (val.success === false) {
@@ -303,7 +322,8 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
       row.requestType.toLowerCase().includes(q) ||
       row.lastActionTakenBy.toLowerCase().includes(q) ||
       row.status.toLowerCase().includes(q) ||
-      row.requestDate.toLowerCase().includes(q);
+      row.requestDate.toLowerCase().includes(q) ||
+      (row.employeeName ? row.employeeName.toLowerCase().includes(q) : false);
 
     // 2. Date Range Match
     const matchesDate = isWithinRange(row.requestDate, dateRange);
