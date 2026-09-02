@@ -83,6 +83,26 @@ export const AssignAssetModal: React.FC<AssignAssetModalProps> = ({
       return;
     }
 
+    if (formData.assignedDate) {
+      const today = new Date();
+      today.setHours(23, 59, 59, 999);
+      if (new Date(formData.assignedDate) > today) {
+        const msg = "Assignment Date cannot be in the future.";
+        setErrorMsg(msg);
+        toast.error(msg);
+        return;
+      }
+    }
+
+    if (formData.expectedReturnDate && formData.assignedDate) {
+      if (new Date(formData.expectedReturnDate) < new Date(formData.assignedDate)) {
+        const msg = "Expected Return Date cannot be earlier than Assignment Date.";
+        setErrorMsg(msg);
+        toast.error(msg);
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     setErrorMsg(null);
 
