@@ -50,7 +50,10 @@ class LeaveRequestController {
             
             // Basic check so normal users only see their own requests (can be refined via permissions)
             if (request.user.role === 'USER' && leaveRequest.userId !== request.user.userId) {
-                return reply.code(403).send({ success: false, message: "Forbidden: Cannot view other user's leave request." });
+                const hasViewLeavesPermission = request.user.permissions && (request.user.permissions.includes('VIEW_LEAVES') || request.user.permissions.includes('MANAGE_LEAVES'));
+                if (!hasViewLeavesPermission) {
+                    return reply.code(403).send({ success: false, message: "Forbidden: Cannot view other user's leave request." });
+                }
             }
 
             reply.code(200).send({ success: true, data: leaveRequest });
@@ -67,7 +70,10 @@ class LeaveRequestController {
             if (request.user.role === 'OWNER') {
                 companyId = request.query.companyId ? Number(request.query.companyId) : undefined;
             } else if (request.user.role === 'USER') {
-                filterUserId = request.user.userId; // Regular users only see their own
+                const hasViewLeavesPermission = request.user.permissions && (request.user.permissions.includes('VIEW_LEAVES') || request.user.permissions.includes('MANAGE_LEAVES'));
+                if (!hasViewLeavesPermission) {
+                    filterUserId = request.user.userId; // Regular users only see their own
+                }
             }
 
             const leaveRequests = await leaveRequestService.getAllLeaveRequests(companyId, filterUserId);
@@ -89,7 +95,10 @@ class LeaveRequestController {
             
             // Only specific roles can approve/reject
             if (['APPROVED', 'REJECTED'].includes(status) && request.user.role === 'USER') {
-                return reply.code(403).send({ success: false, message: "Forbidden: Not authorized to approve/reject leave requests." });
+                const hasManageLeavesPermission = request.user.permissions && request.user.permissions.includes('MANAGE_LEAVES');
+                if (!hasManageLeavesPermission) {
+                    return reply.code(403).send({ success: false, message: "Forbidden: Not authorized to approve/reject leave requests." });
+                }
             }
 
             const statusData = {
@@ -143,7 +152,10 @@ class LeaveRequestController {
             if (request.user.role === 'OWNER') {
                 companyId = request.query.companyId ? Number(request.query.companyId) : undefined;
             } else if (request.user.role === 'USER') {
-                filterUserId = request.user.userId;
+                const hasViewLeavesPermission = request.user.permissions && (request.user.permissions.includes('VIEW_LEAVES') || request.user.permissions.includes('MANAGE_LEAVES'));
+                if (!hasViewLeavesPermission) {
+                    filterUserId = request.user.userId;
+                }
             }
 
             const leaveRequests = await leaveRequestService.getAllLeaveRequests(companyId, filterUserId);
@@ -181,7 +193,10 @@ class LeaveRequestController {
             if (request.user.role === 'OWNER') {
                 companyId = request.query.companyId ? Number(request.query.companyId) : undefined;
             } else if (request.user.role === 'USER') {
-                filterUserId = request.user.userId;
+                const hasViewLeavesPermission = request.user.permissions && (request.user.permissions.includes('VIEW_LEAVES') || request.user.permissions.includes('MANAGE_LEAVES'));
+                if (!hasViewLeavesPermission) {
+                    filterUserId = request.user.userId;
+                }
             }
 
             const leaveRequests = await leaveRequestService.getAllLeaveRequests(companyId, filterUserId);
