@@ -1,4 +1,5 @@
 const prisma = require("../config/prisma");
+const bcrypt = require("bcrypt");
 
 // Hardcoded static Owner credentials
 const OWNER_EMAIL = "owner@gmail.com";
@@ -22,8 +23,8 @@ class AuthService {
         });
 
         if (superAdmin) {
-            // Using plain text check as currently implemented in company module
-            if (superAdmin.password === password) {
+            const isMatch = await bcrypt.compare(password, superAdmin.password);
+            if (isMatch) {
                 // Update last login
                 await prisma.superAdmin.update({
                     where: { superAdminId: superAdmin.superAdminId },
@@ -40,7 +41,6 @@ class AuthService {
         }
 
         // 3. Check if it's a regular User
-        const bcrypt = require("bcrypt");
         const regularUser = await prisma.user.findUnique({
             where: { officialEmail: email },
             include: {

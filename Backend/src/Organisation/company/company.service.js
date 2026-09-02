@@ -1,4 +1,5 @@
 const companyRepository = require("./company.repository");
+const bcrypt = require("bcrypt");
 
 class CompanyService {
     async createCompany(data) {
@@ -11,6 +12,9 @@ class CompanyService {
             const existingEmail = await companyRepository.getSuperAdminByEmail(data.superAdmin.email);
             if (existingEmail) {
                 throw new Error("Super admin email already exists");
+            }
+            if (data.superAdmin.password) {
+                data.superAdmin.password = await bcrypt.hash(data.superAdmin.password, 10);
             }
         }
 
