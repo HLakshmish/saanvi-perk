@@ -125,6 +125,7 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
     bloodGroup: "O+",
     nationality: "Indian",
     personalEmail: "",
+    phoneNumber: "",
     profilePhoto: "",
     aadhaarNumber: "",
     panNumber: "",
@@ -330,6 +331,7 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
         bloodGroup: pi?.bloodGroup || "O+",
         nationality: pi?.nationality || "Indian",
         personalEmail: pi?.personalEmail || "",
+        phoneNumber: u.phoneNumber || pa?.fatherMobile || "",
         profilePhoto: pi?.profilePhoto || "",
         aadhaarNumber: pi?.aadhaarNumber || "",
         panNumber: pi?.panNumber || "",
@@ -413,20 +415,86 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
     setSuccessMsg(null);
 
     // Validation helpers
-    const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    const validatePhone = (phone: string) => /^\d{10}$/.test(phone);
-    const validatePAN = (pan: string) => /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(pan.toUpperCase());
-    const validateAadhaar = (aadhaar: string) => /^\d{12}$/.test(aadhaar);
-    const validateIFSC = (ifsc: string) => /^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc.toUpperCase());
+    const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+    const validatePhone = (phone: string) => /^(\+?\d{1,3}[- ]?)?\d{10}$/.test(phone.trim());
+    const validatePAN = (pan: string) => /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(pan.trim().toUpperCase());
+    const validateAadhaar = (aadhaar: string) => /^\d{12}$/.test(aadhaar.trim());
+    const validateIFSC = (ifsc: string) => /^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc.trim().toUpperCase());
+    const validatePincode = (pin: string) => /^\d{6}$/.test(pin.trim());
+    const validateUAN = (uan: string) => /^\d{12}$/.test(uan.trim());
+    const validateESI = (esi: string) => /^\d{17}$/.test(esi.trim());
+    const validateName = (name: string) => /^[a-zA-Z\s\'\.\-]+$/.test(name.trim());
+
+    // Anti self-reporting check
+    if (formData.reportingToId && String(formData.reportingToId) === String(employeeId)) {
+      setErrorMsg("An employee cannot be assigned as their own reporting manager.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (formData.dateOfBirth) {
+      const dob = new Date(formData.dateOfBirth);
+      const now = new Date();
+      if (dob > now) {
+        setErrorMsg("Date of Birth cannot be in the future.");
+        setIsSubmitting(false);
+        return;
+      }
+      let age = now.getFullYear() - dob.getFullYear();
+      const m = now.getMonth() - dob.getMonth();
+      if (m < 0 || (m === 0 && now.getDate() < dob.getDate())) {
+        age--;
+      }
+      if (age < 18) {
+        setErrorMsg("Employee must be at least 18 years old.");
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
+    if (formData.joiningDate && formData.dateOfBirth) {
+      const joining = new Date(formData.joiningDate);
+      const dob = new Date(formData.dateOfBirth);
+      if (joining < dob) {
+        setErrorMsg("Joining Date cannot be earlier than Date of Birth.");
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
+    if (formData.probationEndDate && formData.joiningDate) {
+      const probation = new Date(formData.probationEndDate);
+      const joining = new Date(formData.joiningDate);
+      if (probation < joining) {
+        setErrorMsg("Probation End Date cannot be earlier than Joining Date.");
+        setIsSubmitting(false);
+        return;
+      }
+    }
 
     // Validation checks
-    if (formData.personalEmail && !validateEmail(formData.personalEmail)) {
-      setErrorMsg("Personal Email address format is invalid.");
+    if (formData.employeeCode && managers.some((emp) => String(emp.id) !== String(employeeId) && emp.employeeCode?.trim().toLowerCase() === formData.employeeCode.trim().toLowerCase())) {
+      setErrorMsg(`Employee Code "${formData.employeeCode}" is already assigned to another employee.`);
       setIsSubmitting(false);
       return;
     }
     if (formData.officialEmail && !validateEmail(formData.officialEmail)) {
       setErrorMsg("Official Email address format is invalid.");
+      setIsSubmitting(false);
+      return;
+    }
+    if (formData.officialEmail && managers.some((emp) => String(emp.id) !== String(employeeId) && emp.email?.trim().toLowerCase() === formData.officialEmail.trim().toLowerCase())) {
+      setErrorMsg(`Official Email "${formData.officialEmail}" is already in use by another user.`);
+      setIsSubmitting(false);
+      return;
+    }
+    if (formData.personalEmail && !validateEmail(formData.personalEmail)) {
+      setErrorMsg("Personal Email address format is invalid.");
+      setIsSubmitting(false);
+      return;
+    }
+    if (formData.phoneNumber && !validatePhone(formData.phoneNumber)) {
+      setErrorMsg("Employee mobile number format is invalid.");
       setIsSubmitting(false);
       return;
     }
@@ -460,6 +528,16 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
       setIsSubmitting(false);
       return;
     }
+    if (formData.uanNumber && !validateUAN(formData.uanNumber)) {
+      setErrorMsg("UAN Number must be exactly 12 digits.");
+      setIsSubmitting(false);
+      return;
+    }
+    if (formData.esiNumber && !validateESI(formData.esiNumber)) {
+      setErrorMsg("ESI Number must be exactly 17 digits.");
+      setIsSubmitting(false);
+      return;
+    }
 
     const cur = formData.currentAddress;
     if (!cur.addressLine1 || !cur.city || !cur.state || !cur.postalCode) {
@@ -467,10 +545,20 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
       setIsSubmitting(false);
       return;
     }
+    if (!validatePincode(cur.postalCode)) {
+      setErrorMsg("Current Address Pincode must be exactly 6 digits.");
+      setIsSubmitting(false);
+      return;
+    }
     if (!formData.isSameAddress) {
       const perm = formData.permanentAddress;
       if (!perm.addressLine1 || !perm.city || !perm.state || !perm.postalCode) {
         setErrorMsg("Permanent Address details are required unless same as current.");
+        setIsSubmitting(false);
+        return;
+      }
+      if (!validatePincode(perm.postalCode)) {
+        setErrorMsg("Permanent Address Pincode must be exactly 6 digits.");
         setIsSubmitting(false);
         return;
       }
@@ -487,7 +575,7 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
         departmentId: formData.departmentId ? Number(formData.departmentId) : null,
         designationId: formData.designationId ? Number(formData.designationId) : null,
         officialEmail: formData.officialEmail,
-        phoneNumber: formData.fatherMobile || null,
+        phoneNumber: formData.phoneNumber || formData.fatherMobile || null,
         employmentType: formData.employmentType,
         joiningDate: new Date(formData.joiningDate).toISOString(),
         probationEndDate: formData.probationEndDate ? new Date(formData.probationEndDate).toISOString() : null,
@@ -811,7 +899,7 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
 
                     <div className="flex flex-col gap-1.5 text-left sm:col-span-2">
                       <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-                        Assigned Roles <span className="text-rose-500">*</span>{" "}
+                        Assigned Roles <span className="text-red-500 font-bold ml-0.5">*</span>{" "}
                         <span className="text-[10px] text-slate-400 font-normal lowercase">(select one or more)</span>
                       </label>
                       <div className="flex flex-wrap gap-2 p-3 border border-slate-300 rounded-xl bg-slate-50/50 min-h-[48px] items-center">
@@ -1115,6 +1203,14 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
                             placeholder="name@email.com"
                             value={formData.personalEmail}
                             onChange={(e) => handleChange("personalEmail", e.target.value)}
+                          />
+
+                          <Input
+                            label="Mobile / Phone Number"
+                            type="tel"
+                            placeholder="e.g. 9876543210"
+                            value={formData.phoneNumber}
+                            onChange={(e) => handleChange("phoneNumber", e.target.value)}
                           />
                         </div>
                       </div>

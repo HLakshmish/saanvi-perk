@@ -9,6 +9,7 @@ import {
   getDepartments,
   getEmployees,
   createEmployee,
+  createPersonalInfo,
   getPersonalInfoByUserId,
   updatePersonalInfo,
   createParentInfo,
@@ -102,6 +103,7 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
     motherTongue: "",
     profilePhoto: "",
     personalEmail: "",
+    phoneNumber: "",
 
     // Step 1.2: Address
     currentAddress: {
@@ -250,10 +252,11 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
     }
   }, []);
 
-  // Save Draft on changes
+  // Save Draft on changes (omit sensitive password from plain-text localStorage)
   useEffect(() => {
     if (typeof window !== "undefined") {
-      localStorage.setItem(DRAFT_KEY, JSON.stringify(formData));
+      const { password, ...safeData } = formData;
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(safeData));
     }
   }, [formData]);
 
@@ -299,137 +302,290 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
   };
 
   // Field validations
-  const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const validatePhone = (phone: string) => /^\d{10}$/.test(phone);
-  const validatePAN = (pan: string) => /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(pan.toUpperCase());
-  const validateAadhaar = (aadhaar: string) => /^\d{12}$/.test(aadhaar);
-  const validateIFSC = (ifsc: string) => /^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc.toUpperCase());
+  const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+  const validatePhone = (phone: string) => /^(\+?\d{1,3}[- ]?)?\d{10}$/.test(phone.trim());
+  const validatePAN = (pan: string) => /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(pan.trim().toUpperCase());
+  const validateAadhaar = (aadhaar: string) => /^\d{12}$/.test(aadhaar.trim());
+  const validateIFSC = (ifsc: string) => /^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc.trim().toUpperCase());
+  const validateName = (name: string) => /^[a-zA-Z\s\'\.\-]+$/.test(name.trim());
+  const validatePincode = (pin: string) => /^\d{6}$/.test(pin.trim());
+  const validateUAN = (uan: string) => /^\d{12}$/.test(uan.trim());
+  const validateESI = (esi: string) => /^\d{17}$/.test(esi.trim());
 
-  const validateStep = (step: number): boolean => {
-    setErrorMsg(null);
+  const validateProfileSubTab = (): boolean => {
+    if (!formData.firstName.trim()) {
+      setErrorMsg("First Name is required.");
+      return false;
+    }
+    if (!validateName(formData.firstName)) {
+      setErrorMsg("First Name should only contain letters, spaces, hyphens or apostrophes.");
+      return false;
+    }
+    if (!formData.lastName.trim()) {
+      setErrorMsg("Last Name is required.");
+      return false;
+    }
+    if (!validateName(formData.lastName)) {
+      setErrorMsg("Last Name should only contain letters, spaces, hyphens or apostrophes.");
+      return false;
+    }
+    if (!formData.dateOfBirth) {
+      setErrorMsg("Date of Birth is required.");
+      return false;
+    }
+    const dob = new Date(formData.dateOfBirth);
+    const now = new Date();
+    if (dob > now) {
+      setErrorMsg("Date of Birth cannot be in the future.");
+      return false;
+    }
+    let age = now.getFullYear() - dob.getFullYear();
+    const m = now.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && now.getDate() < dob.getDate())) {
+      age--;
+    }
+    if (age < 18) {
+      setErrorMsg("Employee must be at least 18 years old.");
+      return false;
+    }
+    if (formData.personalEmail && !validateEmail(formData.personalEmail)) {
+      setErrorMsg("Personal Email address format is invalid.");
+      return false;
+    }
+    if (
+      formData.personalEmail &&
+      managers.some((emp) => emp.email?.trim().toLowerCase() === formData.personalEmail.trim().toLowerCase())
+    ) {
+      setErrorMsg(`Personal Email "${formData.personalEmail}" is already associated with an existing account.`);
+      return false;
+    }
+    if (formData.phoneNumber && !validatePhone(formData.phoneNumber)) {
+      setErrorMsg("Employee mobile number format is invalid.");
+      return false;
+    }
+    return true;
+  };
 
-    if (step === 1) {
-      if (activeSubTab === "profile") {
-        if (!formData.firstName) {
-          setErrorMsg("First Name is required.");
-          return false;
-        }
-        if (!formData.lastName) {
-          setErrorMsg("Last Name is required.");
-          return false;
-        }
-        if (!formData.dateOfBirth) {
-          setErrorMsg("Date of Birth is required.");
-          return false;
-        }
-        if (formData.personalEmail && !validateEmail(formData.personalEmail)) {
-          setErrorMsg("Personal Email address format is invalid.");
-          return false;
-        }
-      } else if (activeSubTab === "address") {
-        const cur = formData.currentAddress;
-        if (!cur.addressLine1 || !cur.city || !cur.state || !cur.postalCode) {
-          setErrorMsg("Current Address details (Line 1, City, State, and Pincode) are required.");
-          return false;
-        }
-        if (!formData.isSameAddress) {
-          const perm = formData.permanentAddress;
-          if (!perm.addressLine1 || !perm.city || !perm.state || !perm.postalCode) {
-            setErrorMsg("Permanent Address details are required unless same as current.");
-            return false;
-          }
-        }
-      } else if (activeSubTab === "family") {
-        if (formData.fatherMobile && !validatePhone(formData.fatherMobile)) {
-          setErrorMsg("Father's mobile number format is invalid.");
-          return false;
-        }
-        if (formData.motherMobile && !validatePhone(formData.motherMobile)) {
-          setErrorMsg("Mother's mobile number format is invalid.");
-          return false;
-        }
-        if (formData.guardianMobile && !validatePhone(formData.guardianMobile)) {
-          setErrorMsg("Guardian's mobile number format is invalid.");
-          return false;
-        }
-      } else if (activeSubTab === "statutory") {
-        if (formData.aadhaarNumber && !validateAadhaar(formData.aadhaarNumber)) {
-          setErrorMsg("Aadhaar Number must be exactly 12 digits.");
-          return false;
-        }
-        if (formData.panNumber && !validatePAN(formData.panNumber)) {
-          setErrorMsg("PAN Number format is invalid (Format: ABCDE1234F).");
-          return false;
-        }
-        if (!formData.bankName) {
-          setErrorMsg("Bank Name is required.");
-          return false;
-        }
-        if (!formData.bankAccountNo) {
-          setErrorMsg("Bank Account Number is required.");
-          return false;
-        }
-        if (!formData.ifscCode) {
-          setErrorMsg("IFSC Code is required.");
-          return false;
-        }
-        if (!validateIFSC(formData.ifscCode)) {
-          setErrorMsg("IFSC Code format is invalid (e.g. SBIN0001234).");
-          return false;
-        }
-        if (!formData.bankBranch) {
-          setErrorMsg("Bank Branch is required.");
-          return false;
-        }
-      }
-    } else if (step === 2) {
-      if (!formData.employeeCode) {
-        setErrorMsg("Employee Code is required.");
+  const validateAddressSubTab = (): boolean => {
+    const cur = formData.currentAddress;
+    if (!cur.addressLine1.trim() || !cur.city.trim() || !cur.state.trim() || !cur.postalCode.trim()) {
+      setErrorMsg("Current Address details (Line 1, City, State, and Pincode) are required.");
+      return false;
+    }
+    if (!validatePincode(cur.postalCode)) {
+      setErrorMsg("Current Address Pincode must be exactly 6 digits.");
+      return false;
+    }
+    if (!formData.isSameAddress) {
+      const perm = formData.permanentAddress;
+      if (!perm.addressLine1.trim() || !perm.city.trim() || !perm.state.trim() || !perm.postalCode.trim()) {
+        setErrorMsg("Permanent Address details are required unless same as current.");
         return false;
       }
-      if (!formData.officialEmail) {
-        setErrorMsg("Official Email is required.");
+      if (!validatePincode(perm.postalCode)) {
+        setErrorMsg("Permanent Address Pincode must be exactly 6 digits.");
         return false;
       }
-      if (!validateEmail(formData.officialEmail)) {
-        setErrorMsg("Official Email format is invalid.");
-        return false;
-      }
-      if (!formData.password || formData.password.length < 6) {
-        setErrorMsg("Login Password is required and must be at least 6 characters.");
-        return false;
-      }
-      if (!formData.roleIds || formData.roleIds.length === 0) {
-        if (!formData.roleId) {
-          setErrorMsg("At least one User Role assignment is required.");
-          return false;
-        }
-      }
+    }
+    return true;
+  };
 
-      if (!formData.joiningDate) {
-        setErrorMsg("Joining Date is required.");
+  const validateFamilySubTab = (): boolean => {
+    if (formData.fatherMobile && !validatePhone(formData.fatherMobile)) {
+      setErrorMsg("Father's mobile number format is invalid.");
+      return false;
+    }
+    if (formData.motherMobile && !validatePhone(formData.motherMobile)) {
+      setErrorMsg("Mother's mobile number format is invalid.");
+      return false;
+    }
+    if (formData.guardianMobile && !validatePhone(formData.guardianMobile)) {
+      setErrorMsg("Guardian's mobile number format is invalid.");
+      return false;
+    }
+    return true;
+  };
+
+  const validateStatutorySubTab = (): boolean => {
+    if (formData.aadhaarNumber) {
+      if (!validateAadhaar(formData.aadhaarNumber)) {
+        setErrorMsg("Aadhaar Number must be exactly 12 digits.");
         return false;
       }
-    } else if (step === 3) {
-      // Documents section can proceed without strict uploads unless added.
+      if (managers.some((emp) => emp.aadhaarNumber?.trim() === formData.aadhaarNumber.trim())) {
+        setErrorMsg(`The Aadhaar Number entered is already registered to another employee. Please enter a unique Aadhaar.`);
+        return false;
+      }
+    }
+    if (formData.panNumber) {
+      if (!validatePAN(formData.panNumber)) {
+        setErrorMsg("PAN Number format is invalid (Format: ABCDE1234F).");
+        return false;
+      }
+      if (managers.some((emp) => emp.panNumber?.trim().toUpperCase() === formData.panNumber.trim().toUpperCase())) {
+        setErrorMsg(`The PAN Number entered is already registered to another employee. Please enter a unique PAN.`);
+        return false;
+      }
+    }
+    if (!formData.bankName.trim()) {
+      setErrorMsg("Bank Name is required.");
+      return false;
+    }
+    if (!formData.bankAccountNo.trim()) {
+      setErrorMsg("Bank Account Number is required.");
+      return false;
+    }
+    if (!formData.ifscCode.trim()) {
+      setErrorMsg("IFSC Code is required.");
+      return false;
+    }
+    if (!validateIFSC(formData.ifscCode)) {
+      setErrorMsg("IFSC Code format is invalid (e.g. SBIN0001234).");
+      return false;
+    }
+    if (!formData.bankBranch.trim()) {
+      setErrorMsg("Bank Branch is required.");
+      return false;
+    }
+    if (formData.uanNumber && !validateUAN(formData.uanNumber)) {
+      setErrorMsg("UAN Number must be exactly 12 digits.");
+      return false;
+    }
+    if (formData.esiNumber && !validateESI(formData.esiNumber)) {
+      setErrorMsg("ESI Number must be exactly 17 digits.");
+      return false;
+    }
+    return true;
+  };
+
+  const validateStep1All = (): boolean => {
+    if (!validateProfileSubTab()) {
+      setActiveSubTab("profile");
+      return false;
+    }
+    if (!validateAddressSubTab()) {
+      setActiveSubTab("address");
+      return false;
+    }
+    if (!validateFamilySubTab()) {
+      setActiveSubTab("family");
+      return false;
+    }
+    if (!validateStatutorySubTab()) {
+      setActiveSubTab("statutory");
+      return false;
+    }
+    return true;
+  };
+
+  const validateStep2All = (): boolean => {
+    if (!formData.employeeCode.trim()) {
+      setErrorMsg("Employee Code is required.");
+      return false;
+    }
+    if (
+      managers.some(
+        (emp) => emp.employeeCode?.trim().toLowerCase() === formData.employeeCode.trim().toLowerCase()
+      )
+    ) {
+      setErrorMsg(
+        `Employee Code "${formData.employeeCode}" is already assigned to an existing employee. Please enter a unique Employee Code.`
+      );
+      return false;
+    }
+    if (!formData.officialEmail.trim()) {
+      setErrorMsg("Official Email is required.");
+      return false;
+    }
+    if (!validateEmail(formData.officialEmail)) {
+      setErrorMsg("Official Email format is invalid.");
+      return false;
+    }
+    if (
+      managers.some(
+        (emp) => emp.email?.trim().toLowerCase() === formData.officialEmail.trim().toLowerCase()
+      )
+    ) {
+      setErrorMsg(
+        `Official Email "${formData.officialEmail}" is already in use by another user. Please use a unique email.`
+      );
+      return false;
+    }
+    if (!formData.password || formData.password.length < 6) {
+      setErrorMsg("Login Password is required and must be at least 6 characters.");
+      return false;
+    }
+    if (!formData.roleIds || formData.roleIds.length === 0) {
+      if (!formData.roleId) {
+        setErrorMsg("At least one User Role assignment is required.");
+        return false;
+      }
+    }
+
+    if (!formData.joiningDate) {
+      setErrorMsg("Joining Date is required.");
+      return false;
+    }
+
+    if (formData.joiningDate && formData.dateOfBirth) {
+      const joining = new Date(formData.joiningDate);
+      const dob = new Date(formData.dateOfBirth);
+      if (joining < dob) {
+        setErrorMsg("Joining Date cannot be earlier than Date of Birth.");
+        return false;
+      }
+    }
+
+    if (formData.probationEndDate && formData.joiningDate) {
+      const probation = new Date(formData.probationEndDate);
+      const joining = new Date(formData.joiningDate);
+      if (probation < joining) {
+        setErrorMsg("Probation End Date cannot be earlier than Joining Date.");
+        return false;
+      }
     }
 
     return true;
   };
 
-  const nextStep = () => {
-    if (!validateStep(currentStep)) return;
+  const handleSubTabClick = (targetTab: "profile" | "address" | "family" | "statutory") => {
+    setErrorMsg(null);
+    if (activeSubTab === "profile" && !validateProfileSubTab()) return;
+    if (activeSubTab === "address" && !validateAddressSubTab()) return;
+    if (activeSubTab === "family" && !validateFamilySubTab()) return;
+    if (activeSubTab === "statutory" && !validateStatutorySubTab()) return;
+    setActiveSubTab(targetTab);
+  };
 
+  const goToStep = (targetStep: number) => {
+    if (targetStep === currentStep) return;
+    setErrorMsg(null);
+    if (targetStep > currentStep) {
+      if (currentStep === 1 && !validateStep1All()) return;
+      if (currentStep === 2 && !validateStep2All()) return;
+    }
+    setCurrentStep(targetStep);
+  };
+
+  const nextStep = () => {
+    setErrorMsg(null);
     if (currentStep === 1) {
       if (activeSubTab === "profile") {
+        if (!validateProfileSubTab()) return;
         setActiveSubTab("address");
       } else if (activeSubTab === "address") {
+        if (!validateAddressSubTab()) return;
         setActiveSubTab("family");
       } else if (activeSubTab === "family") {
+        if (!validateFamilySubTab()) return;
         setActiveSubTab("statutory");
       } else {
+        if (!validateStep1All()) return;
         setCurrentStep(2);
       }
+    } else if (currentStep === 2) {
+      if (!validateStep2All()) return;
+      setCurrentStep(3);
     } else {
       setCurrentStep((prev) => Math.min(prev + 1, 4));
     }
@@ -498,7 +654,8 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
       return;
     }
 
-    if (!validateStep(currentStep)) return;
+    if (!validateStep1All()) return;
+    if (!validateStep2All()) return;
 
     setIsLoading(true);
     setErrorMsg(null);
@@ -519,7 +676,7 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
         firstName: formData.firstName,
         lastName: formData.lastName,
         officialEmail: formData.officialEmail,
-        phoneNumber: formData.fatherMobile || null,
+        phoneNumber: formData.phoneNumber || formData.fatherMobile || null,
         password: formData.password,
         employmentType: formData.employmentType || "FULL_TIME",
         joiningDate: new Date(formData.joiningDate).toISOString(),
@@ -540,8 +697,6 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
       const targetUserId = userRes.data.userId;
 
       // 2. Update Personal Information Record
-      // The createUser endpoint already creates a personalInformation record
-      // with dateOfBirth, so we fetch it and update with remaining fields.
       const personalData = {
         userId: targetUserId,
         dateOfBirth: formData.dateOfBirth ? new Date(formData.dateOfBirth).toISOString() : null,
@@ -559,17 +714,18 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
         officialEmail: formData.officialEmail || null,
       };
 
-      // Fetch the auto-created personal info record to get its ID, then update it
       const existingPI = await getPersonalInfoByUserId(targetUserId);
-      // API returns data as an array, pick first record
       const piRecord = Array.isArray(existingPI.data) ? existingPI.data[0] : existingPI.data;
       if (existingPI.success && piRecord?.personalInfoId) {
         const personalRes = await updatePersonalInfo(piRecord.personalInfoId, personalData);
         if (!personalRes.success) {
-          console.warn("Personal info update warning:", personalRes.error);
+          throw new Error(personalRes.error || "Failed to save personal details.");
         }
       } else {
-        console.warn("No existing personal info record found to update.");
+        const personalRes = await createPersonalInfo(personalData);
+        if (!personalRes.success) {
+          throw new Error(personalRes.error || "Failed to save personal details.");
+        }
       }
 
       // 3. Create Parent Info Record (if any parent field is provided)
@@ -821,7 +977,10 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
 
             return (
               <React.Fragment key={step.number}>
-                <div className="flex items-center gap-2 shrink-0">
+                <div
+                  onClick={() => goToStep(step.number)}
+                  className="flex items-center gap-2 shrink-0 cursor-pointer"
+                >
                   <div
                     className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                       isDone
@@ -850,6 +1009,23 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
           })}
         </div>
 
+        {/* Inline Error Alert Banner */}
+        {errorMsg && (
+          <div className="mb-6 p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-bold flex items-center justify-between animate-in fade-in duration-200 shadow-2xs">
+            <div className="flex items-center gap-2.5">
+              <AlertCircle className="w-5 h-5 text-rose-500 shrink-0" />
+              <span>{errorMsg}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setErrorMsg(null)}
+              className="text-xs font-extrabold text-rose-600 hover:text-rose-800 ml-4 cursor-pointer underline"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
         {/* Form Container */}
         <form onSubmit={handleSubmit} className="space-y-6">
 
@@ -867,7 +1043,7 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
                   <button
                     key={tab.id}
                     type="button"
-                    onClick={() => setActiveSubTab(tab.id as any)}
+                    onClick={() => handleSubTabClick(tab.id as any)}
                     className={`px-4 py-2 text-xs font-bold border-b-2 transition-all transition-colors duration-150 cursor-pointer ${
                       activeSubTab === tab.id
                         ? "border-brand-primary text-brand-primary font-extrabold"
@@ -921,7 +1097,9 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
                   {/* Profile Fields */}
                   <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Title *</label>
+                      <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                        Title <span className="text-red-500 font-bold ml-0.5">*</span>
+                      </label>
                       <select
                         className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none"
                         value={formData.title}
@@ -952,7 +1130,9 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
                     />
 
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Gender *</label>
+                      <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                        Gender <span className="text-red-500 font-bold ml-0.5">*</span>
+                      </label>
                       <select
                         className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none"
                         value={formData.gender}
@@ -1003,6 +1183,14 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
                         <option value="O-">O-</option>
                       </select>
                     </div>
+
+                    <Input
+                      label="Mobile / Phone Number"
+                      type="tel"
+                      placeholder="e.g. 9876543210"
+                      value={formData.phoneNumber}
+                      onChange={(e) => handleChange("phoneNumber", e.target.value)}
+                    />
 
                     <Input
                       label="Personal Email"
@@ -1262,35 +1450,41 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
                       />
 
                       <Input
-                        label="Bank Name"
+                        label="Bank Name *"
                         placeholder="e.g. State Bank of India"
                         value={formData.bankName}
                         onChange={(e) => handleChange("bankName", e.target.value)}
+                        required
                       />
 
                       <Input
-                        label="Bank Account No"
+                        label="Bank Account No *"
                         placeholder="Account identifier number"
                         value={formData.bankAccountNo}
                         onChange={(e) => handleChange("bankAccountNo", e.target.value)}
+                        required
                       />
 
                       <Input
-                        label="IFSC/BIN Code"
+                        label="IFSC/BIN Code *"
                         placeholder="11 alphanumeric code (e.g. SBIN0001234)"
                         value={formData.ifscCode}
                         onChange={(e) => handleChange("ifscCode", e.target.value.toUpperCase())}
+                        required
                       />
 
                       <Input
-                        label="Branch"
+                        label="Branch *"
                         placeholder="e.g. Saligrama Branch"
                         value={formData.bankBranch}
                         onChange={(e) => handleChange("bankBranch", e.target.value)}
+                        required
                       />
 
                       <div className="flex flex-col gap-1.5">
-                        <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Account Type *</label>
+                        <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                          Account Type <span className="text-red-500 font-bold ml-0.5">*</span>
+                        </label>
                         <select
                           className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none"
                           value={formData.accountType}
@@ -1587,7 +1781,7 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5 text-left w-full relative">
                   <label className="text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
-                    Login Password *
+                    Login Password <span className="text-red-500 font-bold ml-0.5">*</span>
                   </label>
                   <div className="relative w-full">
                     <input
@@ -1603,7 +1797,7 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
 
                 <div className="flex flex-col gap-1.5 text-left sm:col-span-2">
                   <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-                    Assigned Roles <span className="text-rose-500">*</span>{" "}
+                    Assigned Roles <span className="text-red-500 font-bold ml-0.5">*</span>{" "}
                     <span className="text-[10px] text-slate-400 font-normal lowercase">(select one or more)</span>
                   </label>
                   <div className="flex flex-wrap gap-2 p-3 border border-slate-300 rounded-xl bg-slate-50/50 min-h-[48px] items-center">

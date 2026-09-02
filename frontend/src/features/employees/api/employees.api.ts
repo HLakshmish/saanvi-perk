@@ -14,12 +14,13 @@ const pendingRequests = new Map<string, Promise<Response>>();
 export function formatBackendError(errorMsg: string): string {
   if (!errorMsg) return "An unexpected error occurred.";
   const lowerMsg = errorMsg.toLowerCase();
-  if (lowerMsg.includes("unique constraint failed")) {
-    if (lowerMsg.includes("pan_number") || lowerMsg.includes("pannumber")) {
-      return "The PAN Number entered is already registered to another employee. Please enter a unique PAN.";
-    }
-    if (lowerMsg.includes("aadhaar_number") || lowerMsg.includes("aadhaarnumber")) {
-      return "The Aadhaar Number entered is already registered to another employee. Please enter a unique Aadhaar.";
+  if (
+    lowerMsg.includes("unique constraint failed") ||
+    lowerMsg.includes("already exists") ||
+    lowerMsg.includes("duplicate entry")
+  ) {
+    if (lowerMsg.includes("employee_code") || lowerMsg.includes("employeecode")) {
+      return "The Employee Code entered is already registered to another employee. Please enter a unique Employee Code.";
     }
     if (lowerMsg.includes("official_email") || lowerMsg.includes("officialemail")) {
       return "The Official Email entered is already in use by another user. Please use a unique email.";
@@ -27,7 +28,28 @@ export function formatBackendError(errorMsg: string): string {
     if (lowerMsg.includes("personal_email") || lowerMsg.includes("personalemail")) {
       return "The Personal Email entered is already registered. Please use a unique email.";
     }
-    return "A record with these details already exists. Please check unique fields (PAN, Aadhaar, Email, etc.).";
+    if (lowerMsg.includes("pan_number") || lowerMsg.includes("pannumber")) {
+      return "The PAN Number entered is already registered to another employee. Please enter a unique PAN.";
+    }
+    if (lowerMsg.includes("aadhaar_number") || lowerMsg.includes("aadhaarnumber")) {
+      return "The Aadhaar Number entered is already registered to another employee. Please enter a unique Aadhaar.";
+    }
+    if (lowerMsg.includes("passport_number") || lowerMsg.includes("passportnumber")) {
+      return "The Passport Number entered is already registered. Please enter a unique Passport number.";
+    }
+    if (lowerMsg.includes("uan_number") || lowerMsg.includes("uannumber")) {
+      return "The UAN Number entered is already registered to another employee. Please enter a unique UAN.";
+    }
+    if (lowerMsg.includes("pf_number") || lowerMsg.includes("pfnumber")) {
+      return "The PF Number entered is already registered to another employee. Please enter a unique PF number.";
+    }
+    if (lowerMsg.includes("esi_number") || lowerMsg.includes("esinumber")) {
+      return "The ESI Number entered is already registered to another employee. Please enter a unique ESI number.";
+    }
+    if (lowerMsg.includes("account_number") || lowerMsg.includes("accountnumber")) {
+      return "The Bank Account Number entered is already registered. Please enter a unique account number.";
+    }
+    return "A record with these details already exists. Please check unique fields (Employee Code, Email, PAN, Aadhaar, etc.).";
   }
   return errorMsg;
 }
@@ -153,12 +175,12 @@ export const getEmployees = async (): Promise<Employee[]> => {
 
     const result = await res.json();
     const personalResult = await personalRes.json();
-    const personalMap = new Map<number, string>();
+    const personalRecordMap = new Map<number, any>();
 
     if (personalRes.ok && personalResult.success && Array.isArray(personalResult.data)) {
       personalResult.data.forEach((pi: any) => {
-        if (pi.userId && pi.profilePhoto) {
-          personalMap.set(pi.userId, pi.profilePhoto);
+        if (pi.userId) {
+          personalRecordMap.set(pi.userId, pi);
         }
       });
     }
@@ -176,12 +198,16 @@ export const getEmployees = async (): Promise<Employee[]> => {
         const mgrCode = user.reportingToId ? userIdToCodeMap.get(user.reportingToId) : undefined;
         const matchingDesignation = designations.find((d) => d.designationId === user.designationId);
         const userRoleName = user.roles?.[0]?.roleName || user.userRoles?.[0]?.role?.roleName || user.role?.roleName || "";
-        const personalPhoto = personalMap.get(user.userId);
+        const pi = personalRecordMap.get(user.userId);
         return {
           id: String(user.userId),
           employeeCode: user.employeeCode,
           name: `${user.firstName} ${user.lastName || ""}`.trim(),
           email: user.officialEmail,
+          personalEmail: pi?.personalEmail || user.personalEmail || undefined,
+          aadhaarNumber: pi?.aadhaarNumber || undefined,
+          panNumber: pi?.panNumber || undefined,
+          passportNumber: pi?.passportNumber || undefined,
           location: user.location?.locationName || user.location?.city || companyLocation,
           department: user.department?.departmentName || "General",
           designation: matchingDesignation?.designationName || userRoleName || "Staff",
@@ -189,7 +215,7 @@ export const getEmployees = async (): Promise<Employee[]> => {
           reportsTo: mgrCode,
           reportingToId: user.reportingToId || undefined,
           roleName: userRoleName,
-          profilePic: user.profilePic || personalPhoto || undefined,
+          profilePic: user.profilePic || pi?.profilePhoto || undefined,
           designationId: user.designationId || undefined,
           status: user.status || "ACTIVE",
         };
@@ -470,6 +496,10 @@ export const uploadEmployeeDocument = async (
 ): Promise<{ success: boolean; data?: any; error?: string }> => {
   const token = getAuthToken();
   try {
+    if (file.size > 10 * 1024 * 1024) {
+      return { success: false, error: "File size exceeds 10MB limit. Please choose a smaller file." };
+    }
+
     const formData = new FormData();
     formData.append("userId", String(userId));
     formData.append("documentType", documentType);
@@ -887,11 +917,26 @@ export const downloadEmployeeDocument = async (id: number): Promise<void> => {
       },
     });
     if (!res.ok) throw new Error("Failed to download document");
+
+    let filename = `document_${id}`;
+    const disposition = res.headers.get("content-disposition");
+    if (disposition) {
+      const utf8Match = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+      if (utf8Match && utf8Match[1]) {
+        filename = decodeURIComponent(utf8Match[1]);
+      } else {
+        const match = disposition.match(/filename="?([^";]+)"?/i);
+        if (match && match[1]) {
+          filename = match[1];
+        }
+      }
+    }
+
     const blob = await res.blob();
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `document_${id}.bin`;
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     a.remove();
