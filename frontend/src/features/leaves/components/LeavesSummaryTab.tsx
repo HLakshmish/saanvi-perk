@@ -438,18 +438,18 @@ export const LeavesSummaryTab: React.FC<LeavesSummaryTabProps> = ({
                     <TableCell className="text-slate-600 truncate max-w-[220px]" title={req.remarks}>{req.remarks}</TableCell>
                     <TableCell>
                       {isAdminOrSuperAdmin && req.status === "Pending" && onStatusUpdate ? (
-                        <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-                          <button
-                            onClick={() => onStatusUpdate(req.id, "APPROVED")}
-                            className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold shadow-2xs cursor-pointer transition-colors"
-                          >
-                            Approve
-                          </button>
+                        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                           <button
                             onClick={() => onStatusUpdate(req.id, "REJECTED")}
-                            className="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-[10px] font-bold shadow-2xs cursor-pointer transition-colors"
+                            className="px-3.5 py-1.5 text-xs font-bold text-rose-700 bg-rose-50 border border-rose-200/80 hover:bg-rose-100 rounded-xl transition-colors cursor-pointer"
                           >
                             Reject
+                          </button>
+                          <button
+                            onClick={() => onStatusUpdate(req.id, "APPROVED")}
+                            className="px-4 py-1.5 text-xs font-extrabold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-xs transition-colors cursor-pointer"
+                          >
+                            Approve
                           </button>
                         </div>
                       ) : (

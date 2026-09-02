@@ -3,16 +3,20 @@
 import React from "react";
 import { Link2, ClipboardList, CalendarDays, UserPlus, Receipt, FileText, ChevronRight, Zap } from "lucide-react";
 
+interface QuickLinksWidgetProps {
+  onTabChange?: (tab: string) => void;
+}
+
 const quickLinks = [
-  { label: "Apply Leave", icon: CalendarDays },
-  { label: "Submit Expense", icon: Receipt },
-  { label: "My Requests", icon: ClipboardList },
-  { label: "View Payslip", icon: FileText },
-  { label: "Add Employee", icon: UserPlus },
-  { label: "Directory", icon: Link2 },
+  { label: "Apply Leave", icon: CalendarDays, tab: "holidays-leaves" },
+  { label: "Submit Expense", icon: Receipt, tab: "expenses" },
+  { label: "My Requests", icon: ClipboardList, tab: "requests" },
+  { label: "View Payslip", icon: FileText, tab: "expenses" },
+  { label: "Add Employee", icon: UserPlus, tab: "employees" },
+  { label: "Directory", icon: Link2, tab: "employees" },
 ];
 
-export const QuickLinksWidget: React.FC = () => {
+export const QuickLinksWidget: React.FC<QuickLinksWidgetProps> = ({ onTabChange }) => {
   return (
     <div className="bg-white p-5 rounded-3xl border border-slate-200/70 shadow-2xs hover:shadow-xs transition-all duration-300 flex flex-col justify-between">
       <div>
@@ -34,7 +38,8 @@ export const QuickLinksWidget: React.FC = () => {
             return (
               <button
                 key={link.label}
-                className="flex items-center gap-2.5 p-3 rounded-2xl bg-slate-50/80 border border-slate-200/60 hover:border-brand-primary/40 hover:bg-brand-primary-light/40 transition-all duration-200 group text-left cursor-pointer shadow-2xs hover:shadow-xs"
+                onClick={() => onTabChange?.(link.tab)}
+                className="flex items-center gap-2.5 p-3 rounded-2xl bg-slate-50/80 border border-slate-200/60 hover:border-brand-primary/40 hover:bg-brand-primary-light/40 transition-all duration-200 group text-left cursor-pointer shadow-2xs hover:shadow-xs active:scale-[0.98]"
               >
                 <div className="w-8 h-8 rounded-xl bg-brand-primary/10 text-brand-primary group-hover:bg-brand-primary group-hover:text-brand-btn-text flex items-center justify-center shrink-0 transition-colors shadow-2xs">
                   <Icon className="w-4 h-4" />

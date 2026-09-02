@@ -45,24 +45,36 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [profileEditOpen, setProfileEditOpen] = useState(false);
 
-  const [resolvedCompanyName, setResolvedCompanyName] = useState<string>(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("company_name") || companyName || "";
+  const [resolvedCompanyName, setResolvedCompanyName] = useState<string>(
+    companyName || ""
+  );
+  const [resolvedCompanyLogo, setResolvedCompanyLogo] = useState<
+    string | undefined
+  >(undefined);
+  const [resolvedUserName, setResolvedUserName] = useState<string>(
+    userName || ""
+  );
+
+  useEffect(() => {
+    const storedUserName = localStorage.getItem("user_name");
+    if (storedUserName) {
+      setResolvedUserName(storedUserName);
     }
-    return companyName || "";
-  });
-  const [resolvedCompanyLogo, setResolvedCompanyLogo] = useState<string | undefined>(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("company_logo") || undefined;
+  }, [userName]);
+
+  useEffect(() => {
+    const storedCompanyName = localStorage.getItem("company_name");
+    if (storedCompanyName) {
+      setResolvedCompanyName(storedCompanyName);
     }
-    return undefined;
-  });
-  const [resolvedUserName, setResolvedUserName] = useState<string>(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("user_name") || userName || "";
+  }, [companyName]);
+
+  useEffect(() => {
+    const storedCompanyLogo = localStorage.getItem("company_logo");
+    if (storedCompanyLogo) {
+      setResolvedCompanyLogo(storedCompanyLogo);
     }
-    return userName || "";
-  });
+  }, []);
 
   // Expand sidebar on desktop screens, keep hidden on mobile
   useEffect(() => {
@@ -311,7 +323,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
               {/* Row 3: Quick Actions */}
               <div className="grid grid-cols-1 gap-5">
-                <QuickLinksWidget />
+                <QuickLinksWidget onTabChange={setActiveTab} />
               </div>
             </div>
           </>

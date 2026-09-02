@@ -89,43 +89,10 @@ export async function createCompany(
         error: result.message || "Failed to create company. Please check input details.",
       };
     }
-  } catch (error) {
-    console.warn("Backend API error during company creation, using mock fallback:", error);
-
-    const mockCompany: Company = {
-      companyId: Math.floor(Math.random() * 1000) + 1,
-      companyName: data.companyName,
-      companyCode: data.companyCode,
-      companyEmail: data.companyEmail,
-      companyPhone: data.companyPhone,
-      website: data.website,
-      gstNumber: data.gstNumber,
-      panNumber: data.panNumber,
-      industryType: data.industryType,
-      city: data.city,
-      state: data.state,
-      workingHoursPerDay: data.workingHoursPerDay,
-      workingDaysPerWeek: data.workingDaysPerWeek,
-      officeStartTime: data.officeStartTime,
-      officeEndTime: data.officeEndTime,
-      allowedRadius: data.allowedRadius,
-      status: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      superAdmin: {
-        superAdminId: 101,
-        email: data.superAdmin.email,
-        firstName: data.superAdmin.firstName,
-        lastName: data.superAdmin.lastName,
-      },
-    };
-
-    saveLocalCompany(mockCompany);
-
+  } catch (error: any) {
     return {
-      success: true,
-      message: "Company registered successfully!",
-      data: mockCompany,
+      success: false,
+      error: error?.message || "Failed to create company. Network or server error.",
     };
   }
 }
