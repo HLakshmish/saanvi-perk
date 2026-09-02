@@ -11,6 +11,7 @@ interface CreateAssetModalProps {
   onClose: () => void;
   onSuccess: () => void;
   assetToEdit?: AssetDetails | null;
+  existingAssets?: AssetDetails[];
 }
 
 export const CreateAssetModal: React.FC<CreateAssetModalProps> = ({
@@ -18,6 +19,7 @@ export const CreateAssetModal: React.FC<CreateAssetModalProps> = ({
   onClose,
   onSuccess,
   assetToEdit,
+  existingAssets = [],
 }) => {
   const [formData, setFormData] = useState<CreateAssetInput>({
     assetCode: "",
@@ -84,6 +86,46 @@ export const CreateAssetModal: React.FC<CreateAssetModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // 1. Purchase price validation
+    if (formData.purchasePrice !== undefined && formData.purchasePrice !== null && Number(formData.purchasePrice) < 0) {
+      setErrorMsg("Purchase Price cannot be negative.");
+      return;
+    }
+
+    // 2. Warranty Date sequence validation
+    if (formData.purchaseDate && formData.warrantyStartDate) {
+      if (new Date(formData.warrantyStartDate) < new Date(formData.purchaseDate)) {
+        setErrorMsg("Warranty Start Date cannot be earlier than Purchase Date.");
+        return;
+      }
+    }
+    if (formData.warrantyStartDate && formData.warrantyEndDate) {
+      if (new Date(formData.warrantyEndDate) < new Date(formData.warrantyStartDate)) {
+        setErrorMsg("Warranty End Date cannot be earlier than Warranty Start Date.");
+        return;
+      }
+    }
+    if (formData.purchaseDate && formData.warrantyEndDate) {
+      if (new Date(formData.warrantyEndDate) < new Date(formData.purchaseDate)) {
+        setErrorMsg("Warranty End Date cannot be earlier than Purchase Date.");
+        return;
+      }
+    }
+
+    // 3. Serial Number uniqueness validation
+    if (formData.serialNumber && formData.serialNumber.trim() && existingAssets.length > 0) {
+      const serialClean = formData.serialNumber.trim().toLowerCase();
+      const duplicate = existingAssets.find((a) => {
+        if (assetToEdit && a.assetId === assetToEdit.assetId) return false;
+        return a.serialNumber && a.serialNumber.trim().toLowerCase() === serialClean;
+      });
+      if (duplicate) {
+        setErrorMsg(`Serial Number "${formData.serialNumber}" is already registered to another asset (${duplicate.assetName}). Please enter a unique Serial Number.`);
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     setErrorMsg(null);
 

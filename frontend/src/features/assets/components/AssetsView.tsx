@@ -760,6 +760,7 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ currentRole = "admin" })
         onClose={() => setIsCreateModalOpen(false)}
         onSuccess={fetchData}
         assetToEdit={assetToEdit}
+        existingAssets={assets}
       />
 
       <AssignAssetModal

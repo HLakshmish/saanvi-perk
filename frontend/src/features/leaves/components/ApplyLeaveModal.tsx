@@ -1,8 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Calendar as CalendarIcon, Loader2, Search, X, AlertCircle } from "lucide-react";
+import { Calendar as CalendarIcon, Loader2, Search, X, AlertCircle, CheckCircle2 } from "lucide-react";
 import { ApplyLeaveInput } from "../types/leaves.types";
 import { getCurrentUserId } from "../api/leaves.api";
+import { getHolidays, HolidayRecord } from "@/features/organization/api/calendar.api";
+import {
+  getAssignedWeekOffs,
+  getWeekOffs,
+} from "@/features/settings/api/weekOff.api";
+import {
+  WeekOffRecord,
+  WeekOffAssignRecord,
+} from "@/features/settings/types/weekOff.types";
 
 interface ApplyLeaveModalProps {
   isOpen: boolean;
@@ -48,43 +57,197 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
   const [toDate, setToDate] = useState(todayStr);
   const [reason, setReason] = useState("");
 
-
   // Employee Selection (for Apply on Behalf)
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<number>(0);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  // Holiday and Week-Off Metadata
+  const [holidays, setHolidays] = useState<HolidayRecord[]>([]);
+  const [assignedWeekOffs, setAssignedWeekOffs] = useState<WeekOffAssignRecord[]>([]);
+  const [globalWeekOffs, setGlobalWeekOffs] = useState<WeekOffRecord[]>([]);
+
   const mappedEmployees = employees.map((emp: any) => ({
     id: Number(emp.id),
     name: emp.name,
   }));
 
+  // Load Holiday & Week-Off Metadata
+  useEffect(() => {
+    if (!isOpen) return;
+    const fetchMetadata = async () => {
+      try {
+        const targetUserId =
+          isAdminOrSuperAdmin && Number(selectedEmployeeId) > 0
+            ? Number(selectedEmployeeId)
+            : (getCurrentUserId() || 0);
+
+        const [holRes, assignRes, weekOffRes] = await Promise.all([
+          getHolidays().catch(() => ({ success: false, data: [] as HolidayRecord[] })),
+          getAssignedWeekOffs(targetUserId || undefined).catch(() => ({ success: false, data: [] as WeekOffAssignRecord[] })),
+          getWeekOffs().catch(() => ({ success: false, data: [] as WeekOffRecord[] })),
+        ]);
+
+        if (holRes.success && Array.isArray(holRes.data)) {
+          setHolidays(holRes.data);
+        }
+        if (assignRes.success && Array.isArray(assignRes.data)) {
+          setAssignedWeekOffs(assignRes.data);
+        }
+        if (weekOffRes.success && Array.isArray(weekOffRes.data)) {
+          setGlobalWeekOffs(weekOffRes.data);
+        }
+      } catch (err) {
+        console.warn("Could not load leave calendar metadata:", err);
+      }
+    };
+    fetchMetadata();
+  }, [isOpen, selectedEmployeeId, isAdminOrSuperAdmin]);
+
+  // Helper: Check if date is a Holiday
+  const getDateHoliday = (dateStr: string): HolidayRecord | null => {
+    if (!dateStr || !holidays.length) return null;
+    const targetTime = new Date(dateStr + "T00:00:00").getTime();
+    if (isNaN(targetTime)) return null;
+
+    const match = holidays.find((h) => {
+      if (h.status === false) return false;
+      if (h.holidayType === "WEEK_OFF") return false;
+      const start = new Date(
+        h.startDate.includes("T") ? h.startDate.split("T")[0] + "T00:00:00" : h.startDate + "T00:00:00"
+      ).getTime();
+      const end = new Date(
+        h.endDate.includes("T") ? h.endDate.split("T")[0] + "T23:59:59" : h.endDate + "T23:59:59"
+      ).getTime();
+      return targetTime >= start && targetTime <= end;
+    });
+    return match || null;
+  };
+
+  // Helper: Check if date is a Week Off
+  const getDateWeekOff = (dateStr: string): { isWeekOff: boolean; label?: string } | null => {
+    if (!dateStr) return null;
+    const dateObj = new Date(dateStr + "T00:00:00");
+    if (isNaN(dateObj.getTime())) return null;
+
+    const targetTime = dateObj.getTime();
+
+    // 1. Check holiday record with holidayType === "WEEK_OFF"
+    const weekOffHoliday = holidays.find((h) => {
+      if (h.status === false || h.holidayType !== "WEEK_OFF") return false;
+      const start = new Date(
+        h.startDate.includes("T") ? h.startDate.split("T")[0] + "T00:00:00" : h.startDate + "T00:00:00"
+      ).getTime();
+      const end = new Date(
+        h.endDate.includes("T") ? h.endDate.split("T")[0] + "T23:59:59" : h.endDate + "T23:59:59"
+      ).getTime();
+      return targetTime >= start && targetTime <= end;
+    });
+    if (weekOffHoliday) {
+      return { isWeekOff: true, label: weekOffHoliday.holidayName || "Weekly Off" };
+    }
+
+    // 2. Check assigned or global week-off rules
+    const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const dayName = daysOfWeek[dateObj.getDay()];
+
+    let activeRules: Array<{ frequency: string; dayOfWeek: string; duration: string }> = [];
+
+    if (assignedWeekOffs.length > 0 && assignedWeekOffs[0].weekOff?.rules) {
+      activeRules = assignedWeekOffs[0].weekOff.rules;
+    } else if (globalWeekOffs.length > 0 && globalWeekOffs[0].rules) {
+      activeRules = globalWeekOffs[0].rules;
+    }
+
+    if (activeRules.length > 0) {
+      const match = activeRules.find((rule) => {
+        if (rule.dayOfWeek.toLowerCase() !== dayName.toLowerCase()) return false;
+        if (rule.frequency === "Every") return true;
+
+        const dom = dateObj.getDate();
+        const nth = Math.ceil(dom / 7);
+        if (rule.frequency === "First" && nth === 1) return true;
+        if (rule.frequency === "Second" && nth === 2) return true;
+        if (rule.frequency === "Third" && nth === 3) return true;
+        if (rule.frequency === "Fourth" && nth === 4) return true;
+        if (rule.frequency === "Fifth" && nth === 5) return true;
+
+        return false;
+      });
+
+      if (match) {
+        return { isWeekOff: true, label: `${dayName} Weekly Off` };
+      }
+    } else {
+      // Standard default week-off (Sunday & Saturday)
+      if (dateObj.getDay() === 0 || dateObj.getDay() === 6) {
+        return { isWeekOff: true, label: `${dayName} Weekly Off` };
+      }
+    }
+
+    return null;
+  };
+
   const getRequestedDaysCount = (): number => {
-    if (isHalfDay) return 0.5;
-    const start = new Date(fromDate);
-    const end = new Date(toDate);
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) return 0;
+    const start = new Date(fromDate + "T00:00:00");
+    const end = new Date(toDate + "T00:00:00");
+    if (isNaN(start.getTime()) || isNaN(end.getTime()) || start > end) return 0;
 
     let workingDays = 0;
     let current = new Date(start);
+
     while (current <= end) {
-      const dayOfWeek = current.getDay();
-      if (dayOfWeek !== 0 && dayOfWeek !== 6) { // 0 is Sunday, 6 is Saturday
-        workingDays++;
+      const currStr = current.toISOString().slice(0, 10);
+      const isHol = Boolean(getDateHoliday(currStr));
+      const isWo = Boolean(getDateWeekOff(currStr));
+
+      if (!isHol && !isWo) {
+        workingDays += isHalfDay ? 0.5 : 1;
       }
+
       current.setDate(current.getDate() + 1);
     }
-    return workingDays === 0 ? 1 : workingDays;
+
+    return workingDays;
+  };
+
+  const renderDateStatusBadge = (dateStr: string) => {
+    if (!dateStr) return null;
+    const hol = getDateHoliday(dateStr);
+    if (hol) {
+      return (
+        <div className="mt-1 flex items-center gap-1.5 text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg">
+          <span>🌴</span>
+          <span>Holiday: {hol.holidayName}</span>
+        </div>
+      );
+    }
+    const wo = getDateWeekOff(dateStr);
+    if (wo?.isWeekOff) {
+      return (
+        <div className="mt-1 flex items-center gap-1.5 text-[11px] font-bold text-purple-700 bg-purple-50 border border-purple-200 px-2.5 py-1 rounded-lg">
+          <span>🗓️</span>
+          <span>{wo.label || "Weekly Off"}</span>
+        </div>
+      );
+    }
+    return (
+      <div className="mt-1 flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">
+        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+        <span>Working Day</span>
+      </div>
+    );
   };
 
   const getSelectedLeaveBalance = () => {
     const selectedType = leaveTypes.find((t) => Number(t.leaveTypeId) === Number(leaveTypeId));
     if (!selectedType) return { balance: 0, categoryName: "" };
 
-    const targetUserId = isAdminOrSuperAdmin && Number(selectedEmployeeId) > 0
-      ? Number(selectedEmployeeId)
-      : (getCurrentUserId() || 0);
+    const targetUserId =
+      isAdminOrSuperAdmin && Number(selectedEmployeeId) > 0
+        ? Number(selectedEmployeeId)
+        : (getCurrentUserId() || 0);
 
     const balances = getUserBalances ? getUserBalances(targetUserId) : { sick: 12, comp: 0, earned: 0, lop: 0 };
     const name = selectedType.leaveName.toLowerCase();
@@ -141,12 +304,46 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
       return;
     }
 
-    if (new Date(fromDate) > new Date(toDate)) {
-      setErrorMsg("From date cannot be after to date.");
+    const start = new Date(fromDate + "T00:00:00");
+    const end = new Date(toDate + "T00:00:00");
+
+    if (isNaN(start.getTime())) {
+      setErrorMsg("Please select a valid From Date.");
+      return;
+    }
+
+    if (isNaN(end.getTime())) {
+      setErrorMsg("Please select a valid To Date.");
+      return;
+    }
+
+    if (start > end) {
+      setErrorMsg("To Date cannot be before From Date.");
+      return;
+    }
+
+    const fromHoliday = getDateHoliday(fromDate);
+    const fromWeekOff = getDateWeekOff(fromDate);
+    if (fromHoliday || fromWeekOff?.isWeekOff) {
+      const reasonStr = fromHoliday ? `Holiday (${fromHoliday.holidayName})` : (fromWeekOff?.label || "Weekly Off");
+      setErrorMsg(`Leave cannot be applied for holidays or weekly-off days. From Date is a ${reasonStr}.`);
+      return;
+    }
+
+    const toHoliday = getDateHoliday(toDate);
+    const toWeekOff = getDateWeekOff(toDate);
+    if (toHoliday || toWeekOff?.isWeekOff) {
+      const reasonStr = toHoliday ? `Holiday (${toHoliday.holidayName})` : (toWeekOff?.label || "Weekly Off");
+      setErrorMsg(`Leave cannot be applied for holidays or weekly-off days. To Date is a ${reasonStr}.`);
       return;
     }
 
     const requestedDays = getRequestedDaysCount();
+    if (requestedDays === 0) {
+      setErrorMsg("Leave cannot be applied for holidays or weekly-off days. The selected date range contains no working days.");
+      return;
+    }
+
     const { balance, categoryName } = getSelectedLeaveBalance();
 
     if (requestedDays > balance) {
@@ -312,6 +509,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
                     className="w-full text-xs font-bold text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 pl-3.5 pr-10 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary shadow-2xs transition-all disabled:bg-slate-50"
                   />
                 </div>
+                {renderDateStatusBadge(fromDate)}
               </div>
 
 
@@ -352,6 +550,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
                     className="w-full text-xs font-bold text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 pl-3.5 pr-10 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary shadow-2xs transition-all disabled:bg-slate-50"
                   />
                 </div>
+                {renderDateStatusBadge(toDate)}
               </div>
 
 

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { AssetAssignment, ReturnAssetInput } from "../types/assets.types";
-import { updateAssignment } from "../api/assets.api";
+import { updateAssignment, updateAsset } from "../api/assets.api";
 import { X, RotateCcw, Check, Loader2 } from "lucide-react";
 import { snackbar as toast } from "@/components/ui/snackbar";
 
@@ -48,6 +48,19 @@ export const ReturnAssetModal: React.FC<ReturnAssetModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (formData.returnedDate && assignmentToReturn.assignedDate) {
+      const assignDateStr = assignmentToReturn.assignedDate.includes("T")
+        ? assignmentToReturn.assignedDate.split("T")[0]
+        : assignmentToReturn.assignedDate;
+      if (new Date(formData.returnedDate) < new Date(assignDateStr)) {
+        const msg = `Return Date cannot be earlier than Assignment Date (${assignDateStr}).`;
+        setErrorMsg(msg);
+        toast.error(msg);
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     setErrorMsg(null);
 
@@ -55,6 +68,13 @@ export const ReturnAssetModal: React.FC<ReturnAssetModalProps> = ({
       const res = await updateAssignment(assignmentToReturn.assignmentId, formData);
 
       if (res.success) {
+        const cond = formData.conditionAtReturn || "";
+        if (cond.includes("Needs Repair") || cond.includes("Damaged")) {
+          await updateAsset(assignmentToReturn.assetId, { assetStatus: "UNDER_REPAIR" });
+        } else if (cond.includes("Defective") || cond.includes("Non-Functional")) {
+          await updateAsset(assignmentToReturn.assetId, { assetStatus: "DAMAGED" });
+        }
+
         toast.success("Asset return logged successfully!");
         onSuccess();
         onClose();
