@@ -154,12 +154,12 @@ export const ReportsView: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   // Date Range state & Picker Modal state (filtered on frontend in real-time)
-  const [selectedDateRange, setSelectedDateRange] = useState("01 Aug 2026 To 25 Aug 2026");
+  const [selectedDateRange, setSelectedDateRange] = useState("This Month");
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
   // Filters State
   const [selectedUserId, setSelectedUserId] = useState<number | "">("");
-  const [attendanceStatus, setAttendanceStatus] = useState<string>("PRESENT");
+  const [attendanceStatus, setAttendanceStatus] = useState<string>("All");
 
   // Leave Filters State
   const [leaveType, setLeaveType] = useState("All");
@@ -185,11 +185,18 @@ export const ReportsView: React.FC = () => {
     { id: "others", label: "Others" },
   ];
 
+  function getCompanyIdCookie(): number | undefined {
+    if (typeof document === "undefined") return undefined;
+    const match = document.cookie.match(/(?:^|; )company_id=([^;]*)/);
+    return match && !isNaN(Number(match[1])) ? Number(match[1]) : undefined;
+  }
+
   // Load employees and leave types metadata on mount
   useEffect(() => {
     const loadMetadata = async () => {
       try {
-        const usersReport = await getUsersReportView({ companyId: 2 });
+        const cid = getCompanyIdCookie();
+        const usersReport = await getUsersReportView(cid ? { companyId: cid } : {});
         if (usersReport.success && Array.isArray(usersReport.data)) {
           setEmployees(usersReport.data);
         } else {
@@ -222,63 +229,79 @@ export const ReportsView: React.FC = () => {
     setRawAttendanceData(null);
     setRawLeaveData(null);
 
+    const cid = getCompanyIdCookie();
+
     try {
       if (activeView === "attendance-summary") {
         const res = await getAttendanceReportView({
           userId: selectedUserId ? Number(selectedUserId) : undefined,
-          attendanceStatus: attendanceStatus || undefined,
-          attendanceDate: "2026-08-19",
+          attendanceStatus: attendanceStatus === "All" ? undefined : attendanceStatus,
         });
 
         if (res.success && res.data && res.data.length > 0) {
-          const mapped = res.data.map((item: any) => ({
-            code: item.user?.employeeCode || `ST00${item.userId || item.attendanceId}`,
-            name: item.user ? `${item.user.firstName} ${item.user.lastName}` : "Employee",
-            dept: "Development and Production - Development and Production",
-            loc: "Saligrama - Saligrama",
-            periodDays: "24.00",
-            daysPresent: item.attendanceStatus === "PRESENT" ? "1.00" : "4.00",
-            daysAbsent: item.attendanceStatus === "ABSENT" ? "1.00" : "20.00",
-            date: item.attendanceDate ? item.attendanceDate.split("T")[0] : "2026-08-20",
-          }));
+          const mapped = res.data.map((item: any) => {
+            const formatTime = (timeStr: string | null | undefined) => {
+              if (!timeStr) return "--:--";
+              try {
+                const d = new Date(timeStr);
+                if (isNaN(d.getTime())) return "--:--";
+                return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true });
+              } catch {
+                return "--:--";
+              }
+            };
+
+            return {
+              code: item.user?.employeeCode || `ST00${item.userId || item.attendanceId}`,
+              name: item.user ? `${item.user.firstName} ${item.user.lastName || ""}`.trim() : "Employee",
+              dept: item.user?.department?.departmentName || item.user?.departmentName || "General",
+              loc: item.user?.officeLocation?.locationName || item.user?.locationName || "Headquarters",
+              date: item.attendanceDate ? item.attendanceDate.split("T")[0] : "--",
+              checkIn: formatTime(item.checkInTime),
+              checkOut: formatTime(item.checkOutTime),
+              status: item.attendanceStatus || "PRESENT",
+              periodDays: "1.00",
+              daysPresent: item.attendanceStatus === "PRESENT" ? "1.00" : "0.00",
+              daysAbsent: item.attendanceStatus === "ABSENT" ? "1.00" : "0.00",
+            };
+          });
           setRawAttendanceData(mapped);
+          toast.success("Attendance summary loaded!");
         } else {
-          // Fallback to match screenshot dataset if API returns empty
-          setRawAttendanceData(defaultAttendanceSummaryData);
+          setRawAttendanceData([]);
+          toast.info("No attendance records found for the selected criteria.");
         }
-        toast.success("Attendance summary loaded. Type or change range to filter instantly!");
       } else if (activeView === "leave-requests") {
-        const companyId = 2; // Required for OWNER / standard config
         const res = await getLeaveRequestReportView({
-          companyId,
+          ...(cid ? { companyId: cid } : {}),
           userId: selectedUserId ? Number(selectedUserId) : undefined,
         });
 
         if (res.success && res.data && res.data.length > 0) {
           const mapped = res.data.map((item: any) => ({
             id: item.user?.employeeCode || `ST00${item.userId || item.leaveRequestId}`,
-            name: item.user ? `${item.user.firstName} ${item.user.lastName}` : "Employee",
-            type: item.leaveType?.leaveName || "Sick Leave / Casual Leave",
+            name: item.user ? `${item.user.firstName} ${item.user.lastName || ""}`.trim() : "Employee",
+            type: item.leaveType?.leaveName || "Leave",
             from: item.fromDate ? item.fromDate.split("T")[0] : "--",
             to: item.toDate ? item.toDate.split("T")[0] : "--",
             days: item.numberOfDays || 1,
             status: item.status || "PENDING",
-            date: item.fromDate ? item.fromDate.split("T")[0] : "2026-08-20", // for date filter
+            date: item.fromDate ? item.fromDate.split("T")[0] : "",
           }));
           setRawLeaveData(mapped);
           toast.success("Leave requests report loaded!");
         } else {
-          setRawLeaveData(mockLeaveData);
-          toast.success("Leave report loaded (fallback data)!");
+          setRawLeaveData([]);
+          toast.info("No leave requests found for the selected criteria.");
         }
       }
     } catch (err: any) {
       if (activeView === "attendance-summary") {
-        setRawAttendanceData(defaultAttendanceSummaryData);
+        setRawAttendanceData([]);
       } else {
-        setRawLeaveData(mockLeaveData);
+        setRawLeaveData([]);
       }
-      toast.success("Report data loaded. Filter instantly!");
+      toast.error("Failed to load report data.");
     } finally {
       setIsGenerating(false);
     }
@@ -286,18 +309,17 @@ export const ReportsView: React.FC = () => {
 
   const handleDownloadReport = async () => {
     setIsDownloading(true);
+    const cid = getCompanyIdCookie();
     try {
       if (activeView === "attendance-summary") {
         await downloadAttendanceReport({
           userId: selectedUserId ? Number(selectedUserId) : undefined,
-          attendanceStatus: attendanceStatus || undefined,
-          attendanceDate: "2026-08-19",
+          attendanceStatus: attendanceStatus === "All" ? undefined : attendanceStatus,
         });
         toast.success("Attendance report download completed successfully!");
       } else if (activeView === "leave-requests") {
-        const companyId = 2; // Required for OWNER / standard config
         await downloadLeaveRequestReport({
-          companyId,
+          ...(cid ? { companyId: cid } : {}),
           userId: selectedUserId ? Number(selectedUserId) : undefined,
         });
         toast.success("Leave request report download completed successfully!");
@@ -539,6 +561,18 @@ export const ReportsView: React.FC = () => {
                   </select>
                 </div>
 
+                {/* Attendance Status Selector */}
+                <select
+                  value={attendanceStatus}
+                  onChange={(e) => setAttendanceStatus(e.target.value)}
+                  className="px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-brand-primary cursor-pointer shadow-2xs pr-8"
+                >
+                  <option value="All">All Statuses</option>
+                  <option value="PRESENT">Present</option>
+                  <option value="ABSENT">Absent</option>
+                  <option value="HALF_DAY">Half Day</option>
+                </select>
+
                 {/* Search Box Reusable Component */}
                 <div className="w-64 sm:w-72">
                   <SearchBox
@@ -598,11 +632,12 @@ export const ReportsView: React.FC = () => {
                       <tr>
                         <TableHead className="border-r border-white/10">Code</TableHead>
                         <TableHead className="border-r border-white/10">Name</TableHead>
-                        <TableHead className="border-r border-white/10">Dept Code-Name</TableHead>
-                        <TableHead className="border-r border-white/10">Loc Code-Name</TableHead>
-                        <TableHead className="border-r border-white/10 text-right">Period Days</TableHead>
-                        <TableHead className="border-r border-white/10 text-right">Days present</TableHead>
-                        <TableHead className="text-right">Days Absent</TableHead>
+                        <TableHead className="border-r border-white/10">Dept</TableHead>
+                        <TableHead className="border-r border-white/10">Loc</TableHead>
+                        <TableHead className="border-r border-white/10">Date</TableHead>
+                        <TableHead className="border-r border-white/10">Check In</TableHead>
+                        <TableHead className="border-r border-white/10">Check Out</TableHead>
+                        <TableHead>Status</TableHead>
                       </tr>
                     </TableHeader>
                     <TableBody>
@@ -613,14 +648,27 @@ export const ReportsView: React.FC = () => {
                             <TableCell className="border-r border-slate-100 font-bold text-slate-800">{row.name}</TableCell>
                             <TableCell className="border-r border-slate-100 text-slate-600">{row.dept}</TableCell>
                             <TableCell className="border-r border-slate-100 text-slate-600">{row.loc}</TableCell>
-                            <TableCell className="border-r border-slate-100 text-right font-mono">{row.periodDays}</TableCell>
-                            <TableCell className="border-r border-slate-100 text-right font-mono font-bold text-slate-800">{row.daysPresent}</TableCell>
-                            <TableCell className="text-right font-mono font-bold text-slate-800">{row.daysAbsent}</TableCell>
+                            <TableCell className="border-r border-slate-100 font-mono text-slate-600 text-xs">{row.date}</TableCell>
+                            <TableCell className="border-r border-slate-100 font-mono text-slate-600 text-xs">{row.checkIn}</TableCell>
+                            <TableCell className="border-r border-slate-100 font-mono text-slate-600 text-xs">{row.checkOut}</TableCell>
+                            <TableCell>
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                                row.status === "PRESENT"
+                                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200/50"
+                                  : row.status === "ABSENT"
+                                    ? "bg-rose-50 text-rose-700 border border-rose-200/50"
+                                    : row.status === "HALF_DAY"
+                                      ? "bg-amber-50 text-amber-700 border border-amber-200/50"
+                                      : "bg-slate-100 text-slate-600 border border-slate-200"
+                              }`}>
+                                {row.status}
+                              </span>
+                            </TableCell>
                           </TableRow>
                         ))
                       ) : (
                         <TableRow>
-                          <TableCell colSpan={7} className="text-center py-6 text-slate-400 font-medium">
+                          <TableCell colSpan={8} className="text-center py-6 text-slate-400 font-medium">
                             No records found matching search query or date range filters.
                           </TableCell>
                         </TableRow>
@@ -828,6 +876,8 @@ export const ReportsView: React.FC = () => {
                   >
                     <option value="ACTIVE">Active</option>
                     <option value="INACTIVE">InActive</option>
+                    <option value="RESIGNED">Resigned</option>
+                    <option value="TERMINATED">Terminated</option>
                     <option value="ALL">All</option>
                   </select>
                 </div>
@@ -852,7 +902,8 @@ export const ReportsView: React.FC = () => {
                 <button
                   onClick={async () => {
                     try {
-                      await downloadUsersReport({ companyId: 2 });
+                      const cid = getCompanyIdCookie();
+                      await downloadUsersReport(cid ? { companyId: cid } : {});
                       toast.success("Users CSV report download completed successfully!");
                     } catch (e) {
                       toast.error("Failed to download CSV report");
@@ -879,6 +930,7 @@ export const ReportsView: React.FC = () => {
                     <TableHead>Name</TableHead>
                     <TableHead>System Role</TableHead>
                     <TableHead>Employee Code</TableHead>
+                    <TableHead>Status</TableHead>
                   </tr>
                 </TableHeader>
                 <TableBody>
@@ -893,11 +945,32 @@ export const ReportsView: React.FC = () => {
                           {user.roles?.[0]?.roleName || user.designation?.designationName || "Employee"}
                         </TableCell>
                         <TableCell className="font-mono text-[11px] text-slate-500">{user.employeeCode || "N/A"}</TableCell>
+                        <TableCell>
+                          {(() => {
+                            const st = (user.status || "ACTIVE").toUpperCase();
+                            const isAct = st === "ACTIVE";
+                            const isRes = st === "RESIGNED";
+                            const isTerm = st === "TERMINATED";
+                            return (
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${
+                                isAct
+                                  ? "bg-emerald-50 text-emerald-700 border-emerald-200/50"
+                                  : isRes
+                                    ? "bg-amber-50 text-amber-700 border-amber-200/50"
+                                    : isTerm
+                                      ? "bg-rose-50 text-rose-700 border-rose-200/50"
+                                      : "bg-slate-100 text-slate-600 border-slate-200"
+                              }`}>
+                                {st}
+                              </span>
+                            );
+                          })()}
+                        </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center py-6 text-slate-400 font-medium">
+                      <TableCell colSpan={5} className="text-center py-6 text-slate-400 font-medium">
                         No users found matching status or search criteria.
                       </TableCell>
                     </TableRow>

@@ -1,20 +1,5 @@
 import React, { useState } from "react";
-import {
-  Megaphone,
-  FileCheck,
-  Receipt,
-  Users,
-  ListPlus,
-  FileText,
-  Smartphone,
-  CalendarClock,
-  UserCheck,
-  Link,
-  ShieldCheck,
-  Trash2,
-  Lock,
-  CloudUpload,
-} from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { RoleItem } from "../types/settings.types";
 import { RolesList, INITIAL_ROLES } from "./RolesList";
 import { RoleDetail } from "./RoleDetail";
@@ -30,89 +15,11 @@ export const OthersTab: React.FC = () => {
 
   const otherCards = [
     {
-      id: "news",
-      title: "NEWS / Announcement",
-      description: "Share updates, NEWS and announcements across Organization.",
-      icon: Megaphone,
-    },
-    {
-      id: "approval-rules",
-      title: "Approval Rules",
-      description: "Define approval workflows for attendance, reimbursement, etc.",
-      icon: FileCheck,
-    },
-    {
-      id: "reimbursement-policy",
-      title: "Reimbursement Policy",
-      description: "Create reimbursement policies with amount limits, required fields.",
-      icon: Receipt,
-    },
-    {
-      id: "teams",
-      title: "Teams",
-      description: "Create and edit teams in your Organization.",
-      icon: Users,
-    },
-    {
-      id: "additional-fields",
-      title: "Additional Fields",
-      description: "Add other required fields related to Employees.",
-      icon: ListPlus,
-    },
-    {
-      id: "tax-profiles",
-      title: "Tax Profiles*",
-      description: "Set up your Organisation's profile for ESI, PF, TDS and PT.",
-      icon: FileText,
-    },
-    {
-      id: "app-registration",
-      title: "App Registration",
-      description: "Register mobile app on employees' mobiles or on attendance device and configure settings.",
-      icon: Smartphone,
-    },
-    {
-      id: "schedule-tasks",
-      title: "Schedule Tasks",
-      description: "Schedule your reports and Time card processes.",
-      icon: CalendarClock,
-    },
-    {
-      id: "face-enrolment",
-      title: "Face Enrolment",
-      description: "Upload images of Employees for facial recognition.",
-      icon: UserCheck,
-    },
-    {
-      id: "quick-links",
-      title: "Quick Links",
-      description: "Add links to pages that your employees can quickly access from their Dashboard.",
-      icon: Link,
-    },
-    {
       id: "user-roles",
       title: "User Roles",
       description: "Create custom roles and add permissions.",
       icon: ShieldCheck,
       highlight: true,
-    },
-    {
-      id: "delete-leave-accumulation",
-      title: "Delete Leave Accumulation",
-      description: "Delete Leave accumulation records in bulk.",
-      icon: Trash2,
-    },
-    {
-      id: "data-authorisation",
-      title: "Data Authorisation",
-      description: "Set Restrictions on users access to data.",
-      icon: Lock,
-    },
-    {
-      id: "hr-policy",
-      title: "HR Policy",
-      description: "Select document and upload HR Policies, manage their active / inactive states.",
-      icon: CloudUpload,
     },
   ];
 
