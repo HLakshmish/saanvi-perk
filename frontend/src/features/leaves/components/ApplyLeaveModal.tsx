@@ -47,7 +47,14 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
   employees = [],
   getUserBalances,
 }) => {
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const getTodayString = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+  const todayStr = getTodayString();
   const userRole = getUserRoleCookie();
   const isAdminOrSuperAdmin = userRole === "superadmin" || userRole === "admin";
 
@@ -322,6 +329,16 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
       return;
     }
 
+    if (fromDate < todayStr) {
+      setErrorMsg("Leave cannot be applied for past dates. Please select today or a future date.");
+      return;
+    }
+
+    if (toDate < todayStr) {
+      setErrorMsg("Leave cannot be applied for past dates. Please select today or a future date.");
+      return;
+    }
+
     const fromHoliday = getDateHoliday(fromDate);
     const fromWeekOff = getDateWeekOff(fromDate);
     if (fromHoliday || fromWeekOff?.isWeekOff) {
@@ -503,6 +520,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
                 <div className="relative">
                   <input
                     type="date"
+                    min={todayStr}
                     value={fromDate}
                     onChange={(e) => setFromDate(e.target.value)}
                     disabled={isSubmitting}
@@ -544,6 +562,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
                 <div className="relative">
                   <input
                     type="date"
+                    min={fromDate && fromDate > todayStr ? fromDate : todayStr}
                     value={toDate}
                     onChange={(e) => setToDate(e.target.value)}
                     disabled={isSubmitting}

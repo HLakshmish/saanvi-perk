@@ -33,6 +33,44 @@ const getGroupBadgeStyles = (group: string): string => {
   return "bg-slate-50 text-slate-700 border-slate-200/35";
 };
 
+// Utility to get design styles for employee status badges
+const getStatusBadgeStyles = (status?: string): { container: string; dot: string; label: string } => {
+  const s = (status || "ACTIVE").toUpperCase();
+  if (s === "ACTIVE") {
+    return {
+      container: "bg-emerald-50 text-emerald-700 border-emerald-200/50",
+      dot: "bg-emerald-500",
+      label: "Active",
+    };
+  }
+  if (s === "INACTIVE") {
+    return {
+      container: "bg-slate-100 text-slate-600 border-slate-200",
+      dot: "bg-slate-400",
+      label: "Inactive",
+    };
+  }
+  if (s === "RESIGNED") {
+    return {
+      container: "bg-amber-50 text-amber-700 border-amber-200/50",
+      dot: "bg-amber-500",
+      label: "Resigned",
+    };
+  }
+  if (s === "TERMINATED") {
+    return {
+      container: "bg-rose-50 text-rose-700 border-rose-200/50",
+      dot: "bg-rose-500",
+      label: "Terminated",
+    };
+  }
+  return {
+    container: "bg-slate-50 text-slate-700 border-slate-200/50",
+    dot: "bg-slate-400",
+    label: status || "Active",
+  };
+};
+
 export const EmployeeTable: React.FC<EmployeeTableProps> = ({
   employees,
   onRowClick,
@@ -127,10 +165,15 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
 
               {/* Status */}
               <TableCell>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border bg-emerald-50 text-emerald-700 border-emerald-200/50">
-                  <span className="w-1.2 h-1.2 rounded-full bg-emerald-500 mr-1.5 animate-pulse" />
-                  Active
-                </span>
+                {(() => {
+                  const badge = getStatusBadgeStyles(employee.status);
+                  return (
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${badge.container}`}>
+                      <span className={`w-1.2 h-1.2 rounded-full ${badge.dot} mr-1.5 animate-pulse`} />
+                      {badge.label}
+                    </span>
+                  );
+                })()}
               </TableCell>
 
               {/* Employee Group */}

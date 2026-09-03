@@ -1032,7 +1032,7 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <Input
                       label="Joining Date *"
                       type="date"
@@ -1071,20 +1071,6 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
                             )}
                           </>
                         )}
-                      </select>
-                    </div>
-
-                    <div className="flex flex-col gap-1.5 text-left">
-                      <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Status</label>
-                      <select
-                        className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none"
-                        value={formData.status}
-                        onChange={(e) => handleChange("status", e.target.value)}
-                      >
-                        <option value="ACTIVE">Active</option>
-                        <option value="INACTIVE">Inactive</option>
-                        <option value="RESIGNED">Resigned</option>
-                        <option value="TERMINATED">Terminated</option>
                       </select>
                     </div>
                   </div>
