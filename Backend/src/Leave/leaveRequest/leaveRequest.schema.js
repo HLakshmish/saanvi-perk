@@ -3,6 +3,7 @@ const leaveRequestResponseProperties = {
     companyId: { type: 'number' },
     userId: { type: 'number' },
     leaveTypeId: { type: 'number' },
+    isCompOff: { type: 'boolean' },
     fromDate: { type: 'string', format: 'date-time' },
     toDate: { type: 'string', format: 'date-time' },
     numberOfDays: { type: 'number' },
@@ -49,9 +50,10 @@ const createLeaveRequestSchema = {
     summary: 'Create a leave request',
     body: {
         type: 'object',
-        required: ['leaveTypeId', 'fromDate', 'toDate', 'numberOfDays', 'reason'],
+        required: ['fromDate', 'toDate', 'numberOfDays', 'reason'],
         properties: {
             leaveTypeId: { type: 'number' },
+            isCompOff: { type: 'boolean', default: false },
             fromDate: { type: 'string', format: 'date-time' },
             toDate: { type: 'string', format: 'date-time' },
             numberOfDays: { type: 'number' },
@@ -116,7 +118,8 @@ const getAllLeaveRequestsSchema = {
         type: 'object',
         properties: {
             companyId: { type: 'number', description: 'Required for OWNER' },
-            userId: { type: 'number', description: 'Filter by specific user' }
+            userId: { type: 'number', description: 'Filter by specific user' },
+            isCompOff: { type: 'boolean', description: 'Filter by Comp-Off leave requests' }
         }
     },
     response: {
@@ -216,7 +219,8 @@ const downloadLeaveReportSchema = {
         type: 'object',
         properties: {
             companyId: { type: 'number', description: 'Required for OWNER' },
-            userId: { type: 'number', description: 'Filter by specific user' }
+            userId: { type: 'number', description: 'Filter by specific user' },
+            isCompOff: { type: 'boolean', description: 'Filter by Comp-Off leave requests' }
         }
     }
 };
@@ -229,7 +233,8 @@ const viewLeaveReportSchema = {
         type: 'object',
         properties: {
             companyId: { type: 'number', description: 'Required for OWNER' },
-            userId: { type: 'number', description: 'Filter by specific user' }
+            userId: { type: 'number', description: 'Filter by specific user' },
+            isCompOff: { type: 'boolean', description: 'Filter by Comp-Off leave requests' }
         }
     },
     response: {

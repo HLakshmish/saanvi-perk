@@ -847,6 +847,7 @@ model LeaveRequest {
   companyId      Int @map("company_id")
   userId         Int @map("user_id")
   leaveTypeId    Int @map("leave_type_id")
+  isCompOff      Boolean @default(false) @map("is_comp_off")
 
   fromDate     DateTime @map("from_date")
   toDate       DateTime @map("to_date")
