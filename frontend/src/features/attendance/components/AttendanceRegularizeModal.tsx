@@ -13,8 +13,24 @@ import {
 import { snackbar as toast } from "@/components/ui/snackbar";
 import {
   createAttendanceRequest,
+  fetchAttendanceRequests,
   AttendanceRequestPayload,
 } from "../api/attendance.api";
+import { fetchLeaveRequests, getCurrentUserId } from "@/features/leaves/api/leaves.api";
+
+function toYMD(dateInput: string | Date | undefined | null): string {
+  if (!dateInput) return "";
+  if (typeof dateInput === "string") {
+    const parts = dateInput.split("T")[0];
+    if (/^\d{4}-\d{2}-\d{2}$/.test(parts)) return parts;
+  }
+  const d = new Date(dateInput);
+  if (isNaN(d.getTime())) return "";
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
 interface AttendanceRegularizeModalProps {
   isOpen: boolean;
@@ -197,6 +213,8 @@ export const AttendanceRegularizeModal: React.FC<AttendanceRegularizeModalProps>
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (isSubmitting) return;
+
     if (!remarks.trim()) {
       toast.error("Please enter a brief remark explaining the request.");
       return;
@@ -204,6 +222,60 @@ export const AttendanceRegularizeModal: React.FC<AttendanceRegularizeModalProps>
 
     setIsSubmitting(true);
     try {
+      const targetUserId = getCurrentUserId() || undefined;
+      const [attRes, leaveRes] = await Promise.all([
+        fetchAttendanceRequests(targetUserId).catch(() => ({ success: false, data: [] })),
+        fetchLeaveRequests(targetUserId).catch(() => ({ success: false, data: [] })),
+      ]);
+
+      const selectedYMD = toYMD(modalDate);
+
+      // 1. Check existing active attendance regularization requests for this date
+      let attRequestsList: any[] = [];
+      if (Array.isArray(attRes)) {
+        attRequestsList = attRes;
+      } else if (attRes && attRes.success && Array.isArray(attRes.data)) {
+        attRequestsList = attRes.data;
+      }
+
+      if (attRequestsList.length > 0) {
+        const activeAtt = attRequestsList.filter((a: any) => {
+          const st = (a.status || "").toUpperCase();
+          return st !== "REJECTED" && st !== "CANCELLED";
+        });
+
+        for (const att of activeAtt) {
+          const attDate = toYMD(att.shiftDate || att.attendanceDate || att.checkInTime);
+          if (attDate === selectedYMD) {
+            toast.error(
+              `An attendance regularization request already exists for ${selectedYMD}.`
+            );
+            setIsSubmitting(false);
+            return;
+          }
+        }
+      }
+
+      // 2. Check existing active leave requests covering this date
+      if (leaveRes && leaveRes.success && Array.isArray(leaveRes.data)) {
+        const activeLeaves = leaveRes.data.filter((l: any) => {
+          const st = (l.status || "").toUpperCase();
+          return st !== "REJECTED" && st !== "CANCELLED";
+        });
+
+        for (const leave of activeLeaves) {
+          const exFrom = toYMD(leave.fromDate);
+          const exTo = toYMD(leave.toDate);
+          if (exFrom && exTo && exFrom <= selectedYMD && selectedYMD <= exTo) {
+            toast.error(
+              `A leave request already exists for ${selectedYMD}. Cannot request attendance regularization on a leave date.`
+            );
+            setIsSubmitting(false);
+            return;
+          }
+        }
+      }
+
       const year = modalDate.getFullYear();
       const month = modalDate.getMonth();
       const day = modalDate.getDate();
