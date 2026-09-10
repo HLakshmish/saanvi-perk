@@ -275,14 +275,15 @@ export const LeavesView: React.FC = () => {
 
       const days = data.isHalfDay ? 0.5 : (workingDays === 0 ? 1 : workingDays);
 
-      const userId = getCurrentUserId();
+      const currentUserId = getCurrentUserId();
+      const targetUserId = data.userId ? Number(data.userId) : (currentUserId ? Number(currentUserId) : undefined);
       const payload = {
-        leaveTypeId: data.leaveTypeId,
+        leaveTypeId: Number(data.leaveTypeId),
         fromDate: new Date(data.fromDate).toISOString(),
         toDate: new Date(data.toDate).toISOString(),
-        numberOfDays: days,
+        numberOfDays: Number(days),
         reason: data.reason,
-        userId: data.userId || userId || undefined,
+        userId: targetUserId,
       };
 
       const res = await createLeaveRequest(payload);
