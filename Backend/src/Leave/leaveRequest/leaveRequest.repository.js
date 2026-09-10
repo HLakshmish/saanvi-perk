@@ -43,10 +43,11 @@ class LeaveRequestRepository {
         });
     }
 
-    async getAllLeaveRequests(companyId, userId) {
+    async getAllLeaveRequests(companyId, userId, isCompOff) {
         const whereClause = {};
         if (companyId) whereClause.companyId = companyId;
         if (userId) whereClause.userId = userId;
+        if (typeof isCompOff === 'boolean') whereClause.isCompOff = isCompOff;
 
         return await prisma.leaveRequest.findMany({
             where: whereClause,

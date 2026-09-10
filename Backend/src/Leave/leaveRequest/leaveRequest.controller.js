@@ -25,6 +25,7 @@ class LeaveRequestController {
 
             leaveRequestData.companyId = targetCompanyId;
             leaveRequestData.userId = targetUserId;
+            leaveRequestData.isCompOff = Boolean(request.body.isCompOff ?? false);
 
             // Ensure dates are correctly formatted
             leaveRequestData.fromDate = new Date(leaveRequestData.fromDate);
@@ -66,6 +67,7 @@ class LeaveRequestController {
         try {
             let companyId = request.user.companyId;
             let filterUserId = request.query.userId ? Number(request.query.userId) : undefined;
+            const isCompOff = request.query.isCompOff !== undefined ? (request.query.isCompOff === 'true' || request.query.isCompOff === true) : undefined;
 
             if (request.user.role === 'OWNER') {
                 companyId = request.query.companyId ? Number(request.query.companyId) : undefined;
@@ -76,7 +78,7 @@ class LeaveRequestController {
                 }
             }
 
-            const leaveRequests = await leaveRequestService.getAllLeaveRequests(companyId, filterUserId);
+            const leaveRequests = await leaveRequestService.getAllLeaveRequests(companyId, filterUserId, isCompOff);
             reply.code(200).send({ success: true, data: leaveRequests });
         } catch (error) {
             reply.code(500).send({ success: false, message: error.message });
@@ -148,6 +150,7 @@ class LeaveRequestController {
         try {
             let companyId = request.user.companyId;
             let filterUserId = request.query.userId ? Number(request.query.userId) : undefined;
+            const isCompOff = request.query.isCompOff !== undefined ? (request.query.isCompOff === 'true' || request.query.isCompOff === true) : undefined;
 
             if (request.user.role === 'OWNER') {
                 companyId = request.query.companyId ? Number(request.query.companyId) : undefined;
@@ -158,14 +161,15 @@ class LeaveRequestController {
                 }
             }
 
-            const leaveRequests = await leaveRequestService.getAllLeaveRequests(companyId, filterUserId);
+            const leaveRequests = await leaveRequestService.getAllLeaveRequests(companyId, filterUserId, isCompOff);
             
-            const headers = ['Leave Request ID', 'User ID', 'Leave Type ID', 'From Date', 'To Date', 'Number Of Days', 'Status', 'Reason', 'Remarks', 'Approved By'];
+            const headers = ['Leave Request ID', 'User ID', 'Leave Type ID', 'Is Comp Off', 'From Date', 'To Date', 'Number Of Days', 'Status', 'Reason', 'Remarks', 'Approved By'];
             
             const csvRows = leaveRequests.map(l => [
                 l.leaveRequestId,
                 l.userId,
                 l.leaveTypeId,
+                l.isCompOff ? 'Yes' : 'No',
                 l.fromDate ? new Date(l.fromDate).toISOString().split('T')[0] : '',
                 l.toDate ? new Date(l.toDate).toISOString().split('T')[0] : '',
                 l.numberOfDays || 0,
@@ -189,6 +193,7 @@ class LeaveRequestController {
         try {
             let companyId = request.user.companyId;
             let filterUserId = request.query.userId ? Number(request.query.userId) : undefined;
+            const isCompOff = request.query.isCompOff !== undefined ? (request.query.isCompOff === 'true' || request.query.isCompOff === true) : undefined;
 
             if (request.user.role === 'OWNER') {
                 companyId = request.query.companyId ? Number(request.query.companyId) : undefined;
@@ -199,7 +204,7 @@ class LeaveRequestController {
                 }
             }
 
-            const leaveRequests = await leaveRequestService.getAllLeaveRequests(companyId, filterUserId);
+            const leaveRequests = await leaveRequestService.getAllLeaveRequests(companyId, filterUserId, isCompOff);
             reply.code(200).send({ success: true, data: leaveRequests });
         } catch (error) {
             reply.code(500).send({ success: false, message: error.message });

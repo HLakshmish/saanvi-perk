@@ -1,7 +1,37 @@
 const leaveRequestRepository = require("./leaveRequest.repository");
+const compOffAssignService = require("../COMP-OFF/compOffAssign/compOffAssign.service");
+const prisma = require("../../config/prisma");
 
 class LeaveRequestService {
     async createLeaveRequest(data) {
+        if (data.isCompOff) {
+            // 1. Fetch user comp-off balance and validation
+            const compOffDetails = await compOffAssignService.getUserCompOffDetails(data.companyId, data.userId);
+            const availableCompOff = compOffDetails.remainingCompOffDays ?? compOffDetails.totalCompOffDays ?? 0;
+
+            if (availableCompOff < Number(data.numberOfDays)) {
+                throw new Error(`Insufficient comp-off days. Available: ${availableCompOff}, Requested: ${data.numberOfDays}`);
+            }
+
+            // 2. Map comp-off leaveTypeId if not explicitly provided
+            if (!data.leaveTypeId) {
+                const compOffAssign = await prisma.compOffAssign.findFirst({
+                    where: { userId: data.userId, companyId: data.companyId, status: true },
+                    include: { policy: true },
+                    orderBy: { id: 'desc' }
+                });
+                if (compOffAssign && compOffAssign.policy && compOffAssign.policy.leaveTypeId) {
+                    data.leaveTypeId = compOffAssign.policy.leaveTypeId;
+                } else {
+                    const fallbackLeaveType = await prisma.leaveType.findFirst({
+                        where: { companyId: data.companyId }
+                    });
+                    if (!fallbackLeaveType) throw new Error("Leave type not found");
+                    data.leaveTypeId = fallbackLeaveType.leaveTypeId;
+                }
+            }
+        }
+
         return await leaveRequestRepository.createLeaveRequest(data);
     }
 
@@ -45,8 +75,8 @@ class LeaveRequestService {
         return await this.mapSuperAdminApprovers(leaveRequest, leaveRequest.companyId);
     }
 
-    async getAllLeaveRequests(companyId, userId) {
-        const requests = await leaveRequestRepository.getAllLeaveRequests(companyId, userId);
+    async getAllLeaveRequests(companyId, userId, isCompOff) {
+        const requests = await leaveRequestRepository.getAllLeaveRequests(companyId, userId, isCompOff);
         return await this.mapSuperAdminApprovers(requests, companyId);
     }
 
