@@ -14,6 +14,7 @@ import {
   createLeaveAccumulation,
   updateLeaveAccumulation,
   deleteLeaveAccumulation,
+  fetchAdminCompOffOverview,
 } from "../api/settings.api";
 import { getEmployees } from "@/features/employees/api/employees.api";
 import { Employee } from "@/features/employees/types/employees.types";
@@ -124,17 +125,20 @@ export const LeaveAccumulationsDetailView: React.FC<LeaveAccumulationsDetailView
     if (msg) toast.error(msg);
   };
 
+  const [compOffSummary, setCompOffSummary] = useState<any[]>([]);
+
   const loadData = async (selectPolicyId?: number) => {
     setIsLoading(true);
     setErrorMsg("");
     try {
-      const [policiesRes, typesRes, accsRes, allocsRes, employeesList, requestsRes] = await Promise.all([
+      const [policiesRes, typesRes, accsRes, allocsRes, employeesList, requestsRes, compOffOverviewRes] = await Promise.all([
         fetchLeavePolicies(),
         fetchLeaveTypes(),
         fetchLeavePolicyAccumulations(),
         fetchLeaveAccumulations(),
         getEmployees(),
         fetchLeaveRequests().catch(() => ({ success: false, data: [] })),
+        fetchAdminCompOffOverview().catch(() => ({ success: false, data: null })),
       ]);
 
       if (policiesRes.success && policiesRes.data) {
@@ -167,6 +171,10 @@ export const LeaveAccumulationsDetailView: React.FC<LeaveAccumulationsDetailView
 
       if (requestsRes.success && Array.isArray(requestsRes.data)) {
         setLeaveRequests(requestsRes.data);
+      }
+
+      if (compOffOverviewRes && compOffOverviewRes.success && compOffOverviewRes.data && Array.isArray(compOffOverviewRes.data.employees)) {
+        setCompOffSummary(compOffOverviewRes.data.employees);
       }
     } catch (err: any) {
       setErrorMsg("Failed to load leave accumulations data.");
@@ -865,9 +873,56 @@ export const LeaveAccumulationsDetailView: React.FC<LeaveAccumulationsDetailView
 
                   {/* Employee Allocations Table */}
                   {(() => {
-                    const filteredAllocations = employeeAllocations.filter((alloc) => {
+                    const compOffType = leaveTypes.find((t) => t.leaveName.toLowerCase().includes("comp") || t.leaveCode.toLowerCase().includes("comp"));
+
+                    const virtualCompAllocations: any[] = [];
+                    if (compOffType && Array.isArray(compOffSummary)) {
+                      compOffSummary.forEach((compEmp: any) => {
+                        const earnedComp = Number(compEmp.summary?.validEarned || compEmp.summary?.totalEarned || 0);
+                        if (earnedComp > 0) {
+                          const existsInAllocations = employeeAllocations.some(
+                            (a: any) => Number(a.userId) === Number(compEmp.userId) && Number(a.leaveTypeId) === Number(compOffType.leaveTypeId)
+                          );
+
+                          if (!existsInAllocations) {
+                            const earnedDateStr = compEmp.summary?.latestEarnedDate;
+                            const earnedDate = earnedDateStr ? new Date(earnedDateStr) : new Date();
+                            const availDays = compEmp.assignedPolicy?.availabilityDays ? Number(compEmp.assignedPolicy.availabilityDays) : 30;
+                            const expiryDate = new Date(earnedDate);
+                            expiryDate.setDate(expiryDate.getDate() + availDays);
+
+                            virtualCompAllocations.push({
+                              leaveAccumulationId: `virtual-compoff-${compEmp.userId}`,
+                              userId: compEmp.userId,
+                              leavePolicyId: selectedPolicy?.leavePolicyId || 1,
+                              leaveTypeId: compOffType.leaveTypeId,
+                              numberOfLeaves: earnedComp,
+                              accumulationDate: earnedDate.toISOString(),
+                              accumulationPeriodFrom: earnedDate.toISOString(),
+                              accumulationPeriodTo: expiryDate.toISOString(),
+                              availabilityPeriodFrom: earnedDate.toISOString(),
+                              availabilityPeriodTo: expiryDate.toISOString(),
+                              status: true,
+                              isVirtualCompOff: true,
+                            });
+                          }
+                        }
+                      });
+                    }
+
+                    const allAllocations = [...employeeAllocations, ...virtualCompAllocations];
+
+                    const filteredAllocations = allAllocations.filter((alloc) => {
+                      // Comp-Off rows are only visible if compoff is actually allocated (> 0)
+                      const isCompOff = compOffType && Number(alloc.leaveTypeId) === Number(compOffType.leaveTypeId);
+                      if (isCompOff) {
+                        const empCompOff = compOffSummary.find((c: any) => Number(c.userId) === Number(alloc.userId));
+                        const effectiveAllocated = empCompOff ? Number(empCompOff.summary?.validEarned ?? 0) : Number(alloc.numberOfLeaves);
+                        if (effectiveAllocated <= 0) return false;
+                      }
+
                       if (selectedPolicy && alloc.leavePolicyId !== selectedPolicy.leavePolicyId) {
-                        return false;
+                        if (!alloc.isVirtualCompOff) return false;
                       }
                       if (allocSearchText.trim()) {
                         const emp = employees.find((e) => String(e.id) === String(alloc.userId));
@@ -918,6 +973,32 @@ export const LeaveAccumulationsDetailView: React.FC<LeaveAccumulationsDetailView
                                 .reduce((sum: number, req: any) => sum + Number(req.numberOfDays), 0);
                               
                               const balance = Number(alloc.numberOfLeaves) - availedDays;
+                              const isCompOffType = lt ? (lt.leaveName.toLowerCase().includes("comp") || lt.leaveCode.toLowerCase().includes("comp")) : false;
+                              const empCompOff = isCompOffType ? compOffSummary.find((c: any) => Number(c.userId) === Number(alloc.userId)) : null;
+                              const effectiveAllocated = empCompOff ? empCompOff.summary.validEarned : Number(alloc.numberOfLeaves);
+                              const effectiveBalance = empCompOff ? empCompOff.summary.remainingCompOffDays : balance;
+
+                              // Calculate exact Comp-Off availability/expiry dates if Auto-Attendance
+                              const compItem = empCompOff || (alloc.isVirtualCompOff ? compOffSummary.find((c: any) => Number(c.userId) === Number(alloc.userId)) : null);
+                              const isAutoComp = isCompOffType && (Boolean(empCompOff) || Boolean(alloc.isVirtualCompOff));
+                              
+                              let displayAccumDate = new Date(alloc.accumulationDate).toLocaleDateString("en-GB");
+                              let displayPeriod = `${new Date(alloc.accumulationPeriodFrom).toLocaleDateString("en-GB")} - ${new Date(alloc.accumulationPeriodTo).toLocaleDateString("en-GB")}`;
+                              let displayAvailability = `${new Date(alloc.availabilityPeriodFrom).toLocaleDateString("en-GB")} - ${new Date(alloc.availabilityPeriodTo).toLocaleDateString("en-GB")}`;
+
+                              if (isAutoComp && compItem) {
+                                const earnedStr = compItem.summary?.latestEarnedDate;
+                                if (earnedStr) {
+                                  const earnedDate = new Date(earnedStr);
+                                  const availDays = compItem.assignedPolicy?.availabilityDays ? Number(compItem.assignedPolicy.availabilityDays) : 30;
+                                  const expiryDate = new Date(earnedDate);
+                                  expiryDate.setDate(expiryDate.getDate() + availDays);
+
+                                  displayAccumDate = earnedDate.toLocaleDateString("en-GB");
+                                  displayPeriod = `${earnedDate.toLocaleDateString("en-GB")} - ${expiryDate.toLocaleDateString("en-GB")}`;
+                                  displayAvailability = `${earnedDate.toLocaleDateString("en-GB")} - ${expiryDate.toLocaleDateString("en-GB")}`;
+                                }
+                              }
 
                               return (
                                 <tr key={alloc.leaveAccumulationId} className="hover:bg-slate-50/60 transition-colors">
@@ -927,21 +1008,26 @@ export const LeaveAccumulationsDetailView: React.FC<LeaveAccumulationsDetailView
                                   </td>
                                   <td className="py-3 px-3 font-bold text-slate-900">
                                     {lt ? lt.leaveName : `Leave Type ID: ${alloc.leaveTypeId}`}
+                                    {(empCompOff || alloc.isVirtualCompOff) && (
+                                      <span className="ml-1.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                        Auto-Attendance
+                                      </span>
+                                    )}
                                   </td>
                                   <td className="py-3 px-3 text-center font-bold text-slate-800">
-                                    {alloc.numberOfLeaves}
+                                    {effectiveAllocated}
                                   </td>
                                   <td className="py-3 px-3 text-center font-bold text-emerald-700">
-                                    {balance}
+                                    {effectiveBalance}
                                   </td>
                                   <td className="py-3 px-3 text-center font-medium text-slate-600">
-                                    {new Date(alloc.accumulationDate).toLocaleDateString("en-GB")}
+                                    {displayAccumDate}
                                   </td>
                                   <td className="py-3 px-3 text-center font-medium text-slate-600">
-                                    {new Date(alloc.accumulationPeriodFrom).toLocaleDateString("en-GB")} - {new Date(alloc.accumulationPeriodTo).toLocaleDateString("en-GB")}
+                                    {displayPeriod}
                                   </td>
                                   <td className="py-3 px-3 text-center font-medium text-slate-600">
-                                    {new Date(alloc.availabilityPeriodFrom).toLocaleDateString("en-GB")} - {new Date(alloc.availabilityPeriodTo).toLocaleDateString("en-GB")}
+                                    {displayAvailability}
                                   </td>
                                   <td className="py-3 px-3 text-center font-semibold">
                                     {alloc.status ? (
@@ -951,28 +1037,30 @@ export const LeaveAccumulationsDetailView: React.FC<LeaveAccumulationsDetailView
                                     )}
                                   </td>
                                   <td className="py-3 px-3 text-center">
-                                    <div className="flex items-center justify-center gap-1">
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          setEditingAllocation(alloc);
-                                          setAllocDefaultLeaveTypeId(alloc.leaveTypeId);
-                                          setIsAllocationModalOpen(true);
-                                        }}
-                                        className="p-1 text-slate-400 hover:text-brand-primary hover:bg-slate-100 rounded-md transition-colors"
-                                        title="Edit Allocation"
-                                      >
-                                        <Edit3 className="w-3.5 h-3.5" />
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={() => handleDeleteAllocation(alloc.leaveAccumulationId)}
-                                        className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
-                                        title="Delete Allocation"
-                                      >
-                                        <Trash2 className="w-3.5 h-3.5" />
-                                      </button>
-                                    </div>
+                                    {!(alloc.isVirtualCompOff || empCompOff) && (
+                                      <div className="flex items-center justify-center gap-1">
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setEditingAllocation(alloc);
+                                            setAllocDefaultLeaveTypeId(alloc.leaveTypeId);
+                                            setIsAllocationModalOpen(true);
+                                          }}
+                                          className="p-1 text-slate-400 hover:text-brand-primary hover:bg-slate-100 rounded-md transition-colors"
+                                          title="Edit Allocation"
+                                        >
+                                          <Edit3 className="w-3.5 h-3.5" />
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleDeleteAllocation(alloc.leaveAccumulationId)}
+                                          className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
+                                          title="Delete Allocation"
+                                        >
+                                          <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
+                                      </div>
+                                    )}
                                   </td>
                                 </tr>
                               );

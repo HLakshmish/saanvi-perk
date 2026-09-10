@@ -10,7 +10,7 @@ import { ApplyLeaveModal } from "./ApplyLeaveModal";
 import { RejectLeaveModal } from "./RejectLeaveModal";
 import { LeaveDetailsModal } from "./LeaveDetailsModal";
 import { fetchLeaveRequests, createLeaveRequest, getCurrentUserId, updateLeaveRequestStatus } from "../api/leaves.api";
-import { fetchLeaveTypes, fetchLeavePolicies, fetchLeavePolicyRules, fetchLeavePolicyAccumulations, fetchLeaveAccumulations } from "@/features/settings/api/settings.api";
+import { fetchLeaveTypes, fetchLeavePolicies, fetchLeavePolicyRules, fetchLeavePolicyAccumulations, fetchLeaveAccumulations, fetchUserCompOffDetails } from "@/features/settings/api/settings.api";
 import { getEmployees } from "@/features/employees/api/employees.api";
 import { Employee } from "@/features/employees/types/employees.types";
 import { snackbar as toast } from "@/components/ui/snackbar";
@@ -32,6 +32,8 @@ export const LeavesView: React.FC = () => {
   const [leaveTypes, setLeaveTypes] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [compOffExpiryDate, setCompOffExpiryDate] = useState<string | null>(null);
 
   // Dynamic accumulated limits state
   const [accumulatedSick, setAccumulatedSick] = useState<number>(12.00);
@@ -63,6 +65,7 @@ export const LeavesView: React.FC = () => {
       const typesPromise = fetchLeaveTypes().catch(() => ({ success: false, data: [] }));
       const empListPromise = getEmployees().catch(() => [] as Employee[]);
       const empAccsPromise = fetchLeaveAccumulations().catch(() => ({ success: false, data: [] }));
+      const compOffPromise = fetchUserCompOffDetails(filterUserId || undefined).catch(() => ({ success: false, data: null }));
 
       let policiesPromise = Promise.resolve({ success: false, data: [] as any[] });
       let rulesPromise = Promise.resolve({ success: false, data: [] as any[] });
@@ -74,7 +77,7 @@ export const LeavesView: React.FC = () => {
         accsPromise = fetchLeavePolicyAccumulations().catch(() => ({ success: false, data: [] }));
       }
 
-      const [res, typesRes, empList, policiesRes, rulesRes, accsRes, empAccsRes] = await Promise.all([
+      const [res, typesRes, empList, policiesRes, rulesRes, accsRes, empAccsRes, compOffRes] = await Promise.all([
         requestsPromise,
         typesPromise,
         empListPromise,
@@ -82,6 +85,7 @@ export const LeavesView: React.FC = () => {
         rulesPromise,
         accsPromise,
         empAccsPromise,
+        compOffPromise,
       ]);
 
       if (res.success && Array.isArray(res.data)) {
@@ -167,6 +171,18 @@ export const LeavesView: React.FC = () => {
           dynamicLop += limit;
         }
       });
+
+      if (compOffRes && compOffRes.success && compOffRes.data) {
+        if (compOffRes.data.remainingCompOffDays !== undefined) {
+          dynamicComp = Number(compOffRes.data.remainingCompOffDays);
+          hasAccumulations = true;
+        }
+        if (Array.isArray(compOffRes.data.eligibleDays) && compOffRes.data.eligibleDays.length > 0 && compOffRes.data.eligibleDays[0].validTo) {
+          setCompOffExpiryDate(new Date(compOffRes.data.eligibleDays[0].validTo).toLocaleDateString("en-GB"));
+        } else {
+          setCompOffExpiryDate(null);
+        }
+      }
 
       if (resolvedTypes.length === 0) {
         setAccumulatedSick(0.00);
@@ -284,6 +300,7 @@ export const LeavesView: React.FC = () => {
         numberOfDays: Number(days),
         reason: data.reason,
         userId: targetUserId,
+        isCompOff: Boolean(data.isCompOff),
       };
 
       const res = await createLeaveRequest(payload);
@@ -576,6 +593,7 @@ export const LeavesView: React.FC = () => {
               accumulatedComp={accumulatedComp}
               accumulatedEarned={accumulatedEarned}
               accumulatedLop={accumulatedLop}
+              compOffExpiryDate={compOffExpiryDate}
             />
           )}
 

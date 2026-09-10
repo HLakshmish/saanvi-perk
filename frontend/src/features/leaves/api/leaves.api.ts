@@ -107,6 +107,7 @@ export const createLeaveRequest = async (payload: {
   reason: string;
   userId?: number;
   companyId?: number;
+  isCompOff?: boolean;
 }) => {
   const token = getAuthToken();
   const companyId = getCompanyIdCookie();

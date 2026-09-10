@@ -32,6 +32,7 @@ interface LeavesSummaryTabProps {
   accumulatedComp?: number;
   accumulatedEarned?: number;
   accumulatedLop?: number;
+  compOffExpiryDate?: string | null;
 }
 
 export const LeavesSummaryTab: React.FC<LeavesSummaryTabProps> = ({
@@ -44,6 +45,7 @@ export const LeavesSummaryTab: React.FC<LeavesSummaryTabProps> = ({
   accumulatedComp = 0.00,
   accumulatedEarned = 0.00,
   accumulatedLop = 0.00,
+  compOffExpiryDate,
 }) => {
   // 1. Dynamic Balance Calculations
   const totalAccumulated = accumulatedSick + accumulatedComp + accumulatedEarned + accumulatedLop;
@@ -379,8 +381,8 @@ export const LeavesSummaryTab: React.FC<LeavesSummaryTabProps> = ({
                     <span>Total {item.total.toFixed(1)}</span>
                   </div>
 
-                  {/* State text tag */}
-                  <div className="text-[9px] font-bold flex items-center gap-1.5 mt-0.5">
+                  {/* State text tag & Expiry Badge */}
+                  <div className="text-[9px] font-bold flex flex-wrap items-center gap-1.5 mt-0.5">
                     {!hasAllocation ? (
                       <span className="text-slate-400 bg-slate-50 px-2 py-0.5 rounded-md">No Allocation</span>
                     ) : isFullyUsed ? (
@@ -391,6 +393,12 @@ export const LeavesSummaryTab: React.FC<LeavesSummaryTabProps> = ({
                       <span className="text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md">Partially Used</span>
                     ) : (
                       <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">Full Available</span>
+                    )}
+
+                    {item.code === "COFF" && compOffExpiryDate && (
+                      <span className="text-amber-800 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded-md font-bold flex items-center gap-1">
+                        <span>⏳</span> Valid until {compOffExpiryDate}
+                      </span>
                     )}
                   </div>
 

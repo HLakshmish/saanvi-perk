@@ -1157,4 +1157,65 @@ export const deleteCompOffAssignmentApi = async (id: number) => {
   }
 };
 
+export const fetchUserCompOffDetails = async (targetUserId?: number) => {
+  const token = getAuthToken();
+  const companyId = getCompanyIdCookie();
+  
+  let url = `${API_BASE_URL}/api/comp-off-assigns/user-details`;
+  const params: string[] = [];
+  if (companyId) params.push(`companyId=${companyId}`);
+  if (targetUserId) params.push(`userId=${targetUserId}`);
+  
+  if (params.length > 0) {
+    url += `?${params.join("&")}`;
+  }
+
+  try {
+    const res = await fetchDeduplicated(url, {
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    const result = await res.json();
+    if (res.ok && result.success && result.data) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, data: null, error: result.message || "Failed to fetch user comp-off details" };
+  } catch (error: any) {
+    return { success: false, data: null, error: error.message };
+  }
+};
+
+export const fetchAdminCompOffOverview = async (filters?: { userId?: number; policyId?: number }) => {
+  const token = getAuthToken();
+  const companyId = getCompanyIdCookie();
+  
+  let url = `${API_BASE_URL}/api/comp-off-assigns/admin/all-employees-summary`;
+  const params: string[] = [];
+  if (companyId) params.push(`companyId=${companyId}`);
+  if (filters?.userId) params.push(`userId=${filters.userId}`);
+  if (filters?.policyId) params.push(`policyId=${filters.policyId}`);
+  
+  if (params.length > 0) {
+    url += `?${params.join("&")}`;
+  }
+
+  try {
+    const res = await fetchDeduplicated(url, {
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    const result = await res.json();
+    if (res.ok && result.success && result.data) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, data: null, error: result.message || "Failed to fetch admin comp-off overview" };
+  } catch (error: any) {
+    return { success: false, data: null, error: error.message };
+  }
+};
+
 

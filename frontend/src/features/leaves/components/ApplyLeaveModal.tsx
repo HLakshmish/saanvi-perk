@@ -2,7 +2,9 @@ import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Calendar as CalendarIcon, Loader2, Search, X, AlertCircle, CheckCircle2 } from "lucide-react";
 import { ApplyLeaveInput } from "../types/leaves.types";
-import { getCurrentUserId } from "../api/leaves.api";
+import { getCurrentUserId, fetchLeaveRequests } from "../api/leaves.api";
+import { fetchAttendanceRequests } from "@/features/attendance/api/attendance.api";
+import { fetchUserCompOffDetails } from "@/features/settings/api/settings.api";
 import { getHolidays, HolidayRecord } from "@/features/organization/api/calendar.api";
 import {
   getAssignedWeekOffs,
@@ -39,6 +41,20 @@ function getUserRoleCookie(): string | null {
   return match ? match[1] : null;
 }
 
+function toYMD(dateInput: string | Date | undefined | null): string {
+  if (!dateInput) return "";
+  if (typeof dateInput === "string") {
+    const parts = dateInput.split("T")[0];
+    if (/^\d{4}-\d{2}-\d{2}$/.test(parts)) return parts;
+  }
+  const d = new Date(dateInput);
+  if (isNaN(d.getTime())) return "";
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
   isOpen,
   onClose,
@@ -70,17 +86,18 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Holiday and Week-Off Metadata
+  // Holiday and Week-Off Metadata & Comp-Off Details
   const [holidays, setHolidays] = useState<HolidayRecord[]>([]);
   const [assignedWeekOffs, setAssignedWeekOffs] = useState<WeekOffAssignRecord[]>([]);
   const [globalWeekOffs, setGlobalWeekOffs] = useState<WeekOffRecord[]>([]);
+  const [compOffDetails, setCompOffDetails] = useState<any | null>(null);
 
   const mappedEmployees = employees.map((emp: any) => ({
     id: Number(emp.id),
     name: emp.name,
   }));
 
-  // Load Holiday & Week-Off Metadata
+  // Load Holiday & Week-Off Metadata & Comp-Off Details
   useEffect(() => {
     if (!isOpen) return;
     const fetchMetadata = async () => {
@@ -90,10 +107,11 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
             ? Number(selectedEmployeeId)
             : (getCurrentUserId() || 0);
 
-        const [holRes, assignRes, weekOffRes] = await Promise.all([
+        const [holRes, assignRes, weekOffRes, compOffRes] = await Promise.all([
           getHolidays().catch(() => ({ success: false, data: [] as HolidayRecord[] })),
           getAssignedWeekOffs(targetUserId || undefined).catch(() => ({ success: false, data: [] as WeekOffAssignRecord[] })),
           getWeekOffs().catch(() => ({ success: false, data: [] as WeekOffRecord[] })),
+          fetchUserCompOffDetails(targetUserId || undefined).catch(() => ({ success: false, data: null })),
         ]);
 
         if (holRes.success && Array.isArray(holRes.data)) {
@@ -104,6 +122,11 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
         }
         if (weekOffRes.success && Array.isArray(weekOffRes.data)) {
           setGlobalWeekOffs(weekOffRes.data);
+        }
+        if (compOffRes && compOffRes.success && compOffRes.data) {
+          setCompOffDetails(compOffRes.data);
+        } else {
+          setCompOffDetails(null);
         }
       } catch (err) {
         console.warn("Could not load leave calendar metadata:", err);
@@ -263,7 +286,10 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
     if (name.includes("sick") || name.includes("casual") || code.includes("sl") || code.includes("cl")) {
       return { balance: balances.sick, categoryName: "Sick Leave/Casual Leave" };
     } else if (name.includes("comp") || code.includes("comp")) {
-      return { balance: balances.comp, categoryName: "Comp-Off" };
+      const compBalance = (compOffDetails && compOffDetails.remainingCompOffDays !== undefined)
+        ? Number(compOffDetails.remainingCompOffDays)
+        : balances.comp;
+      return { balance: compBalance, categoryName: "Comp-Off" };
     } else if (name.includes("earned") || code.includes("el")) {
       return { balance: balances.earned, categoryName: "Earned Leave" };
     } else if (name.includes("loss") || name.includes("lop") || code.includes("lop")) {
@@ -300,6 +326,8 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (isSubmitting) return;
 
     if (userRole === "superadmin" && selectedEmployeeId === 0) {
       setErrorMsg("SuperAdmin must select a target employee to apply leave on behalf of.");
@@ -373,6 +401,75 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
     setIsSubmitting(true);
     setErrorMsg(null);
 
+    // Validate double submission / overlapping requests for the same dates
+    try {
+      const targetUserId =
+        isAdminOrSuperAdmin && Number(selectedEmployeeId) > 0
+          ? Number(selectedEmployeeId)
+          : (getCurrentUserId() || undefined);
+
+      const [leaveRes, attRes] = await Promise.all([
+        fetchLeaveRequests(targetUserId).catch(() => ({ success: false, data: [] })),
+        fetchAttendanceRequests(targetUserId).catch(() => ({ success: false, data: [] })),
+      ]);
+
+      const requestedFrom = fromDate;
+      const requestedTo = toDate;
+
+      // 1. Check existing active leave requests
+      if (leaveRes && leaveRes.success && Array.isArray(leaveRes.data)) {
+        const activeLeaves = leaveRes.data.filter((l: any) => {
+          const st = (l.status || "").toUpperCase();
+          return st !== "REJECTED" && st !== "CANCELLED";
+        });
+
+        for (const leave of activeLeaves) {
+          const exFrom = toYMD(leave.fromDate);
+          const exTo = toYMD(leave.toDate);
+          if (exFrom && exTo && requestedFrom <= exTo && requestedTo >= exFrom) {
+            setErrorMsg(
+              `A leave request already exists for the selected date range (${exFrom} to ${exTo}).`
+            );
+            setIsSubmitting(false);
+            return;
+          }
+        }
+      }
+
+      // 2. Check existing active attendance regularization requests
+      let attRequestsList: any[] = [];
+      if (Array.isArray(attRes)) {
+        attRequestsList = attRes;
+      } else if (attRes && attRes.success && Array.isArray(attRes.data)) {
+        attRequestsList = attRes.data;
+      }
+
+      if (attRequestsList.length > 0) {
+        const activeAtt = attRequestsList.filter((a: any) => {
+          const st = (a.status || "").toUpperCase();
+          return st !== "REJECTED" && st !== "CANCELLED";
+        });
+
+        for (const att of activeAtt) {
+          const attDate = toYMD(att.shiftDate || att.attendanceDate || att.checkInTime);
+          if (attDate && requestedFrom <= attDate && attDate <= requestedTo) {
+            setErrorMsg(
+              `An attendance request already exists for ${attDate}. You cannot apply for leave on the same date.`
+            );
+            setIsSubmitting(false);
+            return;
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("Could not validate overlapping requests:", err);
+    }
+
+    const selectedType = leaveTypes.find((t) => Number(t.leaveTypeId) === Number(leaveTypeId));
+    const isCompType = selectedType
+      ? selectedType.leaveName.toLowerCase().includes("comp") || selectedType.leaveCode.toLowerCase().includes("comp")
+      : false;
+
     const success = await onSubmit({
       leaveTypeId,
       isHalfDay,
@@ -380,6 +477,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
       toDate,
       reason: reason.trim() || "Personal Reason",
       userId: selectedEmployeeId > 0 ? selectedEmployeeId : undefined,
+      isCompOff: isCompType,
     });
 
     setIsSubmitting(false);
@@ -479,17 +577,25 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
                     ))}
                   </select>
                   {leaveTypeId > 0 && (
-                    <div className="mt-1.5 flex items-center justify-between bg-slate-50 border border-slate-200/60 p-2.5 rounded-xl">
-                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
-                        Available Balance:
-                      </span>
-                      <span className={`text-xs font-bold px-2 py-0.5 rounded-md border ${
-                        getSelectedLeaveBalance().balance > 0
-                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                          : "bg-rose-50 text-rose-700 border-rose-200"
-                      }`}>
-                        {getSelectedLeaveBalance().balance} {getSelectedLeaveBalance().balance === 1 ? "Day" : "Days"}
-                      </span>
+                    <div className="mt-1.5 space-y-1.5">
+                      <div className="flex items-center justify-between bg-slate-50 border border-slate-200/60 p-2.5 rounded-xl">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+                          Available Balance:
+                        </span>
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-md border ${
+                          getSelectedLeaveBalance().balance > 0
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                            : "bg-rose-50 text-rose-700 border-rose-200"
+                        }`}>
+                          {getSelectedLeaveBalance().balance} {getSelectedLeaveBalance().balance === 1 ? "Day" : "Days"}
+                        </span>
+                      </div>
+                      {getSelectedLeaveBalance().categoryName === "Comp-Off" && compOffDetails?.eligibleDays?.[0]?.validTo && (
+                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200/80 px-2.5 py-1 rounded-xl">
+                          <span>⏳</span>
+                          <span>Comp-Off Expiry Date: {new Date(compOffDetails.eligibleDays[0].validTo).toLocaleDateString("en-GB")}</span>
+                        </div>
+                      )}
                     </div>
                   )}
               </div>

@@ -39,6 +39,7 @@ export interface ApplyLeaveInput {
   toDate: string;
   reason: string;
   userId?: number;
+  isCompOff?: boolean;
 }
 
 export interface CompOffInput {
