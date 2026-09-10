@@ -1,5 +1,52 @@
+const prisma = require("../../config/prisma");
 const leaveRequestService = require("./leaveRequest.service");
-// Triggering server restart for new prisma client
+
+async function checkCanManageLeaves(user) {
+    if (!user) return false;
+    if (user.role === 'OWNER' || user.role === 'SUPERADMIN' || user.role === 'ADMIN' || user.role === 'HR') {
+        return true;
+    }
+    if (user.permissions && (user.permissions.includes('MANAGE_LEAVES') || user.permissions.includes('APPLY_LEAVE_ON_BEHALF'))) {
+        return true;
+    }
+    if (user.userId) {
+        try {
+            const dbUser = await prisma.user.findUnique({
+                where: { userId: Number(user.userId) },
+                include: {
+                    userRoles: {
+                        include: {
+                            role: {
+                                include: {
+                                    rolePermissions: {
+                                        include: { permission: true }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            if (dbUser && dbUser.userRoles) {
+                return dbUser.userRoles.some(ur => {
+                    const code = (ur.role?.roleCode || '').toUpperCase();
+                    const name = (ur.role?.roleName || '').toUpperCase();
+                    const hasPerm = ur.role?.rolePermissions?.some(rp =>
+                        rp.permission?.permissionCode === 'MANAGE_LEAVES' ||
+                        rp.permission?.permissionCode === 'APPLY_LEAVE_ON_BEHALF'
+                    );
+                    return hasPerm ||
+                           code.includes('ADMIN') || code.includes('HR') || code.includes('MGR') || code.includes('MANAGER') ||
+                           name.includes('ADMIN') || name.includes('HR') || name.includes('MANAGER');
+                });
+            }
+        } catch (e) {
+            console.error("Error checking user roles in DB:", e);
+        }
+    }
+    return false;
+}
+
 class LeaveRequestController {
     async createLeaveRequest(request, reply) {
         try {
@@ -9,22 +56,46 @@ class LeaveRequestController {
             let targetCompanyId = request.user.companyId;
             let targetUserId = request.user.userId;
 
-            if (request.user.role === 'OWNER') {
+            const isOwner = request.user.role === 'OWNER';
+            const isSuperAdmin = request.user.role === 'SUPERADMIN';
+
+            if (isOwner) {
                 if (!companyId) throw new Error("OWNER must provide a companyId to create a leave request.");
-                targetCompanyId = companyId;
-                if (userId) targetUserId = userId; // Owner can apply for others
-            } else if (request.user.role === 'SUPERADMIN' || request.user.role === 'ADMIN' || request.user.role === 'HR') {
+                targetCompanyId = Number(companyId);
+                if (!userId) throw new Error("OWNER must provide an employee userId to create a leave request.");
+                targetUserId = Number(userId);
+            } else if (isSuperAdmin) {
                 targetCompanyId = request.user.companyId;
-                if (userId) targetUserId = userId; // HR/Admin can apply for others
+                if (!userId) throw new Error("SUPERADMIN must select an employee to create a leave request.");
+                targetUserId = Number(userId);
             } else {
                 targetCompanyId = request.user.companyId;
-                if (userId && userId !== request.user.userId) {
-                    return reply.code(403).send({ success: false, message: "Forbidden: Cannot apply leave for another user." });
+
+                // Check if applying for another user
+                const isDifferentUser = userId !== undefined && userId !== null && Number(userId) !== Number(request.user.userId);
+                if (isDifferentUser) {
+                    const canManage = await checkCanManageLeaves(request.user);
+                    if (!canManage) {
+                        return reply.code(403).send({ success: false, message: "Forbidden: Cannot apply leave for another user." });
+                    }
+                    targetUserId = Number(userId);
+                } else {
+                    targetUserId = Number(request.user.userId);
                 }
+            }
+
+            // Verify target employee exists in target company
+            const targetUser = await prisma.user.findFirst({
+                where: { userId: targetUserId, companyId: targetCompanyId }
+            });
+            if (!targetUser) {
+                return reply.code(404).send({ success: false, message: "Target employee not found in this company." });
             }
 
             leaveRequestData.companyId = targetCompanyId;
             leaveRequestData.userId = targetUserId;
+            leaveRequestData.leaveTypeId = Number(leaveRequestData.leaveTypeId);
+            leaveRequestData.numberOfDays = Number(leaveRequestData.numberOfDays);
             leaveRequestData.isCompOff = Boolean(request.body.isCompOff ?? false);
 
             // Ensure dates are correctly formatted
@@ -50,10 +121,13 @@ class LeaveRequestController {
             const leaveRequest = await leaveRequestService.getLeaveRequestById(Number(id), companyId);
             
             // Basic check so normal users only see their own requests (can be refined via permissions)
-            if (request.user.role === 'USER' && leaveRequest.userId !== request.user.userId) {
+            if (request.user.role === 'USER' && Number(leaveRequest.userId) !== Number(request.user.userId)) {
                 const hasViewLeavesPermission = request.user.permissions && (request.user.permissions.includes('VIEW_LEAVES') || request.user.permissions.includes('MANAGE_LEAVES'));
                 if (!hasViewLeavesPermission) {
-                    return reply.code(403).send({ success: false, message: "Forbidden: Cannot view other user's leave request." });
+                    const canManage = await checkCanManageLeaves(request.user);
+                    if (!canManage) {
+                        return reply.code(403).send({ success: false, message: "Forbidden: Cannot view other user's leave request." });
+                    }
                 }
             }
 
@@ -74,7 +148,10 @@ class LeaveRequestController {
             } else if (request.user.role === 'USER') {
                 const hasViewLeavesPermission = request.user.permissions && (request.user.permissions.includes('VIEW_LEAVES') || request.user.permissions.includes('MANAGE_LEAVES'));
                 if (!hasViewLeavesPermission) {
-                    filterUserId = request.user.userId; // Regular users only see their own
+                    const canManage = await checkCanManageLeaves(request.user);
+                    if (!canManage) {
+                        filterUserId = request.user.userId; // Regular users only see their own
+                    }
                 }
             }
 
@@ -99,7 +176,10 @@ class LeaveRequestController {
             if (['APPROVED', 'REJECTED'].includes(status) && request.user.role === 'USER') {
                 const hasManageLeavesPermission = request.user.permissions && request.user.permissions.includes('MANAGE_LEAVES');
                 if (!hasManageLeavesPermission) {
-                    return reply.code(403).send({ success: false, message: "Forbidden: Not authorized to approve/reject leave requests." });
+                    const canManage = await checkCanManageLeaves(request.user);
+                    if (!canManage) {
+                        return reply.code(403).send({ success: false, message: "Forbidden: Not authorized to approve/reject leave requests." });
+                    }
                 }
             }
 
@@ -157,7 +237,10 @@ class LeaveRequestController {
             } else if (request.user.role === 'USER') {
                 const hasViewLeavesPermission = request.user.permissions && (request.user.permissions.includes('VIEW_LEAVES') || request.user.permissions.includes('MANAGE_LEAVES'));
                 if (!hasViewLeavesPermission) {
-                    filterUserId = request.user.userId;
+                    const canManage = await checkCanManageLeaves(request.user);
+                    if (!canManage) {
+                        filterUserId = request.user.userId;
+                    }
                 }
             }
 
@@ -200,7 +283,10 @@ class LeaveRequestController {
             } else if (request.user.role === 'USER') {
                 const hasViewLeavesPermission = request.user.permissions && (request.user.permissions.includes('VIEW_LEAVES') || request.user.permissions.includes('MANAGE_LEAVES'));
                 if (!hasViewLeavesPermission) {
-                    filterUserId = request.user.userId;
+                    const canManage = await checkCanManageLeaves(request.user);
+                    if (!canManage) {
+                        filterUserId = request.user.userId;
+                    }
                 }
             }
 
