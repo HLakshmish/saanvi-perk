@@ -40,9 +40,9 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ onTabChange }) => {
       icon: CalendarCheck,
     },
     {
-      id: "approval",
-      title: "Approvals",
-      subtitle: "Review & Status",
+      id: "requests",
+      title: "My Requests",
+      subtitle: "Status & History",
       icon: FileCheck,
     },
     {
@@ -89,11 +89,11 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ onTabChange }) => {
 
       {/* 3 or 4 Column Grid Layout (2 cols on mobile, 3 on tablet, 4 on desktop) */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
-        {services.map((item) => {
+        {services.map((item, index) => {
           const Icon = item.icon;
           return (
             <button
-              key={item.id}
+              key={`${item.id}-${index}`}
               onClick={() => onTabChange(item.id)}
               className="group relative flex flex-col p-3 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-200/80 bg-white hover:border-brand-primary/30 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-200 text-left cursor-pointer active:scale-[0.98]"
             >

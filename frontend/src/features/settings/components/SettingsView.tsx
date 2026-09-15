@@ -28,10 +28,10 @@ export const SettingsView: React.FC = () => {
         </h1>
 
         {/* Sub-Navigation Tabs Header */}
-        <div className="flex flex-wrap items-center gap-1 text-xs font-semibold text-slate-500">
+        <div className="flex items-center gap-1 text-xs font-semibold text-slate-500 overflow-x-auto max-w-full pb-1 no-scrollbar shrink-0">
           <button
             onClick={() => handleSubTabChange("account-info")}
-            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
               activeSubTab === "account-info"
                 ? "bg-brand-primary text-brand-btn-text font-bold shadow-2xs border border-brand-primary"
                 : "hover:text-brand-primary"
@@ -39,11 +39,11 @@ export const SettingsView: React.FC = () => {
           >
             Account Info
           </button>
-          <span className="text-slate-300">|</span>
+          <span className="hidden sm:inline text-slate-300">|</span>
 
           <button
             onClick={() => handleSubTabChange("organization")}
-            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
               activeSubTab === "organization"
                 ? "bg-brand-primary text-brand-btn-text font-bold shadow-2xs border border-brand-primary"
                 : "hover:text-brand-primary"
@@ -51,11 +51,11 @@ export const SettingsView: React.FC = () => {
           >
             Organization
           </button>
-          <span className="text-slate-300">|</span>
+          <span className="hidden sm:inline text-slate-300">|</span>
 
           <button
             onClick={() => handleSubTabChange("payroll")}
-            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
               activeSubTab === "payroll"
                 ? "bg-brand-primary text-brand-btn-text font-bold shadow-2xs border border-brand-primary"
                 : "hover:text-brand-primary"
@@ -63,11 +63,11 @@ export const SettingsView: React.FC = () => {
           >
             Payroll
           </button>
-          <span className="text-slate-300">|</span>
+          <span className="hidden sm:inline text-slate-300">|</span>
 
           <button
             onClick={() => handleSubTabChange("attendance")}
-            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
               activeSubTab === "attendance"
                 ? "bg-brand-primary text-brand-btn-text font-bold shadow-2xs border border-brand-primary"
                 : "hover:text-brand-primary"
@@ -75,11 +75,11 @@ export const SettingsView: React.FC = () => {
           >
             Attendance
           </button>
-          <span className="text-slate-300">|</span>
+          <span className="hidden sm:inline text-slate-300">|</span>
 
           <button
             onClick={() => handleSubTabChange("leave")}
-            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
               activeSubTab === "leave"
                 ? "bg-brand-primary text-brand-btn-text font-bold shadow-2xs border border-brand-primary"
                 : "hover:text-brand-primary"
@@ -87,11 +87,11 @@ export const SettingsView: React.FC = () => {
           >
             Leave
           </button>
-          <span className="text-slate-300">|</span>
+          <span className="hidden sm:inline text-slate-300">|</span>
 
           <button
             onClick={() => handleSubTabChange("others")}
-            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
               activeSubTab === "others"
                 ? "bg-brand-primary text-brand-btn-text font-bold shadow-2xs border border-brand-primary"
                 : "hover:text-brand-primary"

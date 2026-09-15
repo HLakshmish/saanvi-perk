@@ -27,6 +27,7 @@ export const showSnackbar = (message: string, type: SnackbarType = "success", du
 };
 
 export const snackbar = {
+  show: (message: string, type: SnackbarType = "info", duration?: number) => showSnackbar(message, type, duration),
   success: (message: string, duration?: number) => showSnackbar(message, "success", duration),
   error: (message: string, duration?: number) => showSnackbar(message, "error", duration),
   info: (message: string, duration?: number) => showSnackbar(message, "info", duration),
@@ -71,8 +72,8 @@ export const SnackbarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       {/* Premium Dark Toast / Snackbar Element */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 z-[9999] animate-slide-up">
-          <div className="flex items-center gap-4 bg-[#111c2a] text-white px-5 py-3.5 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.45)] border border-slate-800/80 min-w-[300px] max-w-[450px]">
+        <div className="fixed bottom-4 sm:bottom-6 left-4 right-4 sm:left-auto sm:right-6 z-[9999] animate-slide-up flex justify-center sm:block">
+          <div className="flex items-center gap-3 sm:gap-4 bg-[#111c2a] text-white px-4 sm:px-5 py-3 sm:py-3.5 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.45)] border border-slate-800/80 w-full sm:w-auto sm:min-w-[300px] max-w-[450px]">
             {/* Left Circular Badge */}
             <div className="flex-shrink-0">
               {type === "success" ? (

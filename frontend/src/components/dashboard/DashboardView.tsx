@@ -138,8 +138,26 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             }
           }
 
-          if (role === "superadmin") {
-            const superAdminRes = await getSuperAdminDetails();
+          const loggedInUserId = getCurrentUserId();
+          let userResolved = false;
+
+          if (role !== "superadmin" && loggedInUserId) {
+            const userRes = await getUserById(loggedInUserId).catch(() => ({ success: false, data: null }));
+            if (userRes.success && userRes.data) {
+              const u = userRes.data;
+              const fullName = `${u.firstName || ""} ${u.lastName || ""}`.trim();
+              if (fullName) {
+                setResolvedUserName(fullName);
+                userResolved = true;
+                if (typeof window !== "undefined") {
+                  localStorage.setItem("user_name", fullName);
+                }
+              }
+            }
+          }
+
+          if (!userResolved) {
+            const superAdminRes = await getSuperAdminDetails().catch(() => ({ success: false, data: null }));
             if (superAdminRes.success && superAdminRes.data) {
               const sa = superAdminRes.data;
               const fullName = `${sa.firstName || ""} ${sa.lastName || ""}`.trim();
@@ -159,27 +177,29 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 }
               }
             }
-          } else {
-            // For regular roles (admin, employee, etc.), resolve from user profile API
-            const loggedInUserId = getCurrentUserId();
-            if (loggedInUserId) {
-              const userRes = await getUserById(loggedInUserId);
-              if (userRes.success && userRes.data) {
-                const u = userRes.data;
-                const fullName = `${u.firstName || ""} ${u.lastName || ""}`.trim();
-                if (fullName) {
-                  setResolvedUserName(fullName);
-                  if (typeof window !== "undefined") {
-                    localStorage.setItem("user_name", fullName);
-                  }
+          }
+        } else {
+          // Fallback if company API is unavailable
+          const loggedInUserId = getCurrentUserId();
+          let userResolved = false;
+
+          if (role !== "superadmin" && loggedInUserId) {
+            const userRes = await getUserById(loggedInUserId).catch(() => ({ success: false, data: null }));
+            if (userRes.success && userRes.data) {
+              const u = userRes.data;
+              const fullName = `${u.firstName || ""} ${u.lastName || ""}`.trim();
+              if (fullName) {
+                setResolvedUserName(fullName);
+                userResolved = true;
+                if (typeof window !== "undefined") {
+                  localStorage.setItem("user_name", fullName);
                 }
               }
             }
           }
-        } else {
-          // Fallback if company API is unavailable
-          if (role === "superadmin") {
-            const superAdminRes = await getSuperAdminDetails();
+
+          if (!userResolved) {
+            const superAdminRes = await getSuperAdminDetails().catch(() => ({ success: false, data: null }));
             if (superAdminRes.success && superAdminRes.data) {
               const sa = superAdminRes.data;
               const fullName = `${sa.firstName || ""} ${sa.lastName || ""}`.trim();
@@ -187,21 +207,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 setResolvedUserName(fullName);
                 if (typeof window !== "undefined") {
                   localStorage.setItem("user_name", fullName);
-                }
-              }
-            }
-          } else {
-            const loggedInUserId = getCurrentUserId();
-            if (loggedInUserId) {
-              const userRes = await getUserById(loggedInUserId);
-              if (userRes.success && userRes.data) {
-                const u = userRes.data;
-                const fullName = `${u.firstName || ""} ${u.lastName || ""}`.trim();
-                if (fullName) {
-                  setResolvedUserName(fullName);
-                  if (typeof window !== "undefined") {
-                    localStorage.setItem("user_name", fullName);
-                  }
                 }
               }
             }

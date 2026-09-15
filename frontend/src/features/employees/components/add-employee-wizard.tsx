@@ -970,7 +970,7 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
         </div>
 
         {/* Wizard Progress Timeline */}
-        <div className="flex items-center justify-between mb-8 pb-6 border-b border-slate-100 overflow-x-auto">
+        <div className="flex items-center justify-between mb-8 pb-6 border-b border-slate-100 overflow-x-auto no-scrollbar shrink-0 max-w-full">
           {steps.map((step, idx) => {
             const isActive = currentStep === step.number;
             const isDone = currentStep > step.number;

@@ -700,18 +700,18 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
                 </div>
               </div>
 
-              <div className="flex items-center justify-between text-[9px] sm:text-[10px] font-semibold text-slate-500 pt-0.5">
+              <div className="flex flex-wrap items-center justify-between text-[8px] xs:text-[9px] sm:text-[10px] font-semibold text-slate-500 pt-0.5 gap-y-1 gap-x-2">
                 <span className="flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
-                  Sick/Casual: {leaveSummary.isLoading ? "--" : `${leaveSummary.sickBal} Bal`}
+                  <span className="w-1.5 h-1.5 rounded-full bg-purple-500 shrink-0" />
+                  Sick: {leaveSummary.isLoading ? "--" : `${leaveSummary.sickBal}`}
                 </span>
                 <span className="flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  Earned: {leaveSummary.isLoading ? "--" : `${leaveSummary.earnedBal} Bal`}
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                  Earned: {leaveSummary.isLoading ? "--" : `${leaveSummary.earnedBal}`}
                 </span>
                 <span className="flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-teal-500" />
-                  Comp-Off: {leaveSummary.isLoading ? "--" : `${leaveSummary.compBal} Bal`}
+                  <span className="w-1.5 h-1.5 rounded-full bg-teal-500 shrink-0" />
+                  Comp-Off: {leaveSummary.isLoading ? "--" : `${leaveSummary.compBal}`}
                 </span>
               </div>
             </div>

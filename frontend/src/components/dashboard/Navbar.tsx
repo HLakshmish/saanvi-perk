@@ -76,9 +76,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         if (currentRole === "superadmin") {
           detectedRoles.push("superadmin", "admin", "employee");
-        }
-
-        if (userId) {
+        } else if (userId) {
           const res = await getUserById(userId);
           if (res.success && res.data) {
             // Check userRoles relation
@@ -216,29 +214,27 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         <div
           onClick={() => onTabChange && onTabChange("dashboard")}
-          className="flex items-center gap-3 cursor-pointer select-none group"
-          suppressHydrationWarning
+          className="flex items-center gap-2 sm:gap-2.5 cursor-pointer select-none group min-w-0 shrink"
         >
           {isMounted && companyLogo ? (
-            <div className="h-7 sm:h-8 max-w-[140px] sm:max-w-[160px] flex items-center justify-center shrink-0">
+            <div className="h-7 sm:h-8 max-w-[80px] xs:max-w-[110px] sm:max-w-[140px] flex items-center justify-center shrink-0">
               <img
                 src={companyLogo}
                 alt={companyName || "Organization Logo"}
                 className="h-full w-auto max-w-full object-contain"
               />
             </div>
-          ) : isMounted && companyName ? (
-            <>
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-brand-primary text-white flex items-center justify-center text-xs font-black shadow-2xs group-hover:scale-105 transition-transform shrink-0">
-                {companyName.charAt(0).toUpperCase()}
-              </div>
-              <div className="flex flex-col">
-                <span className="font-black text-brand-primary text-sm sm:text-base tracking-tight leading-tight line-clamp-1">
-                  {companyName}
-                </span>
-              </div>
-            </>
+          ) : companyName ? (
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-brand-primary text-white flex items-center justify-center text-xs font-black shadow-2xs group-hover:scale-105 transition-transform shrink-0">
+              {companyName.charAt(0).toUpperCase()}
+            </div>
           ) : null}
+
+          {companyName && (
+            <span className="font-black text-brand-primary text-xs xs:text-sm sm:text-base tracking-tight leading-tight truncate max-w-[85px] xs:max-w-[130px] sm:max-w-[220px] md:max-w-[320px]">
+              {companyName}
+            </span>
+          )}
         </div>
       </div>
 
@@ -329,7 +325,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <select
               value={currentRole}
               onChange={(e) => handleRoleSwitch(e.target.value as UserRole)}
-              className="appearance-none px-3 py-1.5 pr-7 border border-slate-200/90 rounded-xl text-brand-primary bg-slate-50 hover:bg-slate-100 font-bold text-xs focus:ring-2 focus:ring-brand-primary/20 focus:outline-none cursor-pointer capitalize shadow-2xs"
+              className="appearance-none px-2 sm:px-3 py-1 sm:py-1.5 pr-6 sm:pr-7 border border-slate-200/90 rounded-xl text-brand-primary bg-slate-50 hover:bg-slate-100 font-bold text-[11px] sm:text-xs focus:ring-2 focus:ring-brand-primary/20 focus:outline-none cursor-pointer capitalize shadow-2xs max-w-[110px] sm:max-w-none truncate"
             >
               {assignedRoles.map((r) => (
                 <option key={r} value={r} className="bg-white text-slate-800 capitalize">

@@ -498,7 +498,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
 
   return typeof document !== "undefined" ? createPortal(
     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fade-in">
-      <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/80 w-full max-w-[640px] overflow-hidden flex flex-col relative animate-scale-in">
+      <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/80 w-full max-w-[640px] max-h-[90vh] overflow-y-auto flex flex-col relative animate-scale-in">
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -555,69 +555,69 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {/* Left Column */}
-            <div className="space-y-4">
-              {/* Leave Type */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700 block">
-                  Select Leave Type
-                </label>
-                  <select
-                    value={leaveTypeId}
-                    onChange={(e) => setLeaveTypeId(Number(e.target.value))}
-                    disabled={isSubmitting}
-                    className="w-full text-xs font-semibold text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 px-3 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary shadow-2xs transition-all cursor-pointer disabled:bg-slate-50"
-                  >
-                    <option value="0">Select Leave Type</option>
-                    {leaveTypes.filter((t) => t.status !== false).map((t) => (
-                      <option key={t.leaveTypeId} value={t.leaveTypeId}>
-                        {t.leaveName} ({t.leaveCode})
-                      </option>
-                    ))}
-                  </select>
-                  {leaveTypeId > 0 && (
-                    <div className="mt-1.5 space-y-1.5">
-                      <div className="flex items-center justify-between bg-slate-50 border border-slate-200/60 p-2.5 rounded-xl">
-                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
-                          Available Balance:
-                        </span>
-                        <span className={`text-xs font-bold px-2 py-0.5 rounded-md border ${
-                          getSelectedLeaveBalance().balance > 0
-                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                            : "bg-rose-50 text-rose-700 border-rose-200"
-                        }`}>
-                          {getSelectedLeaveBalance().balance} {getSelectedLeaveBalance().balance === 1 ? "Day" : "Days"}
-                        </span>
-                      </div>
-                      {getSelectedLeaveBalance().categoryName === "Comp-Off" && compOffDetails?.eligibleDays?.[0]?.validTo && (
-                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200/80 px-2.5 py-1 rounded-xl">
-                          <span>⏳</span>
-                          <span>Comp-Off Expiry Date: {new Date(compOffDetails.eligibleDays[0].validTo).toLocaleDateString("en-GB")}</span>
-                        </div>
-                      )}
+          <div className="space-y-4">
+            {/* Leave Type */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-700 block">
+                Select Leave Type
+              </label>
+              <select
+                value={leaveTypeId}
+                onChange={(e) => setLeaveTypeId(Number(e.target.value))}
+                disabled={isSubmitting}
+                className="w-full text-xs font-semibold text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 px-3 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary shadow-2xs transition-all cursor-pointer disabled:bg-slate-50"
+              >
+                <option value="0">Select Leave Type</option>
+                {leaveTypes.filter((t) => t.status !== false).map((t) => (
+                  <option key={t.leaveTypeId} value={t.leaveTypeId}>
+                    {t.leaveName} ({t.leaveCode})
+                  </option>
+                ))}
+              </select>
+              {leaveTypeId > 0 && (
+                <div className="mt-1.5 space-y-1.5">
+                  <div className="flex items-center justify-between bg-slate-50 border border-slate-200/60 p-2.5 rounded-xl">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+                      Available Balance:
+                    </span>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-md border ${
+                      getSelectedLeaveBalance().balance > 0
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        : "bg-rose-50 text-rose-700 border-rose-200"
+                    }`}>
+                      {getSelectedLeaveBalance().balance} {getSelectedLeaveBalance().balance === 1 ? "Day" : "Days"}
+                    </span>
+                  </div>
+                  {getSelectedLeaveBalance().categoryName === "Comp-Off" && compOffDetails?.eligibleDays?.[0]?.validTo && (
+                    <div className="flex items-center gap-1.5 text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200/80 px-2.5 py-1 rounded-xl">
+                      <span>⏳</span>
+                      <span>Comp-Off Expiry Date: {new Date(compOffDetails.eligibleDays[0].validTo).toLocaleDateString("en-GB")}</span>
                     </div>
                   )}
-              </div>
+                </div>
+              )}
+            </div>
 
-              {/* Half Day Checkbox */}
-              <div className="flex items-center gap-2 pt-1">
-                <input
-                  type="checkbox"
-                  id="halfDay"
-                  checked={isHalfDay}
-                  onChange={(e) => setIsHalfDay(e.target.checked)}
-                  disabled={isSubmitting}
-                  className="w-4 h-4 rounded border-slate-300 text-brand-primary focus:ring-brand-primary/20 cursor-pointer disabled:opacity-50"
-                />
-                <label
-                  htmlFor="halfDay"
-                  className="text-xs font-semibold text-slate-700 cursor-pointer select-none"
-                >
-                  Half Day
-                </label>
-              </div>
+            {/* Half Day Checkbox */}
+            <div className="flex items-center gap-2 pt-1">
+              <input
+                type="checkbox"
+                id="halfDay"
+                checked={isHalfDay}
+                onChange={(e) => setIsHalfDay(e.target.checked)}
+                disabled={isSubmitting}
+                className="w-4 h-4 rounded border-slate-300 text-brand-primary focus:ring-brand-primary/20 cursor-pointer disabled:opacity-50"
+              />
+              <label
+                htmlFor="halfDay"
+                className="text-xs font-semibold text-slate-700 cursor-pointer select-none"
+              >
+                Half Day
+              </label>
+            </div>
 
+            {/* Date Range: From Date & To Date */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
               {/* From Date */}
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-slate-700 block">
@@ -636,30 +636,6 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
                 {renderDateStatusBadge(fromDate)}
               </div>
 
-
-            </div>
-
-            {/* Right Column */}
-            <div className="space-y-4">
-              {/* Reason */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700 block">
-                  Reason
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
-                  placeholder="Enter leave reason..."
-                  disabled={isSubmitting}
-                  className="w-full text-xs font-medium text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary shadow-2xs transition-all placeholder:text-slate-400"
-                />
-              </div>
-
-              {/* Spacer for alignment with Half Day checkbox */}
-              <div className="h-6 hidden md:block" />
-
               {/* To Date */}
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-slate-700 block">
@@ -677,8 +653,22 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
                 </div>
                 {renderDateStatusBadge(toDate)}
               </div>
+            </div>
 
-
+            {/* Reason */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-700 block">
+                Reason
+              </label>
+              <input
+                type="text"
+                required
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder="Enter leave reason..."
+                disabled={isSubmitting}
+                className="w-full text-xs font-medium text-slate-800 bg-white border border-slate-300 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary shadow-2xs transition-all placeholder:text-slate-400"
+              />
             </div>
           </div>
 
