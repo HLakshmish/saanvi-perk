@@ -70,6 +70,7 @@ app.register(require("./Leave/COMP-OFF/compOffPolicy/compOffPolicy.route"), { pr
 app.register(require("./Leave/COMP-OFF/compOffAssign/compOffAssign.route"), { prefix: "/api/comp-off-assigns" });
 app.register(require("./Organisation/assets/asset.route"), { prefix: "/api/assets" });
 app.register(require("./Reimbursement/reimbursement.route"), { prefix: "/api/reimbursements" });
+app.register(require("./Payroll/payroll.route"), { prefix: "/api/payroll" });
 
 module.exports = app;
 // Trigger restart
