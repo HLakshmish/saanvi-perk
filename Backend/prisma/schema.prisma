@@ -69,6 +69,9 @@ model CompanyDetails {
   weekOffAssigns           WeekOffAssign[]
   assets              AssetDetails[]
   reimbursementClaims ReimbursementClaim[]
+  payrollSettings     PayrollSettings?
+  salaryStructures    EmployeeSalaryStructure[]
+  employeePayslips    EmployeePayslip[]
 
   @@map("company_details")
 }
@@ -281,6 +284,9 @@ model User {
   reimbursementHistories ReimbursementHistory[]
 
   userRoles UserRole[]
+
+  salaryStructure  EmployeeSalaryStructure?
+  employeePayslips EmployeePayslip[]
 
   @@map("users")
 }
@@ -1382,4 +1388,116 @@ model WeekOffAssign {
   updatedUser User?          @relation("WeekOffAssignUpdatedBy", fields: [updatedBy], references: [userId])
 
   @@map("week_off_assigns")
+}
+
+// ==========================
+// Payroll Settings
+// ==========================
+model PayrollSettings {
+  id                        Int      @id @default(autoincrement())
+  companyId                 Int      @unique @map("company_id")
+  basicPercentage           Decimal  @default(50.00) @map("basic_percentage") @db.Decimal(5, 2)
+  hraPercentage             Decimal  @default(25.00) @map("hra_percentage") @db.Decimal(5, 2)
+  otherAllowancesPercentage Decimal  @default(25.00) @map("other_allowances_percentage") @db.Decimal(5, 2)
+  employeePfRate            Decimal  @default(12.00) @map("employee_pf_rate") @db.Decimal(5, 2)
+  employeeEsiRate           Decimal  @default(0.75) @map("employee_esi_rate") @db.Decimal(5, 2)
+  professionalTax           Decimal  @default(200.00) @map("professional_tax") @db.Decimal(10, 2)
+  employerPfRate            Decimal  @default(13.00) @map("employer_pf_rate") @db.Decimal(5, 2)
+  employerEsiRate           Decimal  @default(3.25) @map("employer_esi_rate") @db.Decimal(5, 2)
+  gratuityRate              Decimal  @default(4.81) @map("gratuity_rate") @db.Decimal(5, 2)
+  statutoryPfWageLimit      Decimal  @default(15000.00) @map("statutory_pf_wage_limit") @db.Decimal(10, 2)
+  usePfWageCeiling          Boolean  @default(true) @map("use_pf_wage_ceiling")
+  statutoryEsiGrossLimit    Decimal  @default(21000.00) @map("statutory_esi_gross_limit") @db.Decimal(10, 2)
+  updatedBy                 Int?     @map("updated_by")
+  createdAt                 DateTime @default(now()) @map("created_at")
+  updatedAt                 DateTime @default(now()) @updatedAt @map("updated_at")
+
+  company CompanyDetails @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
+
+  @@map("payroll_settings")
+}
+
+// ==========================
+// Employee Salary Structure (CTC)
+// ==========================
+model EmployeeSalaryStructure {
+  id                     Int      @id @default(autoincrement())
+  companyId              Int      @map("company_id")
+  userId                 Int      @unique @map("user_id")
+  annualCtc              Decimal  @map("annual_ctc") @db.Decimal(12, 2)
+  monthlyCtc             Decimal  @map("monthly_ctc") @db.Decimal(12, 2)
+  monthlyGross           Decimal  @map("monthly_gross") @db.Decimal(12, 2)
+  annualGross            Decimal  @map("annual_gross") @db.Decimal(12, 2)
+  basicMonthly           Decimal  @map("basic_monthly") @db.Decimal(12, 2)
+  basicAnnual            Decimal  @map("basic_annual") @db.Decimal(12, 2)
+  hraMonthly             Decimal  @map("hra_monthly") @db.Decimal(12, 2)
+  hraAnnual              Decimal  @map("hra_annual") @db.Decimal(12, 2)
+  otherAllowancesMonthly Decimal  @map("other_allowances_monthly") @db.Decimal(12, 2)
+  otherAllowancesAnnual  Decimal  @map("other_allowances_annual") @db.Decimal(12, 2)
+  employeePfMonthly      Decimal  @map("employee_pf_monthly") @db.Decimal(12, 2)
+  employeePfAnnual       Decimal  @map("employee_pf_annual") @db.Decimal(12, 2)
+  employeeEsiMonthly     Decimal  @map("employee_esi_monthly") @db.Decimal(12, 2)
+  employeeEsiAnnual      Decimal  @map("employee_esi_annual") @db.Decimal(12, 2)
+  professionalTaxMonthly Decimal  @map("professional_tax_monthly") @db.Decimal(12, 2)
+  professionalTaxAnnual  Decimal  @map("professional_tax_annual") @db.Decimal(12, 2)
+  totalDeductionsMonthly Decimal  @map("total_deductions_monthly") @db.Decimal(12, 2)
+  totalDeductionsAnnual  Decimal  @map("total_deductions_annual") @db.Decimal(12, 2)
+  netSalaryMonthly       Decimal  @map("net_salary_monthly") @db.Decimal(12, 2)
+  netSalaryAnnual        Decimal  @map("net_salary_annual") @db.Decimal(12, 2)
+  employerPfMonthly      Decimal  @map("employer_pf_monthly") @db.Decimal(12, 2)
+  employerPfAnnual       Decimal  @map("employer_pf_annual") @db.Decimal(12, 2)
+  employerEsiMonthly     Decimal  @map("employer_esi_monthly") @db.Decimal(12, 2)
+  employerEsiAnnual      Decimal  @map("employer_esi_annual") @db.Decimal(12, 2)
+  gratuityMonthly        Decimal  @map("gratuity_monthly") @db.Decimal(12, 2)
+  gratuityAnnual         Decimal  @map("gratuity_annual") @db.Decimal(12, 2)
+  status                 String   @default("ACTIVE") @db.VarChar(20)
+  effectiveDate          DateTime @default(now()) @map("effective_date")
+  createdAt              DateTime @default(now()) @map("created_at")
+  updatedAt              DateTime @default(now()) @updatedAt @map("updated_at")
+
+  company  CompanyDetails    @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
+  user     User              @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  payslips EmployeePayslip[]
+
+  @@map("employee_salary_structures")
+}
+
+// ==========================
+// Employee Payslip
+// ==========================
+model EmployeePayslip {
+  id                    Int       @id @default(autoincrement())
+  companyId             Int       @map("company_id")
+  userId                Int       @map("user_id")
+  salaryStructureId     Int?      @map("salary_structure_id")
+  month                 Int
+  year                  Int
+  workingDays           Int       @default(30) @map("working_days")
+  paidDays              Decimal   @default(30) @map("paid_days") @db.Decimal(4, 1)
+  lossOfPayDays         Decimal   @default(0) @map("loss_of_pay_days") @db.Decimal(4, 1)
+  basicEarned           Decimal   @map("basic_earned") @db.Decimal(12, 2)
+  hraEarned             Decimal   @map("hra_earned") @db.Decimal(12, 2)
+  otherAllowancesEarned Decimal   @map("other_allowances_earned") @db.Decimal(12, 2)
+  grossEarned           Decimal   @map("gross_earned") @db.Decimal(12, 2)
+  employeePf            Decimal   @map("employee_pf") @db.Decimal(12, 2)
+  employeeEsi           Decimal   @map("employee_esi") @db.Decimal(12, 2)
+  professionalTax       Decimal   @map("professional_tax") @db.Decimal(12, 2)
+  totalDeductions       Decimal   @map("total_deductions") @db.Decimal(12, 2)
+  netPay                Decimal   @map("net_pay") @db.Decimal(12, 2)
+  employerPf            Decimal   @map("employer_pf") @db.Decimal(12, 2)
+  employerEsi           Decimal   @map("employer_esi") @db.Decimal(12, 2)
+  gratuity              Decimal   @map("gratuity") @db.Decimal(12, 2)
+  ctcEarned             Decimal   @map("ctc_earned") @db.Decimal(12, 2)
+  paymentStatus         String    @default("GENERATED") @map("payment_status") @db.VarChar(20)
+  paymentDate           DateTime? @map("payment_date")
+  remarks               String?
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  company         CompanyDetails           @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
+  user            User                     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  salaryStructure EmployeeSalaryStructure? @relation(fields: [salaryStructureId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, month, year])
+  @@map("employee_payslips")
 }

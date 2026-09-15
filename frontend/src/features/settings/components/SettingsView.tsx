@@ -8,6 +8,7 @@ import { PlaceholderConfigTab } from "./PlaceholderConfigTab";
 import { DepartmentTab } from "./DepartmentTab";
 import { LeaveTab } from "./LeaveTab";
 import { AttendanceTab } from "./AttendanceTab";
+import { PayrollSettingsTab } from "@/features/payroll";
 
 export const SettingsView: React.FC = () => {
   const [activeSubTab, setActiveSubTab] = useState<SettingsSubTab>("account-info");
@@ -121,10 +122,7 @@ export const SettingsView: React.FC = () => {
           )}
 
           {activeSubTab === "payroll" && (
-            <PlaceholderConfigTab
-              title="Payroll"
-              description="Manage salary structures, deductions, statutory rates, and tax policies."
-            />
+            <PayrollSettingsTab />
           )}
 
           {activeSubTab === "attendance" && (
