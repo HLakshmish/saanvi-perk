@@ -865,7 +865,7 @@ export const UsersManagementView: React.FC = () => {
             <select
               value={roleToAssign}
               onChange={(e) => setRoleToAssign(e.target.value)}
-              className="px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:border-brand-primary shadow-2xs cursor-pointer min-w-[200px]"
+              className="w-full sm:w-auto px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:border-brand-primary shadow-2xs cursor-pointer min-w-0 sm:min-w-[200px]"
             >
               {availableRoleNames.map((r) => (
                 <option key={r} value={r}>

@@ -182,8 +182,8 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fade-in">
-      <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/80 w-full max-w-[660px] overflow-hidden flex flex-col relative animate-scale-in">
+    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-3 sm:p-4 animate-fade-in">
+      <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/80 w-full max-w-[660px] max-h-[90vh] overflow-y-auto flex flex-col relative animate-scale-in">
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -194,7 +194,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
         </button>
 
         {/* Modal Header Row: From & To inputs */}
-        <div className="grid grid-cols-2 gap-6 p-6 pr-14 border-b border-slate-100 bg-slate-50/50">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6 p-4 sm:p-6 pr-12 sm:pr-14 border-b border-slate-100 bg-slate-50/50">
           <div className="flex items-center gap-3">
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider w-8">From</span>
             <div className="relative flex-1">

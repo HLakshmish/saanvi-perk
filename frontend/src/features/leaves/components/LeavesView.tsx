@@ -482,8 +482,8 @@ export const LeavesView: React.FC = () => {
   return (
     <div className="w-full space-y-6">
       {/* Upper Navigation Header Bar: Summary | Request | Holiday */}
-      <div className="flex justify-end border-b border-slate-200/80 pb-2">
-        <div className="flex items-center gap-1 bg-slate-100/80 p-1 rounded-xl border border-slate-200/80 shadow-2xs">
+      <div className="flex justify-start sm:justify-end border-b border-slate-200/80 pb-2 overflow-x-auto w-full max-w-full">
+        <div className="flex items-center gap-1 bg-slate-100/80 p-1 rounded-xl border border-slate-200/80 shadow-2xs shrink-0 max-w-full overflow-x-auto">
           <button
             onClick={() => setActiveTab("summary")}
             className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 cursor-pointer ${

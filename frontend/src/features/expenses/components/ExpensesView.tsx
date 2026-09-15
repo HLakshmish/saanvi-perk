@@ -519,9 +519,9 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
       <div className="bg-white rounded-2xl border border-slate-200/80 p-6 sm:p-8 shadow-2xs hover:shadow-xs transition-all min-h-[460px] flex flex-col justify-between relative">
         <div>
           {/* Filters Bar */}
-          <div className="flex flex-wrap items-center gap-3 mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
             {/* Search Input */}
-            <div className="relative min-w-[240px] sm:min-w-[280px]">
+            <div className="relative w-full sm:w-auto sm:min-w-[280px]">
               <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"

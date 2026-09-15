@@ -25,6 +25,14 @@ interface SidebarProps {
   onCloseMobileSidebar?: () => void;
 }
 
+interface NavItem {
+  id: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  roles: UserRole[];
+  disabled?: boolean;
+}
+
 export const Sidebar: React.FC<SidebarProps> = ({
   currentRole,
   activeTab,
@@ -33,11 +41,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onCloseMobileSidebar,
 }) => {
   // Navigation items filtered by role
-  const navItems = [
+  const navItems: NavItem[] = [
     { id: "dashboard", label: "Dashboard", icon: LayoutGrid, roles: ["superadmin", "admin", "employee"] },
     { id: "employees", label: "Employees", icon: Users, roles: ["superadmin", "admin"] },
     { id: "requests", label: "Requests", icon: CalendarCheck, roles: ["superadmin", "admin", "employee"] },
-    { id: "approval", label: "Approval", icon: FileCheck, roles: ["superadmin", "admin", "employee"] },
+    { id: "approval", label: "Approval", icon: FileCheck, roles: ["superadmin", "admin"] },
     { id: "attendance", label: "Attendance", icon: Clock, roles: ["superadmin", "admin", "employee"] },
     { id: "holidays-leaves", label: "Leaves", icon: Umbrella, roles: ["superadmin", "admin", "employee"] },
     { id: "payroll", label: "Payroll", icon: Banknote, roles: ["superadmin", "admin", "employee"] },

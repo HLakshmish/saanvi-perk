@@ -343,8 +343,8 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
     <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-2xs hover:shadow-xs transition-all min-h-[500px] flex flex-col justify-between relative">
       <div>
         {/* Filters Header */}
-        <div className="flex flex-wrap items-center gap-3 mb-6">
-          <div className="relative min-w-[240px] sm:min-w-[280px]">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
+          <div className="relative w-full sm:w-auto sm:min-w-[280px]">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
@@ -360,11 +360,13 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
 
           <button
             onClick={() => setIsDatePickerOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 border border-slate-300 rounded-xl text-sm text-slate-700 bg-white hover:bg-slate-50 font-semibold shadow-2xs transition-colors cursor-pointer"
+            className="flex items-center justify-between sm:justify-start gap-2 px-4 py-2 border border-slate-300 rounded-xl text-sm text-slate-700 bg-white hover:bg-slate-50 font-semibold shadow-2xs transition-colors cursor-pointer w-full sm:w-auto"
           >
-            <CalendarIcon className="w-4 h-4 text-slate-500" />
-            <span>{dateRange}</span>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400 ml-1" />
+            <div className="flex items-center gap-2">
+              <CalendarIcon className="w-4 h-4 text-slate-500 shrink-0" />
+              <span className="truncate">{dateRange}</span>
+            </div>
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400 ml-1 shrink-0" />
           </button>
         </div>
 
