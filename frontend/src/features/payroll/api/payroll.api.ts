@@ -82,8 +82,22 @@ export async function calculateSalaryBreakup(payload: CalculateSalaryInput, comp
   }
 }
 
-// 4. Assign Salary Structure to Employee
-export async function assignEmployeeSalary(payload: { userId: number; annualCtc?: number; monthlyCtc?: number; monthlyGross?: number; basicAmount?: number }, companyId?: number): Promise<{ success: boolean; data?: any; error?: string }> {
+// 4. Assign Salary Structure to Employee (Initial or Hike / Revision)
+export async function assignEmployeeSalary(
+  payload: {
+    userId: number;
+    annualCtc?: number;
+    monthlyCtc?: number;
+    monthlyGross?: number;
+    basicAmount?: number;
+    effectiveDate?: string;
+    hikePercentage?: number;
+    previousCtc?: number;
+    revisionType?: string;
+    remarks?: string;
+  },
+  companyId?: number
+): Promise<{ success: boolean; data?: any; error?: string }> {
   try {
     const cId = companyId || getCompanyIdCookie();
     const res = await fetch(`${API_BASE_URL}/api/payroll/salaries`, {
@@ -96,6 +110,28 @@ export async function assignEmployeeSalary(payload: { userId: number; annualCtc?
       return { success: true, data: json.data };
     }
     return { success: false, error: json.message || "Failed to assign salary structure" };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Network error" };
+  }
+}
+
+// 4b. Get Salary Revision & Hike History for Employee
+export async function getSalaryHistory(
+  userId: number,
+  companyId?: number
+): Promise<{ success: boolean; data?: any[]; error?: string }> {
+  try {
+    const cId = companyId || getCompanyIdCookie();
+    const query = cId ? `?companyId=${cId}` : "";
+    const res = await fetch(`${API_BASE_URL}/api/payroll/salaries/${userId}/history${query}`, {
+      method: "GET",
+      headers: getHeaders()
+    });
+    const json = await res.json();
+    if (res.ok && json.success) {
+      return { success: true, data: json.data };
+    }
+    return { success: false, error: json.message || "Failed to fetch salary history" };
   } catch (err: any) {
     return { success: false, error: err.message || "Network error" };
   }

@@ -25,6 +25,7 @@ async function payrollRoutes(fastify, options) {
 
     // 3. Employee Salary Structures & CTC Assignments
     fastify.get("/salaries", opts(getSalaryStructuresSchema), payrollController.getAllSalaryStructures.bind(payrollController));
+    fastify.get("/salaries/:userId/history", opts(), payrollController.getSalaryHistory.bind(payrollController));
     fastify.get("/salaries/:userId", opts(), payrollController.getSalaryStructure.bind(payrollController));
     fastify.post("/salaries", opts(assignSalarySchema), payrollController.assignSalary.bind(payrollController));
 

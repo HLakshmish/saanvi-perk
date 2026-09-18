@@ -54,7 +54,12 @@ const assignSalarySchema = {
             annualCtc: { type: 'number' },
             monthlyCtc: { type: 'number' },
             monthlyGross: { type: 'number' },
-            basicAmount: { type: 'number' }
+            basicAmount: { type: 'number' },
+            effectiveDate: { type: 'string' },
+            hikePercentage: { type: 'number' },
+            previousCtc: { type: 'number' },
+            revisionType: { type: 'string' },
+            remarks: { type: 'string' }
         }
     }
 };

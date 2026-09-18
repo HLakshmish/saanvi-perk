@@ -91,12 +91,13 @@ class PayrollService {
                 ? Number(basicAmount) 
                 : Math.round(mGross * (rates.basicPercentage / 100) * 100) / 100;
             
-            const pfWage = rates.usePfWageCeiling 
-                ? Math.min(basicM, rates.statutoryPfWageLimit) 
-                : basicM;
+            // Statutory PF & ESI wage limits
+            const pfWage = basicM > 15000 ? 15000 : basicM;
+            const esiThreshold = Number(rates.statutoryEsiGrossLimit || 21000);
             
             const employerPfM = Math.round(pfWage * (rates.employerPfRate / 100));
-            const employerEsiM = Math.round(basicM * (rates.employerEsiRate / 100));
+            // ESI Contribution: If base amount is more than 21000/m, Employer ESI is 0
+            const employerEsiM = basicM > esiThreshold ? 0 : Math.round(basicM * (rates.employerEsiRate / 100));
             const gratuityM = Math.round(basicM * (rates.gratuityRate / 100));
             
             mCtc = mGross + employerPfM + employerEsiM + gratuityM;
@@ -115,14 +116,14 @@ class PayrollService {
             basicMonthly = Math.round(mCtc * (rates.basicPercentage / 100) * 100) / 100;
         }
 
-        // Statutory PF wage base
-        const pfWage = rates.usePfWageCeiling
-            ? Math.min(basicMonthly, rates.statutoryPfWageLimit)
-            : basicMonthly;
+        // Statutory PF wage base (EPF wage capped at 15000 if basic is more than 15000)
+        const pfWage = basicMonthly > 15000 ? 15000 : basicMonthly;
+        const esiThreshold = Number(rates.statutoryEsiGrossLimit || 21000);
 
         // Employer Contributions
+        // ESI Rule: if base amount (basic monthly) is more than 21,000/m, Employer ESI is 0
         const employerPfMonthly = Math.round(pfWage * (rates.employerPfRate / 100));
-        const employerEsiMonthly = Math.round(basicMonthly * (rates.employerEsiRate / 100));
+        const employerEsiMonthly = basicMonthly > esiThreshold ? 0 : Math.round(basicMonthly * (rates.employerEsiRate / 100));
         const gratuityMonthly = Math.round(basicMonthly * (rates.gratuityRate / 100));
         const totalEmployerContribution = employerPfMonthly + employerEsiMonthly + gratuityMonthly;
 
@@ -135,8 +136,12 @@ class PayrollService {
         const otherAllowancesMonthly = Math.round((remainingGross - hraMonthly) * 100) / 100;
 
         // Employee Deductions
-        const employeePfMonthly = Math.round(pfWage * (rates.employeePfRate / 100));
-        const employeeEsiMonthly = Math.round(basicMonthly * (rates.employeeEsiRate / 100));
+        // EPF Contribution Rate: If basic is more than 15000/m take 1800 only. 12% applies only if basic <= 15000/m
+        const employeePfMonthly = basicMonthly > 15000 
+            ? 1800 
+            : Math.round(basicMonthly * (Number(rates.employeePfRate || 12.00) / 100));
+        // ESI Contribution: If base amount is more than 21000/m, Employee ESI is 0
+        const employeeEsiMonthly = basicMonthly > esiThreshold ? 0 : Math.round(basicMonthly * (rates.employeeEsiRate / 100));
         const professionalTaxMonthly = Number(rates.professionalTax || 200.00);
         const totalDeductionsMonthly = employeePfMonthly + employeeEsiMonthly + professionalTaxMonthly;
 
@@ -250,14 +255,23 @@ class PayrollService {
             employerEsiMonthly: breakup.monthly.employerEsi,
             employerEsiAnnual: breakup.annual.employerEsi,
             gratuityMonthly: breakup.monthly.gratuity,
-            gratuityAnnual: breakup.annual.gratuity
+            gratuityAnnual: breakup.annual.gratuity,
+            effectiveDate: payload.effectiveDate || new Date().toISOString().split('T')[0],
+            hikePercentage: payload.hikePercentage,
+            previousCtc: payload.previousCtc,
+            revisionType: payload.revisionType,
+            remarks: payload.remarks
         };
 
-        const result = await payrollRepository.assignSalaryStructure(Number(companyId), Number(userId), data);
+        const result = await payrollRepository.assignSalaryStructure(Number(companyId), Number(userId), data, createdBy);
         return {
             ...result,
             breakup
         };
+    }
+
+    async getSalaryHistory(companyId, userId) {
+        return await payrollRepository.getSalaryHistory(Number(companyId), Number(userId));
     }
 
     async getSalaryStructure(companyId, userId) {
@@ -352,14 +366,30 @@ class PayrollService {
             const otherAllowancesEarned = Math.round(Number(structure.other_allowances_monthly) * payFactor * 100) / 100;
             const grossEarned = basicEarned + hraEarned + otherAllowancesEarned;
 
-            const employeePf = Math.round(Number(structure.employee_pf_monthly) * payFactor * 100) / 100;
-            const employeeEsi = Math.round(Number(structure.employee_esi_monthly) * payFactor * 100) / 100;
-            const professionalTax = Number(structure.professional_tax_monthly);
+            // EPF Contribution: If basic is more than 15000/m take 1800 only. 12% applies only if basic <= 15000/m
+            let baseMonthlyPf = Number(structure.employee_pf_monthly);
+            if (Number(structure.basic_monthly) > 15000) {
+                baseMonthlyPf = 1800;
+            } else if (Number(structure.basic_monthly) <= 15000 && (!baseMonthlyPf || baseMonthlyPf > 1800)) {
+                baseMonthlyPf = Math.round(Number(structure.basic_monthly) * (Number(settings.employeePfRate || 12.00) / 100));
+            }
+            const employeePf = Math.round(baseMonthlyPf * payFactor * 100) / 100;
+
+            // ESI Contribution: If base amount is more than 21000/m, both Employee and Employer ESI are 0
+            const esiThreshold = Number(settings.statutoryEsiGrossLimit || 21000);
+            const isEsiExempt = Number(structure.basic_monthly) > esiThreshold || basicEarned > esiThreshold;
+
+            const employeeEsi = isEsiExempt 
+                ? 0 
+                : Math.round(Number(structure.employee_esi_monthly || 0) * payFactor * 100) / 100;
+            const professionalTax = Number(structure.professional_tax_monthly || 0);
             const totalDeductions = employeePf + employeeEsi + professionalTax;
             const netPay = Math.round((grossEarned - totalDeductions) * 100) / 100;
 
             const employerPf = Math.round(Number(structure.employer_pf_monthly) * payFactor * 100) / 100;
-            const employerEsi = Math.round(Number(structure.employer_esi_monthly) * payFactor * 100) / 100;
+            const employerEsi = isEsiExempt 
+                ? 0 
+                : Math.round(Number(structure.employer_esi_monthly || 0) * payFactor * 100) / 100;
             const gratuity = Math.round(Number(structure.gratuity_monthly) * payFactor * 100) / 100;
             const ctcEarned = grossEarned + employerPf + employerEsi + gratuity;
 

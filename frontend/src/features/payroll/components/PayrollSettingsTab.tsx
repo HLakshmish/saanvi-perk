@@ -105,14 +105,13 @@ export const PayrollSettingsTab: React.FC = () => {
   // Quick live simulator for ₹71,555 monthly CTC
   const sampleCtc = 71555;
   const simBasic = Math.round(sampleCtc * (settings.basicPercentage / 100));
-  const simPfWage = settings.usePfWageCeiling
-    ? Math.min(simBasic, settings.statutoryPfWageLimit)
-    : simBasic;
-  const simEmpPf = Math.round(simPfWage * (settings.employeePfRate / 100));
-  const simEmpEsi = Math.round(simBasic * (settings.employeeEsiRate / 100));
+  const simPfWage = simBasic > 15000 ? 15000 : simBasic;
+  const simEmpPf = simBasic > 15000 ? 1800 : Math.round(simBasic * (settings.employeePfRate / 100));
+  const simEsiLimit = Number(settings.statutoryEsiGrossLimit || 21000);
+  const simEmpEsi = simBasic > simEsiLimit ? 0 : Math.round(simBasic * (settings.employeeEsiRate / 100));
   const simPt = Number(settings.professionalTax || 0);
   const simEmployerPf = Math.round(simPfWage * (settings.employerPfRate / 100));
-  const simEmployerEsi = Math.round(simBasic * (settings.employerEsiRate / 100));
+  const simEmployerEsi = simBasic > simEsiLimit ? 0 : Math.round(simBasic * (settings.employerEsiRate / 100));
   const simGratuity = Math.round(simBasic * (settings.gratuityRate / 100));
   const simTotalEmployer = simEmployerPf + simEmployerEsi + simGratuity;
   const simGross = sampleCtc - simTotalEmployer;
@@ -248,7 +247,7 @@ export const PayrollSettingsTab: React.FC = () => {
                   />
                   <span className="absolute right-3 top-2.5 text-xs font-bold text-slate-400">%</span>
                 </div>
-                <p className="text-[11px] text-slate-400 mt-1">Default 12.00% on Basic Pay</p>
+                <p className="text-[11px] text-slate-400 mt-1">12.00% if Basic ≤ ₹15,000; fixed ₹1,800 if Basic &gt; ₹15,000</p>
               </div>
 
               <div>
@@ -267,7 +266,7 @@ export const PayrollSettingsTab: React.FC = () => {
                   />
                   <span className="absolute right-3 top-2.5 text-xs font-bold text-slate-400">%</span>
                 </div>
-                <p className="text-[11px] text-slate-400 mt-1">Default 0.75% on Basic Pay</p>
+                <p className="text-[11px] text-slate-400 mt-1">Default 0.75% on Basic Pay (₹0 if Basic &gt; ₹21,000/mo)</p>
               </div>
 
               <div>
@@ -344,7 +343,7 @@ export const PayrollSettingsTab: React.FC = () => {
                   />
                   <span className="absolute right-3 top-2.5 text-xs font-bold text-slate-400">%</span>
                 </div>
-                <p className="text-[11px] text-slate-400 mt-1">Default 3.25% on Basic Pay</p>
+                <p className="text-[11px] text-slate-400 mt-1">Default 3.25% on Basic Pay (₹0 if Basic &gt; ₹21,000/mo)</p>
               </div>
 
               <div>
@@ -393,7 +392,7 @@ export const PayrollSettingsTab: React.FC = () => {
                     Enforce Statutory PF Wage Ceiling
                   </div>
                   <div className="text-[11px] text-slate-500 mt-0.5">
-                    Caps PF contribution to statutory wage limit (₹1,800/mo cap)
+                    Caps EPF to ₹1,800/mo when Basic exceeds ₹15,000 (12% applies only if Basic ≤ ₹15,000)
                   </div>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -423,7 +422,54 @@ export const PayrollSettingsTab: React.FC = () => {
                     className="w-full pl-7 pr-3 py-2 text-sm font-bold border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary outline-none disabled:bg-slate-100 disabled:text-slate-400"
                   />
                 </div>
-                <p className="text-[11px] text-slate-400 mt-1">Standard statutory limit: ₹15,000</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 5: Statutory ESI Wage Ceiling Rule */}
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs">
+                  5
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">
+                    Statutory ESI Wage Ceiling Rule
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Indian statutory ESI threshold: ₹21,000/month wage limit rule
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <div className="text-xs font-bold text-slate-800">
+                  ESI Exemption Above Threshold
+                </div>
+                <div className="text-[11px] text-slate-500 mt-0.5">
+                  If base amount (Basic Pay) exceeds ₹21,000/mo, both Employee ESI and Employer ESI contributions are set to ₹0.
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Statutory ESI Wage Limit (₹)
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2.5 text-xs font-bold text-slate-400">₹</span>
+                  <input
+                    type="number"
+                    step="100"
+                    min="0"
+                    value={settings.statutoryEsiGrossLimit}
+                    onChange={(e) => handleChange("statutoryEsiGrossLimit", parseFloat(e.target.value) || 0)}
+                    className="w-full pl-7 pr-3 py-2 text-sm font-bold border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary outline-none"
+                  />
+                </div>
+                <p className="text-[11px] text-slate-400 mt-1">Standard statutory limit: ₹21,000 / month</p>
               </div>
             </div>
           </div>
@@ -453,7 +499,9 @@ export const PayrollSettingsTab: React.FC = () => {
               </div>
               <div className="flex justify-between text-slate-300">
                 <span>Employee ESI ({settings.employeeEsiRate}%)</span>
-                <span className="font-bold text-rose-300">₹{simEmpEsi.toLocaleString()}</span>
+                <span className="font-bold text-rose-300">
+                  {simEmpEsi === 0 ? "₹0 (Exempt > ₹21k)" : `₹${simEmpEsi.toLocaleString()}`}
+                </span>
               </div>
               <div className="flex justify-between text-slate-300">
                 <span>Professional Tax (PT)</span>
