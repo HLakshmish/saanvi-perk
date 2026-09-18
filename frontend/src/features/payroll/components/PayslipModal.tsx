@@ -191,7 +191,9 @@ export const PayslipModal: React.FC<PayslipModalProps> = ({ payslip, onClose }) 
                   <span className="font-semibold text-rose-600">{formatCurrency(payslip.employee_pf)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-600">Employee ESI (0.75%)</span>
+                  <span className="text-slate-600">
+                    Employee ESI {Number(payslip.employee_esi) === 0 ? "(Exempt > ₹21k)" : "(0.75%)"}
+                  </span>
                   <span className="font-semibold text-rose-600">{formatCurrency(payslip.employee_esi)}</span>
                 </div>
                 <div className="flex justify-between">
@@ -232,7 +234,9 @@ export const PayslipModal: React.FC<PayslipModalProps> = ({ payslip, onClose }) 
                 <span className="font-semibold text-slate-900 ml-1">{formatCurrency(payslip.employer_pf)}</span>
               </div>
               <div className="flex justify-between sm:block">
-                <span className="text-slate-500">Employer ESI (3.25%):</span>
+                <span className="text-slate-500">
+                  Employer ESI {Number(payslip.employer_esi) === 0 ? "(Exempt > ₹21k)" : "(3.25%)"}:
+                </span>
                 <span className="font-semibold text-slate-900 ml-1">{formatCurrency(payslip.employer_esi)}</span>
               </div>
               <div className="flex justify-between sm:block">

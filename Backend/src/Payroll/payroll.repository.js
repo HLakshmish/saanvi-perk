@@ -108,6 +108,63 @@ class PayrollRepository {
                     );
                 `);
 
+                // Create employee_salary_history table for hike & revision tracking
+                await prisma.$executeRawUnsafe(`
+                    CREATE TABLE IF NOT EXISTS employee_salary_history (
+                        id SERIAL PRIMARY KEY,
+                        company_id INTEGER NOT NULL,
+                        user_id INTEGER NOT NULL,
+                        previous_annual_ctc NUMERIC(12, 2) DEFAULT 0,
+                        new_annual_ctc NUMERIC(12, 2) NOT NULL,
+                        previous_monthly_ctc NUMERIC(12, 2) DEFAULT 0,
+                        new_monthly_ctc NUMERIC(12, 2) NOT NULL,
+                        hike_percentage NUMERIC(6, 2) DEFAULT 0,
+                        hike_amount NUMERIC(12, 2) DEFAULT 0,
+                        revision_type VARCHAR(50) DEFAULT 'INITIAL',
+                        effective_date DATE NOT NULL,
+                        remarks TEXT,
+                        created_by INTEGER,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    );
+                `);
+
+                // Normalize any existing salary structures to ensure basic > 15000 has employee_pf capped at 1800
+                await prisma.$executeRawUnsafe(`
+                    UPDATE employee_salary_structures
+                    SET employee_pf_monthly = 1800.00,
+                        employee_pf_annual = 21600.00,
+                        total_deductions_monthly = 1800.00 + employee_esi_monthly + professional_tax_monthly,
+                        total_deductions_annual = 21600.00 + employee_esi_annual + professional_tax_annual,
+                        net_salary_monthly = monthly_gross - (1800.00 + employee_esi_monthly + professional_tax_monthly),
+                        net_salary_annual = annual_gross - (21600.00 + employee_esi_annual + professional_tax_annual)
+                    WHERE basic_monthly > 15000 AND employee_pf_monthly > 1800;
+                `).catch(() => {});
+
+                // Normalize any existing salary structures to ensure basic > 21000 has ESI (both employee & employer) set to 0
+                await prisma.$executeRawUnsafe(`
+                    UPDATE employee_salary_structures
+                    SET employee_esi_monthly = 0.00,
+                        employee_esi_annual = 0.00,
+                        employer_esi_monthly = 0.00,
+                        employer_esi_annual = 0.00,
+                        total_deductions_monthly = employee_pf_monthly + professional_tax_monthly,
+                        total_deductions_annual = employee_pf_annual + professional_tax_annual,
+                        net_salary_monthly = monthly_gross - (employee_pf_monthly + professional_tax_monthly),
+                        net_salary_annual = annual_gross - (employee_pf_annual + professional_tax_annual)
+                    WHERE basic_monthly > 21000 AND (employee_esi_monthly > 0 OR employer_esi_monthly > 0);
+                `).catch(() => {});
+
+                // Normalize payslips where basic_earned > 21000
+                await prisma.$executeRawUnsafe(`
+                    UPDATE payslips
+                    SET employee_esi = 0.00,
+                        employer_esi = 0.00,
+                        total_deductions = employee_pf + professional_tax,
+                        net_pay = gross_earned - (employee_pf + professional_tax),
+                        ctc_earned = gross_earned + employer_pf + gratuity
+                    WHERE basic_earned > 21000 AND (employee_esi > 0 OR employer_esi > 0);
+                `).catch(() => {});
+
                 this.initialized = true;
             } catch (err) {
                 console.error("Error initializing payroll tables:", err);
@@ -225,11 +282,19 @@ class PayrollRepository {
         let query = `
             SELECT s.*, 
                    u.user_id, u.first_name, u.last_name, u.employee_code, u.official_email,
-                   d.designation_name, dept.department_name
+                   d.designation_name, dept.department_name,
+                   h.hike_percentage, h.hike_amount, h.previous_annual_ctc, h.revision_type, h.remarks as hike_remarks
             FROM users u
             LEFT JOIN employee_salary_structures s ON u.user_id = s.user_id AND s.company_id = $1
             LEFT JOIN designations d ON u.designation_id = d.designation_id
             LEFT JOIN departments dept ON u.department_id = dept.department_id
+            LEFT JOIN LATERAL (
+                SELECT hike_percentage, hike_amount, previous_annual_ctc, revision_type, remarks
+                FROM employee_salary_history
+                WHERE user_id = u.user_id AND company_id = $1
+                ORDER BY effective_date DESC, created_at DESC
+                LIMIT 1
+            ) h ON true
             WHERE u.company_id = $1 AND u.status = 'ACTIVE'
         `;
         const params = [companyId];
@@ -243,14 +308,28 @@ class PayrollRepository {
         return await prisma.$queryRawUnsafe(query, ...params);
     }
 
-    async assignSalaryStructure(companyId, userId, data) {
+    async assignSalaryStructure(companyId, userId, data, createdBy) {
         await this.ensureTables();
         const existing = await prisma.$queryRawUnsafe(
-            `SELECT id FROM employee_salary_structures WHERE user_id = $1 AND company_id = $2`,
+            `SELECT id, annual_ctc, monthly_ctc, effective_date FROM employee_salary_structures WHERE user_id = $1 AND company_id = $2`,
             userId, companyId
         );
 
+        const effDate = data.effectiveDate ? new Date(data.effectiveDate) : new Date();
+
+        let result;
         if (existing.length > 0) {
+            const oldRecord = existing[0];
+            const oldAnnual = Number(oldRecord.annual_ctc) || 0;
+            const newAnnual = Number(data.annualCtc) || 0;
+            const oldMonthly = Number(oldRecord.monthly_ctc) || 0;
+            const newMonthly = Number(data.monthlyCtc) || 0;
+            const hikeAmount = Math.max(0, newAnnual - oldAnnual);
+            const hikePercentage = data.hikePercentage !== undefined && data.hikePercentage !== null
+                ? Number(data.hikePercentage)
+                : (oldAnnual > 0 && newAnnual > oldAnnual ? Math.round(((newAnnual - oldAnnual) / oldAnnual) * 100 * 100) / 100 : 0);
+            const revisionType = data.revisionType || (newAnnual > oldAnnual ? 'HIKE' : 'REVISION');
+
             const rows = await prisma.$queryRawUnsafe(`
                 UPDATE employee_salary_structures SET
                     annual_ctc = $1, monthly_ctc = $2, monthly_gross = $3, annual_gross = $4,
@@ -264,9 +343,10 @@ class PayrollRepository {
                     employer_pf_monthly = $21, employer_pf_annual = $22,
                     employer_esi_monthly = $23, employer_esi_annual = $24,
                     gratuity_monthly = $25, gratuity_annual = $26,
+                    effective_date = $27,
                     status = 'ACTIVE',
                     updated_at = CURRENT_TIMESTAMP
-                WHERE user_id = $27 AND company_id = $28
+                WHERE user_id = $28 AND company_id = $29
                 RETURNING *
             `,
                 data.annualCtc, data.monthlyCtc, data.monthlyGross, data.annualGross,
@@ -280,9 +360,24 @@ class PayrollRepository {
                 data.employerPfMonthly, data.employerPfAnnual,
                 data.employerEsiMonthly, data.employerEsiAnnual,
                 data.gratuityMonthly, data.gratuityAnnual,
+                effDate,
                 userId, companyId
             );
-            return rows[0];
+            result = rows[0];
+
+            // Log salary hike / revision history
+            await prisma.$executeRawUnsafe(`
+                INSERT INTO employee_salary_history (
+                    company_id, user_id, previous_annual_ctc, new_annual_ctc,
+                    previous_monthly_ctc, new_monthly_ctc, hike_percentage,
+                    hike_amount, revision_type, effective_date, remarks, created_by
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+            `,
+                companyId, userId, oldAnnual, newAnnual,
+                oldMonthly, newMonthly, hikePercentage,
+                hikeAmount, revisionType, effDate, data.remarks || null, createdBy || null
+            ).catch(err => console.error("Error logging salary history:", err));
+
         } else {
             const rows = await prisma.$queryRawUnsafe(`
                 INSERT INTO employee_salary_structures (
@@ -296,11 +391,12 @@ class PayrollRepository {
                     net_salary_monthly, net_salary_annual,
                     employer_pf_monthly, employer_pf_annual,
                     employer_esi_monthly, employer_esi_annual,
-                    gratuity_monthly, gratuity_annual
+                    gratuity_monthly, gratuity_annual,
+                    effective_date
                 ) VALUES (
                     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
                     $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
-                    $21, $22, $23, $24, $25, $26, $27, $28
+                    $21, $22, $23, $24, $25, $26, $27, $28, $29
                 )
                 RETURNING *
             `,
@@ -314,10 +410,35 @@ class PayrollRepository {
                 data.netSalaryMonthly, data.netSalaryAnnual,
                 data.employerPfMonthly, data.employerPfAnnual,
                 data.employerEsiMonthly, data.employerEsiAnnual,
-                data.gratuityMonthly, data.gratuityAnnual
+                data.gratuityMonthly, data.gratuityAnnual,
+                effDate
             );
-            return rows[0];
+            result = rows[0];
+
+            // Log initial salary assignment history
+            await prisma.$executeRawUnsafe(`
+                INSERT INTO employee_salary_history (
+                    company_id, user_id, previous_annual_ctc, new_annual_ctc,
+                    previous_monthly_ctc, new_monthly_ctc, hike_percentage,
+                    hike_amount, revision_type, effective_date, remarks, created_by
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+            `,
+                companyId, userId, 0, Number(data.annualCtc),
+                0, Number(data.monthlyCtc), 0,
+                0, data.revisionType || 'INITIAL', effDate, data.remarks || 'Initial Salary Assignment', createdBy || null
+            ).catch(err => console.error("Error logging initial salary history:", err));
         }
+
+        return result;
+    }
+
+    async getSalaryHistory(companyId, userId) {
+        await this.ensureTables();
+        return await prisma.$queryRawUnsafe(`
+            SELECT * FROM employee_salary_history 
+            WHERE user_id = $1 AND company_id = $2 
+            ORDER BY effective_date DESC, created_at DESC
+        `, userId, companyId);
     }
 
     async upsertPayslip(companyId, slip) {

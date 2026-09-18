@@ -124,6 +124,7 @@ export const SalaryBreakupCalculator: React.FC<SalaryBreakupCalculatorProps> = (
     gratuityRate: settings?.gratuityRate ?? 4.81,
     statutoryPfWageLimit: settings?.statutoryPfWageLimit ?? 15000,
     usePfWageCeiling: settings?.usePfWageCeiling ?? true,
+    statutoryEsiGrossLimit: settings?.statutoryEsiGrossLimit ?? 21000,
   };
 
   return (
@@ -440,8 +441,10 @@ export const SalaryBreakupCalculator: React.FC<SalaryBreakupCalculatorProps> = (
                     EPF Contribution by employee (on Basic Pay)
                   </td>
                   <td className="py-3 px-4 text-slate-500">
-                    <span className="font-semibold text-rose-700">{rates.employeePfRate}%</span>{" "}
-                    {rates.usePfWageCeiling && "(Capped at ₹15k wage)"}
+                    <span className="font-semibold text-rose-700">
+                      {monthly.basicPay > 15000 ? "Fixed ₹1,800" : `${rates.employeePfRate}%`}
+                    </span>{" "}
+                    {monthly.basicPay > 15000 ? "(Basic > ₹15,000 capped at ₹1,800)" : "(12% on Basic ≤ ₹15,000)"}
                   </td>
                   <td className="py-3 px-6 text-right font-semibold text-slate-800">
                     {formatCurrency(monthly.employeePf)}
@@ -456,7 +459,15 @@ export const SalaryBreakupCalculator: React.FC<SalaryBreakupCalculatorProps> = (
                     ESI Contribution by employee (on Basic Pay)
                   </td>
                   <td className="py-3 px-4 text-slate-500">
-                    <span className="font-semibold text-rose-700">{rates.employeeEsiRate}%</span> on Basic Pay
+                    {monthly.basicPay > (rates.statutoryEsiGrossLimit || 21000) ? (
+                      <span className="font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded text-[11px]">
+                        Exempt (Basic &gt; ₹21,000)
+                      </span>
+                    ) : (
+                      <>
+                        <span className="font-semibold text-rose-700">{rates.employeeEsiRate}%</span> on Basic Pay
+                      </>
+                    )}
                   </td>
                   <td className="py-3 px-6 text-right font-semibold text-slate-800">
                     {formatCurrency(monthly.employeeEsi)}
@@ -540,7 +551,15 @@ export const SalaryBreakupCalculator: React.FC<SalaryBreakupCalculatorProps> = (
                     Employer ESI contribution
                   </td>
                   <td className="py-3 px-4 text-slate-500">
-                    <span className="font-semibold text-blue-700">{rates.employerEsiRate}%</span> on Basic Pay
+                    {monthly.basicPay > (rates.statutoryEsiGrossLimit || 21000) ? (
+                      <span className="font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded text-[11px]">
+                        Exempt (Basic &gt; ₹21,000)
+                      </span>
+                    ) : (
+                      <>
+                        <span className="font-semibold text-blue-700">{rates.employerEsiRate}%</span> on Basic Pay
+                      </>
+                    )}
                   </td>
                   <td className="py-3 px-6 text-right font-semibold text-slate-800">
                     {formatCurrency(monthly.employerEsi)}
@@ -654,10 +673,12 @@ function performLocalCalculation(
   const aCtc = type === "annual" ? amount : Math.round(amount * 12 * 100) / 100;
 
   const basicMonthly = Math.round(mCtc * (basicPct / 100) * 100) / 100;
-  const pfWage = usePfCeiling ? Math.min(basicMonthly, statutoryPfCap) : basicMonthly;
+  const pfWage = basicMonthly > 15000 ? 15000 : basicMonthly;
+  const esiLimit = Number(settings?.statutoryEsiGrossLimit ?? 21000.0);
 
   const employerPfMonthly = Math.round(pfWage * (emPfRate / 100));
-  const employerEsiMonthly = Math.round(basicMonthly * (emEsiRate / 100));
+  // ESI Contribution: If base amount is more than 21000/m, Employer ESI is 0
+  const employerEsiMonthly = basicMonthly > esiLimit ? 0 : Math.round(basicMonthly * (emEsiRate / 100));
   const gratuityMonthly = Math.round(basicMonthly * (gratRate / 100));
   const totalEmployer = employerPfMonthly + employerEsiMonthly + gratuityMonthly;
 
@@ -666,8 +687,10 @@ function performLocalCalculation(
   const hraMonthly = Math.round((remainingGross / 2) * 100) / 100;
   const otherMonthly = Math.round((remainingGross - hraMonthly) * 100) / 100;
 
-  const employeePfMonthly = Math.round(pfWage * (epfRate / 100));
-  const employeeEsiMonthly = Math.round(basicMonthly * (esiRate / 100));
+  // EPF Contribution Rate: If basic > 15000/m take 1800 only. 12% applies only if basic <= 15000/m
+  const employeePfMonthly = basicMonthly > 15000 ? 1800 : Math.round(basicMonthly * (epfRate / 100));
+  // ESI Contribution: If base amount is more than 21000/m, Employee ESI is 0
+  const employeeEsiMonthly = basicMonthly > esiLimit ? 0 : Math.round(basicMonthly * (esiRate / 100));
   const ptMonthly = ptVal;
   const totalDeductionsMonthly = employeePfMonthly + employeeEsiMonthly + ptMonthly;
 
@@ -684,6 +707,7 @@ function performLocalCalculation(
       gratuityRate: gratRate,
       statutoryPfWageLimit: statutoryPfCap,
       usePfWageCeiling: usePfCeiling,
+      statutoryEsiGrossLimit: esiLimit,
     },
     monthly: {
       ctc: mCtc,

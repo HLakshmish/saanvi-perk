@@ -111,7 +111,28 @@ export interface EmployeeSalaryStructure {
   gratuity_annual: number | string;
   status?: string;
   effective_date?: string;
+  hike_percentage?: number | string;
+  hike_amount?: number | string;
+  previous_annual_ctc?: number | string;
+  revision_type?: string;
+  hike_remarks?: string;
   updated_at?: string;
+}
+
+export interface SalaryHistoryItem {
+  id: number;
+  company_id: number;
+  user_id: number;
+  previous_annual_ctc: number | string;
+  new_annual_ctc: number | string;
+  previous_monthly_ctc: number | string;
+  new_monthly_ctc: number | string;
+  hike_percentage: number | string;
+  hike_amount: number | string;
+  revision_type: string;
+  effective_date: string;
+  remarks?: string;
+  created_at?: string;
 }
 
 export interface Payslip {

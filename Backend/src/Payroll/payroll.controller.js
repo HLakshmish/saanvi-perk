@@ -117,10 +117,33 @@ class PayrollController {
                 return reply.code(400).send({ success: false, message: "Target userId is required." });
             }
 
-            const result = await payrollService.assignSalary(Number(companyId), Number(userId), payload);
+            const result = await payrollService.assignSalary(Number(companyId), Number(userId), payload, request.user?.userId);
             reply.code(200).send({ success: true, message: "Salary structure assigned successfully", data: result });
         } catch (error) {
             reply.code(400).send({ success: false, message: error.message });
+        }
+    }
+
+    // 4b. Get salary revision & hike history for employee
+    async getSalaryHistory(request, reply) {
+        try {
+            let companyId = request.user.companyId;
+            if (request.user.role === 'OWNER' && request.query.companyId) {
+                companyId = Number(request.query.companyId);
+            }
+            if (!companyId) {
+                return reply.code(400).send({ success: false, message: "Company ID is required" });
+            }
+
+            const { userId } = request.params;
+            if (!userId) {
+                return reply.code(400).send({ success: false, message: "userId parameter is required." });
+            }
+
+            const history = await payrollService.getSalaryHistory(Number(companyId), Number(userId));
+            reply.code(200).send({ success: true, data: history });
+        } catch (error) {
+            reply.code(500).send({ success: false, message: error.message });
         }
     }
 
