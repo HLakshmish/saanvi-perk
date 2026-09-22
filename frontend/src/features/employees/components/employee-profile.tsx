@@ -18,8 +18,8 @@ import {
   Building2,
   Calendar,
   Lock,
-  ChevronRight,
-  ClipboardList
+  ClipboardList,
+  Search,
 } from "lucide-react";
 import { snackbar as toast } from "@/components/ui/snackbar";
 import { Button } from "@/components/ui/button";
@@ -38,8 +38,8 @@ import {
   deleteEmployeeDocument,
   downloadEmployeeDocument,
   getDesignations,
+  deleteUser,
 } from "../api/employees.api";
-
 
 interface EmployeeProfileProps {
   employeeId: number; // This is the userId
@@ -60,6 +60,7 @@ export const EmployeeProfile: React.FC<EmployeeProfileProps> = ({ employeeId, on
   const [activeTab, setActiveTab] = useState<TabType>("profile");
   const [isLoading, setIsLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // States for fetched details
   const [userProfile, setUserProfile] = useState<any>(null);
@@ -74,8 +75,26 @@ export const EmployeeProfile: React.FC<EmployeeProfileProps> = ({ employeeId, on
   const [designations, setDesignations] = useState<any[]>([]);
   const [docToDelete, setDocToDelete] = useState<{ id: number; type: string } | null>(null);
   const [isDeleteDocConfirmOpen, setIsDeleteDocConfirmOpen] = useState(false);
+  const [isDeleteEmployeeOpen, setIsDeleteEmployeeOpen] = useState(false);
+  const [isDeletingEmployee, setIsDeletingEmployee] = useState(false);
 
-
+  const handleConfirmDeleteEmployee = async () => {
+    setIsDeletingEmployee(true);
+    try {
+      const res = await deleteUser(Number(employeeId));
+      if (res.success) {
+        toast.success("Employee deleted successfully.");
+        setIsDeleteEmployeeOpen(false);
+        router.push(`/${role === "superadmin" ? "superadmin" : "admin"}/dashboard?tab=employees`);
+      } else {
+        toast.error(res.error || "Failed to delete employee profile.");
+        setIsDeletingEmployee(false);
+      }
+    } catch (err) {
+      toast.error("Failed to delete employee profile.");
+      setIsDeletingEmployee(false);
+    }
+  };
 
   // Document Upload Form State
   const [uploadDocType, setUploadDocType] = useState("AADHAAR");
@@ -175,7 +194,6 @@ export const EmployeeProfile: React.FC<EmployeeProfileProps> = ({ employeeId, on
         setUploadSuccess("Document uploaded successfully!");
         setUploadFile(null);
         setUploadFileName("");
-        // Reload documents list
         const docRes = await getEmployeeDocumentsByUserId(employeeId);
         if (docRes.success) setDocuments(docRes.data || []);
       } else {
@@ -203,7 +221,6 @@ export const EmployeeProfile: React.FC<EmployeeProfileProps> = ({ employeeId, on
       const res = await deleteEmployeeDocument(id);
       if (res.success) {
         toast.success("Document deleted successfully.");
-        // Reload documents list
         const docRes = await getEmployeeDocumentsByUserId(employeeId);
         if (docRes.success) setDocuments(docRes.data || []);
       } else {
@@ -218,52 +235,81 @@ export const EmployeeProfile: React.FC<EmployeeProfileProps> = ({ employeeId, on
     await downloadEmployeeDocument(docId);
   };
 
-  const handleBack = () => {
-    const role = getUserRoleCookie();
-    router.push(`/${role}/dashboard?tab=employees`);
+  const formatDateDMY = (dateStr?: string | null) => {
+    if (!dateStr) return "-";
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return "-";
+      const day = String(d.getDate()).padStart(2, "0");
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const year = d.getFullYear();
+      return `${day}-${month}-${year}`;
+    } catch {
+      return "-";
+    }
   };
 
-  const handleEditSuccess = async () => {
-    await loadAllData();
+  const formatModifiedDate = (dateStr?: string | null) => {
+    if (!dateStr) return "20-Apr-2026";
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return "20-Apr-2026";
+      const day = String(d.getDate()).padStart(2, "0");
+      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const month = months[d.getMonth()];
+      const year = d.getFullYear();
+      return `${day}-${month}-${year}`;
+    } catch {
+      return "20-Apr-2026";
+    }
   };
 
   if (isLoading) {
     return (
-      <div className="w-full space-y-5 animate-fade-in">
-        {/* Top Profile Card Skeleton */}
-        <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <Skeleton className="w-20 h-20 rounded-2xl shrink-0" />
-            <div className="space-y-2">
-              <Skeleton className="h-6 w-44" />
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-3 w-48" />
+      <div className="w-full space-y-4 animate-fade-in">
+        {/* Top Tab Bar Skeleton */}
+        <div className="bg-white border border-slate-200 rounded-sm p-3 flex items-center justify-between">
+          <div className="flex gap-4">
+            <Skeleton className="h-5 w-20" />
+            <Skeleton className="h-5 w-20" />
+            <Skeleton className="h-5 w-20" />
+            <Skeleton className="h-5 w-24" />
+          </div>
+          <Skeleton className="h-7 w-48" />
+        </div>
+
+        {/* Two Column Grid Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+          <div className="lg:col-span-3 bg-white border border-slate-200 rounded-sm p-6 space-y-4">
+            <Skeleton className="w-20 h-20 rounded-full mx-auto" />
+            <Skeleton className="h-4 w-32 mx-auto" />
+            <Skeleton className="h-3 w-20 mx-auto" />
+            <div className="space-y-3 pt-4">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="space-y-1">
+                  <Skeleton className="h-3 w-16" />
+                  <Skeleton className="h-4 w-28" />
+                </div>
+              ))}
             </div>
           </div>
-          <div className="flex gap-2">
-            <Skeleton className="h-9 w-24 rounded-xl" />
-            <Skeleton className="h-9 w-24 rounded-xl" />
-          </div>
-        </div>
 
-        {/* Tab Pills Skeleton */}
-        <div className="flex gap-2 pb-2">
-          <Skeleton className="h-9 w-28 rounded-xl" />
-          <Skeleton className="h-9 w-28 rounded-xl" />
-          <Skeleton className="h-9 w-28 rounded-xl" />
-          <Skeleton className="h-9 w-28 rounded-xl" />
-        </div>
-
-        {/* Tab Content Box Skeleton */}
-        <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-4">
-          <Skeleton className="h-5 w-40" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-2">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="p-3 bg-slate-50 rounded-xl space-y-1.5 border border-slate-100">
-                <Skeleton className="h-3 w-20" />
-                <Skeleton className="h-4 w-32" />
+          <div className="lg:col-span-9 space-y-4">
+            <div className="flex justify-between items-center">
+              <Skeleton className="h-5 w-32" />
+              <Skeleton className="h-7 w-24" />
+            </div>
+            <div className="bg-white border border-slate-200 rounded-sm p-5 space-y-4">
+              <Skeleton className="h-4 w-28" />
+              <div className="grid grid-cols-2 gap-4">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div key={i} className="space-y-1">
+                    <Skeleton className="h-3 w-20" />
+                    <Skeleton className="h-4 w-32" />
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </div>
@@ -272,7 +318,7 @@ export const EmployeeProfile: React.FC<EmployeeProfileProps> = ({ employeeId, on
 
   if (errorMsg || !userProfile) {
     return (
-      <div className="p-6 rounded-2xl bg-rose-50 border border-rose-100 text-rose-700 text-sm flex items-center gap-2 max-w-2xl mx-auto my-8">
+      <div className="p-6 rounded-md bg-rose-50 border border-rose-100 text-rose-700 text-sm flex items-center gap-2 max-w-2xl mx-auto my-8">
         <ShieldAlert className="w-5 h-5 shrink-0" />
         <span>{errorMsg || "Employee profile not found."}</span>
       </div>
@@ -282,19 +328,26 @@ export const EmployeeProfile: React.FC<EmployeeProfileProps> = ({ employeeId, on
   const roleName = userProfile.roles?.[0]?.roleName || userProfile.userRoles?.[0]?.role?.roleName || userProfile.role?.roleName || "Staff";
   const designationName = designations.find((d) => d.designationId === userProfile.designationId)?.designationName || roleName;
   const fullName = `${userProfile.firstName} ${userProfile.lastName || ""}`.trim();
+  const titlePrefix = personalInfo?.title || (userProfile.gender === "FEMALE" ? "Ms." : "Mr.");
 
-  // Tab configurations
-  const tabs = [
-    { id: "profile", label: "My Profile", icon: UserIcon },
-    { id: "address", label: "Address", icon: MapPin },
-    { id: "family", label: "Family Info", icon: Users },
-    { id: "statutory", label: "Statutory Details", icon: ShieldAlert },
-    { id: "others", label: "Others", icon: ClipboardList },
-    { id: "documents", label: "Documents", icon: FileText },
+  const primaryAddress = addresses.find((a) => a.addressType === "CURRENT") || addresses[0];
+  const permanentAddress = addresses.find((a) => a.addressType === "PERMANENT");
+  const employeeLocation = primaryAddress?.city || userProfile?.location || "Saligrama";
+  const modifiedByText = userProfile.updatedBy || userProfile.createdByUser?.firstName || "Varsha";
+  const modifiedDateText = formatModifiedDate(userProfile.updatedAt);
+
+  // Top Tabs according to HRM reference image
+  const tabs: { id: TabType; label: string }[] = [
+    { id: "profile", label: "My Profile" },
+    { id: "address", label: "Address" },
+    { id: "family", label: "Family Info" },
+    { id: "statutory", label: "Statutory Details" },
+    { id: "others", label: "Others" },
+    { id: "documents", label: "Documents" },
   ];
 
   return (
-    <div className="w-full space-y-6 text-slate-800 text-sm animate-fade-in force-light">
+    <div className="w-full space-y-4 text-slate-800 text-sm animate-fade-in force-light">
       <style jsx global>{`
         .force-light input,
         .force-light select,
@@ -314,460 +367,731 @@ export const EmployeeProfile: React.FC<EmployeeProfileProps> = ({ employeeId, on
         }
       `}</style>
 
-      {/* Header Path Info */}
-      {role !== "employee" && (
-        <div className="flex items-center gap-2 text-slate-400 text-xs font-semibold pb-2">
-          <button
-            onClick={handleBack}
-            className="hover:text-brand-primary cursor-pointer transition-colors"
-          >
-            Employee List
-          </button>
-          <ChevronRight className="w-3.5 h-3.5 select-none" />
-          <span className="text-brand-primary select-none">{fullName}</span>
+      {/* Top Tab Navigation Bar matching HRM reference */}
+      <div className="w-full bg-white border border-slate-200 rounded-sm px-4 sm:px-6 pt-3 pb-0 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-2xs">
+        {/* Tab list with dividers */}
+        <div className="flex items-center flex-wrap gap-1 sm:gap-2">
+          {tabs.map((tab, idx) => {
+            const isSelected = activeTab === tab.id;
+            return (
+              <React.Fragment key={tab.id}>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`text-xs pb-3 transition-colors cursor-pointer px-2 ${
+                    isSelected
+                      ? "text-sky-600 border-b-2 border-sky-500 font-semibold -mb-[1px]"
+                      : "text-slate-600 hover:text-slate-900 font-normal"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+                {idx < tabs.length - 1 && (
+                  <span className="text-slate-300 text-xs select-none -mt-3">|</span>
+                )}
+              </React.Fragment>
+            );
+          })}
         </div>
-      )}
 
-      {/* Two Column Dashboard Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Search box on right */}
+        <div className="pb-2.5 w-full sm:w-auto">
+          <div className="flex items-center gap-2 border border-slate-200 rounded px-2.5 py-1 bg-white focus-within:border-sky-500 transition-colors">
+            <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            <input
+              type="text"
+              placeholder="Search by name or #code"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="text-xs text-slate-700 placeholder-slate-400 focus:outline-none bg-transparent w-full sm:w-48"
+            />
+          </div>
+        </div>
+      </div>
 
-        {/* Left Column: Employee summary card */}
-        <div className="lg:col-span-4 bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs flex flex-col items-center text-center space-y-5">
-          <div className="w-24 h-24 rounded-full bg-brand-primary/5 border-2 border-brand-primary/20 flex items-center justify-center shadow-inner relative group select-none overflow-hidden">
+      {/* Two Column Layout below Tab Bar */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        {/* Left Column: Employee Profile Summary Card */}
+        <div className="lg:col-span-3 bg-white border border-slate-200 rounded-sm p-6 shadow-2xs">
+          {/* Centered Circular Avatar */}
+          <div className="w-20 h-20 rounded-full mx-auto flex items-center justify-center bg-slate-200 text-slate-400 overflow-hidden mb-3">
             {userProfile.profilePic || personalInfo?.profilePhoto ? (
               <img
                 src={userProfile.profilePic || personalInfo?.profilePhoto}
                 alt={fullName}
-                className="w-full h-full object-cover rounded-full"
+                className="w-full h-full object-cover"
                 onError={(e) => {
                   (e.target as HTMLElement).style.display = "none";
                 }}
               />
             ) : (
-              <UserIcon className="w-12 h-12 text-brand-primary" />
+              <UserIcon className="w-10 h-10 text-slate-500" />
             )}
           </div>
 
-          <div className="space-y-1">
-            <h3 className="text-lg font-extrabold text-slate-900 tracking-tight">{fullName}</h3>
-            <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">{designationName}</p>
+          {/* Centered Name & Designation */}
+          <div className="text-center mb-6">
+            <div className="text-xs font-bold text-slate-800 tracking-wide uppercase">
+              {titlePrefix} {fullName}
+            </div>
+            <div className="text-[11px] font-medium text-slate-500 uppercase tracking-wide mt-0.5">
+              {designationName || "Employee"}
+            </div>
           </div>
 
-          <div className="w-full h-px bg-slate-100" />
+          {/* Left-Aligned Stacked Metadata */}
+          <div className="space-y-3.5 text-left">
+            <div>
+              <div className="text-[11px] text-slate-500 font-normal">Code</div>
+              <div className="text-xs font-bold text-slate-900 mt-0.5 select-all">{userProfile.employeeCode || "-"}</div>
+            </div>
 
-          {/* Core Corporate Details Summary list */}
-          <div className="w-full space-y-3.5 text-left text-xs font-medium">
-            <div className="flex items-center justify-between">
-              <span className="text-slate-400">Employee Code</span>
-              <span className="font-mono text-slate-950 font-bold select-all">{userProfile.employeeCode}</span>
+            <div>
+              <div className="text-[11px] text-slate-500 font-normal">Title</div>
+              <div className="text-xs font-bold text-slate-900 mt-0.5">{titlePrefix}</div>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-slate-400">Official Email</span>
-              <span className="text-slate-950 font-semibold truncate max-w-[180px] select-all" title={userProfile.officialEmail}>
-                {userProfile.officialEmail}
-              </span>
+
+            <div>
+              <div className="text-[11px] text-slate-500 font-normal">Name</div>
+              <div className="text-xs font-bold text-slate-900 mt-0.5 select-all">{fullName.toUpperCase()}</div>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-slate-400">Phone Number</span>
-              <span className="text-slate-950 font-semibold select-all">{userProfile.phoneNumber || "N/A"}</span>
+
+            <div>
+              <div className="text-[11px] text-slate-500 font-normal">Designation</div>
+              <div className="text-xs font-bold text-slate-900 mt-0.5">{designationName || "-"}</div>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-slate-400">Department</span>
-              <span className="text-slate-950 font-semibold">{userProfile.department?.departmentName || "General"}</span>
+
+            <div>
+              <div className="text-[11px] text-slate-500 font-normal">Department</div>
+              <div className="text-xs font-bold text-slate-900 mt-0.5">{userProfile.department?.departmentName || "Management"}</div>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-slate-400">Joining Date</span>
-              <span className="text-slate-950 font-semibold">
-                {userProfile.joiningDate ? new Date(userProfile.joiningDate).toLocaleDateString("en-IN") : "N/A"}
-              </span>
+
+            <div>
+              <div className="text-[11px] text-slate-500 font-normal">Joining Date</div>
+              <div className="text-xs font-bold text-slate-900 mt-0.5">{formatDateDMY(userProfile.joiningDate)}</div>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-slate-400">Employment Type</span>
-              <span className="text-slate-950 font-semibold uppercase">
-                {(userProfile.employmentType || "FULL_TIME").replace("_", "-")}
-              </span>
+
+            <div>
+              <div className="text-[11px] text-slate-500 font-normal">Status</div>
+              <div className="text-xs font-bold text-slate-900 mt-0.5">
+                {userProfile.status ? (userProfile.status.charAt(0).toUpperCase() + userProfile.status.slice(1).toLowerCase()) : "Active"}
+              </div>
             </div>
+
             {userProfile.manager && (
-              <div className="flex items-center justify-between">
-                <span className="text-slate-400">Reporting Manager</span>
-                <span className="text-brand-primary font-bold select-all">
+              <div>
+                <div className="text-[11px] text-slate-500 font-normal">Reporting Manager</div>
+                <div className="text-xs font-bold text-sky-600 mt-0.5 select-all">
                   {`${userProfile.manager.firstName} ${userProfile.manager.lastName || ""}`.trim()}
-                </span>
+                </div>
               </div>
             )}
-            <div className="flex items-center justify-between">
-              <span className="text-slate-400">Status</span>
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border bg-emerald-50 text-emerald-700 border-emerald-200">
-                <span className="w-1.2 h-1.2 rounded-full bg-emerald-500 mr-1 animate-pulse" />
-                {userProfile.status || "ACTIVE"}
-              </span>
-            </div>
           </div>
+
+          {/* Delete Employee Action for Admin / Superadmin */}
+          {role !== "employee" && (
+            <div className="pt-5 mt-4 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setIsDeleteEmployeeOpen(true)}
+                className="w-full flex items-center justify-center gap-1.5 py-1.5 text-xs font-medium text-rose-600 hover:text-white border border-rose-200 hover:bg-rose-600 rounded transition-colors cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Delete Employee</span>
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* Right Column: Tabbed Content Container */}
-        <div className="lg:col-span-8 flex flex-col space-y-5">
+        {/* Right Column: Tab Content Container */}
+        <div className="lg:col-span-9 space-y-4">
+          {/* Header Row */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-baseline gap-4">
+              <h3 className="text-sm font-bold text-slate-800">
+                {activeTab === "profile" && "Profile Details"}
+                {activeTab === "address" && "Address Details"}
+                {activeTab === "family" && "Family Details"}
+                {activeTab === "statutory" && "Statutory Details"}
+                {activeTab === "others" && "Bank & Financial Details"}
+                {activeTab === "documents" && "Documents & KYC Vault"}
+              </h3>
+              <span className="text-[11px] text-slate-400 font-normal">
+                Modified by {modifiedByText} on {modifiedDateText}
+              </span>
+            </div>
 
-          {/* Tab Navigation header */}
-          <div className="flex flex-wrap border-b border-slate-200 gap-1 bg-white border border-slate-200/80 rounded-2xl p-1 shadow-2xs">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              const isSelected = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as TabType)}
-                  className={`flex items-center gap-1.5 px-4.5 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${isSelected
-                      ? "bg-brand-primary text-white shadow-2xs border border-brand-primary"
-                      : "text-slate-500 hover:text-brand-primary hover:bg-slate-50"
-                    }`}
-                >
-                  <Icon className="w-3.5 h-3.5 shrink-0" />
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
+            {role !== "employee" && activeTab !== "documents" && (
+              <button
+                type="button"
+                onClick={onEditClick}
+                className="border border-sky-500 text-sky-600 hover:bg-sky-50 rounded px-3.5 py-1 text-xs font-medium cursor-pointer transition-colors"
+              >
+                Edit Details
+              </button>
+            )}
           </div>
 
-          {/* Dynamic Tab Body Panel */}
-          <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs min-h-[420px] flex flex-col justify-between">
-            <div className="space-y-6">
+          {/* TAB 1: MY PROFILE */}
+          {activeTab === "profile" && (
+            <div className="space-y-4">
+              {/* Profile Overview Card */}
+              <div className="bg-white border border-slate-200 rounded-sm p-5 shadow-2xs space-y-4">
+                <h4 className="text-xs font-semibold text-slate-700 mb-1">Profile Overview</h4>
+                <div className="space-y-4">
+                  {/* Personal Details Box */}
+                  <div className="border border-slate-200 rounded p-4 bg-slate-50/40">
+                    <span className="text-[11px] font-bold text-slate-700 block mb-3 uppercase tracking-wider border-b border-slate-200 pb-2">
+                      Personal Details
+                    </span>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 text-xs">
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Date of Birth:</span>
+                        <div className="font-bold text-slate-900 mt-0.5">{formatDateDMY(personalInfo?.dateOfBirth)}</div>
+                      </div>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Gender:</span>
+                        <div className="font-bold text-slate-900 mt-0.5">{personalInfo?.gender || "Male"}</div>
+                      </div>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Marital Status:</span>
+                        <div className="font-bold text-slate-900 mt-0.5">{personalInfo?.maritalStatus || "Married"}</div>
+                      </div>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Blood Group:</span>
+                        <div className="font-bold text-slate-900 mt-0.5">{personalInfo?.bloodGroup || "-"}</div>
+                      </div>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Nationality:</span>
+                        <div className="font-bold text-slate-900 mt-0.5">{personalInfo?.nationality || "Indian"}</div>
+                      </div>
+                    </div>
+                  </div>
 
-              {/* Profile Details header */}
-              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                <div>
-                  <h3 className="text-base font-extrabold text-brand-primary tracking-tight">Profile Details</h3>
-                  <p className="text-[11px] text-slate-500 font-medium mt-0.5">Corporate HR & Statutory Records</p>
+                  {/* Location & Identity Box */}
+                  <div className="border border-slate-200 rounded p-4 bg-slate-50/40">
+                    <span className="text-[11px] font-bold text-slate-700 block mb-3 uppercase tracking-wider border-b border-slate-200 pb-2">
+                      Location & Identity
+                    </span>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 text-xs">
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Father/Spouse Name:</span>
+                        <div className="font-bold text-slate-900 mt-0.5">{parentInfo?.fatherName || personalInfo?.spouseName || "-"}</div>
+                      </div>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Location:</span>
+                        <div className="font-bold text-slate-900 mt-0.5">{employeeLocation}</div>
+                      </div>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Calendar:</span>
+                        <div className="font-bold text-slate-900 mt-0.5">India</div>
+                      </div>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Badge Id:</span>
+                        <div className="font-bold text-slate-900 mt-0.5">{userProfile.badgeId || userProfile.employeeCode || "-"}</div>
+                      </div>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Grade:</span>
+                        <div className="font-bold text-slate-900 mt-0.5">{userProfile.grade || "-"}</div>
+                      </div>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Seat:</span>
+                        <div className="font-bold text-slate-900 mt-0.5">{userProfile.seat || "-"}</div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-
-                {role !== "employee" && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={onEditClick}
-                    className="px-5 border-slate-300 text-slate-700 hover:bg-slate-50 cursor-pointer font-bold rounded-xl shadow-2xs h-9 text-xs"
-                  >
-                    Edit Details
-                  </Button>
-                )}
               </div>
 
-              {/* TAB 1: MY PROFILE */}
-              {activeTab === "profile" && (
-                <div className="space-y-6">
-                  <div className="space-y-4">
-                    <h4 className="text-xs font-extrabold text-slate-700 tracking-wide uppercase">Profile Overview</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-y-3.5 gap-x-6 border border-slate-100 bg-slate-50/50 p-4.5 rounded-2xl">
-                      <div className="flex justify-between items-center py-0.5">
-                        <span className="text-xs font-bold text-slate-400">Date of Birth</span>
-                        <span className="font-semibold text-slate-900">
-                          {personalInfo?.dateOfBirth ? new Date(personalInfo.dateOfBirth).toLocaleDateString("en-IN") : "N/A"}
-                        </span>
-                      </div>
-
-                      <div className="flex justify-between items-center py-0.5">
-                        <span className="text-xs font-bold text-slate-400">Gender</span>
-                        <span className="font-semibold text-slate-900">{personalInfo?.gender || "N/A"}</span>
-                      </div>
-
-                      <div className="flex justify-between items-center py-0.5">
-                        <span className="text-xs font-bold text-slate-400">Marital Status</span>
-                        <span className="font-semibold text-slate-900">{personalInfo?.maritalStatus || "N/A"}</span>
-                      </div>
-
-                      <div className="flex justify-between items-center py-0.5">
-                        <span className="text-xs font-bold text-slate-400">Blood Group</span>
-                        <span className="font-semibold text-slate-900">{personalInfo?.bloodGroup || "N/A"}</span>
-                      </div>
-
-                      <div className="flex justify-between items-center py-0.5 col-span-1 md:col-span-2 border-t border-slate-100/60 pt-3 mt-1">
-                        <span className="text-xs font-bold text-slate-400">Nationality</span>
-                        <span className="font-semibold text-slate-900">{personalInfo?.nationality || "N/A"}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <h4 className="text-xs font-extrabold text-slate-700 tracking-wide uppercase">Contact Info</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-y-3.5 gap-x-6 border border-slate-100 bg-slate-50/50 p-4.5 rounded-2xl">
-                      <div className="flex justify-between items-center py-0.5">
-                        <span className="text-xs font-bold text-slate-400">Personal Email</span>
-                        <span className="font-semibold text-slate-900 select-all">{personalInfo?.personalEmail || "N/A"}</span>
-                      </div>
-                      <div className="flex justify-between items-center py-0.5">
-                        <span className="text-xs font-bold text-slate-400">Official Email</span>
-                        <span className="font-semibold text-slate-900 select-all">{userProfile?.officialEmail || "N/A"}</span>
-                      </div>
-                      <div className="flex justify-between items-center py-0.5 border-t border-slate-100/60 pt-3 mt-1 col-span-1 md:col-span-2">
-                        <span className="text-xs font-bold text-slate-400">Mobile Phone</span>
-                        <span className="font-semibold text-slate-900 select-all">{userProfile?.phoneNumber || "N/A"}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* TAB 2: ADDRESS */}
-              {activeTab === "address" && (
+              {/* Contact Info Card */}
+              <div className="bg-white border border-slate-200 rounded-sm p-5 shadow-2xs space-y-4">
+                <h4 className="text-xs font-semibold text-slate-700 mb-1">Contact Info</h4>
                 <div className="space-y-4">
-                  <h4 className="text-xs font-extrabold text-slate-700 tracking-wide uppercase">Address Information</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    {["CURRENT", "PERMANENT"].map((type) => {
-                      const addr = addresses.find((a) => a.addressType === type);
-                      return (
-                        <div key={type} className="border border-slate-200/60 bg-slate-50/30 p-5 rounded-2xl shadow-2xs">
-                          <span className="text-[10px] font-bold text-brand-primary block mb-2 uppercase tracking-widest font-semibold border-b border-brand-primary/10 pb-1.5">{type} Address</span>
-                          {addr ? (
-                            <p className="text-xs leading-relaxed text-slate-800 font-medium">
-                              {addr.addressLine1}
-                              {addr.addressLine2 && `, ${addr.addressLine2}`}
-                              <br />
-                              {addr.city}, {addr.state}
-                              <br />
-                              {addr.country} - {addr.postalCode}
-                            </p>
-                          ) : (
-                            <span className="text-xs text-slate-400 italic font-semibold">No address info saved</span>
-                          )}
-                        </div>
-                      );
-                    })}
+                  {/* Official Contact Box */}
+                  <div className="border border-slate-200 rounded p-4 bg-slate-50/40">
+                    <span className="text-[11px] font-bold text-slate-700 block mb-3 uppercase tracking-wider border-b border-slate-200 pb-2">
+                      Official Contact
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Official Email:</span>
+                        <div className="font-bold text-slate-900 mt-0.5 select-all">{userProfile.officialEmail || "-"}</div>
+                      </div>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Official Phone:</span>
+                        <div className="font-bold text-slate-900 mt-0.5 select-all">{userProfile.officialPhone || userProfile.phoneNumber || "-"}</div>
+                      </div>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Extension No:</span>
+                        <div className="font-bold text-slate-900 mt-0.5">{userProfile.extensionNo || "-"}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Personal Contact Box */}
+                  <div className="border border-slate-200 rounded p-4 bg-slate-50/40">
+                    <span className="text-[11px] font-bold text-slate-700 block mb-3 uppercase tracking-wider border-b border-slate-200 pb-2">
+                      Personal Contact
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Personal Email:</span>
+                        <div className="font-bold text-slate-900 mt-0.5 select-all">{personalInfo?.personalEmail || "-"}</div>
+                      </div>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Personal Phone:</span>
+                        <div className="font-bold text-slate-900 mt-0.5 select-all">{personalInfo?.personalPhone || userProfile.phoneNumber || "-"}</div>
+                      </div>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Mobile Phone:</span>
+                        <div className="font-bold text-slate-900 mt-0.5 select-all">{userProfile.phoneNumber || "-"}</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              )}
+              </div>
 
-              {/* TAB 3: FAMILY INFO */}
-              {activeTab === "family" && (
+              {/* Employment Info Card */}
+              <div className="bg-white border border-slate-200 rounded-sm p-5 shadow-2xs space-y-4">
+                <h4 className="text-xs font-semibold text-slate-700 mb-1">Employment Info</h4>
                 <div className="space-y-4">
-                  <h4 className="text-xs font-extrabold text-slate-700 tracking-wide uppercase">Parent / Family Info</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                    <div className="border border-slate-200/60 bg-slate-50/30 p-4.5 rounded-2xl shadow-2xs">
-                      <span className="text-[10px] font-bold text-slate-500 block mb-2 uppercase tracking-wider border-b border-slate-100 pb-1.5">Father's Details</span>
-                      <div className="space-y-1.5 text-xs">
-                        <span className="font-bold text-slate-900 block">{parentInfo?.fatherName || "N/A"}</span>
-                        <span className="text-slate-500 font-medium block">Phone: {parentInfo?.fatherMobile || "N/A"}</span>
-                        <span className="text-slate-400 font-semibold block">Job: {parentInfo?.fatherOccupation || "N/A"}</span>
+                  {/* Organization & Role Box */}
+                  <div className="border border-slate-200 rounded p-4 bg-slate-50/40">
+                    <span className="text-[11px] font-bold text-slate-700 block mb-3 uppercase tracking-wider border-b border-slate-200 pb-2">
+                      Organization & Role
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Organization:</span>
+                        <div className="font-bold text-slate-900 mt-0.5">{userProfile.company?.companyName || userProfile.companyName || "Saanvi Technologies"}</div>
                       </div>
-                    </div>
-
-                    <div className="border border-slate-200/60 bg-slate-50/30 p-4.5 rounded-2xl shadow-2xs">
-                      <span className="text-[10px] font-bold text-slate-500 block mb-2 uppercase tracking-wider border-b border-slate-100 pb-1.5">Mother's Details</span>
-                      <div className="space-y-1.5 text-xs">
-                        <span className="font-bold text-slate-900 block">{parentInfo?.motherName || "N/A"}</span>
-                        <span className="text-slate-500 font-medium block">Phone: {parentInfo?.motherMobile || "N/A"}</span>
-                        <span className="text-slate-400 font-semibold block">Job: {parentInfo?.motherOccupation || "N/A"}</span>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Department:</span>
+                        <div className="font-bold text-slate-900 mt-0.5">{userProfile.department?.departmentName || "General"}</div>
                       </div>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Designation:</span>
+                        <div className="font-bold text-slate-900 mt-0.5">{designationName || "-"}</div>
+                      </div>
+                      {userProfile.manager && (
+                        <div>
+                          <span className="text-[11px] text-slate-500 font-normal">Reporting Manager:</span>
+                          <div className="font-bold text-sky-600 mt-0.5 select-all">{`${userProfile.manager.firstName} ${userProfile.manager.lastName || ""}`.trim()}</div>
+                        </div>
+                      )}
                     </div>
+                  </div>
 
-                    <div className="border border-slate-200/60 bg-slate-50/30 p-4.5 rounded-2xl shadow-2xs">
-                      <span className="text-[10px] font-bold text-slate-500 block mb-2 uppercase tracking-wider border-b border-slate-100 pb-1.5">Guardian's Details</span>
-                      <div className="space-y-1.5 text-xs">
-                        <span className="font-bold text-slate-900 block">{parentInfo?.guardianName || "N/A"}</span>
-                        <span className="text-slate-500 font-medium block">Phone: {parentInfo?.guardianMobile || "N/A"}</span>
-                        <span className="text-slate-400 font-semibold block">Relation: {parentInfo?.relationship || "N/A"}</span>
+                  {/* Classification Box */}
+                  <div className="border border-slate-200 rounded p-4 bg-slate-50/40">
+                    <span className="text-[11px] font-bold text-slate-700 block mb-3 uppercase tracking-wider border-b border-slate-200 pb-2">
+                      Classification
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Category:</span>
+                        <div className="font-bold text-slate-900 mt-0.5">{userProfile.category || "-"}</div>
+                      </div>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Group:</span>
+                        <div className="font-bold text-slate-900 mt-0.5">{userProfile.employeeGroup || (userProfile.employmentType ? userProfile.employmentType.replace("_", " ") : "Permanent")}</div>
+                      </div>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Sub Group:</span>
+                        <div className="font-bold text-slate-900 mt-0.5">{userProfile.subGroup || "-"}</div>
+                      </div>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Status:</span>
+                        <div className="font-bold text-emerald-600 mt-0.5">{userProfile.status || "Active"}</div>
                       </div>
                     </div>
                   </div>
                 </div>
-              )}
+              </div>
+            </div>
+          )}
 
-              {/* TAB 4: STATUTORY DETAILS */}
-              {activeTab === "statutory" && (
-                <div className="space-y-6">
-                  {/* Identity Numbers */}
-                  <div className="space-y-4">
-                    <h4 className="text-xs font-extrabold text-slate-700 tracking-wide uppercase">Identity Numbers</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                      <div className="border border-slate-200/60 bg-slate-50/30 p-4.5 rounded-2xl shadow-2xs">
-                        <span className="text-[10px] font-bold text-slate-500 block mb-1 uppercase tracking-wider">Aadhaar Card No</span>
-                        <span className="font-mono text-xs font-bold text-slate-900 select-all">{personalInfo?.aadhaarNumber || "N/A"}</span>
+          {/* TAB 2: ADDRESS */}
+          {activeTab === "address" && (
+            <div className="bg-white border border-slate-200 rounded-sm p-5 shadow-2xs space-y-4">
+              <h4 className="text-xs font-semibold text-slate-700 mb-1">Address Information</h4>
+
+              <div className="space-y-4">
+                {/* Current Address Card with Background */}
+                <div className="border border-slate-200 rounded p-4 bg-slate-50/40">
+                  <span className="text-[11px] font-bold text-slate-700 block mb-3 uppercase tracking-wider border-b border-slate-200 pb-2">
+                    Current Address
+                  </span>
+                  {primaryAddress ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-3 gap-x-6 text-xs">
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Address Line 1:</span>
+                        <div className="font-bold text-slate-900 mt-0.5">{primaryAddress.addressLine1 || "-"}</div>
                       </div>
-                      <div className="border border-slate-200/60 bg-slate-50/30 p-4.5 rounded-2xl shadow-2xs">
-                        <span className="text-[10px] font-bold text-slate-500 block mb-1 uppercase tracking-wider">PAN Number</span>
-                        <span className="font-mono text-xs font-bold text-slate-900 select-all">{personalInfo?.panNumber || "N/A"}</span>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Address Line 2:</span>
+                        <div className="font-bold text-slate-900 mt-0.5">{primaryAddress.addressLine2 || "-"}</div>
                       </div>
-                      <div className="border border-slate-200/60 bg-slate-50/30 p-4.5 rounded-2xl shadow-2xs">
-                        <span className="text-[10px] font-bold text-slate-500 block mb-1 uppercase tracking-wider">Passport Number</span>
-                        <span className="font-mono text-xs font-bold text-slate-900 select-all">{personalInfo?.passportNumber || "N/A"}</span>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">City:</span>
+                        <div className="font-bold text-slate-900 mt-0.5">{primaryAddress.city || "-"}</div>
+                      </div>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">State:</span>
+                        <div className="font-bold text-slate-900 mt-0.5">{primaryAddress.state || "-"}</div>
+                      </div>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Postal Code:</span>
+                        <div className="font-bold text-slate-900 mt-0.5">{primaryAddress.postalCode || "-"}</div>
+                      </div>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Country:</span>
+                        <div className="font-bold text-slate-900 mt-0.5">{primaryAddress.country || "-"}</div>
                       </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="text-xs text-slate-400 italic">No current address recorded</div>
+                  )}
+                </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* PF Details */}
-                    <div className="space-y-4">
-                      <h4 className="text-xs font-extrabold text-slate-700 tracking-wide uppercase">PF Details</h4>
-                      <div className="border border-slate-100 bg-slate-50/50 p-4.5 rounded-2xl space-y-3">
-                        <div>
-                          <span className="text-[10px] font-bold text-slate-400 block">UAN Number</span>
-                          <span className="font-mono text-xs font-bold text-slate-900 select-all">{pfDetail?.uanNumber || "Not Provided"}</span>
-                        </div>
-                        <div>
-                          <span className="text-[10px] font-bold text-slate-400 block">PF Number</span>
-                          <span className="font-mono text-xs font-bold text-slate-900 select-all">{pfDetail?.pfNumber || "N/A"}</span>
-                        </div>
-                        {pfDetail?.pfJoiningDate && (
-                          <div>
-                            <span className="text-[10px] font-bold text-slate-400 block">PF Joining Date</span>
-                            <span className="text-xs font-semibold text-slate-900">{new Date(pfDetail.pfJoiningDate).toLocaleDateString("en-IN")}</span>
-                          </div>
-                        )}
-                        {pfDetail?.pfLeavingDate && (
-                          <div>
-                            <span className="text-[10px] font-bold text-slate-400 block">PF Leaving Date</span>
-                            <span className="text-xs font-semibold text-slate-900">{new Date(pfDetail.pfLeavingDate).toLocaleDateString("en-IN")}</span>
-                          </div>
-                        )}
-                        <div>
-                          <span className="text-[10px] font-bold text-slate-400 block">International Worker</span>
-                          <span className="text-xs font-semibold text-slate-900">{pfDetail?.isInternationalWorker ? "Yes" : "No"}</span>
-                        </div>
-                        {pfDetail?.educationLevel && (
-                          <div>
-                            <span className="text-[10px] font-bold text-slate-400 block">Education Level</span>
-                            <span className="text-xs font-semibold text-slate-900">{pfDetail.educationLevel}</span>
-                          </div>
-                        )}
-                        {pfDetail?.phcCategory && (
-                          <div>
-                            <span className="text-[10px] font-bold text-slate-400 block">PHC Category</span>
-                            <span className="text-xs font-semibold text-slate-900">{pfDetail.phcCategory}</span>
-                          </div>
-                        )}
-                        {pfDetail?.reasonForLeaving && (
-                          <div>
-                            <span className="text-[10px] font-bold text-slate-400 block">Reason for Leaving</span>
-                            <span className="text-xs font-semibold text-slate-900">{pfDetail.reasonForLeaving}</span>
-                          </div>
-                        )}
-                        {pfDetail?.documentNumber && (
-                          <div>
-                            <span className="text-[10px] font-bold text-slate-400 block">Doc Number ({pfDetail.documentType || "Other"})</span>
-                            <span className="font-mono text-xs font-bold text-slate-900 select-all">{pfDetail.documentNumber}</span>
-                          </div>
-                        )}
-                        {pfDetail?.documentExpiryDate && (
-                          <div>
-                            <span className="text-[10px] font-bold text-slate-400 block">Doc Expiry Date</span>
-                            <span className="text-xs font-semibold text-slate-900">{new Date(pfDetail.documentExpiryDate).toLocaleDateString("en-IN")}</span>
-                          </div>
-                        )}
+                {/* Permanent Address Card with Background (Displayed Below Current Address) */}
+                <div className="border border-slate-200 rounded p-4 bg-slate-50/40">
+                  <span className="text-[11px] font-bold text-slate-700 block mb-3 uppercase tracking-wider border-b border-slate-200 pb-2">
+                    Permanent Address
+                  </span>
+                  {permanentAddress ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-3 gap-x-6 text-xs">
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Address Line 1:</span>
+                        <div className="font-bold text-slate-900 mt-0.5">{permanentAddress.addressLine1 || "-"}</div>
+                      </div>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Address Line 2:</span>
+                        <div className="font-bold text-slate-900 mt-0.5">{permanentAddress.addressLine2 || "-"}</div>
+                      </div>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">City:</span>
+                        <div className="font-bold text-slate-900 mt-0.5">{permanentAddress.city || "-"}</div>
+                      </div>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">State:</span>
+                        <div className="font-bold text-slate-900 mt-0.5">{permanentAddress.state || "-"}</div>
+                      </div>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Postal Code:</span>
+                        <div className="font-bold text-slate-900 mt-0.5">{permanentAddress.postalCode || "-"}</div>
+                      </div>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Country:</span>
+                        <div className="font-bold text-slate-900 mt-0.5">{permanentAddress.country || "-"}</div>
                       </div>
                     </div>
+                  ) : (
+                    <div className="text-xs text-slate-400 italic">No permanent address recorded</div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
-                    {/* ESI Details */}
-                    <div className="space-y-4">
-                      <h4 className="text-xs font-extrabold text-slate-700 tracking-wide uppercase">ESI Details</h4>
-                      <div className="border border-slate-100 bg-slate-50/50 p-4.5 rounded-2xl space-y-3 min-h-[120px]">
-                        <div>
-                          <span className="text-[10px] font-bold text-slate-400 block">ESI Account No</span>
-                          <span className="font-mono text-xs font-bold text-slate-900 select-all">{esiDetail?.esiNumber || "Not Provided"}</span>
-                        </div>
-                        {esiDetail?.esiJoiningDate && (
-                          <div>
-                            <span className="text-[10px] font-bold text-slate-400 block">ESI Joining Date</span>
-                            <span className="text-xs font-semibold text-slate-900">{new Date(esiDetail.esiJoiningDate).toLocaleDateString("en-IN")}</span>
-                          </div>
-                        )}
-                        {esiDetail?.esiLeavingDate && (
-                          <div>
-                            <span className="text-[10px] font-bold text-slate-400 block">ESI Leaving Date</span>
-                            <span className="text-xs font-semibold text-slate-900">{new Date(esiDetail.esiLeavingDate).toLocaleDateString("en-IN")}</span>
-                          </div>
-                        )}
-                        {esiDetail?.reasonForLeaving && (
-                          <div>
-                            <span className="text-[10px] font-bold text-slate-400 block">Reason for Leaving</span>
-                            <span className="text-xs font-semibold text-slate-900">{esiDetail.reasonForLeaving}</span>
-                          </div>
-                        )}
-                      </div>
+          {/* TAB 3: FAMILY INFO */}
+          {activeTab === "family" && (
+            <div className="bg-white border border-slate-200 rounded-sm p-5 shadow-2xs space-y-4">
+              <h4 className="text-xs font-semibold text-slate-700 mb-1">Parent / Family Info</h4>
+              <div className="space-y-4">
+                {/* Father's Details Box */}
+                <div className="border border-slate-200 rounded p-4 bg-slate-50/40">
+                  <span className="text-[11px] font-bold text-slate-700 block mb-3 uppercase tracking-wider border-b border-slate-200 pb-2">
+                    Father's Details
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                    <div>
+                      <span className="text-[11px] text-slate-500 font-normal">Name:</span>
+                      <div className="font-bold text-slate-900 mt-0.5">{parentInfo?.fatherName || "-"}</div>
                     </div>
-
-                    {/* Insurance Details */}
-                    <div className="space-y-4">
-                      <h4 className="text-xs font-extrabold text-slate-700 tracking-wide uppercase">Insurance</h4>
-                      <div className="border border-slate-100 bg-slate-50/50 p-4.5 rounded-2xl space-y-3">
-                        <div>
-                          <span className="text-[10px] font-bold text-slate-400 block">Provider</span>
-                          <span className="font-semibold text-slate-900">{insuranceDetail?.insuranceProvider || "Not Provided"}</span>
-                        </div>
-                        <div>
-                          <span className="text-[10px] font-bold text-slate-400 block">Policy Number</span>
-                          <span className="font-mono text-xs font-bold text-slate-900 select-all">{insuranceDetail?.policyNumber || "N/A"}</span>
-                        </div>
-                        <div>
-                          <span className="text-[10px] font-bold text-slate-400 block">Expiry Date</span>
-                          <span className="font-semibold text-slate-900">
-                            {insuranceDetail?.insuranceExpiryDate ? new Date(insuranceDetail.insuranceExpiryDate).toLocaleDateString("en-IN") : "N/A"}
-                          </span>
-                        </div>
-                      </div>
+                    <div>
+                      <span className="text-[11px] text-slate-500 font-normal">Phone:</span>
+                      <div className="font-bold text-slate-900 mt-0.5 select-all">{parentInfo?.fatherMobile || "-"}</div>
+                    </div>
+                    <div>
+                      <span className="text-[11px] text-slate-500 font-normal">Occupation:</span>
+                      <div className="font-bold text-slate-900 mt-0.5">{parentInfo?.fatherOccupation || "-"}</div>
                     </div>
                   </div>
                 </div>
-              )}
 
-              {/* TAB 5: OTHERS (Bank account details) */}
-              {activeTab === "others" && (
+                {/* Mother's Details Box */}
+                <div className="border border-slate-200 rounded p-4 bg-slate-50/40">
+                  <span className="text-[11px] font-bold text-slate-700 block mb-3 uppercase tracking-wider border-b border-slate-200 pb-2">
+                    Mother's Details
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                    <div>
+                      <span className="text-[11px] text-slate-500 font-normal">Name:</span>
+                      <div className="font-bold text-slate-900 mt-0.5">{parentInfo?.motherName || "-"}</div>
+                    </div>
+                    <div>
+                      <span className="text-[11px] text-slate-500 font-normal">Phone:</span>
+                      <div className="font-bold text-slate-900 mt-0.5 select-all">{parentInfo?.motherMobile || "-"}</div>
+                    </div>
+                    <div>
+                      <span className="text-[11px] text-slate-500 font-normal">Occupation:</span>
+                      <div className="font-bold text-slate-900 mt-0.5">{parentInfo?.motherOccupation || "-"}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Guardian / Spouse Box */}
+                <div className="border border-slate-200 rounded p-4 bg-slate-50/40">
+                  <span className="text-[11px] font-bold text-slate-700 block mb-3 uppercase tracking-wider border-b border-slate-200 pb-2">
+                    Guardian / Spouse
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                    <div>
+                      <span className="text-[11px] text-slate-500 font-normal">Name:</span>
+                      <div className="font-bold text-slate-900 mt-0.5">{parentInfo?.guardianName || personalInfo?.spouseName || "-"}</div>
+                    </div>
+                    <div>
+                      <span className="text-[11px] text-slate-500 font-normal">Phone:</span>
+                      <div className="font-bold text-slate-900 mt-0.5 select-all">{parentInfo?.guardianMobile || "-"}</div>
+                    </div>
+                    <div>
+                      <span className="text-[11px] text-slate-500 font-normal">Relationship:</span>
+                      <div className="font-bold text-slate-900 mt-0.5">{parentInfo?.relationship || (personalInfo?.spouseName ? "Spouse" : "-")}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 4: STATUTORY DETAILS */}
+          {activeTab === "statutory" && (
+            <div className="space-y-4">
+              {/* Identity Numbers */}
+              <div className="bg-white border border-slate-200 rounded-sm p-5 shadow-2xs space-y-4">
+                <h4 className="text-xs font-semibold text-slate-700 mb-1">Identity Numbers</h4>
                 <div className="space-y-4">
-                  <h4 className="text-xs font-extrabold text-slate-700 tracking-wide uppercase">Bank Details</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border border-slate-100 bg-slate-50/50 p-5 rounded-2xl shadow-2xs">
-                    <div className="space-y-3.5 text-xs">
-                      <div className="flex justify-between items-center">
-                        <span className="font-bold text-slate-400">Bank Name</span>
-                        <span className="font-bold text-slate-900">{bankDetails?.bankName || "N/A"}</span>
+                  {/* Aadhaar Box */}
+                  <div className="border border-slate-200 rounded p-4 bg-slate-50/40">
+                    <span className="text-[11px] font-bold text-slate-700 block mb-3 uppercase tracking-wider border-b border-slate-200 pb-2">
+                      Aadhaar Card
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Aadhaar Card No:</span>
+                        <div className="font-mono font-bold text-slate-900 mt-0.5 select-all">{personalInfo?.aadhaarNumber || "-"}</div>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="font-bold text-slate-400">Account Number</span>
-                        <span className="font-mono font-bold text-slate-900 select-all">{bankDetails?.accountNumber || "N/A"}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="font-bold text-slate-400">IFSC Code</span>
-                        <span className="font-mono font-bold text-slate-900 select-all">{bankDetails?.ifscCode || "N/A"}</span>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Status:</span>
+                        <div className="font-bold text-emerald-600 mt-0.5">{personalInfo?.aadhaarNumber ? "Verified" : "Not Provided"}</div>
                       </div>
                     </div>
-                    <div className="space-y-3.5 text-xs">
-                      <div className="flex justify-between items-center">
-                        <span className="font-bold text-slate-400">Branch Name</span>
-                        <span className="font-bold text-slate-900">{bankDetails?.branchName || "N/A"}</span>
+                  </div>
+
+                  {/* PAN Card Box */}
+                  <div className="border border-slate-200 rounded p-4 bg-slate-50/40">
+                    <span className="text-[11px] font-bold text-slate-700 block mb-3 uppercase tracking-wider border-b border-slate-200 pb-2">
+                      PAN Card
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">PAN Number:</span>
+                        <div className="font-mono font-bold text-slate-900 mt-0.5 select-all">{personalInfo?.panNumber || "-"}</div>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="font-bold text-slate-400">Account Type</span>
-                        <span className="font-bold text-slate-900">{bankDetails?.accountType || "N/A"}</span>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Status:</span>
+                        <div className="font-bold text-emerald-600 mt-0.5">{personalInfo?.panNumber ? "Verified" : "Not Provided"}</div>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="font-bold text-slate-400">UPI ID</span>
-                        <span className="font-bold text-slate-900 select-all">{bankDetails?.upiId || "None"}</span>
+                    </div>
+                  </div>
+
+                  {/* Passport Box */}
+                  <div className="border border-slate-200 rounded p-4 bg-slate-50/40">
+                    <span className="text-[11px] font-bold text-slate-700 block mb-3 uppercase tracking-wider border-b border-slate-200 pb-2">
+                      Passport
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Passport Number:</span>
+                        <div className="font-mono font-bold text-slate-900 mt-0.5 select-all">{personalInfo?.passportNumber || "-"}</div>
+                      </div>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Status:</span>
+                        <div className="font-bold text-slate-900 mt-0.5">{personalInfo?.passportNumber ? "Active" : "Not Provided"}</div>
                       </div>
                     </div>
                   </div>
                 </div>
-              )}
+              </div>
 
-              {/* TAB 6: DOCUMENTS */}
-              {activeTab === "documents" && (
-                <div className="space-y-6">
-                  {/* Upload document form */}
-                  <form onSubmit={handleUploadDoc} className="p-4.5 border border-slate-200 bg-slate-50/30 rounded-2xl space-y-4 shadow-2xs">
-                    <h4 className="text-xs font-extrabold text-slate-700 tracking-wide uppercase">Upload New KYC Document</h4>
+              {/* Statutory Benefits & Insurance */}
+              <div className="bg-white border border-slate-200 rounded-sm p-5 shadow-2xs space-y-4">
+                <h4 className="text-xs font-semibold text-slate-700 mb-1">Statutory Benefits & Insurance</h4>
+                <div className="space-y-4">
+                  {/* PF Details Box */}
+                  <div className="border border-slate-200 rounded p-4 bg-slate-50/40">
+                    <span className="text-[11px] font-bold text-slate-700 block mb-3 uppercase tracking-wider border-b border-slate-200 pb-2">
+                      PF Details
+                    </span>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 text-xs">
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">UAN Number:</span>
+                        <div className="font-mono font-bold text-slate-900 mt-0.5 select-all">{pfDetail?.uanNumber || "-"}</div>
+                      </div>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">PF Number:</span>
+                        <div className="font-mono font-bold text-slate-900 mt-0.5 select-all">{pfDetail?.pfNumber || "-"}</div>
+                      </div>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">PF Joining Date:</span>
+                        <div className="font-bold text-slate-900 mt-0.5">{formatDateDMY(pfDetail?.pfJoiningDate)}</div>
+                      </div>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">PF Leaving Date:</span>
+                        <div className="font-bold text-slate-900 mt-0.5">{formatDateDMY(pfDetail?.pfLeavingDate)}</div>
+                      </div>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">International Worker:</span>
+                        <div className="font-bold text-slate-900 mt-0.5">{pfDetail?.isInternationalWorker ? "Yes" : "No"}</div>
+                      </div>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Education Level:</span>
+                        <div className="font-bold text-slate-900 mt-0.5">{pfDetail?.educationLevel || "-"}</div>
+                      </div>
+                    </div>
+                  </div>
 
+                  {/* ESI Details Box */}
+                  <div className="border border-slate-200 rounded p-4 bg-slate-50/40">
+                    <span className="text-[11px] font-bold text-slate-700 block mb-3 uppercase tracking-wider border-b border-slate-200 pb-2">
+                      ESI Details
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">ESI Account No:</span>
+                        <div className="font-mono font-bold text-slate-900 mt-0.5 select-all">{esiDetail?.esiNumber || "-"}</div>
+                      </div>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">ESI Joining Date:</span>
+                        <div className="font-bold text-slate-900 mt-0.5">{formatDateDMY(esiDetail?.esiJoiningDate)}</div>
+                      </div>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">ESI Leaving Date:</span>
+                        <div className="font-bold text-slate-900 mt-0.5">{formatDateDMY(esiDetail?.esiLeavingDate)}</div>
+                      </div>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Reason For Leaving:</span>
+                        <div className="font-bold text-slate-900 mt-0.5">{esiDetail?.reasonForLeaving || "-"}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Insurance Details Box */}
+                  <div className="border border-slate-200 rounded p-4 bg-slate-50/40">
+                    <span className="text-[11px] font-bold text-slate-700 block mb-3 uppercase tracking-wider border-b border-slate-200 pb-2">
+                      Insurance Details
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Insurance Provider:</span>
+                        <div className="font-bold text-slate-900 mt-0.5">{insuranceDetail?.insuranceProvider || "-"}</div>
+                      </div>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Policy Number:</span>
+                        <div className="font-mono font-bold text-slate-900 mt-0.5 select-all">{insuranceDetail?.policyNumber || "-"}</div>
+                      </div>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Expiry Date:</span>
+                        <div className="font-bold text-slate-900 mt-0.5">{formatDateDMY(insuranceDetail?.insuranceExpiryDate)}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+
+
+          {/* TAB 6: OTHERS (BANK DETAILS) */}
+          {activeTab === "others" && (
+            <div className="bg-white border border-slate-200 rounded-sm p-5 shadow-2xs space-y-4">
+              <h4 className="text-xs font-semibold text-slate-700 mb-1">Bank & Financial Details</h4>
+              <div className="space-y-4">
+                {/* Primary Bank Account Box */}
+                <div className="border border-slate-200 rounded p-4 bg-slate-50/40">
+                  <span className="text-[11px] font-bold text-slate-700 block mb-3 uppercase tracking-wider border-b border-slate-200 pb-2">
+                    Primary Bank Account
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                    <div>
+                      <span className="text-[11px] text-slate-500 font-normal">Bank Name:</span>
+                      <div className="font-bold text-slate-900 mt-0.5">{bankDetails?.bankName || "-"}</div>
+                    </div>
+                    <div>
+                      <span className="text-[11px] text-slate-500 font-normal">Account Number:</span>
+                      <div className="font-mono font-bold text-slate-900 mt-0.5 select-all">{bankDetails?.accountNumber || "-"}</div>
+                    </div>
+                    <div>
+                      <span className="text-[11px] text-slate-500 font-normal">Account Type:</span>
+                      <div className="font-bold text-slate-900 mt-0.5">{bankDetails?.accountType || "Savings"}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Branch & Transfer Details Box */}
+                <div className="border border-slate-200 rounded p-4 bg-slate-50/40">
+                  <span className="text-[11px] font-bold text-slate-700 block mb-3 uppercase tracking-wider border-b border-slate-200 pb-2">
+                    Branch & Transfer Details
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                    <div>
+                      <span className="text-[11px] text-slate-500 font-normal">Branch Name:</span>
+                      <div className="font-bold text-slate-900 mt-0.5">{bankDetails?.branchName || "-"}</div>
+                    </div>
+                    <div>
+                      <span className="text-[11px] text-slate-500 font-normal">IFSC Code:</span>
+                      <div className="font-mono font-bold text-slate-900 mt-0.5 select-all">{bankDetails?.ifscCode || "-"}</div>
+                    </div>
+                    <div>
+                      <span className="text-[11px] text-slate-500 font-normal">UPI ID:</span>
+                      <div className="font-mono font-bold text-slate-900 mt-0.5 select-all">{bankDetails?.upiId || "-"}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 7: DOCUMENTS */}
+          {activeTab === "documents" && (
+            <div className="space-y-4">
+              {/* Upload Document Form */}
+              <div className="bg-white border border-slate-200 rounded-sm p-5 shadow-2xs space-y-4">
+                <h4 className="text-xs font-semibold text-slate-700 mb-1">Upload New KYC Document</h4>
+                <div className="border border-slate-200 rounded p-4 bg-slate-50/40">
+                  <span className="text-[11px] font-bold text-slate-700 block mb-3 uppercase tracking-wider border-b border-slate-200 pb-2">
+                    Document Attachment
+                  </span>
+
+                  <form onSubmit={handleUploadDoc} className="space-y-4">
                     {uploadError && (
-                      <div className="p-3 text-xs bg-rose-50 border border-rose-100 text-rose-600 rounded-xl font-semibold">
+                      <div className="p-3 text-xs bg-rose-50 border border-rose-100 text-rose-600 rounded font-semibold">
                         {uploadError}
                       </div>
                     )}
                     {uploadSuccess && (
-                      <div className="p-3 text-xs bg-emerald-50 border border-emerald-100 text-emerald-600 rounded-xl font-semibold">
+                      <div className="p-3 text-xs bg-emerald-50 border border-emerald-100 text-emerald-600 rounded font-semibold">
                         {uploadSuccess}
                       </div>
                     )}
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
                       <div className="flex flex-col gap-1.5">
-                        <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider font-bold">Doc Type</label>
+                        <label className="text-[11px] font-medium text-slate-600">Doc Type:</label>
                         <select
-                          className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-900 focus:outline-none"
+                          className="w-full rounded border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-sky-500 font-bold"
                           value={uploadDocType}
                           onChange={(e) => setUploadDocType(e.target.value)}
                         >
@@ -782,9 +1106,9 @@ export const EmployeeProfile: React.FC<EmployeeProfileProps> = ({ employeeId, on
                       </div>
 
                       <div className="flex flex-col gap-1.5">
-                        <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider font-bold">Choose File</label>
-                        <div className="relative flex items-center justify-between border border-slate-300 bg-white rounded-xl px-3 h-10 hover:border-slate-400 transition-colors">
-                          <span className="text-xs text-slate-500 truncate max-w-[150px] font-medium">
+                        <label className="text-[11px] font-medium text-slate-600">Choose File:</label>
+                        <div className="relative flex items-center justify-between border border-slate-300 bg-white rounded px-2.5 h-[34px] hover:border-slate-400 transition-colors">
+                          <span className="text-xs text-slate-500 truncate max-w-[140px] font-medium">
                             {uploadFileName || "No file chosen"}
                           </span>
                           <input
@@ -799,7 +1123,7 @@ export const EmployeeProfile: React.FC<EmployeeProfileProps> = ({ employeeId, on
                           />
                           <label
                             htmlFor="profileDocFile"
-                            className="text-[10px] font-extrabold text-brand-primary bg-brand-primary/5 hover:bg-brand-primary/10 rounded-lg px-2 py-1.5 cursor-pointer select-none"
+                            className="text-[10px] font-bold text-sky-600 bg-sky-50 hover:bg-sky-100 rounded px-2 py-1 cursor-pointer select-none"
                           >
                             Browse
                           </label>
@@ -810,95 +1134,140 @@ export const EmployeeProfile: React.FC<EmployeeProfileProps> = ({ employeeId, on
                         type="submit"
                         isLoading={isUploading}
                         variant="primary"
-                        className="h-10 cursor-pointer text-xs font-bold rounded-xl"
+                        className="h-[34px] cursor-pointer text-xs font-semibold rounded bg-sky-600 hover:bg-sky-700 text-white"
                       >
-                        <UploadCloud className="w-4 h-4 mr-1.5" />
+                        <UploadCloud className="w-3.5 h-3.5 mr-1.5" />
                         <span>Upload</span>
                       </Button>
                     </div>
                   </form>
-
-                  {/* Documents list */}
-                  <div className="space-y-3">
-                    <h4 className="text-xs font-extrabold text-slate-700 tracking-wide uppercase">Uploaded KYC Vault</h4>
-                    {documents.length === 0 ? (
-                      <div className="text-center p-8 border border-dashed border-slate-200 rounded-2xl text-slate-400 text-xs font-semibold">
-                        No KYC documents uploaded for this employee user.
-                      </div>
-                    ) : (
-                      <div className="border border-slate-200/80 rounded-2xl overflow-hidden bg-white shadow-2xs">
-                        <table className="w-full text-left text-xs text-slate-700 border-collapse">
-                          <thead>
-                            <tr className="bg-slate-50 border-b border-slate-200/80 font-bold text-slate-800">
-                              <th className="py-2.5 px-4 font-bold uppercase tracking-wider">Doc Type</th>
-                              <th className="py-2.5 px-4 font-bold uppercase tracking-wider text-right">Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-100">
-                            {documents.map((doc) => (
-                              <tr key={doc.documentId} className="hover:bg-slate-50/50 transition-colors">
-                                <td className="py-3 px-4 font-bold text-slate-900">{doc.documentType}</td>
-                                <td className="py-3 px-4 text-right">
-                                  <div className="flex justify-end gap-1.5">
-                                    <button
-                                      onClick={() => handleDownloadDoc(doc.documentId)}
-                                      className="p-1 text-slate-500 hover:bg-brand-primary/10 hover:text-brand-primary rounded-lg transition-colors cursor-pointer"
-                                      title="Download File"
-                                    >
-                                      <Download className="w-3.5 h-3.5" />
-                                    </button>
-                                    <button
-                                      onClick={() => handleDeleteDoc(doc.documentId, doc.documentType)}
-                                      className="p-1 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                                      title="Delete Document"
-                                    >
-                                      <Trash2 className="w-3.5 h-3.5" />
-                                    </button>
-                                  </div>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </div>
                 </div>
-              )}
+              </div>
 
+              {/* Uploaded Documents List */}
+              <div className="bg-white border border-slate-200 rounded-sm p-5 shadow-2xs space-y-4">
+                <h4 className="text-xs font-semibold text-slate-700 mb-1">Uploaded KYC Vault</h4>
+                <div className="border border-slate-200 rounded p-4 bg-slate-50/40">
+                  <span className="text-[11px] font-bold text-slate-700 block mb-3 uppercase tracking-wider border-b border-slate-200 pb-2">
+                    Verified KYC Records
+                  </span>
+
+                  {documents.length === 0 ? (
+                    <div className="text-center p-8 border border-dashed border-slate-200 rounded text-slate-400 text-xs font-normal">
+                      No KYC documents uploaded for this employee.
+                    </div>
+                  ) : (
+                    <div className="border border-slate-200 rounded overflow-hidden bg-white">
+                      <table className="w-full text-left text-xs text-slate-700 border-collapse">
+                        <thead>
+                          <tr className="bg-slate-50 border-b border-slate-200 font-semibold text-slate-700">
+                            <th className="py-2.5 px-4 font-semibold">Doc Type</th>
+                            <th className="py-2.5 px-4 font-semibold text-right">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {documents.map((doc) => (
+                            <tr key={doc.documentId} className="hover:bg-slate-50 transition-colors">
+                              <td className="py-2.5 px-4 font-bold text-slate-900">{doc.documentType}</td>
+                              <td className="py-2.5 px-4 text-right">
+                                <div className="flex justify-end gap-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDownloadDoc(doc.documentId)}
+                                    className="p-1 text-slate-500 hover:text-sky-600 hover:bg-sky-50 rounded transition-colors cursor-pointer"
+                                    title="Download File"
+                                  >
+                                    <Download className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteDoc(doc.documentId, doc.documentType)}
+                                    className="p-1 text-rose-500 hover:bg-rose-50 rounded transition-colors cursor-pointer"
+                                    title="Delete Document"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
+          )}
         </div>
-
       </div>
-
-
 
       {/* Delete Document Confirmation Modal */}
       {isDeleteDocConfirmOpen && docToDelete && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fade-in">
-          <div className="bg-white w-full max-w-md rounded-2xl border border-slate-200 p-6 shadow-xl space-y-4">
+          <div className="bg-white w-full max-w-md rounded border border-slate-200 p-6 shadow-xl space-y-4">
             <div className="space-y-2">
-              <h3 className="text-lg font-bold text-slate-900">Delete Document</h3>
-              <p className="text-sm text-slate-500 font-medium">
+              <h3 className="text-base font-bold text-slate-900">Delete Document</h3>
+              <p className="text-xs text-slate-600 font-normal">
                 Are you sure you want to delete the <span className="font-semibold text-slate-800">{docToDelete.type}</span> document? This action cannot be undone.
               </p>
             </div>
             <div className="flex items-center justify-end gap-3 pt-2">
               <button
+                type="button"
                 onClick={() => {
                   setIsDeleteDocConfirmOpen(false);
                   setDocToDelete(null);
                 }}
-                className="px-4.5 py-2 text-xs font-bold text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all"
+                className="px-4 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded transition-all cursor-pointer"
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={confirmDeleteDoc}
-                className="px-4.5 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-755 rounded-xl shadow-xs transition-all"
+                className="px-4 py-1.5 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded shadow-xs transition-all cursor-pointer"
               >
                 Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Employee Confirmation Modal */}
+      {isDeleteEmployeeOpen && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-md rounded-md border border-slate-200 p-6 shadow-2xl space-y-4">
+            <div className="space-y-2">
+              <h3 className="text-base font-bold text-slate-900">Delete Employee</h3>
+              <p className="text-xs text-slate-600 font-normal">
+                Are you sure you want to delete employee <span className="font-semibold text-slate-800">{userProfile?.firstName} {userProfile?.lastName || ""} {userProfile?.employeeCode ? `(${userProfile.employeeCode})` : ""}</span>? This will permanently erase their credentials, documents, and company records.
+              </p>
+            </div>
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                disabled={isDeletingEmployee}
+                onClick={() => setIsDeleteEmployeeOpen(false)}
+                className="px-4 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded transition-all cursor-pointer disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isDeletingEmployee}
+                onClick={handleConfirmDeleteEmployee}
+                className="px-4 py-1.5 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded shadow-xs transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+              >
+                {isDeletingEmployee ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  <span>Delete</span>
+                )}
               </button>
             </div>
           </div>

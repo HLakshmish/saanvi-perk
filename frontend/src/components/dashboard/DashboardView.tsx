@@ -76,17 +76,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     }
   }, []);
 
-  // Expand sidebar on desktop screens, keep hidden on mobile
+  // Keep sidebar responsive on window resize (do not auto-expand on desktop)
   useEffect(() => {
-    if (window.innerWidth >= 768) {
-      setIsSidebarOpen(true);
-    }
-
     const handleResize = () => {
       if (window.innerWidth < 768) {
         setIsSidebarOpen(false);
-      } else {
-        setIsSidebarOpen(true);
       }
     };
     window.addEventListener("resize", handleResize);
@@ -244,6 +238,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       case "holidays-leaves":
         return <LeavesView />;
       case "payroll":
+        if (role === "employee") {
+          return <div className="text-sm font-semibold text-slate-500">Access Denied.</div>;
+        }
         return (
           <PayrollView
             currentRole={role}
@@ -352,7 +349,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         userName={resolvedUserName}
         companyName={resolvedCompanyName}
         companyLogo={resolvedCompanyLogo}
-        onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+        onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
         onTabChange={setActiveTab}
       />
 

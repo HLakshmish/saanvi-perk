@@ -8,21 +8,27 @@ import { EmployeeTable } from "./employee-table";
 import { OrganizationChart } from "./organization-chart";
 import { Employee } from "../types/employees.types";
 import { getEmployees, deleteUser } from "../api/employees.api";
-import { LayoutGrid, List, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmployeeEditModal } from "./employee-edit-modal";
+import { Button } from "@/components/ui/button";
 
 interface EmployeeListProps {
   currentUserName?: string;
   currentCompanyName?: string;
+  activeTab?: "list" | "chart";
+  canAddEmployee?: boolean;
+  onAddEmployee?: () => void;
 }
 
 export const EmployeeList: React.FC<EmployeeListProps> = ({
   currentUserName,
   currentCompanyName,
+  activeTab = "list",
+  canAddEmployee = false,
+  onAddEmployee,
 }) => {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"list" | "chart">("list");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
@@ -115,24 +121,23 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
 
   if (isLoading) {
     return (
-      <div className="w-full bg-white border border-slate-200/80 rounded-3xl p-5 shadow-xs space-y-4 animate-fade-in">
+      <div className="w-full bg-white border border-slate-200/80 rounded-2xl p-5 shadow-2xs space-y-4 animate-fade-in">
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-          <Skeleton className="h-8 w-48 rounded-xl" />
-          <Skeleton className="h-8 w-32 rounded-xl" />
+          <Skeleton className="h-9 w-64 rounded-xl" />
+          <Skeleton className="h-9 w-28 rounded-xl" />
         </div>
         {[1, 2, 3, 4, 5].map((i) => (
           <div key={i} className="flex items-center justify-between gap-4 py-2 border-b border-slate-100 last:border-none">
-            <div className="flex items-center gap-3 w-56">
+            <div className="flex items-center gap-3 w-48">
               <Skeleton className="w-9 h-9 rounded-xl shrink-0" />
-              <div className="space-y-1.5 w-full">
-                <Skeleton className="h-3.5 w-28" />
-                <Skeleton className="h-2.5 w-20" />
-              </div>
+              <Skeleton className="h-3.5 w-28" />
             </div>
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-4 w-32" />
             <Skeleton className="h-4 w-24" />
-            <Skeleton className="h-4 w-28" />
+            <Skeleton className="h-4 w-24" />
             <Skeleton className="h-6 w-20 rounded-full" />
-            <Skeleton className="h-8 w-16 rounded-xl" />
+            <Skeleton className="h-6 w-20 rounded-full" />
           </div>
         ))}
       </div>
@@ -140,50 +145,36 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
   }
 
   return (
-    <div className="w-full flex flex-col gap-4">
-      {/* View Switcher / Tabs Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-1 gap-4">
-        <div className="flex bg-slate-100 border border-slate-200/80 p-0.5 rounded-xl w-fit self-start shadow-2xs">
-          <button
-            onClick={() => setActiveTab("list")}
-            className={`flex items-center gap-2 px-4 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 cursor-pointer ${
-              activeTab === "list"
-                ? "bg-brand-primary text-white shadow-2xs border border-brand-primary"
-                : "text-slate-500 hover:text-brand-primary"
-            }`}
-          >
-            <List className="w-3.5 h-3.5" />
-            <span>Employee List</span>
-          </button>
-          <button
-            onClick={() => setActiveTab("chart")}
-            className={`flex items-center gap-2 px-4 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 cursor-pointer ${
-              activeTab === "chart"
-                ? "bg-brand-primary text-white shadow-2xs border border-brand-primary"
-                : "text-slate-500 hover:text-brand-primary"
-            }`}
-          >
-            <LayoutGrid className="w-3.5 h-3.5" />
-            <span>Organisation Chart</span>
-          </button>
-        </div>
+    <div className="w-full">
+      {activeTab === "list" ? (
+        /* Unified View: Search/Action Bar (No background color) + Table & Pagination Container */
+        <div className="w-full flex flex-col gap-2.5">
+          {/* Top Controls Toolbar: Search on Left, Add Employee on Right — no background colour */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="w-full sm:w-80">
+              <SearchBox
+                value={searchTerm}
+                onChange={handleSearchChange}
+                placeholder="Search by name or employee code..."
+              />
+            </div>
 
-        {/* Search Box (Only displayed on the List view) */}
-        {activeTab === "list" && (
-          <div className="w-full sm:w-80">
-            <SearchBox
-              value={searchTerm}
-              onChange={handleSearchChange}
-              placeholder="Search by name or employee code..."
-            />
+            {canAddEmployee && onAddEmployee && (
+              <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+                <Button
+                  variant="primary"
+                  size="sm"
+                  className="h-8 px-3 text-xs font-semibold rounded-lg shadow-xs cursor-pointer"
+                  onClick={onAddEmployee}
+                >
+                  Add Employee
+                </Button>
+              </div>
+            )}
           </div>
-        )}
-      </div>
 
-      {/* Main View Render */}
-      <div className="w-full transition-all duration-300">
-        {activeTab === "list" ? (
-          <div className="flex flex-col gap-4">
+          {/* Table & Pagination Container */}
+          <div className="w-full bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden flex flex-col">
             {/* Table Component */}
             <EmployeeTable
               employees={paginatedEmployees}
@@ -192,22 +183,38 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
               onDelete={handleDelete}
             />
 
-            {/* Pagination Controls */}
+            {/* Bottom Pagination */}
             {filteredEmployees.length > 0 && (
-              <Pagination
-                currentPage={currentPage}
-                pageSize={pageSize}
-                totalRecords={filteredEmployees.length}
-                onPageChange={setCurrentPage}
-                onPageSizeChange={(size) => {
-                  setPageSize(size);
-                  setCurrentPage(1); // Reset to first page on sizing change
-                }}
-              />
+              <div className="border-t border-slate-100 px-4 py-1.5 bg-white">
+                <Pagination
+                  currentPage={currentPage}
+                  pageSize={pageSize}
+                  totalRecords={filteredEmployees.length}
+                  onPageChange={setCurrentPage}
+                  onPageSizeChange={(size) => {
+                    setPageSize(size);
+                    setCurrentPage(1); // Reset to first page on sizing change
+                  }}
+                />
+              </div>
             )}
           </div>
-        ) : (
-          /* Organizational Chart View */
+        </div>
+      ) : (
+        /* Organizational Chart View */
+        <div className="w-full flex flex-col gap-4">
+          {canAddEmployee && onAddEmployee && (
+            <div className="flex justify-end">
+              <Button
+                variant="primary"
+                size="sm"
+                className="h-8 px-3 text-xs font-semibold rounded-lg shadow-xs cursor-pointer"
+                onClick={onAddEmployee}
+              >
+                Add Employee
+              </Button>
+            </div>
+          )}
           <div className="w-full overflow-x-auto">
             <OrganizationChart
               employees={employees}
@@ -215,8 +222,8 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
               currentCompanyName={currentCompanyName}
             />
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Modals */}
       {selectedEmployee && (

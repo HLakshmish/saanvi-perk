@@ -8,31 +8,14 @@ import { Sidebar } from "@/components/dashboard/Sidebar";
 import { EmployeeProfile } from "@/features/employees/components/employee-profile";
 import { getCompanySuperAdmin, getUserById } from "@/features/employees/api/employees.api";
 import { EmployeeEditModal } from "@/features/employees/components/employee-edit-modal";
-
-function getAuthToken(): string | null {
-  if (typeof document === "undefined") return null;
-  const match = document.cookie.match(/(?:^|; )auth_token=([^;]*)/);
-  return match ? match[1] : null;
-}
+import { getCurrentUserId } from "@/features/expenses/api/expenses.api";
 
 function getUserRoleCookie(): UserRole {
   if (typeof document === "undefined") return "employee";
   const match = document.cookie.match(/(?:^|; )user_role=([^;]*)/);
-  const role = match ? match[1] : "employee";
-  return role as UserRole;
+  const role = match ? match[1] : (typeof window !== "undefined" ? localStorage.getItem("user_role") : null);
+  return (role as UserRole) || "employee";
 }
-
-const getUserIdFromToken = (): number | null => {
-  const token = getAuthToken();
-  if (!token) return null;
-  try {
-    const payloadBase64 = token.split(".")[1];
-    const decodedPayload = JSON.parse(atob(payloadBase64.replace(/-/g, "+").replace(/_/g, "/")));
-    return decodedPayload.userId;
-  } catch (e) {
-    return null;
-  }
-};
 
 interface PageProps {
   params: Promise<{ employeeId: string }>;
@@ -46,7 +29,8 @@ export default function EmployeeProfilePage({ params }: PageProps) {
   const [role, setRole] = useState<UserRole>("employee");
   const [userName, setUserName] = useState("");
   const [companyName, setCompanyName] = useState("");
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [companyLogo, setCompanyLogo] = useState<string | undefined>(undefined);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -55,6 +39,18 @@ export default function EmployeeProfilePage({ params }: PageProps) {
     // Read role from cookie
     const currentRole = getUserRoleCookie();
     setRole(currentRole);
+
+    // Immediately resolve stored user and company details from localStorage
+    if (typeof window !== "undefined") {
+      const storedUserName = localStorage.getItem("user_name");
+      if (storedUserName) setUserName(storedUserName);
+
+      const storedCompanyName = localStorage.getItem("company_name");
+      if (storedCompanyName) setCompanyName(storedCompanyName);
+
+      const storedCompanyLogo = localStorage.getItem("company_logo");
+      if (storedCompanyLogo) setCompanyLogo(storedCompanyLogo);
+    }
 
     // Load company metadata
     const loadCompanyMetadata = async () => {
@@ -65,12 +61,15 @@ export default function EmployeeProfilePage({ params }: PageProps) {
           if (comp.companyName) {
             setCompanyName(comp.companyName);
           }
+          if (comp.logo) {
+            setCompanyLogo(comp.logo);
+          }
           if (comp.superAdmin && currentRole === "superadmin") {
             const sa = comp.superAdmin;
             setUserName(`${sa.firstName} ${sa.lastName || ""}`.trim());
           } else {
             // Fetch logged in user's name
-            const loggedInUserId = getUserIdFromToken();
+            const loggedInUserId = getCurrentUserId();
             if (loggedInUserId) {
               const userRes = await getUserById(loggedInUserId);
               if (userRes.success && userRes.data) {
@@ -93,13 +92,14 @@ export default function EmployeeProfilePage({ params }: PageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[#f4fbf7] flex flex-col font-sans">
+    <div className="min-h-screen bg-[#f1f5f9] flex flex-col font-sans">
       <Navbar
         currentRole={role}
         onRoleChange={setRole}
         userName={userName}
         companyName={companyName}
-        onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+        companyLogo={companyLogo}
+        onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
         onTabChange={handleTabChange}
       />
       <div className="flex flex-1">
@@ -108,8 +108,9 @@ export default function EmployeeProfilePage({ params }: PageProps) {
           activeTab="employees" // Highlight employees tab as active
           onTabChange={handleTabChange}
           isSidebarOpen={isSidebarOpen}
+          onCloseMobileSidebar={() => setIsSidebarOpen(false)}
         />
-        <main className="flex-1 p-3.5 sm:p-5 overflow-y-auto max-w-7xl mx-auto w-full">
+        <main className="flex-1 p-3.5 sm:p-5 overflow-y-auto max-w-[1440px] mx-auto w-full">
           <EmployeeProfile 
             key={refreshKey}
             employeeId={employeeId} 

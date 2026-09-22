@@ -3,16 +3,10 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
   Calculator,
-  TrendingUp,
-  CreditCard,
   ShieldCheck,
-  Building2,
-  DollarSign,
   UserPlus,
-  RefreshCw,
   Info,
   Sliders,
-  CheckCircle2,
   ArrowRight,
   Sparkles,
 } from "lucide-react";
@@ -246,84 +240,6 @@ export const SalaryBreakupCalculator: React.FC<SalaryBreakupCalculatorProps> = (
         </div>
       </div>
 
-      {/* 4 Summary Stat Cards */}
-      {monthly && annual && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs hover:border-brand-primary/30 transition-all">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Cost to Company (CTC)
-              </span>
-              <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                <Building2 className="w-4 h-4" />
-              </div>
-            </div>
-            <div className="mt-3">
-              <div className="text-xl font-bold text-slate-900">{formatCurrency(monthly.ctc)}</div>
-              <div className="text-xs text-slate-400 font-medium mt-0.5">
-                {formatCurrency(annual.ctc)} / year
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs hover:border-brand-primary/30 transition-all">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Gross Salary
-              </span>
-              <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                <DollarSign className="w-4 h-4" />
-              </div>
-            </div>
-            <div className="mt-3">
-              <div className="text-xl font-bold text-slate-900">
-                {formatCurrency(monthly.grossSalary)}
-              </div>
-              <div className="text-xs text-slate-400 font-medium mt-0.5">
-                {formatCurrency(annual.grossSalary)} / year
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs hover:border-brand-primary/30 transition-all">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Total Deductions
-              </span>
-              <div className="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
-                <CreditCard className="w-4 h-4" />
-              </div>
-            </div>
-            <div className="mt-3">
-              <div className="text-xl font-bold text-rose-600">
-                {formatCurrency(monthly.totalDeductions)}
-              </div>
-              <div className="text-xs text-slate-400 font-medium mt-0.5">
-                {formatCurrency(annual.totalDeductions)} / year (EPF + ESI + PT)
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-2xl p-5 shadow-sm">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-emerald-100">
-                Net Take-Home Salary
-              </span>
-              <div className="w-8 h-8 rounded-xl bg-white/20 text-white flex items-center justify-center">
-                <CheckCircle2 className="w-4 h-4" />
-              </div>
-            </div>
-            <div className="mt-3">
-              <div className="text-2xl font-extrabold text-white">
-                {formatCurrency(monthly.netSalary)}
-              </div>
-              <div className="text-xs text-emerald-100 font-semibold mt-0.5">
-                {formatCurrency(annual.netSalary)} / year
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* The Master Excel Breakup Calculator Table */}
       <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">

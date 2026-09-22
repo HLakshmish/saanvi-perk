@@ -66,7 +66,7 @@ export const Pagination: React.FC<PaginationProps> = ({
   return (
     <div
       className={cn(
-        "flex flex-col sm:flex-row items-center justify-between gap-4 py-4 px-1 w-full text-xs sm:text-sm text-gray-500",
+        "flex flex-col sm:flex-row items-center justify-between gap-3 py-2 px-1 w-full text-xs text-slate-500",
         className
       )}
     >
