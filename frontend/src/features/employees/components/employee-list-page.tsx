@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { EmployeeList } from "./employee-list";
 import { AddEmployeeWizard } from "./add-employee-wizard";
-import { Button } from "@/components/ui/button";
 import { UserRole } from "@/types/dashboard";
 
 interface EmployeeListPageProps {
@@ -17,6 +16,7 @@ export const EmployeeListPage: React.FC<EmployeeListPageProps> = ({
 }) => {
   const [showWizard, setShowWizard] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [activeTab, setActiveTab] = useState<"list" | "chart">("list");
 
   const isAuthorized = currentRole === "admin" || currentRole === "superadmin";
 
@@ -45,35 +45,55 @@ export const EmployeeListPage: React.FC<EmployeeListPageProps> = ({
   }
 
   return (
-    <div className="w-full space-y-5 text-slate-900 animate-fade-in">
+    <div className="w-full space-y-3.5 text-slate-900 animate-fade-in">
       {/* Header Area */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-3 border-b border-brand-primary/15">
-        <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between border-b border-slate-200">
+        <div className="pb-2 sm:pb-2.5">
           <h2 className="text-xl sm:text-2xl font-bold text-brand-primary tracking-tight">
             Employees
           </h2>
-          <p className="text-slate-500 text-xs font-semibold">
+          {/* <p className="text-slate-500 text-xs font-semibold">
             View company structure and manage the corporate employee directory.
-          </p>
+          </p> */}
         </div>
-        {/* Hide Add Employee button unless role is Admin or Super Admin */}
-        {(currentRole === "admin" || currentRole === "superadmin") && (
-          <div className="flex items-center gap-2 shrink-0">
-            <Button
-              variant="primary"
-              size="sm"
-              className="h-9 text-xs font-bold rounded-xl shadow-xs"
-              onClick={() => setShowWizard(true)}
-            >
-              Add Employee
-            </Button>
-          </div>
-        )}
+
+        {/* View Switcher Tabs */}
+        <div className="flex items-center gap-1 -mb-[1px]">
+          <button
+            type="button"
+            onClick={() => setActiveTab("list")}
+            className={`px-3 py-1.5 text-xs font-medium transition-all duration-150 cursor-pointer rounded-t-md ${
+              activeTab === "list"
+                ? "bg-white text-brand-primary border-b-2 border-brand-primary font-semibold"
+                : "bg-transparent text-slate-600 hover:text-brand-primary border-b-2 border-transparent"
+            }`}
+          >
+            Employee List
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("chart")}
+            className={`px-3 py-1.5 text-xs font-medium transition-all duration-150 cursor-pointer rounded-t-md ${
+              activeTab === "chart"
+                ? "bg-white text-brand-primary border-b-2 border-brand-primary font-semibold"
+                : "bg-transparent text-slate-600 hover:text-brand-primary border-b-2 border-transparent"
+            }`}
+          >
+            Organisation Chart
+          </button>
+        </div>
       </div>
 
       {/* Main Employee Module Content */}
       <div>
-        <EmployeeList key={refreshKey} currentUserName={currentUserName} currentCompanyName={currentCompanyName} />
+        <EmployeeList
+          key={refreshKey}
+          activeTab={activeTab}
+          canAddEmployee={currentRole === "admin" || currentRole === "superadmin"}
+          onAddEmployee={() => setShowWizard(true)}
+          currentUserName={currentUserName}
+          currentCompanyName={currentCompanyName}
+        />
       </div>
     </div>
   );

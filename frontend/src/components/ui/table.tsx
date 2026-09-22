@@ -1,15 +1,20 @@
 import React from "react";
 
-export const TableContainer: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
+export interface TableContainerProps extends React.HTMLAttributes<HTMLDivElement> {
+  scrollClassName?: string;
+}
+
+export const TableContainer: React.FC<TableContainerProps> = ({
   children,
   className = "",
+  scrollClassName = "",
   ...props
 }) => (
   <div
     className={`w-full overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-2xs hover:shadow-xs transition-all duration-300 ${className}`}
     {...props}
   >
-    <div className="overflow-x-auto">{children}</div>
+    <div className={`overflow-x-auto ${scrollClassName}`}>{children}</div>
   </div>
 );
 
@@ -32,7 +37,7 @@ export const TableHeader: React.FC<React.HTMLAttributes<HTMLTableSectionElement>
   ...props
 }) => (
   <thead
-    className={`bg-table-header-bg border-b border-[#0b2544]/10 font-bold text-table-header-text select-none ${className}`}
+    className={`bg-table-header-bg font-bold text-table-header-text select-none sticky top-0 z-20 ${className}`}
     {...props}
   >
     {children}
@@ -45,7 +50,7 @@ export const TableHead: React.FC<React.ThHTMLAttributes<HTMLTableCellElement>> =
   ...props
 }) => (
   <th
-    className={`py-2.5 px-5 text-[10px] font-extrabold text-table-header-text uppercase tracking-wider ${className}`}
+    className={`py-2.5 px-5 text-[10px] font-extrabold text-table-header-text uppercase tracking-wider sticky top-0 bg-table-header-bg z-20 shadow-[0_1px_0_0_rgba(11,37,68,0.2)] ${className}`}
     {...props}
   >
     {children}

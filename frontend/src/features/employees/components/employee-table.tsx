@@ -1,8 +1,7 @@
 import React from "react";
-import { Pencil, Trash2, Mail, MapPin } from "lucide-react";
+import { Mail, MapPin } from "lucide-react";
 import { Employee } from "../types/employees.types";
 import {
-  TableContainer,
   Table,
   TableHeader,
   TableHead,
@@ -14,8 +13,8 @@ import {
 interface EmployeeTableProps {
   employees: Employee[];
   onRowClick: (employee: Employee) => void;
-  onEdit: (employee: Employee) => void;
-  onDelete: (employee: Employee) => void;
+  onEdit?: (employee: Employee) => void;
+  onDelete?: (employee: Employee) => void;
 }
 
 // Utility to get design styles for different employee groups
@@ -88,23 +87,23 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
   }
 
   return (
-    <TableContainer>
+    <div className="w-full overflow-x-auto overflow-y-auto max-h-[calc(100vh-280px)] min-h-[220px]">
       <Table className="min-w-[950px]">
         <TableHeader>
           <tr>
             <TableHead>Employee</TableHead>
+            <TableHead>Code</TableHead>
             <TableHead>Contact Info</TableHead>
             <TableHead>Location</TableHead>
             <TableHead>Role & Team</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Employment Group</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
           </tr>
         </TableHeader>
         <TableBody>
           {employees.map((employee) => (
             <TableRow key={employee.id} onClick={() => onRowClick(employee)}>
-              {/* Employee Name & Code (grouped beautifully with an avatar) */}
+              {/* Employee Name & Avatar */}
               <TableCell>
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-xl overflow-hidden bg-brand-primary-light border border-brand-primary/20 flex items-center justify-center shrink-0 shadow-2xs relative">
@@ -120,15 +119,17 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
                       </span>
                     )}
                   </div>
-                  <div className="flex flex-col">
-                    <span className="font-bold text-slate-900 leading-snug group-hover:text-brand-primary transition-colors duration-200">
-                      {employee.name}
-                    </span>
-                    <span className="text-[10px] font-mono text-slate-400 font-bold tracking-wider mt-0.5">
-                      {employee.employeeCode}
-                    </span>
-                  </div>
+                  <span className="font-bold text-slate-900 leading-snug group-hover:text-brand-primary transition-colors duration-200">
+                    {employee.name}
+                  </span>
                 </div>
+              </TableCell>
+
+              {/* Employee Code */}
+              <TableCell>
+                <span className="font-mono text-xs font-bold text-slate-700 select-all">
+                  {employee.employeeCode}
+                </span>
               </TableCell>
 
               {/* Email Address with icon */}
@@ -186,36 +187,10 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
                   {employee.employeeGroup}
                 </span>
               </TableCell>
-
-              {/* Actions */}
-              <TableCell className="text-right">
-                <div className="flex items-center justify-end gap-1.5">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onEdit(employee);
-                    }}
-                    className="p-1.5 hover:bg-brand-primary-light text-slate-400 hover:text-brand-primary rounded-xl transition-all duration-150 cursor-pointer"
-                    title="Edit Profile"
-                  >
-                    <Pencil className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDelete(employee);
-                    }}
-                    className="p-1.5 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-xl transition-all duration-150 cursor-pointer"
-                    title="Delete Employee"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
-    </TableContainer>
+    </div>
   );
 };

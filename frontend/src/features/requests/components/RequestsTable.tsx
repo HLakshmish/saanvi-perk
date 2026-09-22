@@ -340,58 +340,59 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
   const paginatedData = filteredData.slice(startIndex, endIndex);
 
   return (
-    <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-2xs hover:shadow-xs transition-all min-h-[500px] flex flex-col justify-between relative">
-      <div>
-        {/* Filters Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
-          <div className="relative w-full sm:w-auto sm:min-w-[280px]">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Search table items"
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setCurrentPage(1); // Reset to page 1 on search
-              }}
-              className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary text-slate-800 text-sm placeholder:text-slate-400 shadow-2xs"
-            />
-          </div>
-
-          <button
-            onClick={() => setIsDatePickerOpen(true)}
-            className="flex items-center justify-between sm:justify-start gap-2 px-4 py-2 border border-slate-300 rounded-xl text-sm text-slate-700 bg-white hover:bg-slate-50 font-semibold shadow-2xs transition-colors cursor-pointer w-full sm:w-auto"
-          >
-            <div className="flex items-center gap-2">
-              <CalendarIcon className="w-4 h-4 text-slate-500 shrink-0" />
-              <span className="truncate">{dateRange}</span>
-            </div>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400 ml-1 shrink-0" />
-          </button>
+    <div className="w-full flex flex-col gap-3.5 relative animate-fade-in">
+      {/* Filters Header (No background wrapper) */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="relative w-full sm:w-auto sm:min-w-[280px]">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            placeholder="Search table items"
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1); // Reset to page 1 on search
+            }}
+            className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary text-slate-800 text-sm placeholder:text-slate-400 shadow-2xs bg-white"
+          />
         </div>
 
-        {/* Dynamic API errors notification */}
-        {errorMsgs.length > 0 && (
-          <div className="mb-6 p-4 bg-amber-50/70 border border-amber-200/60 rounded-2xl text-amber-800 text-xs font-semibold space-y-1.5 animate-in fade-in">
-            <span className="font-bold block text-sm">Some request records could not be loaded:</span>
-            <ul className="list-disc pl-4 space-y-0.5">
-              {errorMsgs.map((err, idx) => (
-                <li key={idx}>{err}</li>
-              ))}
-            </ul>
+        <button
+          onClick={() => setIsDatePickerOpen(true)}
+          className="flex items-center justify-between sm:justify-start gap-2 px-4 py-2 border border-slate-300 rounded-xl text-sm text-slate-700 bg-white hover:bg-slate-50 font-semibold shadow-2xs transition-colors cursor-pointer w-full sm:w-auto"
+        >
+          <div className="flex items-center gap-2">
+            <CalendarIcon className="w-4 h-4 text-slate-500 shrink-0" />
+            <span className="truncate">{dateRange}</span>
           </div>
-        )}
+          <ChevronDown className="w-3.5 h-3.5 text-slate-400 ml-1 shrink-0" />
+        </button>
+      </div>
 
-        {/* Data Table */}
-        <TableContainer>
+      {/* Dynamic API errors notification */}
+      {errorMsgs.length > 0 && (
+        <div className="p-4 bg-amber-50/70 border border-amber-200/60 rounded-2xl text-amber-800 text-xs font-semibold space-y-1.5 animate-in fade-in">
+          <span className="font-bold block text-sm">Some request records could not be loaded:</span>
+          <ul className="list-disc pl-4 space-y-0.5">
+            {errorMsgs.map((err, idx) => (
+              <li key={idx}>{err}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Table & Pagination Container */}
+      <div className="w-full bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden flex flex-col">
+        {/* Scrollable Data Table Container with Fixed/Sticky Header */}
+        <div className="overflow-x-auto overflow-y-auto max-h-[520px]">
           <Table className="min-w-[800px]">
-            <TableHeader>
+            <TableHeader className="sticky top-0 z-20 bg-table-header-bg">
               <tr>
-                <TableHead>Request Date</TableHead>
-                <TableHead>Request Type</TableHead>
-                <TableHead>Last Action Taken By</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-12 text-right"></TableHead>
+                <TableHead className="sticky top-0 z-20 bg-table-header-bg">Request Date</TableHead>
+                <TableHead className="sticky top-0 z-20 bg-table-header-bg">Request Type</TableHead>
+                <TableHead className="sticky top-0 z-20 bg-table-header-bg">Last Action Taken By</TableHead>
+                <TableHead className="sticky top-0 z-20 bg-table-header-bg">Status</TableHead>
+                <TableHead className="sticky top-0 z-20 bg-table-header-bg w-12 text-right"></TableHead>
               </tr>
             </TableHeader>
             <TableBody>
@@ -442,7 +443,70 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
               )}
             </TableBody>
           </Table>
-        </TableContainer>
+        </div>
+
+        {/* Footer Pagination controls */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-100 px-6 py-3.5 bg-white text-xs text-slate-500 font-medium">
+          <span>
+            Showing {totalEntries === 0 ? 0 : startIndex + 1} to {endIndex} of {totalEntries} entries
+          </span>
+
+          {/* Entries select dropdown */}
+          <div className="flex items-center gap-1.5">
+            <span>Show</span>
+            <div className="relative">
+              <select
+                value={showEntries}
+                onChange={(e) => {
+                  setShowEntries(Number(e.target.value));
+                  setCurrentPage(1); // Reset to page 1 on page size change
+                }}
+                className="appearance-none border border-slate-300 rounded-lg bg-white pl-2.5 pr-8 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-brand-primary/20 focus:border-brand-primary cursor-pointer"
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+              </select>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-500 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
+            <span>entries</span>
+          </div>
+
+          {/* Pagination buttons */}
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setCurrentPage(1)}
+              disabled={safeCurrentPage === 1}
+              className="p-1.5 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-transparent text-slate-400 cursor-pointer"
+            >
+              <ChevronsLeft className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={safeCurrentPage === 1}
+              className="p-1.5 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-transparent text-slate-400 cursor-pointer"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+            </button>
+            <button className="w-7 h-7 bg-brand-primary border border-brand-primary text-white font-bold rounded-lg flex items-center justify-center text-xs shadow-xs">
+              {safeCurrentPage}
+            </button>
+            <button
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              disabled={safeCurrentPage === totalPages}
+              className="p-1.5 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-transparent text-slate-400 cursor-pointer"
+            >
+              <ChevronRightIcon className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={safeCurrentPage === totalPages}
+              className="p-1.5 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-transparent text-slate-400 cursor-pointer"
+            >
+              <ChevronsRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Custom Date Picker Modal */}
@@ -454,69 +518,6 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
           setCurrentPage(1); // Reset to page 1 on date range changes
         }}
       />
-
-      {/* Footer Pagination controls */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-100 pt-6 mt-8 text-xs text-slate-500 font-medium">
-        <span>
-          Showing {totalEntries === 0 ? 0 : startIndex + 1} to {endIndex} of {totalEntries} entries
-        </span>
-
-        {/* Entries select dropdown */}
-        <div className="flex items-center gap-1.5">
-          <span>Show</span>
-          <div className="relative">
-            <select
-              value={showEntries}
-              onChange={(e) => {
-                setShowEntries(Number(e.target.value));
-                setCurrentPage(1); // Reset to page 1 on page size change
-              }}
-              className="appearance-none border border-slate-300 rounded-lg bg-white pl-2.5 pr-8 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-brand-primary/20 focus:border-brand-primary cursor-pointer"
-            >
-              <option value={10}>10</option>
-              <option value={25}>25</option>
-              <option value={50}>50</option>
-            </select>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-500 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
-          </div>
-          <span>entries</span>
-        </div>
-
-        {/* Pagination buttons */}
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => setCurrentPage(1)}
-            disabled={safeCurrentPage === 1}
-            className="p-1.5 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-transparent text-slate-400 cursor-pointer"
-          >
-            <ChevronsLeft className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            disabled={safeCurrentPage === 1}
-            className="p-1.5 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-transparent text-slate-400 cursor-pointer"
-          >
-            <ChevronLeft className="w-3.5 h-3.5" />
-          </button>
-          <button className="w-7 h-7 bg-brand-primary border border-brand-primary text-white font-bold rounded-lg flex items-center justify-center text-xs shadow-xs">
-            {safeCurrentPage}
-          </button>
-          <button
-            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-            disabled={safeCurrentPage === totalPages}
-            className="p-1.5 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-transparent text-slate-400 cursor-pointer"
-          >
-            <ChevronRightIcon className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={() => setCurrentPage(totalPages)}
-            disabled={safeCurrentPage === totalPages}
-            className="p-1.5 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-transparent text-slate-400 cursor-pointer"
-          >
-            <ChevronsRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      </div>
     </div>
   );
 };

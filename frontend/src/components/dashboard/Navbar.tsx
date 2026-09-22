@@ -7,8 +7,6 @@ import { getCurrentUserId } from "@/features/expenses/api/expenses.api";
 import { getUserById } from "@/features/employees/api/employees.api";
 import {
   Menu,
-  Bell,
-  Headset,
   ChevronDown,
   User as UserIcon,
   LogOut,
@@ -46,15 +44,45 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const router = useRouter();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(false);
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
   const [assignedRoles, setAssignedRoles] = useState<UserRole[]>([currentRole]);
   const [hasFetchedRoles, setHasFetchedRoles] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
+  const [resolvedUserName, setResolvedUserName] = useState(userName || "");
+  const [resolvedCompanyName, setResolvedCompanyName] = useState(companyName || "");
+  const [resolvedCompanyLogo, setResolvedCompanyLogo] = useState(companyLogo || "");
+
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (userName) {
+      setResolvedUserName(userName);
+    } else if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("user_name");
+      if (stored) setResolvedUserName(stored);
+    }
+  }, [userName]);
+
+  useEffect(() => {
+    if (companyName) {
+      setResolvedCompanyName(companyName);
+    } else if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("company_name");
+      if (stored) setResolvedCompanyName(stored);
+    }
+  }, [companyName]);
+
+  useEffect(() => {
+    if (companyLogo) {
+      setResolvedCompanyLogo(companyLogo);
+    } else if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("company_logo");
+      if (stored) setResolvedCompanyLogo(stored);
+    }
+  }, [companyLogo]);
 
   const normalizeRole = (codeOrName?: string): UserRole | null => {
     if (!codeOrName) return null;
@@ -203,10 +231,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
         )}
 
-        {/* Hamburger Menu Toggle (Hidden on mobile, visible on desktop) */}
+        {/* Hamburger Menu Toggle */}
         <button
           onClick={onToggleSidebar}
-          className="hidden md:block p-1.5 rounded-lg hover:bg-slate-100 text-slate-600 focus:outline-none transition-colors cursor-pointer"
+          className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-600 focus:outline-none transition-colors cursor-pointer"
           aria-label="Toggle Sidebar"
         >
           <Menu className="w-5 h-5" />
@@ -216,23 +244,23 @@ export const Navbar: React.FC<NavbarProps> = ({
           onClick={() => onTabChange && onTabChange("dashboard")}
           className="flex items-center gap-2 sm:gap-2.5 cursor-pointer select-none group min-w-0 shrink"
         >
-          {isMounted && companyLogo ? (
+          {isMounted && (resolvedCompanyLogo || companyLogo) ? (
             <div className="h-7 sm:h-8 max-w-[80px] xs:max-w-[110px] sm:max-w-[140px] flex items-center justify-center shrink-0">
               <img
-                src={companyLogo}
-                alt={companyName || "Organization Logo"}
+                src={resolvedCompanyLogo || companyLogo}
+                alt={resolvedCompanyName || companyName || "Organization Logo"}
                 className="h-full w-auto max-w-full object-contain"
               />
             </div>
-          ) : companyName ? (
+          ) : (resolvedCompanyName || companyName) ? (
             <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-brand-primary text-white flex items-center justify-center text-xs font-black shadow-2xs group-hover:scale-105 transition-transform shrink-0">
-              {companyName.charAt(0).toUpperCase()}
+              {(resolvedCompanyName || companyName).charAt(0).toUpperCase()}
             </div>
           ) : null}
 
-          {companyName && (
+          {(resolvedCompanyName || companyName) && (
             <span className="font-black text-brand-primary text-xs xs:text-sm sm:text-base tracking-tight leading-tight truncate max-w-[85px] xs:max-w-[130px] sm:max-w-[220px] md:max-w-[320px]">
-              {companyName}
+              {resolvedCompanyName || companyName}
             </span>
           )}
         </div>
@@ -240,86 +268,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Right section: Actions & User Info */}
       <div className="flex items-center gap-2 sm:gap-3.5 text-xs sm:text-sm">
-        {/* Notifications Icon */}
-        <button
-          className="p-2 text-slate-600 hover:text-brand-primary rounded-full hover:bg-slate-100 transition-colors cursor-pointer relative"
-          aria-label="Notifications"
-        >
-          <Bell className="w-4 h-4" />
-          <span className="w-2 h-2 rounded-full bg-emerald-500 absolute top-1.5 right-1.5 ring-2 ring-white" />
-        </button>
-
-        {/* Support Icon */}
-        <button
-          className="p-2 text-slate-600 hover:text-brand-primary rounded-full hover:bg-slate-100 transition-colors cursor-pointer hidden sm:flex"
-          aria-label="Support"
-        >
-          <Headset className="w-4 h-4" />
-        </button>
-
-        {/* Quick Actions Dropdown */}
-        <div className="relative hidden md:block">
-          <button
-            onClick={() => setIsQuickActionsOpen(!isQuickActionsOpen)}
-            className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200/90 rounded-xl text-brand-primary bg-slate-50 hover:bg-slate-100 text-xs font-bold shadow-2xs transition-colors cursor-pointer"
-          >
-            <span>Quick Actions</span>
-            <ChevronDown
-              className={`w-3.5 h-3.5 text-slate-500 transition-transform ${
-                isQuickActionsOpen ? "rotate-180" : ""
-              }`}
-            />
-          </button>
-
-          {isQuickActionsOpen && (
-            <>
-              <div
-                className="fixed inset-0 z-40"
-                onClick={() => setIsQuickActionsOpen(false)}
-              />
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-200/90 overflow-hidden z-50 py-1.5 animate-in fade-in slide-in-from-top-2 duration-200">
-                <button
-                  onClick={() => {
-                    onTabChange?.("attendance");
-                    setIsQuickActionsOpen(false);
-                  }}
-                  className="w-full text-left px-4 py-2 hover:bg-slate-50 text-xs font-semibold text-slate-700 hover:text-brand-primary transition-colors cursor-pointer"
-                >
-                  Attendance
-                </button>
-                <button
-                  onClick={() => {
-                    onTabChange?.("holidays-leaves");
-                    setIsQuickActionsOpen(false);
-                  }}
-                  className="w-full text-left px-4 py-2 hover:bg-slate-50 text-xs font-semibold text-slate-700 hover:text-brand-primary transition-colors cursor-pointer"
-                >
-                  Leaves
-                </button>
-                <button
-                  onClick={() => {
-                    onTabChange?.("expenses");
-                    setIsQuickActionsOpen(false);
-                  }}
-                  className="w-full text-left px-4 py-2 hover:bg-slate-50 text-xs font-semibold text-slate-700 hover:text-brand-primary transition-colors cursor-pointer"
-                >
-                  Reimbursements
-                </button>
-                <button
-                  onClick={() => {
-                    onTabChange?.("requests");
-                    setIsQuickActionsOpen(false);
-                  }}
-                  className="w-full text-left px-4 py-2 hover:bg-slate-50 text-xs font-semibold text-slate-700 hover:text-brand-primary transition-colors cursor-pointer"
-                >
-                  Requests
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Role Selector Dropdown (Shown right after Quick Actions whenever user has multiple assigned roles) */}
+        {/* Role Selector Dropdown (Shown whenever user has multiple assigned roles) */}
         {showRoleSwitcher && (
           <div className="relative">
             <select
@@ -344,7 +293,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         )}
 
         {/* User Profile Pill */}
-        <div className="relative pl-3 border-l border-slate-200">
+        <div className={`relative ${showRoleSwitcher ? "pl-3 border-l border-slate-200" : ""}`}>
           <button
             onClick={() => setIsProfileOpen(!isProfileOpen)}
             className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-slate-100 border border-transparent transition-colors cursor-pointer"
@@ -353,7 +302,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <UserIcon className="w-4 h-4 text-white" />
             </div>
             <span className="font-bold text-slate-800 text-xs hidden sm:inline">
-              {userName || "User"}
+              {resolvedUserName || userName || "User"}
             </span>
             <ChevronDown
               className={`w-3.5 h-3.5 text-slate-500 hidden sm:inline transition-transform ${

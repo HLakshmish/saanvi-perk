@@ -7,20 +7,24 @@ export interface SearchBoxProps {
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
+  inputClassName?: string;
 }
 
 export const SearchBox = React.forwardRef<HTMLInputElement, SearchBoxProps>(
-  ({ value, onChange, placeholder = "Search...", className }, ref) => {
+  ({ value, onChange, placeholder = "Search...", className, inputClassName }, ref) => {
     return (
       <div className={cn("relative w-full flex items-center shadow-2xs rounded-xl", className)}>
-        <Search className="absolute left-3.5 h-4 w-4 text-slate-400 pointer-events-none z-10" />
+        <Search className="absolute left-3.5 h-3.5 w-3.5 text-slate-400 pointer-events-none z-10" />
         <input
           ref={ref}
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-xl text-sm bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium"
+          className={cn(
+            "w-full pl-9 pr-3.5 py-1.5 border border-slate-300 rounded-xl text-xs sm:text-sm bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all font-medium",
+            inputClassName
+          )}
         />
       </div>
     );

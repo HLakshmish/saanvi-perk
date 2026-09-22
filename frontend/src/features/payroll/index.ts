@@ -3,7 +3,4 @@ export * from "./api/payroll.api";
 export * from "./components/PayrollView";
 export * from "./components/SalaryBreakupCalculator";
 export * from "./components/PayrollSettingsTab";
-export * from "./components/AssignSalaryModal";
-export * from "./components/EmployeeSalaryList";
-export * from "./components/PayslipsView";
-export * from "./components/PayslipModal";
+

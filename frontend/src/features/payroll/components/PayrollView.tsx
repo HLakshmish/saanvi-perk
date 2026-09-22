@@ -1,19 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Banknote,
   Calculator,
-  Users,
-  FileText,
   Sliders,
-  Sparkles,
 } from "lucide-react";
 import { SalaryBreakupCalculator } from "./SalaryBreakupCalculator";
-import { EmployeeSalaryList } from "./EmployeeSalaryList";
-import { PayslipsView } from "./PayslipsView";
 import { PayrollSettingsTab } from "./PayrollSettingsTab";
-import { AssignSalaryModal } from "./AssignSalaryModal";
 
 interface PayrollViewProps {
   currentRole?: string;
@@ -27,20 +21,19 @@ export const PayrollView: React.FC<PayrollViewProps> = ({
   currentUserId,
 }) => {
   const isEmployee = currentRole === "employee";
-  const [activeTab, setActiveTab] = useState<"calculator" | "salaries" | "payslips" | "settings">(
-    isEmployee ? "payslips" : "calculator"
-  );
+  const [activeTab, setActiveTab] = useState<"calculator" | "settings">("calculator");
 
-  // Modal state for assigning CTC directly from calculator
-  const [isAssignModalOpen, setIsAssignModalOpen] = useState<boolean>(false);
-  const [assignPrefillCtc, setAssignPrefillCtc] = useState<number | undefined>(undefined);
-  const [assignPrefillIsAnnual, setAssignPrefillIsAnnual] = useState<boolean>(true);
-
-  const handleAssignFromCalculator = (ctc: number, isAnnual: boolean) => {
-    setAssignPrefillCtc(ctc);
-    setAssignPrefillIsAnnual(isAnnual);
-    setIsAssignModalOpen(true);
-  };
+  if (isEmployee) {
+    return (
+      <div className="w-full py-12 flex flex-col items-center justify-center bg-white border border-slate-200/80 rounded-3xl p-6 text-center shadow-xs">
+        <Banknote className="w-12 h-12 text-slate-300 mb-3" />
+        <h3 className="text-sm font-extrabold text-slate-700">Access Restricted</h3>
+        <p className="text-xs text-slate-400 max-w-xs mt-1">
+          Payroll calculations and settings are only accessible by administrative personnel.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full space-y-6">
@@ -55,97 +48,48 @@ export const PayrollView: React.FC<PayrollViewProps> = ({
               Payroll Management
             </h1>
             <p className="text-xs text-slate-500 font-medium">
-              Indian statutory compensation, real-time CTC calculations, dynamic rates & payslips
+              Indian statutory compensation, real-time CTC calculations & dynamic rates
             </p>
           </div>
         </div>
 
         {/* Sub Navigation Tabs Header */}
         <div className="flex flex-wrap items-center gap-1.5 text-xs font-semibold text-slate-500">
-          {!isEmployee && (
-            <button
-              onClick={() => setActiveTab("calculator")}
-              className={`px-3.5 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
-                activeTab === "calculator"
-                  ? "bg-brand-primary text-brand-btn-text font-bold shadow-2xs border border-brand-primary"
-                  : "hover:text-brand-primary hover:bg-slate-100"
-              }`}
-            >
-              <Calculator className="w-3.5 h-3.5" />
-              <span>Salary Calculator</span>
-            </button>
-          )}
-
-          {!isEmployee && (
-            <button
-              onClick={() => setActiveTab("salaries")}
-              className={`px-3.5 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
-                activeTab === "salaries"
-                  ? "bg-brand-primary text-brand-btn-text font-bold shadow-2xs border border-brand-primary"
-                  : "hover:text-brand-primary hover:bg-slate-100"
-              }`}
-            >
-              <Users className="w-3.5 h-3.5" />
-              <span>Employee Salaries</span>
-            </button>
-          )}
-
           <button
-            onClick={() => setActiveTab("payslips")}
+            onClick={() => setActiveTab("calculator")}
             className={`px-3.5 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
-              activeTab === "payslips"
+              activeTab === "calculator"
                 ? "bg-brand-primary text-brand-btn-text font-bold shadow-2xs border border-brand-primary"
                 : "hover:text-brand-primary hover:bg-slate-100"
             }`}
           >
-            <FileText className="w-3.5 h-3.5" />
-            <span>{isEmployee ? "My Payslips" : "Monthly Payslips"}</span>
+            <Calculator className="w-3.5 h-3.5" />
+            <span>Salary Calculator</span>
           </button>
 
-          {!isEmployee && (
-            <button
-              onClick={() => setActiveTab("settings")}
-              className={`px-3.5 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
-                activeTab === "settings"
-                  ? "bg-brand-primary text-brand-btn-text font-bold shadow-2xs border border-brand-primary"
-                  : "hover:text-brand-primary hover:bg-slate-100"
-              }`}
-            >
-              <Sliders className="w-3.5 h-3.5" />
-              <span>Settings & Rates</span>
-            </button>
-          )}
+          <button
+            onClick={() => setActiveTab("settings")}
+            className={`px-3.5 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
+              activeTab === "settings"
+                ? "bg-brand-primary text-brand-btn-text font-bold shadow-2xs border border-brand-primary"
+                : "hover:text-brand-primary hover:bg-slate-100"
+            }`}
+          >
+            <Sliders className="w-3.5 h-3.5" />
+            <span>Settings & Rates</span>
+          </button>
         </div>
       </div>
 
       {/* Tab Contents */}
-      {activeTab === "calculator" && !isEmployee && (
+      {activeTab === "calculator" && (
         <SalaryBreakupCalculator
-          onAssignToEmployee={handleAssignFromCalculator}
           onNavigateToSettings={() => setActiveTab("settings")}
         />
       )}
 
-      {activeTab === "salaries" && !isEmployee && (
-        <EmployeeSalaryList onOpenCalculator={() => setActiveTab("calculator")} />
-      )}
-
-      {activeTab === "payslips" && (
-        <PayslipsView currentRole={currentRole} currentUserId={currentUserId} />
-      )}
-
-      {activeTab === "settings" && !isEmployee && <PayrollSettingsTab />}
-
-      {/* Assign Salary Modal from Calculator Shortcut */}
-      <AssignSalaryModal
-        isOpen={isAssignModalOpen}
-        onClose={() => setIsAssignModalOpen(false)}
-        onSuccess={() => {
-          setActiveTab("salaries");
-        }}
-        prefillCtc={assignPrefillCtc}
-        prefillIsAnnual={assignPrefillIsAnnual}
-      />
+      {activeTab === "settings" && <PayrollSettingsTab />}
     </div>
   );
 };
+
