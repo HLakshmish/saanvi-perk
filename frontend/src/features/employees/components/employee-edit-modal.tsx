@@ -114,6 +114,7 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
     employmentType: "FULL_TIME",
     joiningDate: "",
     probationEndDate: "",
+    leavingDate: "",
     reportingToId: "",
     status: "ACTIVE",
     locationId: "",
@@ -198,11 +199,44 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
     return designations.filter((d) => Number(d.departmentId) === Number(formData.departmentId));
   }, [designations, formData.departmentId]);
 
+  const addSixMonths = (dateStr: string): string => {
+    if (!dateStr) return "";
+    const parts = dateStr.split("-");
+    if (parts.length !== 3) return "";
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10);
+    const day = parseInt(parts[2], 10);
+    if (isNaN(year) || isNaN(month) || isNaN(day)) return "";
+
+    let newYear = year;
+    let newMonth = month + 6;
+    if (newMonth > 12) {
+      newYear += Math.floor((newMonth - 1) / 12);
+      newMonth = ((newMonth - 1) % 12) + 1;
+    }
+
+    const daysInTargetMonth = new Date(newYear, newMonth, 0).getDate();
+    const newDay = Math.min(day, daysInTargetMonth);
+
+    const yyyy = String(newYear).padStart(4, "0");
+    const mm = String(newMonth).padStart(2, "0");
+    const dd = String(newDay).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
   const handleChange = (field: string, value: any) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    setFormData((prev) => {
+      const updated = {
+        ...prev,
+        [field]: value,
+      };
+
+      if (field === "joiningDate") {
+        updated.probationEndDate = value ? addSixMonths(value) : "";
+      }
+
+      return updated;
+    });
   };
 
   const handleAddressChange = (
@@ -321,6 +355,7 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
         employmentType: u.employmentType || "FULL_TIME",
         joiningDate: u.joiningDate ? u.joiningDate.split("T")[0] : "",
         probationEndDate: u.probationEndDate ? u.probationEndDate.split("T")[0] : "",
+        leavingDate: u.leavingDate ? u.leavingDate.split("T")[0] : "",
         reportingToId: u.reportingToId ? String(u.reportingToId) : "",
         status: u.status || "ACTIVE",
         locationId: u.locationId ? String(u.locationId) : "",
@@ -472,6 +507,16 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
       }
     }
 
+    if (formData.leavingDate && formData.joiningDate) {
+      const leaving = new Date(formData.leavingDate);
+      const joining = new Date(formData.joiningDate);
+      if (leaving < joining) {
+        setErrorMsg("Leaving Date cannot be earlier than Joining Date.");
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
     // Validation checks
     if (formData.employeeCode && managers.some((emp) => String(emp.id) !== String(employeeId) && emp.employeeCode?.trim().toLowerCase() === formData.employeeCode.trim().toLowerCase())) {
       setErrorMsg(`Employee Code "${formData.employeeCode}" is already assigned to another employee.`);
@@ -579,6 +624,7 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
         employmentType: formData.employmentType,
         joiningDate: new Date(formData.joiningDate).toISOString(),
         probationEndDate: formData.probationEndDate ? new Date(formData.probationEndDate).toISOString() : null,
+        leavingDate: formData.leavingDate ? new Date(formData.leavingDate).toISOString() : null,
         reportingToId: formData.reportingToId ? Number(formData.reportingToId) : null,
         status: formData.status,
         locationId: formData.locationId ? Number(formData.locationId) : null,
@@ -1032,7 +1078,7 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <Input
                       label="Joining Date *"
                       type="date"
@@ -1046,6 +1092,13 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
                       type="date"
                       value={formData.probationEndDate}
                       onChange={(e) => handleChange("probationEndDate", e.target.value)}
+                    />
+
+                    <Input
+                      label="Leaving Date"
+                      type="date"
+                      value={formData.leavingDate}
+                      onChange={(e) => handleChange("leavingDate", e.target.value)}
                     />
 
                     <div className="flex flex-col gap-1.5 text-left">

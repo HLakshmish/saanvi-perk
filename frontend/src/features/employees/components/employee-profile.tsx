@@ -471,6 +471,20 @@ export const EmployeeProfile: React.FC<EmployeeProfileProps> = ({ employeeId, on
               <div className="text-xs font-bold text-slate-900 mt-0.5">{formatDateDMY(userProfile.joiningDate)}</div>
             </div>
 
+            {userProfile.probationEndDate && (
+              <div>
+                <div className="text-[11px] text-slate-500 font-normal">Probation End Date</div>
+                <div className="text-xs font-bold text-slate-900 mt-0.5">{formatDateDMY(userProfile.probationEndDate)}</div>
+              </div>
+            )}
+
+            {userProfile.leavingDate && (
+              <div>
+                <div className="text-[11px] text-slate-500 font-normal">Leaving Date</div>
+                <div className="text-xs font-bold text-rose-600 mt-0.5">{formatDateDMY(userProfile.leavingDate)}</div>
+              </div>
+            )}
+
             <div>
               <div className="text-[11px] text-slate-500 font-normal">Status</div>
               <div className="text-xs font-bold text-slate-900 mt-0.5">

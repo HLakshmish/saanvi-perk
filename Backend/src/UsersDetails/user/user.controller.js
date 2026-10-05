@@ -23,6 +23,19 @@ class UserController {
             if (!userData.designationId) userData.designationId = null;
             if (!userData.reportingToId) userData.reportingToId = null;
             if (!userData.shiftId) userData.shiftId = null;
+            if (!userData.probationEndDate && userData.joiningDate) {
+                const jDate = new Date(userData.joiningDate);
+                if (!isNaN(jDate.getTime())) {
+                    const pDate = new Date(jDate);
+                    pDate.setMonth(pDate.getMonth() + 6);
+                    userData.probationEndDate = pDate.toISOString();
+                } else {
+                    userData.probationEndDate = null;
+                }
+            } else if (!userData.probationEndDate) {
+                userData.probationEndDate = null;
+            }
+            if (!userData.leavingDate) userData.leavingDate = null;
 
             const user = await userService.createUser(userData);
             
@@ -121,6 +134,8 @@ class UserController {
             if (data.designationId === 0 || data.designationId === "") data.designationId = null;
             if (data.reportingToId === 0 || data.reportingToId === "") data.reportingToId = null;
             if (data.shiftId === 0 || data.shiftId === "") data.shiftId = null;
+            if (data.probationEndDate === "") data.probationEndDate = null;
+            if (data.leavingDate === "") data.leavingDate = null;
             
             if (data.password === "") delete data.password;
 
@@ -185,7 +200,7 @@ class UserController {
 
             const users = await userService.getAllUsers(companyId);
 
-            const headers = ['User ID', 'Employee Code', 'First Name', 'Last Name', 'Official Email', 'Phone Number', 'Employment Type', 'Joining Date', 'Status', 'Roles', 'Department'];
+            const headers = ['User ID', 'Employee Code', 'First Name', 'Last Name', 'Official Email', 'Phone Number', 'Employment Type', 'Joining Date', 'Leaving Date', 'Status', 'Roles', 'Department'];
 
             const csvRows = users.map(u => {
                 const roles = u.userRoles ? u.userRoles.map(ur => ur.role.roleName).join(' | ') : '';
@@ -198,6 +213,7 @@ class UserController {
                     u.phoneNumber || '',
                     u.employmentType || '',
                     u.joiningDate ? new Date(u.joiningDate).toISOString().split('T')[0] : '',
+                    u.leavingDate ? new Date(u.leavingDate).toISOString().split('T')[0] : '',
                     u.status || '',
                     `"${roles}"`,
                     u.department ? u.department.departmentName : ''
