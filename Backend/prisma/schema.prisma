@@ -209,6 +209,7 @@ model User {
 
   joiningDate      DateTime  @map("joining_date")
   probationEndDate DateTime? @map("probation_end_date")
+  leavingDate      DateTime? @map("leaving_date")
 
   reportingToId Int? @map("reporting_to")
   shiftId       Int? @map("shift_id")

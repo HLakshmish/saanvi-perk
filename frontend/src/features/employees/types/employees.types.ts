@@ -26,6 +26,9 @@ export interface Employee {
   panNumber?: string;
   passportNumber?: string;
   personalEmail?: string;
+  joiningDate?: string;
+  probationEndDate?: string | null;
+  leavingDate?: string | null;
 }
 
 export interface RoleSelection {
@@ -55,6 +58,7 @@ export interface CreateEmployeeInput {
   departmentId?: number | string | null;
   designationId?: number | string | null;
   probationEndDate?: string | null;
+  leavingDate?: string | null;
   reportingToId?: number | null;
   shiftId?: number | null;
   status?: "ACTIVE" | "INACTIVE" | "RESIGNED" | "TERMINATED";
