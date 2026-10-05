@@ -274,7 +274,7 @@ export const LeavesView: React.FC = () => {
     loadRequests();
   }, [isAdminOrSuperAdmin]);
 
-  const handleApplyLeaveSubmit = async (data: ApplyLeaveInput): Promise<boolean> => {
+  const handleApplyLeaveSubmit = async (data: ApplyLeaveInput): Promise<{ success: boolean; error?: string } | boolean> => {
     try {
       const start = new Date(data.fromDate);
       const end = new Date(data.toDate);
@@ -307,14 +307,14 @@ export const LeavesView: React.FC = () => {
       if (res.success) {
         toast.success("Leave request submitted successfully!");
         await loadRequests();
-        return true;
+        return { success: true };
       } else {
         toast.error(res.error || "Failed to submit leave request.");
-        return false;
+        return { success: false, error: res.error || "Failed to submit leave request." };
       }
     } catch (err: any) {
       toast.error(err.message || "An unexpected error occurred during submission.");
-      return false;
+      return { success: false, error: err.message || "An unexpected error occurred during submission." };
     }
   };
 

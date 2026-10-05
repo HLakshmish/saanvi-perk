@@ -18,7 +18,7 @@ import {
 interface ApplyLeaveModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: ApplyLeaveInput) => Promise<boolean>;
+  onSubmit: (data: ApplyLeaveInput) => Promise<{ success: boolean; error?: string } | boolean>;
   leaveTypes?: any[];
   employees?: any[];
   getUserBalances?: (userId: number) => {
@@ -470,7 +470,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
       ? selectedType.leaveName.toLowerCase().includes("comp") || selectedType.leaveCode.toLowerCase().includes("comp")
       : false;
 
-    const success = await onSubmit({
+    const res = await onSubmit({
       leaveTypeId,
       isHalfDay,
       fromDate,
@@ -482,7 +482,10 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
 
     setIsSubmitting(false);
 
-    if (success) {
+    const isSuccess = typeof res === "boolean" ? res : res.success;
+    const errorText = typeof res === "object" && res.error ? res.error : "Failed to submit leave request. Please check validation rules.";
+
+    if (isSuccess) {
       // Reset form
       setLeaveTypeId(0);
       setSelectedEmployeeId(0);
@@ -492,7 +495,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
       setReason("");
       onClose();
     } else {
-      setErrorMsg("Failed to submit leave request. Please check validation rules.");
+      setErrorMsg(errorText);
     }
   };
 
