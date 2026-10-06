@@ -3,6 +3,63 @@ const compOffAssignService = require("../COMP-OFF/compOffAssign/compOffAssign.se
 const prisma = require("../../config/prisma");
 
 class LeaveRequestService {
+    async calculateEmployeeLeaveBalance(companyId, userId, leaveTypeId, isCompOff) {
+        if (!leaveTypeId) return 0;
+
+        if (isCompOff) {
+            try {
+                const compOffDetails = await compOffAssignService.getUserCompOffDetails(companyId, userId);
+                return Number(compOffDetails.remainingCompOffDays ?? compOffDetails.totalCompOffDays ?? 0);
+            } catch (err) {
+                return 0;
+            }
+        }
+
+        const userAllocations = await prisma.leaveAccumulation.findMany({
+            where: { userId, companyId, leaveTypeId, status: true }
+        });
+
+        let totalAllocated = userAllocations.reduce((sum, a) => sum + (Number(a.numberOfLeaves) || 0), 0);
+
+        if (userAllocations.length === 0) {
+            const rule = await prisma.leavePolicyRule.findFirst({
+                where: { leaveTypeId, status: true }
+            });
+            const acc = await prisma.leavePolicyAccumulation.findFirst({
+                where: { leaveTypeId, status: true }
+            });
+
+            if (rule && rule.annualRequestLimit !== null) {
+                totalAllocated = Number(rule.annualRequestLimit);
+            } else if (acc && acc.maxAccumulationPerYear !== null) {
+                totalAllocated = Number(acc.maxAccumulationPerYear);
+            } else if (acc && acc.maxLeaveBalance !== null) {
+                totalAllocated = Number(acc.maxLeaveBalance);
+            } else {
+                const lt = await prisma.leaveType.findFirst({ where: { leaveTypeId } });
+                if (lt) {
+                    const code = (lt.leaveCode || "").toUpperCase();
+                    const name = (lt.leaveName || "").toLowerCase();
+                    if (code.includes("SL") || code.includes("CL") || name.includes("sick") || name.includes("casual")) {
+                        totalAllocated = 12.0;
+                    }
+                }
+            }
+        }
+
+        const approvedRequests = await prisma.leaveRequest.findMany({
+            where: {
+                userId,
+                companyId,
+                leaveTypeId,
+                status: 'APPROVED'
+            }
+        });
+
+        const totalUsed = approvedRequests.reduce((sum, r) => sum + (Number(r.numberOfDays) || 0), 0);
+        return totalAllocated - totalUsed;
+    }
+
     async validateAndApplyLeavePolicy(data) {
         const companyId = Number(data.companyId);
         const userId = Number(data.userId);
@@ -13,6 +70,40 @@ class LeaveRequestService {
 
         const today = new Date();
         today.setHours(0, 0, 0, 0);
+
+        // Probation Validation: Employees in probation period cannot apply for EL (Earned Leave)
+        if (leaveTypeId) {
+            const leaveType = await prisma.leaveType.findFirst({
+                where: { leaveTypeId, companyId }
+            });
+
+            if (leaveType) {
+                const codeUpper = (leaveType.leaveCode || "").toUpperCase();
+                const nameLower = (leaveType.leaveName || "").toLowerCase();
+                const isEarnedLeave = codeUpper === "EL" || nameLower.includes("earned");
+
+                if (isEarnedLeave) {
+                    const user = await prisma.user.findFirst({
+                        where: { userId, companyId }
+                    });
+
+                    if (user) {
+                        const effectiveProbationEnd = user.extendedProbationPeriod || user.probationEndDate;
+                        if (effectiveProbationEnd) {
+                            const todayStart = new Date();
+                            todayStart.setHours(0, 0, 0, 0);
+
+                            const probEnd = new Date(effectiveProbationEnd);
+                            probEnd.setHours(23, 59, 59, 999);
+
+                            if (todayStart <= probEnd) {
+                                throw new Error("Employees currently in probation period are not allowed to apply for Earned Leave (EL).");
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         // 1. COMP-OFF VALIDATION & ENFORCEMENT
         if (isCompOff) {
@@ -116,10 +207,6 @@ class LeaveRequestService {
                     where: { leavePolicyId: activePolicyId, leaveTypeId, status: true }
                 });
 
-                const accumulationSetting = await prisma.leavePolicyAccumulation.findFirst({
-                    where: { leavePolicyId: activePolicyId, leaveTypeId, status: true }
-                });
-
                 if (rule) {
                     // Min Leave Days Per Request
                     if (rule.minLeaveDays !== null && Number(rule.minLeaveDays) > 0) {
@@ -128,10 +215,24 @@ class LeaveRequestService {
                         }
                     }
 
-                    // Max Leave Days Per Request
+                    // Max Leave Days Per Month Limit
                     if (rule.maxLeaveDays !== null && Number(rule.maxLeaveDays) > 0) {
-                        if (numDays > Number(rule.maxLeaveDays)) {
-                            throw new Error(`Policy violation: Maximum leave duration per request for this leave type is ${rule.maxLeaveDays} day(s).`);
+                        const monthStart = new Date(fromDateObj.getFullYear(), fromDateObj.getMonth(), 1);
+                        const monthEnd = new Date(fromDateObj.getFullYear(), fromDateObj.getMonth() + 1, 0, 23, 59, 59);
+
+                        const existingMonthRequests = await prisma.leaveRequest.findMany({
+                            where: {
+                                userId,
+                                companyId,
+                                leaveTypeId,
+                                status: { in: ['PENDING', 'APPROVED'] },
+                                fromDate: { gte: monthStart, lte: monthEnd }
+                            }
+                        });
+
+                        const totalMonthDaysUsed = existingMonthRequests.reduce((sum, r) => sum + (Number(r.numberOfDays) || 0), 0);
+                        if ((totalMonthDaysUsed + numDays) > Number(rule.maxLeaveDays)) {
+                            throw new Error(`Policy violation: Maximum allowed leave limit for this month is ${rule.maxLeaveDays} day(s). You have already taken/requested ${totalMonthDaysUsed} day(s) this month.`);
                         }
                     }
 
@@ -166,34 +267,16 @@ class LeaveRequestService {
                     }
                 }
 
-                // Leave Balance Enforcement
-                if (userAllocations.length > 0) {
-                    const totalAllocated = userAllocations.reduce((sum, a) => sum + (Number(a.numberOfLeaves) || 0), 0);
-                    
-                    const allUsedRequests = await prisma.leaveRequest.findMany({
-                        where: {
-                            userId,
-                            companyId,
-                            leaveTypeId,
-                            status: { in: ['PENDING', 'APPROVED'] }
-                        }
-                    });
-                    const totalUsed = allUsedRequests.reduce((sum, r) => sum + (Number(r.numberOfDays) || 0), 0);
-                    const currentBalance = totalAllocated - totalUsed;
-                    const maxNegative = accumulationSetting?.maxNegativeBalance ? Number(accumulationSetting.maxNegativeBalance) : 0;
-
-                    if ((currentBalance - numDays) < -maxNegative) {
-                        const maxAllowed = Math.max(0, currentBalance + maxNegative);
-                        throw new Error(`Insufficient leave balance. Available balance: ${currentBalance > 0 ? currentBalance : 0} day(s) (Maximum requestable: ${maxAllowed} day(s)).`);
-                    }
-                }
+                // Note: Balance is allowed to become negative even when available balance is 0 or less.
+                // Leave request is not blocked solely due to 0 or negative balance.
             }
         }
     }
 
     async createLeaveRequest(data) {
         await this.validateAndApplyLeavePolicy(data);
-        return await leaveRequestRepository.createLeaveRequest(data);
+        const created = await leaveRequestRepository.createLeaveRequest(data);
+        return await this.mapSuperAdminApprovers(created, created.companyId);
     }
 
     async mapSuperAdminApprovers(requests, companyId) {
@@ -201,6 +284,7 @@ class LeaveRequestService {
         let superAdmin = null;
 
         const mapRequest = async (req) => {
+            if (!req) return req;
             if ((req.status === 'APPROVED' || req.status === 'REJECTED') && !req.approvedBy && req.companyId) {
                 if (!superAdmin) {
                     superAdmin = await prisma.superAdmin.findUnique({ where: { companyId: req.companyId } });
@@ -214,6 +298,24 @@ class LeaveRequestService {
                     req.approvedBy = superAdmin.superAdminId;
                 }
             }
+
+            // Calculate and attach employee's actual leave balance & balance after approval
+            if (req.userId && req.leaveTypeId) {
+                try {
+                    const balance = await this.calculateEmployeeLeaveBalance(
+                        req.companyId || companyId,
+                        req.userId,
+                        req.leaveTypeId,
+                        req.isCompOff
+                    );
+                    req.employeeLeaveBalance = balance;
+                    req.balanceAfterApproval = balance - Number(req.numberOfDays || 0);
+                } catch (e) {
+                    req.employeeLeaveBalance = 0;
+                    req.balanceAfterApproval = 0 - Number(req.numberOfDays || 0);
+                }
+            }
+
             return req;
         };
 
@@ -252,3 +354,4 @@ class LeaveRequestService {
 }
 
 module.exports = new LeaveRequestService();
+

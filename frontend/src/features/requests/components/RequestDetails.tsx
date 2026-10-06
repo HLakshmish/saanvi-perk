@@ -346,6 +346,26 @@ export const RequestDetails: React.FC<RequestDetailsProps> = ({
                   {details.reason || "—"}
                 </p>
               </div>
+
+              <div className="col-span-2 bg-indigo-50/70 border border-indigo-200/80 rounded-xl p-3.5 space-y-2 text-xs">
+                <span className="text-indigo-900 font-extrabold text-[11px] uppercase tracking-wider block">
+                  Employee Leave Balance Overview
+                </span>
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <div className="bg-white p-2.5 rounded-lg border border-indigo-100 shadow-2xs">
+                    <span className="text-slate-500 font-semibold block text-[10px] mb-0.5">Current Available Balance</span>
+                    <span className={`text-xs font-extrabold ${(details.employeeLeaveBalance ?? 0) < 0 ? "text-rose-600" : "text-emerald-700"}`}>
+                      {details.employeeLeaveBalance ?? 0} {Math.abs(details.employeeLeaveBalance ?? 0) === 1 ? "day" : "days"}
+                    </span>
+                  </div>
+                  <div className="bg-white p-2.5 rounded-lg border border-indigo-100 shadow-2xs">
+                    <span className="text-slate-500 font-semibold block text-[10px] mb-0.5">Balance After Approval</span>
+                    <span className={`text-xs font-extrabold ${(details.balanceAfterApproval ?? ((details.employeeLeaveBalance ?? 0) - Number(details.numberOfDays))) < 0 ? "text-rose-600" : "text-emerald-700"}`}>
+                      {details.balanceAfterApproval ?? ((details.employeeLeaveBalance ?? 0) - Number(details.numberOfDays))} {Math.abs(details.balanceAfterApproval ?? ((details.employeeLeaveBalance ?? 0) - Number(details.numberOfDays))) === 1 ? "day" : "days"}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}

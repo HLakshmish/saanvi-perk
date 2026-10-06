@@ -33,6 +33,8 @@ const leaveRequestResponseProperties = {
             lastName: { type: 'string', nullable: true }
         }
     },
+    employeeLeaveBalance: { type: 'number', nullable: true },
+    balanceAfterApproval: { type: 'number', nullable: true },
     leaveType: {
         type: 'object',
         nullable: true,

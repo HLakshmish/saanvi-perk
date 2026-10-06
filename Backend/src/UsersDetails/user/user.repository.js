@@ -39,7 +39,11 @@ class UserRepository {
                 userRoles: { select: { role: { select: { roleId: true, roleName: true, roleCode: true } } } },
                 department: { select: { departmentName: true } },
                 designation: { select: { designationName: true } },
-                manager: { select: { firstName: true, lastName: true, officialEmail: true } }
+                company: { select: { companyName: true } },
+                location: { select: { locationName: true, city: true, state: true } },
+                manager: { select: { firstName: true, lastName: true, officialEmail: true } },
+                updatedByUser: { select: { firstName: true, lastName: true } },
+                createdByUser: { select: { firstName: true, lastName: true } }
             }
         });
     }
@@ -53,7 +57,11 @@ class UserRepository {
             include: {
                 userRoles: { select: { role: { select: { roleId: true, roleName: true, roleCode: true } } } },
                 department: { select: { departmentName: true } },
-                designation: { select: { designationName: true } }
+                designation: { select: { designationName: true } },
+                company: { select: { companyName: true } },
+                location: { select: { locationName: true, city: true, state: true } },
+                updatedByUser: { select: { firstName: true, lastName: true } },
+                createdByUser: { select: { firstName: true, lastName: true } }
             }
         });
     }

@@ -209,6 +209,7 @@ model User {
 
   joiningDate      DateTime  @map("joining_date")
   probationEndDate DateTime? @map("probation_end_date")
+  extendedProbationPeriod DateTime? @map("extended_probation_period")
   leavingDate      DateTime? @map("leaving_date")
 
   reportingToId Int? @map("reporting_to")
@@ -315,6 +316,7 @@ model PersonalInformation {
   officialEmail String? @map("official_email")
   personalEmail String? @map("personal_email")
   profilePhoto  String? @map("profile_photo")
+  nominee       String? @map("nominee")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -436,6 +438,7 @@ enum EmploymentType {
   PART_TIME
   CONTRACT
   INTERN
+  FIXED_TERM
 }
 
 enum EmployeeStatus {

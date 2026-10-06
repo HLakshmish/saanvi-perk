@@ -76,10 +76,10 @@ export const LeavesSummaryTab: React.FC<LeavesSummaryTabProps> = ({
     }
   });
 
-  const balanceSick = Math.max(0, accumulatedSick - availedSick);
-  const balanceComp = Math.max(0, accumulatedComp - availedComp);
-  const balanceEarned = Math.max(0, accumulatedEarned - availedEarned);
-  const balanceLop = Math.max(0, accumulatedLop - availedLop);
+  const balanceSick = accumulatedSick - availedSick;
+  const balanceComp = accumulatedComp - availedComp;
+  const balanceEarned = accumulatedEarned - availedEarned;
+  const balanceLop = accumulatedLop - availedLop;
   const totalBalance = balanceSick + balanceComp + balanceEarned + balanceLop;
 
   const availablePercentage = totalAccumulated > 0 ? (totalBalance / totalAccumulated) * 100 : 0;

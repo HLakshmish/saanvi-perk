@@ -16,7 +16,8 @@ const personalInfoBodyProperties = {
 
     officialEmail: { type: 'string', format: 'email', nullable: true },
     personalEmail: { type: 'string', format: 'email', nullable: true },
-    profilePhoto: { type: 'string', nullable: true }
+    profilePhoto: { type: 'string', nullable: true },
+    nominee: { type: 'string', nullable: true }
 };
 
 const createPersonalInfoSchema = {

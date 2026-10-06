@@ -114,6 +114,7 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
     employmentType: "FULL_TIME",
     joiningDate: "",
     probationEndDate: "",
+    extendedProbationPeriod: "",
     leavingDate: "",
     reportingToId: "",
     status: "ACTIVE",
@@ -128,6 +129,7 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
     personalEmail: "",
     phoneNumber: "",
     profilePhoto: "",
+    nominee: "",
     aadhaarNumber: "",
     panNumber: "",
     passportNumber: "",
@@ -355,6 +357,7 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
         employmentType: u.employmentType || "FULL_TIME",
         joiningDate: u.joiningDate ? u.joiningDate.split("T")[0] : "",
         probationEndDate: u.probationEndDate ? u.probationEndDate.split("T")[0] : "",
+        extendedProbationPeriod: u.extendedProbationPeriod ? u.extendedProbationPeriod.split("T")[0] : "",
         leavingDate: u.leavingDate ? u.leavingDate.split("T")[0] : "",
         reportingToId: u.reportingToId ? String(u.reportingToId) : "",
         status: u.status || "ACTIVE",
@@ -368,6 +371,7 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
         personalEmail: pi?.personalEmail || "",
         phoneNumber: u.phoneNumber || pa?.fatherMobile || "",
         profilePhoto: pi?.profilePhoto || "",
+        nominee: pi?.nominee || "",
         aadhaarNumber: pi?.aadhaarNumber || "",
         panNumber: pi?.panNumber || "",
         passportNumber: pi?.passportNumber || "",
@@ -507,6 +511,26 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
       }
     }
 
+    if (formData.extendedProbationPeriod && formData.joiningDate) {
+      const extProbation = new Date(formData.extendedProbationPeriod);
+      const joining = new Date(formData.joiningDate);
+      if (extProbation < joining) {
+        setErrorMsg("Extended Probation Period cannot be earlier than Joining Date.");
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
+    if (formData.extendedProbationPeriod && formData.probationEndDate) {
+      const extProbation = new Date(formData.extendedProbationPeriod);
+      const probation = new Date(formData.probationEndDate);
+      if (extProbation < probation) {
+        setErrorMsg("Extended Probation Period cannot be earlier than Probation End Date.");
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
     if (formData.leavingDate && formData.joiningDate) {
       const leaving = new Date(formData.leavingDate);
       const joining = new Date(formData.joiningDate);
@@ -624,6 +648,7 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
         employmentType: formData.employmentType,
         joiningDate: new Date(formData.joiningDate).toISOString(),
         probationEndDate: formData.probationEndDate ? new Date(formData.probationEndDate).toISOString() : null,
+        extendedProbationPeriod: formData.extendedProbationPeriod ? new Date(formData.extendedProbationPeriod).toISOString() : null,
         leavingDate: formData.leavingDate ? new Date(formData.leavingDate).toISOString() : null,
         reportingToId: formData.reportingToId ? Number(formData.reportingToId) : null,
         status: formData.status,
@@ -649,6 +674,7 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
         aadhaarNumber: formData.aadhaarNumber || null,
         panNumber: formData.panNumber || null,
         passportNumber: formData.passportNumber || null,
+        nominee: formData.nominee || null,
       };
 
       if (personalInfoId) {
@@ -842,12 +868,25 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
     <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
       <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/80 w-full max-w-[850px] overflow-hidden flex flex-col relative animate-in zoom-in-95 duration-200 max-h-[90vh] force-light">
         <style>{`
+          .force-light,
+          .force-light * {
+            color-scheme: light !important;
+          }
+          .force-light label {
+            color: #334155 !important;
+            opacity: 1 !important;
+          }
           .force-light input,
           .force-light select,
           .force-light textarea {
             background-color: #ffffff !important;
             color: #0f172a !important;
             border-color: #cbd5e1 !important;
+            color-scheme: light !important;
+          }
+          .force-light input::placeholder,
+          .force-light textarea::placeholder {
+            color: #94a3b8 !important;
           }
           .force-light button.border-slate-300 {
             color: #334155 !important;
@@ -903,7 +942,7 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
         </div>
 
         {/* Content Panel */}
-        <div className="p-6 overflow-y-auto flex-1 min-h-[350px]">
+        <div className="p-6 pb-8 overflow-y-auto flex-1 min-h-[350px]">
           {isLoading ? (
             <div className="w-full h-64 flex flex-col items-center justify-center gap-3">
               <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
@@ -1026,6 +1065,7 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
                         <option value="PART_TIME">Part-Time</option>
                         <option value="CONTRACT">Contract</option>
                         <option value="INTERN">Intern</option>
+                        <option value="FIXED_TERM">Fixed Term</option>
                       </select>
                     </div>
                   </div>
@@ -1092,6 +1132,13 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
                       type="date"
                       value={formData.probationEndDate}
                       onChange={(e) => handleChange("probationEndDate", e.target.value)}
+                    />
+
+                    <Input
+                      label="Extended Probation Period"
+                      type="date"
+                      value={formData.extendedProbationPeriod}
+                      onChange={(e) => handleChange("extendedProbationPeriod", e.target.value)}
                     />
 
                     <Input
@@ -1250,6 +1297,13 @@ export const EmployeeEditModal: React.FC<EmployeeEditModalProps> = ({
                             placeholder="e.g. 9876543210"
                             value={formData.phoneNumber}
                             onChange={(e) => handleChange("phoneNumber", e.target.value)}
+                          />
+
+                          <Input
+                            label="Nominee"
+                            placeholder="Enter nominee name"
+                            value={formData.nominee}
+                            onChange={(e) => handleChange("nominee", e.target.value)}
                           />
                         </div>
                       </div>

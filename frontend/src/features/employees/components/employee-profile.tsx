@@ -20,6 +20,7 @@ import {
   Lock,
   ClipboardList,
   Search,
+  Undo2,
 } from "lucide-react";
 import { snackbar as toast } from "@/components/ui/snackbar";
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,7 @@ import {
   downloadEmployeeDocument,
   getDesignations,
   deleteUser,
+  getCompanyById,
 } from "../api/employees.api";
 
 interface EmployeeProfileProps {
@@ -73,6 +75,8 @@ export const EmployeeProfile: React.FC<EmployeeProfileProps> = ({ employeeId, on
   const [insuranceDetail, setInsuranceDetail] = useState<any>(null);
   const [documents, setDocuments] = useState<any[]>([]);
   const [designations, setDesignations] = useState<any[]>([]);
+  const [companyInfo, setCompanyInfo] = useState<any>(null);
+  const [modifierUser, setModifierUser] = useState<any>(null);
   const [docToDelete, setDocToDelete] = useState<{ id: number; type: string } | null>(null);
   const [isDeleteDocConfirmOpen, setIsDeleteDocConfirmOpen] = useState(false);
   const [isDeleteEmployeeOpen, setIsDeleteEmployeeOpen] = useState(false);
@@ -133,7 +137,23 @@ export const EmployeeProfile: React.FC<EmployeeProfileProps> = ({ employeeId, on
         getDesignations(),
       ]);
 
-      if (userRes.success) setUserProfile(userRes.data);
+      if (userRes.success) {
+        setUserProfile(userRes.data);
+        const u = userRes.data;
+        const targetCompanyId = u?.companyId;
+        const modifierId = u?.updatedBy || u?.createdBy;
+
+        if (targetCompanyId) {
+          getCompanyById(targetCompanyId).then((cRes) => {
+            if (cRes.success && cRes.data) setCompanyInfo(cRes.data);
+          }).catch(() => {});
+        }
+        if (modifierId) {
+          getUserById(Number(modifierId)).then((mRes) => {
+            if (mRes.success && mRes.data) setModifierUser(mRes.data);
+          }).catch(() => {});
+        }
+      }
       setDesignations(desData || []);
       if (personalRes.success && personalRes.data && personalRes.data.length > 0) {
         setPersonalInfo(personalRes.data[0]);
@@ -250,17 +270,17 @@ export const EmployeeProfile: React.FC<EmployeeProfileProps> = ({ employeeId, on
   };
 
   const formatModifiedDate = (dateStr?: string | null) => {
-    if (!dateStr) return "20-Apr-2026";
+    if (!dateStr) return "-";
     try {
       const d = new Date(dateStr);
-      if (isNaN(d.getTime())) return "20-Apr-2026";
+      if (isNaN(d.getTime())) return "-";
       const day = String(d.getDate()).padStart(2, "0");
       const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
       const month = months[d.getMonth()];
       const year = d.getFullYear();
       return `${day}-${month}-${year}`;
     } catch {
-      return "20-Apr-2026";
+      return "-";
     }
   };
 
@@ -332,9 +352,14 @@ export const EmployeeProfile: React.FC<EmployeeProfileProps> = ({ employeeId, on
 
   const primaryAddress = addresses.find((a) => a.addressType === "CURRENT") || addresses[0];
   const permanentAddress = addresses.find((a) => a.addressType === "PERMANENT");
-  const employeeLocation = primaryAddress?.city || userProfile?.location || "Saligrama";
-  const modifiedByText = userProfile.updatedBy || userProfile.createdByUser?.firstName || "Varsha";
-  const modifiedDateText = formatModifiedDate(userProfile.updatedAt);
+  const employeeLocation = primaryAddress?.city
+    ? (primaryAddress.state ? `${primaryAddress.city}, ${primaryAddress.state}` : primaryAddress.city)
+    : (userProfile.location?.locationName || userProfile.location?.city || (companyInfo?.city ? (companyInfo.state ? `${companyInfo.city}, ${companyInfo.state}` : companyInfo.city) : "Headquarters"));
+  const modifier = modifierUser || userProfile.updatedByUser || userProfile.createdByUser;
+  const modifiedByText = modifier
+    ? `${modifier.firstName || ""} ${modifier.lastName || ""}`.trim()
+    : (`${userProfile.firstName || ""} ${userProfile.lastName || ""}`.trim() || "-");
+  const modifiedDateText = formatModifiedDate(userProfile.updatedAt || userProfile.createdAt);
 
   // Top Tabs according to HRM reference image
   const tabs: { id: TabType; label: string }[] = [
@@ -371,6 +396,14 @@ export const EmployeeProfile: React.FC<EmployeeProfileProps> = ({ employeeId, on
       <div className="w-full bg-white border border-slate-200 rounded-sm px-4 sm:px-6 pt-3 pb-0 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-2xs">
         {/* Tab list with dividers */}
         <div className="flex items-center flex-wrap gap-1 sm:gap-2">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="p-1.5 mb-2.5 mr-1 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200 rounded-xl transition-all shadow-2xs cursor-pointer flex items-center justify-center shrink-0"
+            title="Back to directory"
+          >
+            <Undo2 className="w-4 h-4 text-slate-600" />
+          </button>
           {tabs.map((tab, idx) => {
             const isSelected = activeTab === tab.id;
             return (
@@ -478,6 +511,13 @@ export const EmployeeProfile: React.FC<EmployeeProfileProps> = ({ employeeId, on
               </div>
             )}
 
+            {userProfile.extendedProbationPeriod && (
+              <div>
+                <div className="text-[11px] text-slate-500 font-normal">Extended Probation Period</div>
+                <div className="text-xs font-bold text-amber-700 mt-0.5">{formatDateDMY(userProfile.extendedProbationPeriod)}</div>
+              </div>
+            )}
+
             {userProfile.leavingDate && (
               <div>
                 <div className="text-[11px] text-slate-500 font-normal">Leaving Date</div>
@@ -558,7 +598,7 @@ export const EmployeeProfile: React.FC<EmployeeProfileProps> = ({ employeeId, on
                     <span className="text-[11px] font-bold text-slate-700 block mb-3 uppercase tracking-wider border-b border-slate-200 pb-2">
                       Personal Details
                     </span>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 text-xs">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 text-xs">
                       <div>
                         <span className="text-[11px] text-slate-500 font-normal">Date of Birth:</span>
                         <div className="font-bold text-slate-900 mt-0.5">{formatDateDMY(personalInfo?.dateOfBirth)}</div>
@@ -579,6 +619,10 @@ export const EmployeeProfile: React.FC<EmployeeProfileProps> = ({ employeeId, on
                         <span className="text-[11px] text-slate-500 font-normal">Nationality:</span>
                         <div className="font-bold text-slate-900 mt-0.5">{personalInfo?.nationality || "Indian"}</div>
                       </div>
+                      <div>
+                        <span className="text-[11px] text-slate-500 font-normal">Nominee:</span>
+                        <div className="font-bold text-slate-900 mt-0.5">{personalInfo?.nominee || "-"}</div>
+                      </div>
                     </div>
                   </div>
 
@@ -598,7 +642,7 @@ export const EmployeeProfile: React.FC<EmployeeProfileProps> = ({ employeeId, on
                       </div>
                       <div>
                         <span className="text-[11px] text-slate-500 font-normal">Calendar:</span>
-                        <div className="font-bold text-slate-900 mt-0.5">India</div>
+                        <div className="font-bold text-slate-900 mt-0.5">{companyInfo?.companyName || userProfile.company?.companyName ? `${companyInfo?.companyName || userProfile.company?.companyName} Calendar` : "-"}</div>
                       </div>
                       <div>
                         <span className="text-[11px] text-slate-500 font-normal">Badge Id:</span>
@@ -677,7 +721,7 @@ export const EmployeeProfile: React.FC<EmployeeProfileProps> = ({ employeeId, on
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs">
                       <div>
                         <span className="text-[11px] text-slate-500 font-normal">Organization:</span>
-                        <div className="font-bold text-slate-900 mt-0.5">{userProfile.company?.companyName || userProfile.companyName || "Saanvi Technologies"}</div>
+                        <div className="font-bold text-slate-900 mt-0.5">{userProfile.company?.companyName || companyInfo?.companyName || userProfile.companyName || "-"}</div>
                       </div>
                       <div>
                         <span className="text-[11px] text-slate-500 font-normal">Department:</span>
@@ -708,7 +752,11 @@ export const EmployeeProfile: React.FC<EmployeeProfileProps> = ({ employeeId, on
                       </div>
                       <div>
                         <span className="text-[11px] text-slate-500 font-normal">Group:</span>
-                        <div className="font-bold text-slate-900 mt-0.5">{userProfile.employeeGroup || (userProfile.employmentType ? userProfile.employmentType.replace("_", " ") : "Permanent")}</div>
+                        <div className="font-bold text-slate-900 mt-0.5">
+                          {userProfile.employmentType
+                            ? userProfile.employmentType.replace("_", " ")
+                            : (userProfile.employeeGroup ? userProfile.employeeGroup.replace("_", " ") : "-")}
+                        </div>
                       </div>
                       <div>
                         <span className="text-[11px] text-slate-500 font-normal">Sub Group:</span>
