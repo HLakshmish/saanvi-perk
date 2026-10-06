@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X, Loader2, Calendar, User, CheckCircle2, XCircle, Clock, Trash2 } from "lucide-react";
-import { fetchLeaveRequestById, deleteLeaveRequest } from "../api/leaves.api";
+import { fetchLeaveRequestById, deleteLeaveRequest, fetchLeaveRequests } from "../api/leaves.api";
+import { fetchLeaveAccumulations } from "@/features/settings/api/settings.api";
 import { snackbar as toast } from "@/components/ui/snackbar";
 
 interface LeaveDetailsModalProps {
@@ -42,7 +43,41 @@ export const LeaveDetailsModal: React.FC<LeaveDetailsModalProps> = ({
         try {
           const res = await fetchLeaveRequestById(leaveRequestId);
           if (res.success && res.data) {
-            setDetails(res.data);
+            const reqData = res.data;
+            if (reqData.employeeLeaveBalance === undefined || reqData.employeeLeaveBalance === null) {
+              try {
+                const [allReqs, accumRes] = await Promise.all([
+                  fetchLeaveRequests(reqData.userId).catch(() => ({ success: false, data: [] })),
+                  fetchLeaveAccumulations().catch(() => ({ success: false, data: [] }))
+                ]);
+
+                const userAllocations = (accumRes.success && Array.isArray(accumRes.data))
+                  ? accumRes.data.filter((a: any) => Number(a.userId) === Number(reqData.userId) && Number(a.leaveTypeId) === Number(reqData.leaveTypeId) && a.status)
+                  : [];
+                let totalAllocated = userAllocations.reduce((sum: number, a: any) => sum + Number(a.numberOfLeaves || 0), 0);
+
+                if (userAllocations.length === 0) {
+                  const lt = leaveTypes.find((t: any) => Number(t.leaveTypeId) === Number(reqData.leaveTypeId)) || reqData.leaveType;
+                  const nameL = (lt?.leaveName || "").toLowerCase();
+                  const codeL = (lt?.leaveCode || "").toUpperCase();
+                  if (codeL.includes("SL") || codeL.includes("CL") || nameL.includes("sick") || nameL.includes("casual")) {
+                    totalAllocated = 12.0;
+                  }
+                }
+
+                const approvedReqs = (allReqs.success && Array.isArray(allReqs.data))
+                  ? allReqs.data.filter((r: any) => Number(r.userId) === Number(reqData.userId) && Number(r.leaveTypeId) === Number(reqData.leaveTypeId) && String(r.status).toUpperCase() === "APPROVED")
+                  : [];
+                const totalUsed = approvedReqs.reduce((sum: number, r: any) => sum + Number(r.numberOfDays || 0), 0);
+
+                reqData.employeeLeaveBalance = totalAllocated - totalUsed;
+                reqData.balanceAfterApproval = reqData.employeeLeaveBalance - Number(reqData.numberOfDays || 0);
+              } catch (e) {
+                reqData.employeeLeaveBalance = 0;
+                reqData.balanceAfterApproval = 0 - Number(reqData.numberOfDays || 0);
+              }
+            }
+            setDetails(reqData);
           } else {
             setErrorMsg(res.error || "Failed to load leave request details.");
           }
@@ -56,7 +91,7 @@ export const LeaveDetailsModal: React.FC<LeaveDetailsModalProps> = ({
     } else {
       setDetails(null);
     }
-  }, [isOpen, leaveRequestId]);
+  }, [isOpen, leaveRequestId, leaveTypes]);
 
   useEffect(() => {
     if (isOpen) {
@@ -249,6 +284,32 @@ export const LeaveDetailsModal: React.FC<LeaveDetailsModalProps> = ({
                     <Calendar className="w-3.5 h-3.5 text-slate-400" />
                     {formatDate(details.toDate)}
                   </p>
+                </div>
+              </div>
+
+              {/* Employee Leave Balance Info for Approver View */}
+              <div className="bg-indigo-50/70 border border-indigo-200/80 rounded-2xl p-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-indigo-900 font-extrabold text-[11px] uppercase tracking-wider">
+                    Employee Leave Balance Overview
+                  </span>
+                  <span className="text-[10px] font-bold text-indigo-600 bg-indigo-100/80 px-2 py-0.5 rounded-full">
+                    {leaveTypeName}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-2.5 pt-1">
+                  <div className="bg-white p-2.5 rounded-xl border border-indigo-100/80 shadow-2xs">
+                    <span className="text-slate-500 font-semibold block text-[10px] mb-0.5">Current Available Balance</span>
+                    <span className={`text-xs font-extrabold ${(details.employeeLeaveBalance ?? 0) < 0 ? "text-rose-600" : "text-emerald-700"}`}>
+                      {details.employeeLeaveBalance ?? 0} {Math.abs(details.employeeLeaveBalance ?? 0) === 1 ? "day" : "days"}
+                    </span>
+                  </div>
+                  <div className="bg-white p-2.5 rounded-xl border border-indigo-100/80 shadow-2xs">
+                    <span className="text-slate-500 font-semibold block text-[10px] mb-0.5">Balance After Approval</span>
+                    <span className={`text-xs font-extrabold ${(details.balanceAfterApproval ?? ((details.employeeLeaveBalance ?? 0) - Number(details.numberOfDays))) < 0 ? "text-rose-600" : "text-emerald-700"}`}>
+                      {details.balanceAfterApproval ?? ((details.employeeLeaveBalance ?? 0) - Number(details.numberOfDays))} {Math.abs(details.balanceAfterApproval ?? ((details.employeeLeaveBalance ?? 0) - Number(details.numberOfDays))) === 1 ? "day" : "days"}
+                    </span>
+                  </div>
                 </div>
               </div>
 

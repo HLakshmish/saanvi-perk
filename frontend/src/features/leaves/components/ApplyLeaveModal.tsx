@@ -389,13 +389,33 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
       return;
     }
 
-    const { balance, categoryName } = getSelectedLeaveBalance();
+    const targetUserId =
+      isAdminOrSuperAdmin && Number(selectedEmployeeId) > 0
+        ? Number(selectedEmployeeId)
+        : (getCurrentUserId() || 0);
 
-    if (requestedDays > balance) {
-      setErrorMsg(
-        `Insufficient balance. The request is for ${requestedDays} ${requestedDays === 1 ? "day" : "days"} but there are only ${balance} ${balance === 1 ? "day" : "days"} remaining for ${categoryName}.`
-      );
-      return;
+    const selectedType = leaveTypes.find((t) => Number(t.leaveTypeId) === Number(leaveTypeId));
+    const isEarnedLeave = selectedType
+      ? (selectedType.leaveCode && selectedType.leaveCode.toUpperCase() === "EL") ||
+        (selectedType.leaveName && selectedType.leaveName.toLowerCase().includes("earned"))
+      : false;
+
+    if (isEarnedLeave && targetUserId) {
+      const targetEmp = employees.find((e) => Number(e.id) === Number(targetUserId));
+      if (targetEmp) {
+        const probEnd = targetEmp.extendedProbationPeriod || targetEmp.probationEndDate;
+        if (probEnd) {
+          const endDate = new Date(probEnd);
+          endDate.setHours(23, 59, 59, 999);
+          const todayStart = new Date();
+          todayStart.setHours(0, 0, 0, 0);
+
+          if (todayStart <= endDate) {
+            setErrorMsg("Employees currently in probation period are not allowed to apply for Earned Leave (EL).");
+            return;
+          }
+        }
+      }
     }
 
     setIsSubmitting(true);
@@ -403,14 +423,9 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
 
     // Validate double submission / overlapping requests for the same dates
     try {
-      const targetUserId =
-        isAdminOrSuperAdmin && Number(selectedEmployeeId) > 0
-          ? Number(selectedEmployeeId)
-          : (getCurrentUserId() || undefined);
-
       const [leaveRes, attRes] = await Promise.all([
-        fetchLeaveRequests(targetUserId).catch(() => ({ success: false, data: [] })),
-        fetchAttendanceRequests(targetUserId).catch(() => ({ success: false, data: [] })),
+        fetchLeaveRequests(targetUserId || undefined).catch(() => ({ success: false, data: [] })),
+        fetchAttendanceRequests(targetUserId || undefined).catch(() => ({ success: false, data: [] })),
       ]);
 
       const requestedFrom = fromDate;
@@ -465,7 +480,6 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
       console.warn("Could not validate overlapping requests:", err);
     }
 
-    const selectedType = leaveTypes.find((t) => Number(t.leaveTypeId) === Number(leaveTypeId));
     const isCompType = selectedType
       ? selectedType.leaveName.toLowerCase().includes("comp") || selectedType.leaveCode.toLowerCase().includes("comp")
       : false;

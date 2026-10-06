@@ -382,10 +382,10 @@ export const LeavesView: React.FC = () => {
     }
   });
 
-  const balanceSick = Math.max(0, accumulatedSick - availedSick);
-  const balanceComp = Math.max(0, accumulatedComp - availedComp);
-  const balanceEarned = Math.max(0, accumulatedEarned - availedEarned);
-  const balanceLop = Math.max(0, accumulatedLop - availedLop);
+  const balanceSick = accumulatedSick - availedSick;
+  const balanceComp = accumulatedComp - availedComp;
+  const balanceEarned = accumulatedEarned - availedEarned;
+  const balanceLop = accumulatedLop - availedLop;
 
   const getUserBalances = (targetUserId: number) => {
     // 1. Filter allocations for target employee
@@ -472,10 +472,10 @@ export const LeavesView: React.FC = () => {
       });
 
     return {
-      sick: Math.max(0, sickLimit - availedSick),
-      comp: Math.max(0, compLimit - availedComp),
-      earned: Math.max(0, earnedLimit - availedEarned),
-      lop: Math.max(0, lopLimit - availedLop),
+      sick: sickLimit - availedSick,
+      comp: compLimit - availedComp,
+      earned: earnedLimit - availedEarned,
+      lop: lopLimit - availedLop,
     };
   };
 

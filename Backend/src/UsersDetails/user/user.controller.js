@@ -35,6 +35,7 @@ class UserController {
             } else if (!userData.probationEndDate) {
                 userData.probationEndDate = null;
             }
+            if (!userData.extendedProbationPeriod) userData.extendedProbationPeriod = null;
             if (!userData.leavingDate) userData.leavingDate = null;
 
             const user = await userService.createUser(userData);
@@ -135,6 +136,7 @@ class UserController {
             if (data.reportingToId === 0 || data.reportingToId === "") data.reportingToId = null;
             if (data.shiftId === 0 || data.shiftId === "") data.shiftId = null;
             if (data.probationEndDate === "") data.probationEndDate = null;
+            if (data.extendedProbationPeriod === "") data.extendedProbationPeriod = null;
             if (data.leavingDate === "") data.leavingDate = null;
             
             if (data.password === "") delete data.password;

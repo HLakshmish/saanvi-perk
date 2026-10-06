@@ -104,6 +104,7 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
     profilePhoto: "",
     personalEmail: "",
     phoneNumber: "",
+    nominee: "",
 
     // Step 1.2: Address
     currentAddress: {
@@ -178,6 +179,7 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
     employmentType: "FULL_TIME",
     joiningDate: "",
     probationEndDate: "",
+    extendedProbationPeriod: "",
     leavingDate: "",
     reportingToId: "",
     status: "ACTIVE",
@@ -579,6 +581,24 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
       }
     }
 
+    if (formData.extendedProbationPeriod && formData.joiningDate) {
+      const extProbation = new Date(formData.extendedProbationPeriod);
+      const joining = new Date(formData.joiningDate);
+      if (extProbation < joining) {
+        setErrorMsg("Extended Probation Period cannot be earlier than Joining Date.");
+        return false;
+      }
+    }
+
+    if (formData.extendedProbationPeriod && formData.probationEndDate) {
+      const extProbation = new Date(formData.extendedProbationPeriod);
+      const probation = new Date(formData.probationEndDate);
+      if (extProbation < probation) {
+        setErrorMsg("Extended Probation Period cannot be earlier than Probation End Date.");
+        return false;
+      }
+    }
+
     if (formData.leavingDate && formData.joiningDate) {
       const leaving = new Date(formData.leavingDate);
       const joining = new Date(formData.joiningDate);
@@ -724,6 +744,7 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
         employmentType: formData.employmentType || "FULL_TIME",
         joiningDate: new Date(formData.joiningDate).toISOString(),
         probationEndDate: formData.probationEndDate ? new Date(formData.probationEndDate).toISOString() : null,
+        extendedProbationPeriod: formData.extendedProbationPeriod ? new Date(formData.extendedProbationPeriod).toISOString() : null,
         leavingDate: formData.leavingDate ? new Date(formData.leavingDate).toISOString() : null,
         reportingToId: formData.reportingToId ? Number(formData.reportingToId) : null,
         status: formData.status || "ACTIVE",
@@ -756,6 +777,7 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
         profilePhoto: formData.profilePhoto || null,
         personalEmail: formData.personalEmail || null,
         officialEmail: formData.officialEmail || null,
+        nominee: formData.nominee || null,
       };
 
       const existingPI = await getPersonalInfoByUserId(targetUserId);
@@ -1467,6 +1489,12 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
                         value={formData.guardianRelationship}
                         onChange={(e) => handleChange("guardianRelationship", e.target.value)}
                       />
+                      <Input
+                        label="Nominee"
+                        placeholder="Enter nominee name"
+                        value={formData.nominee}
+                        onChange={(e) => handleChange("nominee", e.target.value)}
+                      />
                     </div>
                   </div>
                 </div>
@@ -1922,6 +1950,7 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
                     <option value="PART_TIME">Part-Time</option>
                     <option value="CONTRACT">Contract</option>
                     <option value="INTERN">Intern</option>
+                    <option value="FIXED_TERM">Fixed Term</option>
                   </select>
                 </div>
               </div>
@@ -1988,6 +2017,13 @@ export const AddEmployeeWizard: React.FC<AddEmployeeWizardProps> = ({
                   type="date"
                   value={formData.probationEndDate}
                   onChange={(e) => handleChange("probationEndDate", e.target.value)}
+                />
+
+                <Input
+                  label="Extended Probation Period"
+                  type="date"
+                  value={formData.extendedProbationPeriod}
+                  onChange={(e) => handleChange("extendedProbationPeriod", e.target.value)}
                 />
 
                 <Input

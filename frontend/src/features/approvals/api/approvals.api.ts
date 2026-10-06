@@ -41,11 +41,16 @@ export const fetchAllApprovals = async (): Promise<{
 
   const attUrl = `${API_BASE_URL}/api/attendance-requests`;
 
+  const accumUrl = companyId
+    ? `${API_BASE_URL}/api/leave-accumulations?companyId=${companyId}`
+    : `${API_BASE_URL}/api/leave-accumulations`;
+
   try {
-    const [leaveRes, reimbRes, attRes] = await Promise.all([
+    const [leaveRes, reimbRes, attRes, accumRes] = await Promise.all([
       fetch(leaveUrl, { headers }).then((r) => r.json()).catch(() => ({ success: false, data: [] })),
       fetch(reimbUrl, { headers }).then((r) => r.json()).catch(() => ({ success: false, data: [] })),
       fetch(attUrl, { headers }).then((r) => r.json()).catch(() => ({ success: false, data: [] })),
+      fetch(accumUrl, { headers }).then((r) => r.json()).catch(() => ({ success: false, data: [] })),
     ]);
 
     const items: UnifiedApprovalItem[] = [];
@@ -60,6 +65,38 @@ export const fetchAllApprovals = async (): Promise<{
         const empName = l.user ? `${l.user.firstName} ${l.user.lastName || ""}`.trim() : `Employee #${l.userId}`;
         const days = Number(l.numberOfDays ?? 1);
         const typeName = l.leaveType?.leaveName || "Leave";
+        const codeName = (l.leaveType?.leaveCode || "").toUpperCase();
+
+        let empBalance = l.employeeLeaveBalance !== undefined && l.employeeLeaveBalance !== null ? Number(l.employeeLeaveBalance) : undefined;
+
+        if (empBalance === undefined) {
+          const userAllocations = Array.isArray(accumRes.data)
+            ? accumRes.data.filter(
+                (a: any) => Number(a.userId) === Number(l.userId) && Number(a.leaveTypeId) === Number(l.leaveTypeId) && a.status
+              )
+            : [];
+          let totalAllocated = userAllocations.reduce((sum: number, a: any) => sum + Number(a.numberOfLeaves || 0), 0);
+
+          if (userAllocations.length === 0) {
+            const nameL = typeName.toLowerCase();
+            if (codeName.includes("SL") || codeName.includes("CL") || nameL.includes("sick") || nameL.includes("casual")) {
+              totalAllocated = 12.0;
+            }
+          }
+
+          const approvedRequests = Array.isArray(leaveRes.data)
+            ? leaveRes.data.filter(
+                (r: any) =>
+                  Number(r.userId) === Number(l.userId) &&
+                  Number(r.leaveTypeId) === Number(l.leaveTypeId) &&
+                  String(r.status).toUpperCase() === "APPROVED"
+              )
+            : [];
+          const totalUsed = approvedRequests.reduce((sum: number, r: any) => sum + Number(r.numberOfDays || 0), 0);
+          empBalance = totalAllocated - totalUsed;
+        }
+
+        const balAfter = l.balanceAfterApproval !== undefined && l.balanceAfterApproval !== null ? Number(l.balanceAfterApproval) : (empBalance - days);
 
         items.push({
           id: `leave-${l.leaveRequestId}`,
@@ -79,6 +116,8 @@ export const fetchAllApprovals = async (): Promise<{
           approvedAt: l.approvedAt ? new Date(l.approvedAt).toLocaleDateString("en-GB").replace(/\//g, "-") : undefined,
           remarks: l.remarks,
           rejectionReason: l.rejectionReason,
+          employeeLeaveBalance: empBalance,
+          balanceAfterApproval: balAfter,
         });
       });
     }

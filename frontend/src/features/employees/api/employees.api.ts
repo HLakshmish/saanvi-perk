@@ -96,7 +96,7 @@ const mapUserToEmployee = (user: any): Employee => {
     employeeCode: user.employeeCode,
     name: `${user.firstName} ${user.lastName || ""}`.trim(),
     email: user.officialEmail,
-    location: "Saligrama", // default placeholder or company branch
+    location: user.location?.locationName || user.location?.city || "-",
     department: user.department?.departmentName || "General",
     designation: user.roles?.[0]?.roleName || user.userRoles?.[0]?.role?.roleName || user.role?.roleName || "Staff",
     employeeGroup: (user.employmentType || "FULL_TIME").replace("_", "-"),
@@ -218,6 +218,11 @@ export const getEmployees = async (): Promise<Employee[]> => {
           profilePic: user.profilePic || pi?.profilePhoto || undefined,
           designationId: user.designationId || undefined,
           status: user.status || "ACTIVE",
+          joiningDate: user.joiningDate || undefined,
+          probationEndDate: user.probationEndDate || undefined,
+          extendedProbationPeriod: user.extendedProbationPeriod || undefined,
+          leavingDate: user.leavingDate || undefined,
+          nominee: pi?.nominee || undefined,
         };
       });
 
@@ -944,6 +949,24 @@ export const downloadEmployeeDocument = async (id: number): Promise<void> => {
   } catch (error) {
     console.error("Download error:", error);
     toast.error("Failed to download document file.");
+  }
+};
+
+export const getCompanyById = async (companyId: number): Promise<{ success: boolean; data?: any; error?: string }> => {
+  const token = getAuthToken();
+  try {
+    const res = await fetchDeduplicated(`${API_BASE_URL}/api/companies/${companyId}`, {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    const result = await res.json();
+    if (res.ok && result.success && result.data) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, error: "Company details not found" };
+  } catch (error: any) {
+    return { success: false, error: formatBackendError(error.message) };
   }
 };
 

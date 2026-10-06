@@ -36,7 +36,14 @@ class LeaveTypeService {
     }
 
     async deleteLeaveType(leaveTypeId, companyId) {
-        return await leaveTypeRepository.deleteLeaveType(leaveTypeId, companyId);
+        try {
+            return await leaveTypeRepository.deleteLeaveType(leaveTypeId, companyId);
+        } catch (error) {
+            if (error.code === 'P2003' || (error.message && error.message.includes('foreign key constraint'))) {
+                throw new Error("Cannot delete this leave type because it is associated with existing leave requests, allocations, or policies. You can set its status to inactive instead.");
+            }
+            throw error;
+        }
     }
 }
 

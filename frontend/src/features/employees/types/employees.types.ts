@@ -28,7 +28,9 @@ export interface Employee {
   personalEmail?: string;
   joiningDate?: string;
   probationEndDate?: string | null;
+  extendedProbationPeriod?: string | null;
   leavingDate?: string | null;
+  nominee?: string | null;
 }
 
 export interface RoleSelection {
@@ -50,7 +52,7 @@ export interface CreateEmployeeInput {
   officialEmail: string;
   password?: string;
   phoneNumber?: string | null;
-  employmentType: "FULL_TIME" | "PART_TIME" | "CONTRACT" | "INTERN";
+  employmentType: "FULL_TIME" | "PART_TIME" | "CONTRACT" | "INTERN" | "FIXED_TERM";
   joiningDate: string;
   dateOfBirth?: string;
   roleId?: number | string;
@@ -58,6 +60,7 @@ export interface CreateEmployeeInput {
   departmentId?: number | string | null;
   designationId?: number | string | null;
   probationEndDate?: string | null;
+  extendedProbationPeriod?: string | null;
   leavingDate?: string | null;
   reportingToId?: number | null;
   shiftId?: number | null;

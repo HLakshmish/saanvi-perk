@@ -22,6 +22,8 @@ export interface UnifiedApprovalItem {
   approvedAt?: string;
   remarks?: string;
   rejectionReason?: string;
+  employeeLeaveBalance?: number;
+  balanceAfterApproval?: number;
   bills?: Array<{
     billId: number;
     fileName: string;

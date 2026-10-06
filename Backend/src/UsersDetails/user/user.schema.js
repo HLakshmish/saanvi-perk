@@ -12,6 +12,7 @@ const userResponseProperties = {
     employmentType: { type: 'string' },
     joiningDate: { type: 'string', format: 'date-time' },
     probationEndDate: { type: 'string', format: 'date-time', nullable: true },
+    extendedProbationPeriod: { type: 'string', format: 'date-time', nullable: true },
     leavingDate: { type: 'string', format: 'date-time', nullable: true },
     reportingToId: { type: 'number', nullable: true },
     shiftId: { type: 'number', nullable: true },
@@ -47,6 +48,38 @@ const userResponseProperties = {
         properties: {
             designationName: { type: 'string' }
         }
+    },
+    company: {
+        type: 'object',
+        nullable: true,
+        properties: {
+            companyName: { type: 'string' }
+        }
+    },
+    location: {
+        type: 'object',
+        nullable: true,
+        properties: {
+            locationName: { type: 'string', nullable: true },
+            city: { type: 'string', nullable: true },
+            state: { type: 'string', nullable: true }
+        }
+    },
+    updatedByUser: {
+        type: 'object',
+        nullable: true,
+        properties: {
+            firstName: { type: 'string' },
+            lastName: { type: 'string', nullable: true }
+        }
+    },
+    createdByUser: {
+        type: 'object',
+        nullable: true,
+        properties: {
+            firstName: { type: 'string' },
+            lastName: { type: 'string', nullable: true }
+        }
     }
 };
 
@@ -68,9 +101,10 @@ const createUserSchema = {
             officialEmail: { type: 'string' },
             phoneNumber: { type: 'string', nullable: true },
             password: { type: 'string' },
-            employmentType: { type: 'string', enum: ['FULL_TIME', 'PART_TIME', 'CONTRACT', 'INTERN'] },
+            employmentType: { type: 'string', enum: ['FULL_TIME', 'PART_TIME', 'CONTRACT', 'INTERN', 'FIXED_TERM'] },
             joiningDate: { type: 'string', format: 'date-time' },
             probationEndDate: { type: 'string', format: 'date-time', nullable: true },
+            extendedProbationPeriod: { type: 'string', format: 'date-time', nullable: true },
             leavingDate: { type: 'string', format: 'date-time', nullable: true },
             reportingToId: { type: 'number', nullable: true },
             shiftId: { type: 'number', nullable: true },
@@ -184,9 +218,10 @@ const updateUserSchema = {
             officialEmail: { type: 'string' },
             phoneNumber: { type: 'string', nullable: true },
             password: { type: 'string', nullable: true },
-            employmentType: { type: 'string', enum: ['FULL_TIME', 'PART_TIME', 'CONTRACT', 'INTERN'] },
+            employmentType: { type: 'string', enum: ['FULL_TIME', 'PART_TIME', 'CONTRACT', 'INTERN', 'FIXED_TERM'] },
             joiningDate: { type: 'string', format: 'date-time' },
             probationEndDate: { type: 'string', format: 'date-time', nullable: true },
+            extendedProbationPeriod: { type: 'string', format: 'date-time', nullable: true },
             leavingDate: { type: 'string', format: 'date-time', nullable: true },
             reportingToId: { type: 'number', nullable: true },
             shiftId: { type: 'number', nullable: true },

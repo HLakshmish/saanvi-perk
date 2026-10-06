@@ -100,6 +100,34 @@ export const ApprovalDetailsModal: React.FC<ApprovalDetailsModalProps> = ({
             </div>
           </div>
 
+          {/* Leave Balance Overview for Leave Requests */}
+          {item.moduleType === "LEAVE" && (
+            <div className="bg-indigo-50/70 border border-indigo-200/80 rounded-2xl p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-indigo-900 font-extrabold text-[11px] uppercase tracking-wider">
+                  Employee Leave Balance Overview
+                </span>
+                <span className="text-[10px] font-bold text-indigo-600 bg-indigo-100/80 px-2 py-0.5 rounded-full">
+                  {item.category}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2.5 pt-1">
+                <div className="bg-white p-2.5 rounded-xl border border-indigo-100/80 shadow-2xs">
+                  <span className="text-slate-500 font-semibold block text-[10px] mb-0.5">Current Available Balance</span>
+                  <span className={`text-xs font-extrabold ${(item.employeeLeaveBalance ?? 0) < 0 ? "text-rose-600" : "text-emerald-700"}`}>
+                    {item.employeeLeaveBalance ?? 0} {Math.abs(item.employeeLeaveBalance ?? 0) === 1 ? "day" : "days"}
+                  </span>
+                </div>
+                <div className="bg-white p-2.5 rounded-xl border border-indigo-100/80 shadow-2xs">
+                  <span className="text-slate-500 font-semibold block text-[10px] mb-0.5">Balance After Approval</span>
+                  <span className={`text-xs font-extrabold ${(item.balanceAfterApproval ?? ((item.employeeLeaveBalance ?? 0) - item.numericValue)) < 0 ? "text-rose-600" : "text-emerald-700"}`}>
+                    {item.balanceAfterApproval ?? ((item.employeeLeaveBalance ?? 0) - item.numericValue)} {Math.abs(item.balanceAfterApproval ?? ((item.employeeLeaveBalance ?? 0) - item.numericValue)) === 1 ? "day" : "days"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Reason Section */}
           <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
             <span className="text-slate-500 font-bold block mb-1">Reason / Description</span>
