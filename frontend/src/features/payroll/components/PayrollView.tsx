@@ -5,8 +5,12 @@ import {
   Banknote,
   Calculator,
   Sliders,
+  UserPlus,
+  FileText,
 } from "lucide-react";
 import { SalaryBreakupCalculator } from "./SalaryBreakupCalculator";
+import { EmployeeSalaryList } from "./EmployeeSalaryList";
+import { PayslipsView } from "./PayslipsView";
 import { PayrollSettingsTab } from "./PayrollSettingsTab";
 
 interface PayrollViewProps {
@@ -21,7 +25,8 @@ export const PayrollView: React.FC<PayrollViewProps> = ({
   currentUserId,
 }) => {
   const isEmployee = currentRole === "employee";
-  const [activeTab, setActiveTab] = useState<"calculator" | "settings">("calculator");
+  const [activeTab, setActiveTab] = useState<"calculator" | "assign-ctc" | "payslips" | "settings">("calculator");
+  const [prefillCtcData, setPrefillCtcData] = useState<{ ctc: number; isAnnual: boolean } | null>(null);
 
   if (isEmployee) {
     return (
@@ -68,6 +73,30 @@ export const PayrollView: React.FC<PayrollViewProps> = ({
           </button>
 
           <button
+            onClick={() => setActiveTab("assign-ctc")}
+            className={`px-3.5 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
+              activeTab === "assign-ctc"
+                ? "bg-brand-primary text-brand-btn-text font-bold shadow-2xs border border-brand-primary"
+                : "hover:text-brand-primary hover:bg-slate-100"
+            }`}
+          >
+            <UserPlus className="w-3.5 h-3.5" />
+            <span>Assign CTC to Employee</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("payslips")}
+            className={`px-3.5 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
+              activeTab === "payslips"
+                ? "bg-brand-primary text-brand-btn-text font-bold shadow-2xs border border-brand-primary"
+                : "hover:text-brand-primary hover:bg-slate-100"
+            }`}
+          >
+            <FileText className="w-3.5 h-3.5" />
+            <span>Payslips & Monthly Run</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab("settings")}
             className={`px-3.5 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
               activeTab === "settings"
@@ -85,6 +114,25 @@ export const PayrollView: React.FC<PayrollViewProps> = ({
       {activeTab === "calculator" && (
         <SalaryBreakupCalculator
           onNavigateToSettings={() => setActiveTab("settings")}
+          onAssignToEmployee={(ctc, isAnnual) => {
+            setPrefillCtcData({ ctc, isAnnual });
+            setActiveTab("assign-ctc");
+          }}
+        />
+      )}
+
+      {activeTab === "assign-ctc" && (
+        <EmployeeSalaryList
+          onOpenCalculator={() => setActiveTab("calculator")}
+          prefillCtc={prefillCtcData?.ctc}
+          prefillIsAnnual={prefillCtcData?.isAnnual}
+        />
+      )}
+
+      {activeTab === "payslips" && (
+        <PayslipsView
+          currentRole={currentRole}
+          currentUserId={currentUserId}
         />
       )}
 

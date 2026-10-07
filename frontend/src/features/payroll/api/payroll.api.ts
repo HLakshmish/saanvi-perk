@@ -1,5 +1,6 @@
 import {
   PayrollSettings,
+  PayrollSettingsHistoryItem,
   CalculateSalaryInput,
   SalaryBreakupResult,
   EmployeeSalaryStructure,
@@ -17,7 +18,12 @@ function getAuthToken(): string | null {
 function getCompanyIdCookie(): number | null {
   if (typeof document === "undefined") return null;
   const match = document.cookie.match(/(?:^|; )company_id=([^;]*)/);
-  return match ? Number(match[1]) : null;
+  if (match && match[1]) return Number(match[1]);
+  if (typeof localStorage !== "undefined") {
+    const ls = localStorage.getItem("company_id");
+    if (ls) return Number(ls);
+  }
+  return null;
 }
 
 function getHeaders(): HeadersInit {
@@ -28,11 +34,16 @@ function getHeaders(): HeadersInit {
   };
 }
 
-// 1. Get Payroll Settings (dynamic rates)
-export async function getPayrollSettings(companyId?: number): Promise<{ success: boolean; data?: PayrollSettings; error?: string }> {
+// 1. Get Payroll Settings (dynamic rates, optionally for a specific effective date)
+export async function getPayrollSettings(date?: string, companyId?: number): Promise<{ success: boolean; data?: PayrollSettings; error?: string }> {
   try {
     const cId = companyId || getCompanyIdCookie();
-    const url = cId ? `${API_BASE_URL}/api/payroll/settings?companyId=${cId}` : `${API_BASE_URL}/api/payroll/settings`;
+    const query = new URLSearchParams();
+    if (cId) query.set("companyId", String(cId));
+    if (date) query.set("date", date);
+
+    const qStr = query.toString();
+    const url = qStr ? `${API_BASE_URL}/api/payroll/settings?${qStr}` : `${API_BASE_URL}/api/payroll/settings`;
     const res = await fetch(url, { method: "GET", headers: getHeaders() });
     const json = await res.json();
     if (res.ok && json.success) {
@@ -44,7 +55,43 @@ export async function getPayrollSettings(companyId?: number): Promise<{ success:
   }
 }
 
-// 2. Update Payroll Settings (dynamic rates)
+// 1b. Get Payroll Settings Version History
+export async function getPayrollSettingsHistory(companyId?: number): Promise<{ success: boolean; data?: PayrollSettingsHistoryItem[]; error?: string }> {
+  try {
+    const cId = companyId || getCompanyIdCookie();
+    const query = cId ? `?companyId=${cId}` : "";
+    const url = `${API_BASE_URL}/api/payroll/settings/history${query}`;
+    const res = await fetch(url, { method: "GET", headers: getHeaders() });
+    const json = await res.json();
+    if (res.ok && json.success) {
+      return { success: true, data: json.data };
+    }
+    return { success: false, error: json.message || "Failed to fetch payroll settings history" };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Network error" };
+  }
+}
+
+// 1c. Delete Payroll Settings Version
+export async function deletePayrollSettingsVersion(id: number, companyId?: number): Promise<{ success: boolean; error?: string }> {
+  try {
+    const cId = companyId || getCompanyIdCookie();
+    const query = cId ? `?companyId=${cId}` : "";
+    const res = await fetch(`${API_BASE_URL}/api/payroll/settings/versions/${id}${query}`, {
+      method: "DELETE",
+      headers: getHeaders()
+    });
+    const json = await res.json();
+    if (res.ok && json.success) {
+      return { success: true };
+    }
+    return { success: false, error: json.message || "Failed to delete policy version" };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Network error" };
+  }
+}
+
+// 2. Update Payroll Settings (dynamic rates with effective date)
 export async function updatePayrollSettings(data: Partial<PayrollSettings>, companyId?: number): Promise<{ success: boolean; data?: PayrollSettings; error?: string }> {
   try {
     const cId = companyId || getCompanyIdCookie();
@@ -159,12 +206,19 @@ export async function getAllSalaryStructures(search?: string, companyId?: number
   }
 }
 
-// 6. Get Salary Structure for a Specific Employee
-export async function getEmployeeSalaryStructure(userId: number, companyId?: number): Promise<{ success: boolean; data?: EmployeeSalaryStructure; error?: string }> {
+// 6. Get Salary Structure for a Specific Employee (with date support)
+export async function getEmployeeSalaryStructure(
+  userId: number,
+  date?: string,
+  companyId?: number
+): Promise<{ success: boolean; data?: EmployeeSalaryStructure; error?: string }> {
   try {
     const cId = companyId || getCompanyIdCookie();
-    const query = cId ? `?companyId=${cId}` : "";
-    const res = await fetch(`${API_BASE_URL}/api/payroll/salaries/${userId}${query}`, {
+    const params = new URLSearchParams();
+    if (cId) params.set("companyId", String(cId));
+    if (date) params.set("date", date);
+    const queryString = params.toString() ? `?${params.toString()}` : "";
+    const res = await fetch(`${API_BASE_URL}/api/payroll/salaries/${userId}${queryString}`, {
       method: "GET",
       headers: getHeaders()
     });
@@ -255,6 +309,25 @@ export async function updatePayslipStatus(id: number, status: "GENERATED" | "PAI
       return { success: true, data: json.data };
     }
     return { success: false, error: json.message || "Failed to update payslip status" };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Network error" };
+  }
+}
+
+// 11. Delete Payslip
+export async function deletePayslip(id: number, companyId?: number): Promise<{ success: boolean; error?: string }> {
+  try {
+    const cId = companyId || getCompanyIdCookie();
+    const query = cId ? `?companyId=${cId}` : "";
+    const res = await fetch(`${API_BASE_URL}/api/payroll/payslips/${id}${query}`, {
+      method: "DELETE",
+      headers: getHeaders()
+    });
+    const json = await res.json();
+    if (res.ok && json.success) {
+      return { success: true };
+    }
+    return { success: false, error: json.message || "Failed to delete payslip" };
   } catch (err: any) {
     return { success: false, error: err.message || "Network error" };
   }

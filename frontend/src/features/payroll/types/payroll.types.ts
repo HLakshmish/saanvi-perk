@@ -1,6 +1,10 @@
 export interface PayrollSettings {
   id?: number;
   companyId?: number;
+  effectiveFrom?: string;
+  effectiveTo?: string | null;
+  versionName?: string;
+  remarks?: string;
   basicPercentage: number;
   hraPercentage: number;
   otherAllowancesPercentage: number;
@@ -14,6 +18,16 @@ export interface PayrollSettings {
   usePfWageCeiling: boolean;
   statutoryEsiGrossLimit: number;
   updatedAt?: string;
+  createdAt?: string;
+}
+
+export interface PayrollSettingsHistoryItem extends PayrollSettings {
+  id: number;
+  companyId: number;
+  effectiveFrom: string;
+  effectiveTo?: string | null;
+  versionName?: string;
+  remarks?: string;
 }
 
 export interface SalaryBreakupMonthly {
@@ -71,6 +85,7 @@ export interface CalculateSalaryInput {
   monthlyCtc?: number;
   monthlyGross?: number;
   basicAmount?: number;
+  effectiveDate?: string;
 }
 
 export interface EmployeeSalaryStructure {
@@ -111,6 +126,7 @@ export interface EmployeeSalaryStructure {
   gratuity_annual: number | string;
   status?: string;
   effective_date?: string;
+  effective_to?: string | null;
   hike_percentage?: number | string;
   hike_amount?: number | string;
   previous_annual_ctc?: number | string;
@@ -131,6 +147,8 @@ export interface SalaryHistoryItem {
   hike_amount: number | string;
   revision_type: string;
   effective_date: string;
+  effective_to?: string | null;
+  computed_effective_to?: string | null;
   remarks?: string;
   created_at?: string;
 }
@@ -173,6 +191,13 @@ export interface Payslip {
   employer_esi: number | string;
   gratuity: number | string;
   ctc_earned: number | string;
+  basic_percentage?: number | string;
+  employee_pf_rate?: number | string;
+  employee_esi_rate?: number | string;
+  employer_pf_rate?: number | string;
+  employer_esi_rate?: number | string;
+  gratuity_rate?: number | string;
+  rates_applied?: any;
   payment_status: "GENERATED" | "PAID" | "ON_HOLD";
   payment_date?: string;
   remarks?: string;

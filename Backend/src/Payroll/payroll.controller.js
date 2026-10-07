@@ -36,20 +36,65 @@ async function checkCanManagePayroll(user) {
     return false;
 }
 
+async function getEffectiveCompanyId(request) {
+    if (request.query && request.query.companyId && Number(request.query.companyId) > 0) {
+        return Number(request.query.companyId);
+    }
+    if (request.body && request.body.companyId && Number(request.body.companyId) > 0) {
+        return Number(request.body.companyId);
+    }
+    if (request.user && request.user.companyId && Number(request.user.companyId) > 0) {
+        return Number(request.user.companyId);
+    }
+    if (request.user && request.user.company_id && Number(request.user.company_id) > 0) {
+        return Number(request.user.company_id);
+    }
+    if (request.user && request.user.userId) {
+        try {
+            const u = await prisma.user.findUnique({
+                where: { userId: Number(request.user.userId) },
+                select: { companyId: true }
+            });
+            if (u && u.companyId) return u.companyId;
+        } catch (e) {}
+    }
+    // Universal fallback: pick the primary registered company
+    try {
+        const firstComp = await prisma.companyDetails.findFirst({ select: { companyId: true } });
+        if (firstComp) return firstComp.companyId;
+    } catch (e) {
+        console.error("Error finding fallback company:", e);
+    }
+    return 1;
+}
+
 class PayrollController {
-    // 1. Get company payroll settings (dynamic percentages)
+    // 1. Get company payroll settings (dynamic percentages, optionally for a specific date)
     async getSettings(request, reply) {
         try {
-            let companyId = request.user.companyId;
-            if (request.user.role === 'OWNER') {
-                companyId = request.query.companyId ? Number(request.query.companyId) : companyId;
-            }
+            const companyId = await getEffectiveCompanyId(request);
             if (!companyId) {
                 return reply.code(400).send({ success: false, message: "Company ID is required" });
             }
 
-            const settings = await payrollService.getSettings(Number(companyId));
+            const targetDate = request.query.date || null;
+            const settings = await payrollService.getSettings(Number(companyId), targetDate);
             reply.code(200).send({ success: true, data: settings });
+        } catch (error) {
+            reply.code(500).send({ success: false, message: error.message });
+        }
+    }
+
+    // 1b. Get company payroll settings version history
+    async getSettingsHistory(request, reply) {
+        try {
+            const companyId = await getEffectiveCompanyId(request);
+            if (!companyId) {
+                return reply.code(400).send({ success: false, message: "Company ID is required" });
+            }
+
+            const history = await payrollService.getSettingsHistory(Number(companyId));
+            reply.code(200).send({ success: true, data: history });
         } catch (error) {
             reply.code(500).send({ success: false, message: error.message });
         }
@@ -58,10 +103,7 @@ class PayrollController {
     // 2. Update company payroll settings
     async updateSettings(request, reply) {
         try {
-            let companyId = request.user.companyId;
-            if (request.user.role === 'OWNER') {
-                companyId = request.body.companyId ? Number(request.body.companyId) : companyId;
-            }
+            const companyId = await getEffectiveCompanyId(request);
             if (!companyId) {
                 return reply.code(400).send({ success: false, message: "Company ID is required" });
             }
@@ -78,13 +120,29 @@ class PayrollController {
         }
     }
 
+    async deleteSettingsVersion(request, reply) {
+        try {
+            const companyId = await getEffectiveCompanyId(request);
+            if (!companyId) {
+                return reply.code(400).send({ success: false, message: "Company ID is required" });
+            }
+
+            const canManage = await checkCanManagePayroll(request.user);
+            if (!canManage) {
+                return reply.code(403).send({ success: false, message: "Forbidden: Not authorized to delete payroll settings." });
+            }
+
+            await payrollService.deleteSettingsVersion(Number(companyId), Number(request.params.id));
+            reply.code(200).send({ success: true, message: "Policy version deleted successfully" });
+        } catch (error) {
+            reply.code(400).send({ success: false, message: error.message });
+        }
+    }
+
     // 3. Calculate salary breakup (dry run / calculator)
     async calculateBreakup(request, reply) {
         try {
-            let companyId = request.user.companyId;
-            if (request.user.role === 'OWNER' && request.body.companyId) {
-                companyId = Number(request.body.companyId);
-            }
+            const companyId = await getEffectiveCompanyId(request);
             if (!companyId) {
                 return reply.code(400).send({ success: false, message: "Company ID is required" });
             }
@@ -99,10 +157,7 @@ class PayrollController {
     // 4. Assign salary structure to employee
     async assignSalary(request, reply) {
         try {
-            let companyId = request.user.companyId;
-            if (request.user.role === 'OWNER' && request.body.companyId) {
-                companyId = Number(request.body.companyId);
-            }
+            const companyId = await getEffectiveCompanyId(request);
             if (!companyId) {
                 return reply.code(400).send({ success: false, message: "Company ID is required" });
             }
@@ -127,10 +182,7 @@ class PayrollController {
     // 4b. Get salary revision & hike history for employee
     async getSalaryHistory(request, reply) {
         try {
-            let companyId = request.user.companyId;
-            if (request.user.role === 'OWNER' && request.query.companyId) {
-                companyId = Number(request.query.companyId);
-            }
+            const companyId = await getEffectiveCompanyId(request);
             if (!companyId) {
                 return reply.code(400).send({ success: false, message: "Company ID is required" });
             }
@@ -150,12 +202,8 @@ class PayrollController {
     // 5. Get salary structure for a specific employee
     async getSalaryStructure(request, reply) {
         try {
-            let companyId = request.user.companyId;
+            const companyId = await getEffectiveCompanyId(request);
             const targetUserId = Number(request.params.userId || request.user.userId);
-
-            if (request.user.role === 'OWNER' && request.query.companyId) {
-                companyId = Number(request.query.companyId);
-            }
 
             // Normal users can only view their own structure
             if (request.user.role === 'USER' && Number(targetUserId) !== Number(request.user.userId)) {
@@ -165,9 +213,10 @@ class PayrollController {
                 }
             }
 
-            const structure = await payrollService.getSalaryStructure(Number(companyId), targetUserId);
+            const targetDate = request.query?.date || null;
+            const structure = await payrollService.getSalaryStructure(Number(companyId), targetUserId, targetDate);
             if (!structure) {
-                return reply.code(404).send({ success: false, message: "Salary structure not configured for this employee." });
+                return reply.code(200).send({ success: true, data: null, message: "Salary structure not configured for this employee." });
             }
 
             reply.code(200).send({ success: true, data: structure });
@@ -179,10 +228,7 @@ class PayrollController {
     // 6. Get all employee salary structures in company
     async getAllSalaryStructures(request, reply) {
         try {
-            let companyId = request.user.companyId;
-            if (request.user.role === 'OWNER' && request.query.companyId) {
-                companyId = Number(request.query.companyId);
-            }
+            const companyId = await getEffectiveCompanyId(request);
 
             const canManage = await checkCanManagePayroll(request.user);
             if (!canManage) {
@@ -199,10 +245,7 @@ class PayrollController {
     // 7. Generate monthly payroll / payslips
     async generateMonthlyPayroll(request, reply) {
         try {
-            let companyId = request.user.companyId;
-            if (request.user.role === 'OWNER' && request.body.companyId) {
-                companyId = Number(request.body.companyId);
-            }
+            const companyId = await getEffectiveCompanyId(request);
 
             const canManage = await checkCanManagePayroll(request.user);
             if (!canManage) {
@@ -210,7 +253,11 @@ class PayrollController {
             }
 
             const result = await payrollService.generateMonthlyPayroll(Number(companyId), request.body);
-            reply.code(201).send({ success: true, message: `Successfully generated ${result.count} payslip(s)`, data: result });
+            reply.code(201).send({
+                success: true,
+                message: result.message || `Successfully generated ${result.count} payslip(s)`,
+                data: result
+            });
         } catch (error) {
             reply.code(400).send({ success: false, message: error.message });
         }
@@ -219,10 +266,7 @@ class PayrollController {
     // 8. Get payslips list
     async getPayslips(request, reply) {
         try {
-            let companyId = request.user.companyId;
-            if (request.user.role === 'OWNER' && request.query.companyId) {
-                companyId = Number(request.query.companyId);
-            }
+            const companyId = await getEffectiveCompanyId(request);
 
             const filters = { ...request.query };
 
@@ -242,10 +286,7 @@ class PayrollController {
     // 9. Get payslip by ID
     async getPayslipById(request, reply) {
         try {
-            let companyId = request.user.companyId;
-            if (request.user.role === 'OWNER' && request.query.companyId) {
-                companyId = Number(request.query.companyId);
-            }
+            const companyId = await getEffectiveCompanyId(request);
 
             const payslip = await payrollService.getPayslipById(Number(request.params.id), Number(companyId));
             if (!payslip) {
@@ -267,9 +308,9 @@ class PayrollController {
     // 10. Update payslip status
     async updatePayslipStatus(request, reply) {
         try {
-            let companyId = request.user.companyId;
-            if (request.user.role === 'OWNER' && request.body.companyId) {
-                companyId = Number(request.body.companyId);
+            const companyId = await getEffectiveCompanyId(request);
+            if (!companyId) {
+                return reply.code(400).send({ success: false, message: "Company ID is required" });
             }
 
             const canManage = await checkCanManagePayroll(request.user);
@@ -284,6 +325,25 @@ class PayrollController {
             }
 
             reply.code(200).send({ success: true, message: "Payslip status updated", data: updated });
+        } catch (error) {
+            reply.code(400).send({ success: false, message: error.message });
+        }
+    }
+
+    async deletePayslip(request, reply) {
+        try {
+            const companyId = await getEffectiveCompanyId(request);
+            if (!companyId) {
+                return reply.code(400).send({ success: false, message: "Company ID is required" });
+            }
+
+            const canManage = await checkCanManagePayroll(request.user);
+            if (!canManage) {
+                return reply.code(403).send({ success: false, message: "Forbidden: Not authorized to delete payslips." });
+            }
+
+            await payrollService.deletePayslip(Number(request.params.id), Number(companyId));
+            reply.code(200).send({ success: true, message: "Payslip deleted successfully" });
         } catch (error) {
             reply.code(400).send({ success: false, message: error.message });
         }

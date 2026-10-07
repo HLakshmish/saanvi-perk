@@ -1,16 +1,27 @@
 const getSettingsSchema = {
-    description: 'Get company payroll settings (dynamic percentages)',
+    description: 'Get company payroll settings (dynamic percentages, optionally effective for a date)',
     tags: ['Payroll'],
-    summary: 'Get payroll settings'
+    summary: 'Get payroll settings',
+    querystring: {
+        type: 'object',
+        properties: {
+            companyId: { type: 'number' },
+            date: { type: 'string' }
+        }
+    }
 };
 
 const updateSettingsSchema = {
-    description: 'Update company payroll settings (dynamic percentages)',
+    description: 'Update company payroll settings (dynamic percentages with effective date)',
     tags: ['Payroll'],
     summary: 'Update payroll settings',
     body: {
         type: 'object',
         properties: {
+            companyId: { type: 'number' },
+            effectiveFrom: { type: 'string' },
+            versionName: { type: 'string' },
+            remarks: { type: 'string' },
             basicPercentage: { type: 'number', minimum: 0, maximum: 100 },
             hraPercentage: { type: 'number', minimum: 0, maximum: 100 },
             otherAllowancesPercentage: { type: 'number', minimum: 0, maximum: 100 },
@@ -28,16 +39,18 @@ const updateSettingsSchema = {
 };
 
 const calculateBreakupSchema = {
-    description: 'Calculate salary breakup based on CTC and company dynamic rates',
+    description: 'Calculate salary breakup based on CTC and company dynamic rates for an effective date',
     tags: ['Payroll'],
     summary: 'Calculate salary breakup',
     body: {
         type: 'object',
         properties: {
+            companyId: { type: 'number' },
             annualCtc: { type: 'number' },
             monthlyCtc: { type: 'number' },
             monthlyGross: { type: 'number' },
-            basicAmount: { type: 'number' }
+            basicAmount: { type: 'number' },
+            effectiveDate: { type: 'string' }
         }
     }
 };
@@ -50,6 +63,7 @@ const assignSalarySchema = {
         type: 'object',
         required: ['userId'],
         properties: {
+            companyId: { type: 'number' },
             userId: { type: 'number' },
             annualCtc: { type: 'number' },
             monthlyCtc: { type: 'number' },
@@ -71,6 +85,7 @@ const getSalaryStructuresSchema = {
     querystring: {
         type: 'object',
         properties: {
+            companyId: { type: 'number' },
             search: { type: 'string' }
         }
     }
@@ -84,6 +99,7 @@ const generatePayslipsSchema = {
         type: 'object',
         required: ['month', 'year'],
         properties: {
+            companyId: { type: 'number' },
             month: { type: 'number', minimum: 1, maximum: 12 },
             year: { type: 'number', minimum: 2000 },
             userIds: {
@@ -101,6 +117,7 @@ const getPayslipsSchema = {
     querystring: {
         type: 'object',
         properties: {
+            companyId: { type: 'number' },
             userId: { type: 'number' },
             month: { type: 'number' },
             year: { type: 'number' },

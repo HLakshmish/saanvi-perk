@@ -9,6 +9,7 @@ import {
   Sliders,
   ArrowRight,
   Sparkles,
+  Calendar,
 } from "lucide-react";
 import { PayrollSettings, SalaryBreakupResult } from "../types/payroll.types";
 import { calculateSalaryBreakup, getPayrollSettings } from "../api/payroll.api";
@@ -24,8 +25,11 @@ export const SalaryBreakupCalculator: React.FC<SalaryBreakupCalculatorProps> = (
   onNavigateToSettings,
 }) => {
   const [inputType, setInputType] = useState<"annual" | "monthly">("annual");
-  // Default to 858,660 (the exact sample from the spreadsheet user provided!)
-  const [inputValue, setInputValue] = useState<string>("858660");
+  const [inputValue, setInputValue] = useState<string>("");
+  const [effectiveDate, setEffectiveDate] = useState<string>(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  });
   const [settings, setSettings] = useState<PayrollSettings | null>(null);
   const [calculationResult, setCalculationResult] = useState<SalaryBreakupResult | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -34,16 +38,16 @@ export const SalaryBreakupCalculator: React.FC<SalaryBreakupCalculatorProps> = (
   const presets = [
     { label: "₹3.6 LPA", annual: 360000 },
     { label: "₹6.0 LPA", annual: 600000 },
-    { label: "₹8.58 LPA (Sample)", annual: 858660 },
+    { label: "₹9.0 LPA", annual: 900000 },
     { label: "₹12.0 LPA", annual: 1200000 },
     { label: "₹18.0 LPA", annual: 1800000 },
     { label: "₹24.0 LPA", annual: 2400000 },
   ];
 
-  // Load configured company settings
+  // Load configured company settings for the selected effective date
   useEffect(() => {
     let isMounted = true;
-    getPayrollSettings().then((res) => {
+    getPayrollSettings(effectiveDate).then((res) => {
       if (isMounted && res.success && res.data) {
         setSettings(res.data);
       }
@@ -51,10 +55,10 @@ export const SalaryBreakupCalculator: React.FC<SalaryBreakupCalculatorProps> = (
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [effectiveDate]);
 
-  // Compute calculation whenever input or settings change
-  const computeBreakup = async (val: string, type: "annual" | "monthly") => {
+  // Compute calculation whenever input, effectiveDate, or settings change
+  const computeBreakup = async (val: string, type: "annual" | "monthly", dateStr: string) => {
     const num = parseFloat(val.replace(/,/g, ""));
     if (isNaN(num) || num <= 0) {
       setCalculationResult(null);
@@ -63,7 +67,10 @@ export const SalaryBreakupCalculator: React.FC<SalaryBreakupCalculatorProps> = (
 
     setIsLoading(true);
     try {
-      const payload = type === "annual" ? { annualCtc: num } : { monthlyCtc: num };
+      const payload =
+        type === "annual"
+          ? { annualCtc: num, effectiveDate: dateStr || undefined }
+          : { monthlyCtc: num, effectiveDate: dateStr || undefined };
       const res = await calculateSalaryBreakup(payload);
       if (res.success && res.data) {
         setCalculationResult(res.data);
@@ -81,8 +88,8 @@ export const SalaryBreakupCalculator: React.FC<SalaryBreakupCalculatorProps> = (
   };
 
   useEffect(() => {
-    computeBreakup(inputValue, inputType);
-  }, [inputValue, inputType, settings]);
+    computeBreakup(inputValue, inputType, effectiveDate);
+  }, [inputValue, inputType, effectiveDate, settings]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.replace(/[^0-9.]/g, "");
@@ -225,18 +232,31 @@ export const SalaryBreakupCalculator: React.FC<SalaryBreakupCalculatorProps> = (
           </div>
         </div>
 
-        {/* Quick presets pills */}
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          <span className="text-xs font-medium text-slate-300 mr-1">Quick Presets:</span>
-          {presets.map((p) => (
-            <button
-              key={p.label}
-              onClick={() => handleSelectPreset(p.annual)}
-              className="text-xs px-3 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-slate-200 hover:text-white border border-white/5 transition-all font-medium cursor-pointer"
-            >
-              {p.label}
-            </button>
-          ))}
+        {/* Quick presets pills & As of Date selector */}
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-medium text-slate-300 mr-1">Quick Presets:</span>
+            {presets.map((p) => (
+              <button
+                key={p.label}
+                onClick={() => handleSelectPreset(p.annual)}
+                className="text-xs px-3 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-slate-200 hover:text-white border border-white/5 transition-all font-medium cursor-pointer"
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2 bg-black/35 px-3 py-1.5 rounded-xl border border-white/15">
+            <Calendar className="w-3.5 h-3.5 text-amber-400" />
+            <span className="text-[11px] text-slate-300 font-semibold uppercase tracking-wider">Policy As Of:</span>
+            <input
+              type="date"
+              value={effectiveDate}
+              onChange={(e) => setEffectiveDate(e.target.value)}
+              className="bg-transparent text-white font-bold text-xs focus:outline-none cursor-pointer [color-scheme:dark]"
+            />
+          </div>
         </div>
       </div>
 
@@ -251,11 +271,16 @@ export const SalaryBreakupCalculator: React.FC<SalaryBreakupCalculatorProps> = (
               Salary Breakup Calculator
             </h3>
             <span className="text-xs text-slate-400 font-medium ml-2 hidden md:inline">
-              (Live rates dynamically configured per company policy)
+              (Live rates for policy effective as of {effectiveDate ? new Date(effectiveDate).toLocaleDateString("en-IN") : "today"})
             </span>
           </div>
 
-          <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
+          <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-500">
+            {settings?.versionName && (
+              <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-800 px-2.5 py-1 rounded-lg border border-amber-200 font-bold">
+                {settings.versionName}
+              </span>
+            )}
             <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-lg border border-emerald-200">
               <ShieldCheck className="w-3.5 h-3.5" />
               PF Ceiling: {rates.usePfWageCeiling ? `₹${rates.statutoryPfWageLimit.toLocaleString()}` : "Uncapped"}
