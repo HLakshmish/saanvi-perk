@@ -26,7 +26,7 @@ import { LeavesView } from "@/features/leaves";
 import { SettingsView } from "@/features/settings";
 import { AssetsView } from "@/features/assets";
 import { ReportsView } from "./ReportsView";
-import { PayrollView } from "@/features/payroll";
+import { PayrollView, EmployeePayslipsView } from "@/features/payroll";
 import { RefreshCw, HelpCircle, ArrowLeft } from "lucide-react";
 
 interface DashboardViewProps {
@@ -238,8 +238,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       case "holidays-leaves":
         return <LeavesView />;
       case "payroll":
+      case "payslips":
         if (role === "employee") {
-          return <div className="text-sm font-semibold text-slate-500">Access Denied.</div>;
+          return (
+            <EmployeePayslipsView
+              currentUserId={getCurrentUserId() || undefined}
+              currentUserName={resolvedUserName}
+            />
+          );
         }
         return (
           <PayrollView

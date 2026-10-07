@@ -128,6 +128,12 @@ class PayrollService {
      */
     calculateSalaryBreakup({ annualCtc, monthlyCtc, monthlyGross, basicAmount }, settings) {
         const rates = { ...this.getDefaultSettings(), ...(settings || {}) };
+        const usePfCeiling = rates.usePfWageCeiling !== undefined ? Boolean(rates.usePfWageCeiling) : true;
+        const pfWageLimit = Number(rates.statutoryPfWageLimit || 15000.00);
+        const epfRate = Number(rates.employeePfRate || 12.00);
+        const employerPfRate = Number(rates.employerPfRate || 13.00);
+        const pfCapAmount = Math.round(pfWageLimit * (epfRate / 100));
+        const esiThreshold = Number(rates.statutoryEsiGrossLimit || 21000.00);
 
         let mCtc = 0;
         let aCtc = 0;
@@ -146,11 +152,10 @@ class PayrollService {
                 : Math.round(mGross * (rates.basicPercentage / 100) * 100) / 100;
             
             // Statutory PF & ESI wage limits
-            const pfWage = basicM > 15000 ? 15000 : basicM;
-            const esiThreshold = Number(rates.statutoryEsiGrossLimit || 21000);
+            const pfWage = usePfCeiling && basicM > pfWageLimit ? pfWageLimit : basicM;
             
-            const employerPfM = Math.round(pfWage * (rates.employerPfRate / 100));
-            // ESI Contribution: If base amount is more than 21000/m, Employer ESI is 0
+            const employerPfM = Math.round(pfWage * (employerPfRate / 100));
+            // ESI Contribution: If base amount is more than threshold, Employer ESI is 0
             const employerEsiM = basicM > esiThreshold ? 0 : Math.round(basicM * (rates.employerEsiRate / 100));
             const gratuityM = Math.round(basicM * (rates.gratuityRate / 100));
             
@@ -170,13 +175,11 @@ class PayrollService {
             basicMonthly = Math.round(mCtc * (rates.basicPercentage / 100) * 100) / 100;
         }
 
-        // Statutory PF wage base (EPF wage capped at 15000 if basic is more than 15000)
-        const pfWage = basicMonthly > 15000 ? 15000 : basicMonthly;
-        const esiThreshold = Number(rates.statutoryEsiGrossLimit || 21000);
+        // Statutory PF wage base
+        const pfWage = usePfCeiling && basicMonthly > pfWageLimit ? pfWageLimit : basicMonthly;
 
         // Employer Contributions
-        // ESI Rule: if base amount (basic monthly) is more than 21,000/m, Employer ESI is 0
-        const employerPfMonthly = Math.round(pfWage * (rates.employerPfRate / 100));
+        const employerPfMonthly = Math.round(pfWage * (employerPfRate / 100));
         const employerEsiMonthly = basicMonthly > esiThreshold ? 0 : Math.round(basicMonthly * (rates.employerEsiRate / 100));
         const gratuityMonthly = Math.round(basicMonthly * (rates.gratuityRate / 100));
         const totalEmployerContribution = employerPfMonthly + employerEsiMonthly + gratuityMonthly;
@@ -190,11 +193,11 @@ class PayrollService {
         const otherAllowancesMonthly = Math.round((remainingGross - hraMonthly) * 100) / 100;
 
         // Employee Deductions
-        // EPF Contribution Rate: If basic is more than 15000/m take 1800 only. 12% applies only if basic <= 15000/m
-        const employeePfMonthly = basicMonthly > 15000 
-            ? 1800 
-            : Math.round(basicMonthly * (Number(rates.employeePfRate || 12.00) / 100));
-        // ESI Contribution: If base amount is more than 21000/m, Employee ESI is 0
+        // EPF Contribution: If ceiling is enforced and basic > pfWageLimit, capped at pfCapAmount; otherwise % on basic
+        const employeePfMonthly = usePfCeiling && basicMonthly > pfWageLimit 
+            ? pfCapAmount 
+            : Math.round(basicMonthly * (epfRate / 100));
+        // ESI Contribution: If base amount is more than statutory threshold, Employee ESI is 0
         const employeeEsiMonthly = basicMonthly > esiThreshold ? 0 : Math.round(basicMonthly * (rates.employeeEsiRate / 100));
         const professionalTaxMonthly = Number(rates.professionalTax || 200.00);
         const totalDeductionsMonthly = employeePfMonthly + employeeEsiMonthly + professionalTaxMonthly;
@@ -222,14 +225,15 @@ class PayrollService {
         return {
             ratesApplied: {
                 basicPercentage: rates.basicPercentage,
-                employeePfRate: rates.employeePfRate,
+                employeePfRate: epfRate,
                 employeeEsiRate: rates.employeeEsiRate,
                 professionalTax: rates.professionalTax,
-                employerPfRate: rates.employerPfRate,
+                employerPfRate: employerPfRate,
                 employerEsiRate: rates.employerEsiRate,
                 gratuityRate: rates.gratuityRate,
-                statutoryPfWageLimit: rates.statutoryPfWageLimit,
-                usePfWageCeiling: rates.usePfWageCeiling
+                statutoryPfWageLimit: pfWageLimit,
+                usePfWageCeiling: usePfCeiling,
+                statutoryEsiGrossLimit: esiThreshold
             },
             monthly: {
                 ctc: mCtc,
@@ -519,12 +523,17 @@ class PayrollService {
             const otherAllowancesEarned = Math.round((otherAllowancesMonthly || 0) * payFactor * 100) / 100;
             const grossEarned = basicEarned + hraEarned + otherAllowancesEarned;
 
-            // EPF Contribution: If basic is more than 15000/m take 1800 only. 12% applies only if basic <= 15000/m
+            // EPF Contribution: If basic exceeds pfWageLimit and ceiling enabled, cap at pfCapAmount
+            const usePfCeiling = settings?.usePfWageCeiling !== undefined ? Boolean(settings.usePfWageCeiling) : true;
+            const pfWageLimit = Number(settings?.statutoryPfWageLimit || 15000.00);
+            const epfRate = Number(settings?.employeePfRate || 12.00);
+            const pfCapAmount = Math.round(pfWageLimit * (epfRate / 100));
+
             let baseMonthlyPf = employeePfMonthly;
-            if (basicMonthly > 15000) {
-                baseMonthlyPf = 1800;
-            } else if (basicMonthly <= 15000 && (!baseMonthlyPf || baseMonthlyPf > 1800)) {
-                baseMonthlyPf = Math.round(basicMonthly * (Number(settings.employeePfRate || 12.00) / 100));
+            if (usePfCeiling && basicMonthly > pfWageLimit) {
+                baseMonthlyPf = pfCapAmount;
+            } else if (!baseMonthlyPf || (usePfCeiling && baseMonthlyPf > pfCapAmount)) {
+                baseMonthlyPf = Math.round(basicMonthly * (epfRate / 100));
             }
             const employeePf = Math.round(baseMonthlyPf * payFactor * 100) / 100;
 

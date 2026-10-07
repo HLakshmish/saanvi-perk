@@ -291,17 +291,7 @@ class PayrollRepository {
                     WHERE h.user_id = s.user_id AND h.company_id = s.company_id AND h.basic_monthly IS NULL;
                 `).catch(() => {});
 
-                // Normalize any existing salary structures to ensure basic > 15000 has employee_pf capped at 1800
-                await prisma.$executeRawUnsafe(`
-                    UPDATE employee_salary_structures
-                    SET employee_pf_monthly = 1800.00,
-                        employee_pf_annual = 21600.00,
-                        total_deductions_monthly = 1800.00 + employee_esi_monthly + professional_tax_monthly,
-                        total_deductions_annual = 21600.00 + employee_esi_annual + professional_tax_annual,
-                        net_salary_monthly = monthly_gross - (1800.00 + employee_esi_monthly + professional_tax_monthly),
-                        net_salary_annual = annual_gross - (21600.00 + employee_esi_annual + professional_tax_annual)
-                    WHERE basic_monthly > 15000 AND employee_pf_monthly > 1800;
-                `).catch(() => {});
+                // Note: PF cap normalization is managed dynamically by payroll service based on company settings
 
                 // Normalize any existing salary structures to ensure basic > 21000 has ESI (both employee & employer) set to 0
                 await prisma.$executeRawUnsafe(`
@@ -620,7 +610,7 @@ class PayrollRepository {
         // If targetDate is provided, look in employee_salary_history for the structure active on that date
         if (targetDate) {
             const histRows = await prisma.$queryRawUnsafe(`
-                SELECT h.id, h.company_id, h.user_id,
+                SELECT s.id as id, h.id as history_id, h.company_id, h.user_id,
                        h.new_annual_ctc as annual_ctc, h.new_monthly_ctc as monthly_ctc,
                        h.monthly_gross, h.annual_gross,
                        h.basic_monthly, h.basic_annual,
@@ -639,6 +629,7 @@ class PayrollRepository {
                        d.designation_name, dept.department_name
                 FROM employee_salary_history h
                 JOIN users u ON h.user_id = u.user_id
+                LEFT JOIN employee_salary_structures s ON h.user_id = s.user_id
                 LEFT JOIN designations d ON u.designation_id = d.designation_id
                 LEFT JOIN departments dept ON u.department_id = dept.department_id
                 WHERE h.user_id = $1 AND h.company_id = $2 
@@ -929,6 +920,28 @@ class PayrollRepository {
 
     async upsertPayslip(companyId, slip) {
         await this.ensureTables();
+
+        // Safely validate that salaryStructureId actually exists in employee_salary_structures
+        let validStructureId = null;
+        if (slip.salaryStructureId) {
+            const check = await prisma.$queryRawUnsafe(
+                `SELECT id FROM employee_salary_structures WHERE id = $1 LIMIT 1`,
+                Number(slip.salaryStructureId)
+            );
+            if (check && check.length > 0) {
+                validStructureId = check[0].id;
+            }
+        }
+        if (!validStructureId && slip.userId) {
+            const checkUser = await prisma.$queryRawUnsafe(
+                `SELECT id FROM employee_salary_structures WHERE user_id = $1 LIMIT 1`,
+                Number(slip.userId)
+            );
+            if (checkUser && checkUser.length > 0) {
+                validStructureId = checkUser[0].id;
+            }
+        }
+
         const rows = await prisma.$queryRawUnsafe(`
             INSERT INTO employee_payslips (
                 company_id, user_id, salary_structure_id, month, year,
@@ -949,6 +962,7 @@ class PayrollRepository {
                 COALESCE($29, 'GENERATED'), $30
             )
             ON CONFLICT (user_id, month, year) DO UPDATE SET
+                salary_structure_id = EXCLUDED.salary_structure_id,
                 working_days = EXCLUDED.working_days,
                 paid_days = EXCLUDED.paid_days,
                 loss_of_pay_days = EXCLUDED.loss_of_pay_days,
@@ -976,7 +990,7 @@ class PayrollRepository {
                 updated_at = CURRENT_TIMESTAMP
             RETURNING *
         `,
-            companyId, slip.userId, slip.salaryStructureId || null, slip.month, slip.year,
+            companyId, slip.userId, validStructureId, slip.month, slip.year,
             slip.workingDays, slip.paidDays, slip.lossOfPayDays,
             slip.basicEarned, slip.hraEarned, slip.otherAllowancesEarned, slip.grossEarned,
             slip.employeePf, slip.employeeEsi, slip.professionalTax, slip.totalDeductions,
@@ -997,9 +1011,11 @@ class PayrollRepository {
                    d.designation_name, dept.department_name,
                    b.bank_name, b.account_number, b.ifsc_code,
                    pf.uan_number, pf.pf_number, esi.esi_number,
-                   pi.pan_number
+                   pi.pan_number,
+                   c.company_name, c.company_code, c.company_logo
             FROM employee_payslips p
             JOIN users u ON p.user_id = u.user_id
+            JOIN company_details c ON p.company_id = c.company_id
             LEFT JOIN designations d ON u.designation_id = d.designation_id
             LEFT JOIN departments dept ON u.department_id = dept.department_id
             LEFT JOIN bank_details b ON u.user_id = b.user_id
