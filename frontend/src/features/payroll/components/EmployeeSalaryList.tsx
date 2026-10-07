@@ -25,15 +25,19 @@ import { snackbar as toast } from "@/components/ui/snackbar";
 
 interface EmployeeSalaryListProps {
   onOpenCalculator?: () => void;
+  prefillCtc?: number;
+  prefillIsAnnual?: boolean;
 }
 
 export const EmployeeSalaryList: React.FC<EmployeeSalaryListProps> = ({
   onOpenCalculator,
+  prefillCtc,
+  prefillIsAnnual = true,
 }) => {
   const [salaries, setSalaries] = useState<EmployeeSalaryStructure[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [isAssignModalOpen, setIsAssignModalOpen] = useState<boolean>(false);
+  const [viewMode, setViewMode] = useState<"list" | "assign">("list");
   const [selectedEmployeeForHike, setSelectedEmployeeForHike] = useState<EmployeeSalaryStructure | null>(null);
   const [selectedStructure, setSelectedStructure] = useState<EmployeeSalaryStructure | null>(null);
 
@@ -42,6 +46,13 @@ export const EmployeeSalaryList: React.FC<EmployeeSalaryListProps> = ({
   const [selectedEmployeeForHistory, setSelectedEmployeeForHistory] = useState<EmployeeSalaryStructure | null>(null);
   const [historyList, setHistoryList] = useState<SalaryHistoryItem[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (prefillCtc && prefillCtc > 0) {
+      setSelectedEmployeeForHike(null);
+      setViewMode("assign");
+    }
+  }, [prefillCtc]);
 
   const fetchSalaries = async () => {
     setIsLoading(true);
@@ -96,6 +107,27 @@ export const EmployeeSalaryList: React.FC<EmployeeSalaryListProps> = ({
     }).format(Math.round(num));
   };
 
+  if (viewMode === "assign") {
+    return (
+      <AssignSalaryModal
+        isOpen={true}
+        onClose={() => {
+          setViewMode("list");
+          setSelectedEmployeeForHike(null);
+        }}
+        onSuccess={() => {
+          fetchSalaries();
+          setViewMode("list");
+          setSelectedEmployeeForHike(null);
+        }}
+        prefillCtc={prefillCtc}
+        prefillIsAnnual={prefillIsAnnual}
+        prefillUserId={selectedEmployeeForHike?.user_id}
+        existingStructures={salaries}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Top Action Bar */}
@@ -127,13 +159,26 @@ export const EmployeeSalaryList: React.FC<EmployeeSalaryListProps> = ({
           <button
             onClick={() => {
               setSelectedEmployeeForHike(null);
-              setIsAssignModalOpen(true);
+              setViewMode("assign");
             }}
             className="px-4 py-2 text-xs font-bold rounded-xl bg-brand-primary text-brand-btn-text hover:bg-brand-primary/90 transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            <span>Assign Salary (CTC)</span>
+            <span>Assign Salary / Hike (Page)</span>
           </button>
+        </div>
+      </div>
+
+      {/* Date Isolation Info Banner */}
+      <div className="bg-gradient-to-r from-indigo-50/80 via-slate-50 to-emerald-50/80 rounded-2xl p-4 border border-indigo-100/80 flex items-start gap-3 text-xs">
+        <Calendar className="w-4 h-4 text-brand-primary shrink-0 mt-0.5" />
+        <div className="text-slate-600 space-y-0.5">
+          <span className="font-bold text-slate-800">
+            Date-Effective CTC Management & Historical Isolation:
+          </span>
+          <p>
+            Assign or revise an employee&apos;s CTC with any starting effective date (e.g. 01/01/2024 or 05/04/2025). The salary breakup automatically uses the company statutory policy active on that date, and prior months&apos; payslips remain locked and unaltered.
+          </p>
         </div>
       </div>
 
@@ -149,7 +194,7 @@ export const EmployeeSalaryList: React.FC<EmployeeSalaryListProps> = ({
                 <th className="py-3.5 px-4 text-right">Monthly Gross</th>
                 <th className="py-3.5 px-4 text-right">Monthly Deductions</th>
                 <th className="py-3.5 px-4 text-right font-black text-emerald-700">Net Take-Home</th>
-                <th className="py-3.5 px-4 text-center">Effective Start</th>
+                <th className="py-3.5 px-4 text-center">Effective Period</th>
                 <th className="py-3.5 px-6 text-center">Action</th>
               </tr>
             </thead>
@@ -233,6 +278,13 @@ export const EmployeeSalaryList: React.FC<EmployeeSalaryListProps> = ({
                                 year: "numeric",
                               })}
                             </span>
+                            <div className="text-[10px] text-slate-500 mt-0.5">
+                              {sal.effective_to ? (
+                                <span>to {new Date(sal.effective_to).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</span>
+                              ) : (
+                                <span className="text-emerald-700 font-semibold">to Ongoing</span>
+                              )}
+                            </div>
                             {sal.revision_type && sal.revision_type !== "INITIAL" && (
                               <div className="text-[10px] font-semibold text-indigo-600 mt-0.5">
                                 {sal.revision_type.replace(/_/g, " ")}
@@ -258,7 +310,7 @@ export const EmployeeSalaryList: React.FC<EmployeeSalaryListProps> = ({
                               <button
                                 onClick={() => {
                                   setSelectedEmployeeForHike(sal);
-                                  setIsAssignModalOpen(true);
+                                  setViewMode("assign");
                                 }}
                                 title="Assign Salary Hike or Revise CTC"
                                 className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200/80 transition-all cursor-pointer"
@@ -278,7 +330,7 @@ export const EmployeeSalaryList: React.FC<EmployeeSalaryListProps> = ({
                             <button
                               onClick={() => {
                                 setSelectedEmployeeForHike(sal);
-                                setIsAssignModalOpen(true);
+                                setViewMode("assign");
                               }}
                               className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-brand-primary text-brand-btn-text hover:bg-brand-primary/90 transition-all shadow-xs cursor-pointer"
                             >
@@ -325,7 +377,7 @@ export const EmployeeSalaryList: React.FC<EmployeeSalaryListProps> = ({
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-brand-primary" />
                   <div>
-                    <span className="text-slate-500 font-medium">Effective Start Date: </span>
+                    <span className="text-slate-500 font-medium">Effective Period: </span>
                     <span className="font-bold text-slate-800">
                       {selectedStructure.effective_date
                         ? new Date(selectedStructure.effective_date).toLocaleDateString("en-IN", {
@@ -333,7 +385,15 @@ export const EmployeeSalaryList: React.FC<EmployeeSalaryListProps> = ({
                             month: "short",
                             year: "numeric",
                           })
-                        : "Current"}
+                        : "Start"}
+                      {" ➔ "}
+                      {selectedStructure.effective_to
+                        ? new Date(selectedStructure.effective_to).toLocaleDateString("en-IN", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          })
+                        : "Ongoing / Present"}
                     </span>
                   </div>
                 </div>
@@ -534,21 +594,52 @@ export const EmployeeSalaryList: React.FC<EmployeeSalaryListProps> = ({
                   {historyList.map((item, idx) => (
                     <div key={item.id || idx} className="relative">
                       {/* Timeline dot */}
-                      <div className="absolute -left-[27px] top-1.5 w-3 h-3 rounded-full bg-indigo-600 border-2 border-white ring-2 ring-indigo-100" />
+                      <div className={`absolute -left-[27px] top-1.5 w-3 h-3 rounded-full border-2 border-white ring-2 ${
+                        idx === 0 ? "bg-emerald-600 ring-emerald-100" : "bg-indigo-600 ring-indigo-100"
+                      }`} />
 
                       <div className="bg-slate-50/80 rounded-2xl p-4 border border-slate-200/70 space-y-2">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                            <Calendar className="w-3.5 h-3.5 text-slate-500" />
-                            Starts from:{" "}
-                            {item.effective_date
-                              ? new Date(item.effective_date).toLocaleDateString("en-IN", {
-                                  day: "2-digit",
-                                  month: "short",
-                                  year: "numeric",
-                                })
-                              : "Current"}
-                          </span>
+                          <div className="flex items-center flex-wrap gap-1.5 text-xs">
+                            <span className="font-bold text-slate-800 flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs">
+                              <Calendar className="w-3.5 h-3.5 text-indigo-600" />
+                              <span className="text-[10px] text-slate-400 font-semibold uppercase">From:</span>
+                              <span className="font-bold text-slate-900">
+                                {item.effective_date
+                                  ? new Date(item.effective_date).toLocaleDateString("en-IN", {
+                                      day: "2-digit",
+                                      month: "short",
+                                      year: "numeric",
+                                    })
+                                  : "Start"}
+                              </span>
+                            </span>
+                            <span className="text-slate-400 font-bold">➔</span>
+                            <span
+                              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border shadow-2xs ${
+                                (item.computed_effective_to || item.effective_to)
+                                  ? "bg-white border-slate-200 text-slate-900 font-bold"
+                                  : "bg-emerald-50 border-emerald-200 text-emerald-800 font-bold"
+                              }`}
+                            >
+                              <span className="text-[10px] text-slate-400 font-semibold uppercase">To:</span>
+                              {(item.computed_effective_to || item.effective_to) ? (
+                                <span>
+                                  {new Date(
+                                    (item.computed_effective_to || item.effective_to)!
+                                  ).toLocaleDateString("en-IN", {
+                                    day: "2-digit",
+                                    month: "short",
+                                    year: "numeric",
+                                  })}
+                                </span>
+                              ) : (
+                                <span className="text-emerald-700 font-extrabold">
+                                  Ongoing / Present
+                                </span>
+                              )}
+                            </span>
+                          </div>
                           {Number(item.hike_percentage) > 0 ? (
                             <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800">
                               <TrendingUp className="w-3 h-3 text-emerald-600" />
@@ -608,7 +699,7 @@ export const EmployeeSalaryList: React.FC<EmployeeSalaryListProps> = ({
                   setIsHistoryModalOpen(false);
                   setSelectedEmployeeForHistory(null);
                   setSelectedEmployeeForHike(emp);
-                  setIsAssignModalOpen(true);
+                  setViewMode("assign");
                 }}
                 className="px-3 py-1.5 text-xs font-bold rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition-all flex items-center gap-1.5 cursor-pointer"
               >
@@ -628,21 +719,6 @@ export const EmployeeSalaryList: React.FC<EmployeeSalaryListProps> = ({
           </div>
         </div>
       )}
-
-      {/* Assign Salary Modal */}
-      <AssignSalaryModal
-        isOpen={isAssignModalOpen}
-        onClose={() => {
-          setIsAssignModalOpen(false);
-          setSelectedEmployeeForHike(null);
-        }}
-        onSuccess={() => {
-          fetchSalaries();
-          setSelectedEmployeeForHike(null);
-        }}
-        prefillUserId={selectedEmployeeForHike?.user_id}
-        existingStructures={salaries}
-      />
     </div>
   );
 };

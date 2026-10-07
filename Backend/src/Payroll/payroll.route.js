@@ -16,9 +16,11 @@ async function payrollRoutes(fastify, options) {
         preValidation: [fastify.authenticate]
     });
 
-    // 1. Settings (dynamic percentages)
+    // 1. Settings (dynamic percentages with date versioning)
     fastify.get("/settings", opts(getSettingsSchema), payrollController.getSettings.bind(payrollController));
+    fastify.get("/settings/history", opts(), payrollController.getSettingsHistory.bind(payrollController));
     fastify.put("/settings", opts(updateSettingsSchema), payrollController.updateSettings.bind(payrollController));
+    fastify.delete("/settings/versions/:id", opts(), payrollController.deleteSettingsVersion.bind(payrollController));
 
     // 2. Salary Breakup Calculator
     fastify.post("/calculate", opts(calculateBreakupSchema), payrollController.calculateBreakup.bind(payrollController));
@@ -34,6 +36,7 @@ async function payrollRoutes(fastify, options) {
     fastify.get("/payslips", opts(getPayslipsSchema), payrollController.getPayslips.bind(payrollController));
     fastify.get("/payslips/:id", opts(), payrollController.getPayslipById.bind(payrollController));
     fastify.put("/payslips/:id/status", opts(updatePayslipStatusSchema), payrollController.updatePayslipStatus.bind(payrollController));
+    fastify.delete("/payslips/:id", opts(), payrollController.deletePayslip.bind(payrollController));
 }
 
 module.exports = payrollRoutes;

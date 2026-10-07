@@ -3,6 +3,7 @@
 import React from "react";
 import { X, Printer, Download, Building2, User, Calendar, CheckCircle2 } from "lucide-react";
 import { Payslip } from "../types/payroll.types";
+import { downloadPayslipPdf } from "../utils/payslipPdf";
 
 interface PayslipModalProps {
   payslip: Payslip | null;
@@ -56,11 +57,19 @@ export const PayslipModal: React.FC<PayslipModalProps> = ({ payslip, onClose }) 
           </span>
           <div className="flex items-center gap-2">
             <button
+              onClick={() => downloadPayslipPdf(payslip)}
+              className="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold inline-flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
+              title="Download Payslip as PDF"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Download PDF</span>
+            </button>
+            <button
               onClick={handlePrint}
               className="px-3.5 py-1.5 rounded-xl bg-brand-primary text-brand-btn-text hover:bg-brand-primary/90 text-xs font-bold inline-flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
             >
               <Printer className="w-3.5 h-3.5" />
-              <span>Print / PDF</span>
+              <span>Print</span>
             </button>
             <button
               onClick={onClose}
@@ -77,10 +86,10 @@ export const PayslipModal: React.FC<PayslipModalProps> = ({ payslip, onClose }) 
           <div className="border-b-2 border-slate-800 pb-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h1 className="text-2xl font-black tracking-tight text-slate-900 uppercase">
-                {payslip.company_name || "SAANVI PERK TECH"}
+                {payslip.company_name || "Company Payslip"}
               </h1>
               <p className="text-xs text-slate-500 font-medium mt-0.5">
-                Company Code: {payslip.company_code || "SAANVI"} • Official Payslip
+                {payslip.company_code ? `Company Code: ${payslip.company_code} • Official Payslip` : "Official Payslip"}
               </p>
             </div>
             <div className="text-right">
@@ -89,6 +98,11 @@ export const PayslipModal: React.FC<PayslipModalProps> = ({ payslip, onClose }) 
               </div>
               <div className="text-[11px] text-slate-500 font-medium mt-1">
                 Status: <span className="font-bold text-emerald-600">{payslip.payment_status}</span>
+                {payslip.rates_applied?.effectiveDate && (
+                  <span className="ml-2 text-slate-400 font-normal">
+                    • Policy Date: {new Date(payslip.rates_applied.effectiveDate).toLocaleDateString("en-IN")}
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -105,28 +119,40 @@ export const PayslipModal: React.FC<PayslipModalProps> = ({ payslip, onClose }) 
             </div>
             <div>
               <div className="text-slate-400 font-medium text-[11px]">Designation</div>
-              <div className="font-bold text-slate-900 mt-0.5">{payslip.designation_name || "Associate"}</div>
+              <div className="font-bold text-slate-900 mt-0.5">{payslip.designation_name || "—"}</div>
             </div>
             <div>
               <div className="text-slate-400 font-medium text-[11px]">Department</div>
-              <div className="font-bold text-slate-900 mt-0.5">{payslip.department_name || "Operations"}</div>
+              <div className="font-bold text-slate-900 mt-0.5">{payslip.department_name || "—"}</div>
             </div>
 
             <div>
+              <div className="text-slate-400 font-medium text-[11px]">Joining Date</div>
+              <div className="font-bold text-indigo-900 mt-0.5">
+                {payslip.joining_date
+                  ? new Date(payslip.joining_date).toLocaleDateString("en-IN", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })
+                  : "—"}
+              </div>
+            </div>
+            <div>
               <div className="text-slate-400 font-medium text-[11px]">Bank Name</div>
-              <div className="font-bold text-slate-900 mt-0.5">{payslip.bank_name || "HDFC Bank"}</div>
+              <div className="font-bold text-slate-900 mt-0.5">{payslip.bank_name || "—"}</div>
             </div>
             <div>
               <div className="text-slate-400 font-medium text-[11px]">Bank A/C No.</div>
-              <div className="font-bold text-slate-900 mt-0.5">{payslip.account_number || "••••••••1234"}</div>
+              <div className="font-bold text-slate-900 mt-0.5">{payslip.account_number || "—"}</div>
             </div>
             <div>
               <div className="text-slate-400 font-medium text-[11px]">UAN / PF No.</div>
-              <div className="font-bold text-slate-900 mt-0.5">{payslip.uan_number || payslip.pf_number || "101239847291"}</div>
+              <div className="font-bold text-slate-900 mt-0.5">{payslip.uan_number || payslip.pf_number || "—"}</div>
             </div>
             <div>
               <div className="text-slate-400 font-medium text-[11px]">PAN / ESI No.</div>
-              <div className="font-bold text-slate-900 mt-0.5">{payslip.pan_number || "ABCDE1234F"}</div>
+              <div className="font-bold text-slate-900 mt-0.5">{payslip.pan_number || payslip.esi_number || "—"}</div>
             </div>
 
             <div>
@@ -161,7 +187,9 @@ export const PayslipModal: React.FC<PayslipModalProps> = ({ payslip, onClose }) 
               </div>
               <div className="p-4 space-y-2.5 text-xs">
                 <div className="flex justify-between">
-                  <span className="text-slate-600">Basic Pay + DA + RA (50%)</span>
+                  <span className="text-slate-600">
+                    Basic Pay + DA + RA ({payslip.basic_percentage !== undefined && payslip.basic_percentage !== null ? `${payslip.basic_percentage}%` : "50%"})
+                  </span>
                   <span className="font-semibold">{formatCurrency(payslip.basic_earned)}</span>
                 </div>
                 <div className="flex justify-between">
@@ -187,12 +215,14 @@ export const PayslipModal: React.FC<PayslipModalProps> = ({ payslip, onClose }) 
               </div>
               <div className="p-4 space-y-2.5 text-xs">
                 <div className="flex justify-between">
-                  <span className="text-slate-600">Employee EPF (12%)</span>
+                  <span className="text-slate-600">
+                    Employee EPF ({payslip.employee_pf_rate !== undefined && payslip.employee_pf_rate !== null ? `${payslip.employee_pf_rate}%` : "12%"})
+                  </span>
                   <span className="font-semibold text-rose-600">{formatCurrency(payslip.employee_pf)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600">
-                    Employee ESI {Number(payslip.employee_esi) === 0 ? "(Exempt > ₹21k)" : "(0.75%)"}
+                    Employee ESI {Number(payslip.employee_esi) === 0 ? "(Exempt > ₹21k)" : `(${payslip.employee_esi_rate !== undefined && payslip.employee_esi_rate !== null ? `${payslip.employee_esi_rate}%` : "0.75%"})`}
                   </span>
                   <span className="font-semibold text-rose-600">{formatCurrency(payslip.employee_esi)}</span>
                 </div>
@@ -225,22 +255,31 @@ export const PayslipModal: React.FC<PayslipModalProps> = ({ payslip, onClose }) 
 
           {/* Employer Contributions Box */}
           <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs">
-            <div className="font-bold text-slate-700 uppercase tracking-wider text-[11px] mb-2">
-              Employer&apos;s Contributions (Benefits)
+            <div className="font-bold text-slate-700 uppercase tracking-wider text-[11px] mb-2 flex items-center justify-between">
+              <span>Employer&apos;s Contributions (Benefits)</span>
+              {payslip.rates_applied?.versionName && (
+                <span className="text-[10px] text-slate-500 font-medium normal-case">
+                  Policy: {payslip.rates_applied.versionName}
+                </span>
+              )}
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="flex justify-between sm:block">
-                <span className="text-slate-500">Employer PF (13%):</span>
+                <span className="text-slate-500">
+                  Employer PF ({payslip.employer_pf_rate !== undefined && payslip.employer_pf_rate !== null ? `${payslip.employer_pf_rate}%` : "13%"}):
+                </span>
                 <span className="font-semibold text-slate-900 ml-1">{formatCurrency(payslip.employer_pf)}</span>
               </div>
               <div className="flex justify-between sm:block">
                 <span className="text-slate-500">
-                  Employer ESI {Number(payslip.employer_esi) === 0 ? "(Exempt > ₹21k)" : "(3.25%)"}:
+                  Employer ESI {Number(payslip.employer_esi) === 0 ? "(Exempt > ₹21k)" : `(${payslip.employer_esi_rate !== undefined && payslip.employer_esi_rate !== null ? `${payslip.employer_esi_rate}%` : "3.25%"})`}:
                 </span>
                 <span className="font-semibold text-slate-900 ml-1">{formatCurrency(payslip.employer_esi)}</span>
               </div>
               <div className="flex justify-between sm:block">
-                <span className="text-slate-500">Gratuity (4.81%):</span>
+                <span className="text-slate-500">
+                  Gratuity ({payslip.gratuity_rate !== undefined && payslip.gratuity_rate !== null ? `${payslip.gratuity_rate}%` : "4.81%"}):
+                </span>
                 <span className="font-semibold text-slate-900 ml-1">{formatCurrency(payslip.gratuity)}</span>
               </div>
             </div>

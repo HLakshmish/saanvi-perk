@@ -13,9 +13,20 @@ import {
   CheckCircle2,
   HelpCircle,
   Sparkles,
+  Calendar,
+  History,
+  Clock,
+  ArrowRight,
+  Eye,
+  Trash2,
 } from "lucide-react";
-import { PayrollSettings } from "../types/payroll.types";
-import { getPayrollSettings, updatePayrollSettings } from "../api/payroll.api";
+import { PayrollSettings, PayrollSettingsHistoryItem } from "../types/payroll.types";
+import {
+  getPayrollSettings,
+  getPayrollSettingsHistory,
+  updatePayrollSettings,
+  deletePayrollSettingsVersion,
+} from "../api/payroll.api";
 import { snackbar as toast } from "@/components/ui/snackbar";
 
 export const PayrollSettingsTab: React.FC = () => {
@@ -34,12 +45,21 @@ export const PayrollSettingsTab: React.FC = () => {
     statutoryEsiGrossLimit: 21000.0,
   });
 
+  const [effectiveFrom, setEffectiveFrom] = useState<string>(
+    new Date().toISOString().split("T")[0]
+  );
+  const [versionRemarks, setVersionRemarks] = useState<string>("");
+  const [historyList, setHistoryList] = useState<PayrollSettingsHistoryItem[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState<boolean>(false);
+  const [selectedHistoryVersion, setSelectedHistoryVersion] = useState<PayrollSettingsHistoryItem | null>(null);
+
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [hasChanges, setHasChanges] = useState<boolean>(false);
 
   useEffect(() => {
     loadSettings();
+    loadHistory();
   }, []);
 
   const loadSettings = async () => {
@@ -48,11 +68,47 @@ export const PayrollSettingsTab: React.FC = () => {
       const res = await getPayrollSettings();
       if (res.success && res.data) {
         setSettings(res.data);
+        if (res.data.effectiveFrom) {
+          setEffectiveFrom(res.data.effectiveFrom);
+        }
       }
     } catch {
       toast.show("Could not load current payroll settings", "error");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const loadHistory = async () => {
+    setIsLoadingHistory(true);
+    try {
+      const res = await getPayrollSettingsHistory();
+      if (res.success && res.data) {
+        setHistoryList(res.data);
+      }
+    } catch {
+      // Non-blocking
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
+
+  const handleDeleteVersion = async (id?: number, dateStr?: string) => {
+    if (!id) return;
+    if (!confirm(`Are you sure you want to delete the policy version effective ${dateStr}?`)) {
+      return;
+    }
+    try {
+      const res = await deletePayrollSettingsVersion(id);
+      if (res.success) {
+        toast.show("Policy version deleted successfully", "success");
+        loadSettings();
+        loadHistory();
+      } else {
+        toast.show(res.error || "Failed to delete policy version", "error");
+      }
+    } catch (err: any) {
+      toast.show(err.message || "Failed to delete policy version", "error");
     }
   };
 
@@ -66,13 +122,30 @@ export const PayrollSettingsTab: React.FC = () => {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!effectiveFrom) {
+      toast.show("Please specify an Effective From date for this policy", "error");
+      return;
+    }
+
     setIsSaving(true);
     try {
-      const res = await updatePayrollSettings(settings);
+      const payload: Partial<PayrollSettings> = {
+        ...settings,
+        effectiveFrom,
+        remarks: versionRemarks.trim() || undefined,
+        versionName: versionRemarks.trim() || `Policy effective from ${effectiveFrom}`,
+      };
+
+      const res = await updatePayrollSettings(payload);
       if (res.success && res.data) {
         setSettings(res.data);
         setHasChanges(false);
-        toast.show("Payroll settings & percentages updated successfully!", "success");
+        setVersionRemarks("");
+        toast.show(
+          `Payroll settings effective from ${effectiveFrom} saved successfully! Previous dates will remain unaffected.`,
+          "success"
+        );
+        loadHistory();
       } else {
         toast.show(res.error || "Failed to update payroll settings", "error");
       }
@@ -99,7 +172,24 @@ export const PayrollSettingsTab: React.FC = () => {
       statutoryEsiGrossLimit: 21000.0,
     });
     setHasChanges(true);
-    toast.show("Reset to Indian statutory defaults. Click 'Save' to apply.", "info");
+    toast.show("Reset to Indian statutory defaults. Click 'Save Policies' to apply.", "info");
+  };
+
+  const handleSetQuickDate = (type: "today" | "this_month" | "next_month") => {
+    const now = new Date();
+    if (type === "today") {
+      setEffectiveFrom(now.toISOString().split("T")[0]);
+    } else if (type === "this_month") {
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, "0");
+      setEffectiveFrom(`${y}-${m}-01`);
+    } else if (type === "next_month") {
+      const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      const y = nextMonth.getFullYear();
+      const m = String(nextMonth.getMonth() + 1).padStart(2, "0");
+      setEffectiveFrom(`${y}-${m}-01`);
+    }
+    setHasChanges(true);
   };
 
   // Quick live simulator for ₹71,555 monthly CTC
@@ -125,11 +215,10 @@ export const PayrollSettingsTab: React.FC = () => {
         <div>
           <h2 className="text-xl font-bold text-brand-primary flex items-center gap-2">
             <Sliders className="w-5 h-5" />
-            <span>Dynamic Payroll Statutory Rates & Percentages</span>
+            <span>Date-Based Payroll Statutory Rates & Percentages</span>
           </h2>
           <p className="text-xs text-slate-500 mt-1">
-            Store and manage company salary formula percentages in the database. All calculations
-            throughout the system adapt dynamically to these values.
+            Store and manage company salary formula percentages with effective date ranges. Any changes apply only from the selected Effective Date onward and never affect previous payroll cycles.
           </p>
         </div>
 
@@ -162,6 +251,123 @@ export const PayrollSettingsTab: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Form: All Dynamic Percentages */}
         <form onSubmit={handleSave} className="lg:col-span-8 space-y-6">
+          {/* Card 0: Policy Effective Date & Range (The Core Requirement) */}
+          <div className="bg-gradient-to-r from-brand-primary/5 via-indigo-50/50 to-blue-50/30 rounded-2xl border-2 border-brand-primary/20 p-5 shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-indigo-100 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-brand-primary text-white flex items-center justify-center font-bold text-xs shadow-xs">
+                  <Calendar className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">
+                    Policy Effective Period & Date Activation
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Control which date range these percentages apply to
+                  </p>
+                </div>
+              </div>
+
+              {settings.effectiveFrom && (
+                <div className="text-[11px] font-bold text-indigo-700 bg-white px-2.5 py-1 rounded-lg border border-indigo-200">
+                  Active from:{" "}
+                  <span className="font-extrabold text-slate-900">
+                    {new Date(settings.effectiveFrom).toLocaleDateString("en-IN", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </span>{" "}
+                  {settings.effectiveTo ? (
+                    <>
+                      to{" "}
+                      <span className="font-extrabold text-slate-900">
+                        {new Date(settings.effectiveTo).toLocaleDateString("en-IN", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </span>
+                    </>
+                  ) : (
+                    <span>➔ Till next changes</span>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
+                    <span>Effective From Date</span>
+                    <span className="text-rose-500">*</span>
+                  </label>
+
+                  {/* Quick helper date chips */}
+                  <div className="flex items-center gap-1 text-[10px]">
+                    <button
+                      type="button"
+                      onClick={() => handleSetQuickDate("today")}
+                      className="px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 transition-colors font-medium cursor-pointer"
+                    >
+                      Today
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSetQuickDate("this_month")}
+                      className="px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 transition-colors font-medium cursor-pointer"
+                    >
+                      1st of Mo
+                    </button>
+                  </div>
+                </div>
+
+                <div className="relative">
+                  <input
+                    type="date"
+                    value={effectiveFrom}
+                    onChange={(e) => {
+                      setEffectiveFrom(e.target.value);
+                      setHasChanges(true);
+                    }}
+                    className="w-full px-3 py-2 text-sm font-bold border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary outline-none bg-white cursor-pointer"
+                    required
+                  />
+                </div>
+                {historyList.some((v) => v.effectiveFrom === effectiveFrom) ? (
+                  <p className="text-[11px] text-amber-600 font-semibold mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3 shrink-0" />
+                    <span>Existing policy found for this date. Saving will update these rates without creating duplicate overlapping versions.</span>
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-slate-500 mt-1">
+                    New policy version will activate from this date onward. Past versions will close automatically to prevent date overlap.
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Revision Reason / Version Label (Optional)
+                </label>
+                <input
+                  type="text"
+                  value={versionRemarks}
+                  onChange={(e) => {
+                    setVersionRemarks(e.target.value);
+                    setHasChanges(true);
+                  }}
+                  placeholder="e.g. Revised PF % from 05/04/2025"
+                  className="w-full px-3 py-2 text-xs font-medium border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary outline-none bg-white"
+                />
+                <p className="text-[11px] text-slate-400 mt-1">
+                  Identifies this policy version in your audit logs and timeline.
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Card 1: Basic Pay & Allowances Breakup */}
           <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -475,8 +681,9 @@ export const PayrollSettingsTab: React.FC = () => {
           </div>
         </form>
 
-        {/* Right Sidebar: Live Preview for ₹71,555 Sample */}
+        {/* Right Sidebar: Live Preview & Policy Version Timeline */}
         <div className="lg:col-span-4 space-y-4">
+          {/* Live Simulator Card */}
           <div className="bg-slate-900 text-white rounded-3xl p-5 shadow-lg relative overflow-hidden">
             <div className="flex items-center justify-between pb-3 border-b border-white/10">
               <span className="text-xs font-bold uppercase tracking-wider text-amber-300 flex items-center gap-1.5">
@@ -546,14 +753,169 @@ export const PayrollSettingsTab: React.FC = () => {
             </div>
           </div>
 
+          {/* Policy Version Timeline Card */}
+          <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-xs space-y-3">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+              <div className="flex items-center gap-2">
+                <History className="w-4 h-4 text-brand-primary" />
+                <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                  Policy Date Timeline
+                </h4>
+              </div>
+              <span className="text-[11px] font-semibold text-slate-400">
+                {
+                  [...historyList].filter(
+                    (ver, idx, arr) => arr.findIndex((x) => x.effectiveFrom === ver.effectiveFrom) === idx
+                  ).length
+                }{" "}
+                Version
+                {
+                  [...historyList].filter(
+                    (ver, idx, arr) => arr.findIndex((x) => x.effectiveFrom === ver.effectiveFrom) === idx
+                  ).length === 1
+                    ? ""
+                    : "s"
+                }
+              </span>
+            </div>
+
+            {isLoadingHistory ? (
+              <div className="py-6 text-center text-xs text-slate-400">
+                Loading policy history...
+              </div>
+            ) : historyList.length === 0 ? (
+              <div className="py-6 text-center text-xs text-slate-400">
+                No policy revisions saved yet.
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
+                {(() => {
+                  // Deduplicate and strictly sort by effectiveFrom DESC so no duplicate or overlapping dates appear
+                  const uniqueHistory = [...historyList]
+                    .sort((a, b) => new Date(b.effectiveFrom).getTime() - new Date(a.effectiveFrom).getTime())
+                    .filter((ver, idx, arr) => arr.findIndex((x) => x.effectiveFrom === ver.effectiveFrom) === idx);
+
+                  return uniqueHistory.map((ver, idx) => {
+                    // Strictly ONLY the single latest version (idx === 0) is Active! All older versions are Historical.
+                    const isCurrent = idx === 0;
+
+                    let toDateDisplay = "Present";
+                    if (!isCurrent) {
+                      if (ver.effectiveTo) {
+                        toDateDisplay = new Date(ver.effectiveTo).toLocaleDateString("en-IN", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        });
+                      } else if (uniqueHistory[idx - 1]) {
+                        const prevEff = new Date(uniqueHistory[idx - 1].effectiveFrom);
+                        const dayBefore = new Date(prevEff.getTime() - 86400000);
+                        toDateDisplay = dayBefore.toLocaleDateString("en-IN", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        });
+                      }
+                    } else if (ver.effectiveTo) {
+                      toDateDisplay = new Date(ver.effectiveTo).toLocaleDateString("en-IN", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      });
+                    }
+
+                    return (
+                      <div
+                        key={ver.id || `${ver.effectiveFrom}-${idx}`}
+                        className={`p-3 rounded-xl border text-xs transition-all ${
+                          isCurrent
+                            ? "bg-indigo-50/60 border-indigo-200 ring-1 ring-indigo-200/50"
+                            : "bg-slate-50 border-slate-200 hover:bg-slate-100/70"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-slate-900 flex items-center gap-1.5">
+                            <Calendar className="w-3 h-3 text-indigo-600" />
+                            <span>
+                              {new Date(ver.effectiveFrom).toLocaleDateString("en-IN", {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                              })}
+                            </span>
+                            <span className="text-slate-400">➔</span>
+                            <span>{toDateDisplay}</span>
+                          </span>
+
+                          <div className="flex items-center gap-1.5">
+                            <span
+                              className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${
+                                isCurrent
+                                  ? "bg-emerald-100 text-emerald-800"
+                                  : "bg-slate-200 text-slate-600"
+                              }`}
+                            >
+                              {isCurrent ? "Active" : "Historical"}
+                            </span>
+
+                            {uniqueHistory.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteVersion(ver.id, ver.effectiveFrom)}
+                                className="text-slate-400 hover:text-rose-600 p-0.5 rounded transition-colors cursor-pointer"
+                                title="Delete policy version"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {ver.remarks && (
+                          <p className="text-[11px] text-slate-600 mt-1 italic">
+                            &quot;{ver.remarks}&quot;
+                          </p>
+                        )}
+
+                        <div className="mt-2 pt-2 border-t border-slate-200/60 flex items-center justify-between text-[11px] text-slate-500">
+                          <span>
+                            Basic: <strong className="text-slate-800">{ver.basicPercentage}%</strong> | PF:{" "}
+                            <strong className="text-slate-800">{ver.employeePfRate}%</strong> | ESI:{" "}
+                            <strong className="text-slate-800">{ver.employeeEsiRate}%</strong>
+                          </span>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSettings(ver);
+                              if (ver.effectiveFrom) setEffectiveFrom(ver.effectiveFrom);
+                              toast.show(
+                                `Loaded rates from policy effective ${ver.effectiveFrom}`,
+                                "info"
+                              );
+                            }}
+                            className="text-brand-primary hover:text-brand-primary/80 font-bold flex items-center gap-1 cursor-pointer"
+                          >
+                            <Eye className="w-3 h-3" />
+                            <span>Inspect</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+            )}
+          </div>
+
+          {/* Compliance Immuntability Note */}
           <div className="bg-amber-50 rounded-2xl p-4 border border-amber-200/80 text-xs text-amber-900 space-y-2">
             <div className="flex items-center gap-1.5 font-bold">
               <AlertCircle className="w-4 h-4 text-amber-600" />
-              <span>Statutory Compliance Note</span>
+              <span>Date-Based Policy Protection</span>
             </div>
             <p className="text-[11px] text-amber-800 leading-relaxed">
-              Updates to these percentages will apply to newly generated salary breakups and monthly
-              payroll runs. Previously finalized payslips remain immutable for accounting audits.
+              Updating percentages only affects cycles starting from the specified Effective Date. Prior months, past payslips, and historical records remain 100% frozen with their original calculations for accounting compliance.
             </p>
           </div>
         </div>
