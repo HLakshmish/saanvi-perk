@@ -26,13 +26,14 @@ export function downloadPayslipPdf(payslip: Payslip) {
   const fileName = `Payslip_${empName.replace(/\s+/g, "_")}_${monthLabel}_${payslip.year}`;
 
   const formatCurrency = (val?: number | string) => {
-    if (val === undefined || val === null) return "₹0.00";
+    if (val === undefined || val === null || val === "") return "₹0.00";
     const num = typeof val === "string" ? parseFloat(val) : val;
     if (isNaN(num)) return "₹0.00";
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
       currency: "INR",
       minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     }).format(num);
   };
 
@@ -41,6 +42,41 @@ export function downloadPayslipPdf(payslip: Payslip) {
     alert("Please allow popups for this site to download the Payslip PDF.");
     return;
   }
+
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const logoSrc = payslip.company_logo || (origin ? `${origin}/images/company_logo.png` : "/images/company_logo.png");
+  const companyName = payslip.company_name || "SAANVI TECHNOLOGIES";
+  const companyAddress = "NO 3/68/2, First Floor,Main road ,NH-66,Saligram,Udupi, Karnataka, 576225";
+  const employeeCode = payslip.employee_code || `EMP-${payslip.user_id}`;
+  const designation = payslip.designation_name || "—";
+  const department = payslip.department_name || "—";
+  const joiningDate = payslip.joining_date
+    ? new Date(payslip.joining_date).toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
+    : "—";
+  const uan = payslip.uan_number || payslip.pf_number || "—";
+  const bankName = payslip.bank_name || "—";
+  const accountNo = payslip.account_number || "—";
+
+  const totalWorkingDays = payslip.working_days || 30;
+  const paidDays = payslip.paid_days !== undefined ? payslip.paid_days : totalWorkingDays;
+  const lopDays = payslip.loss_of_pay_days || 0;
+  const leaveDays = Math.max(0, totalWorkingDays - paidDays - lopDays);
+
+  const basicEarned = payslip.basic_earned || 0;
+  const hraEarned = payslip.hra_earned || 0;
+  const otherEarned = payslip.other_allowances_earned || 0;
+  const grossEarned = payslip.gross_earned || (Number(basicEarned) + Number(hraEarned) + Number(otherEarned));
+
+  const pfDeduction = payslip.employee_pf || 0;
+  const ptDeduction = payslip.professional_tax || 0;
+  const esiDeduction = payslip.employee_esi || 0;
+  const hasEsi = Number(esiDeduction) > 0;
+  const totalDeductions = payslip.total_deductions || (Number(pfDeduction) + Number(ptDeduction) + Number(esiDeduction));
+  const netPay = payslip.net_pay || (Number(grossEarned) - Number(totalDeductions));
 
   const htmlContent = `<!DOCTYPE html>
 <html lang="en">
@@ -58,366 +94,296 @@ export function downloadPayslipPdf(payslip: Payslip) {
       padding: 0;
     }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      color: #0f172a;
+      font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+      color: #000000;
       background: #ffffff;
-      font-size: 11.5px;
-      line-height: 1.45;
-      padding: 12px;
-    }
-    .payslip-wrapper {
-      max-width: 800px;
-      margin: 0 auto;
-      border: 1.5px solid #cbd5e1;
-      border-radius: 8px;
       padding: 24px;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
     }
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      border-bottom: 2px solid #0f172a;
-      padding-bottom: 14px;
-      margin-bottom: 18px;
-    }
-    .company-name {
-      font-size: 20px;
-      font-weight: 800;
-      text-transform: uppercase;
-      color: #0f172a;
-      letter-spacing: -0.3px;
-    }
-    .company-sub {
-      font-size: 11px;
-      color: #64748b;
-      margin-top: 3px;
-      font-weight: 500;
-    }
-    .payslip-badge {
-      text-align: right;
-    }
-    .badge-title {
-      display: inline-block;
-      background: #0f172a;
-      color: #ffffff;
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      padding: 5px 12px;
-      border-radius: 4px;
-      letter-spacing: 0.5px;
-    }
-    .badge-status {
-      font-size: 11px;
-      color: #64748b;
-      margin-top: 5px;
-    }
-    .status-paid {
-      color: #059669;
-      font-weight: 700;
-    }
-    .info-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 6px;
-      padding: 14px;
-      margin-bottom: 18px;
-    }
-    .info-item {
-      font-size: 11px;
-    }
-    .info-label {
-      color: #64748b;
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-      font-weight: 600;
-    }
-    .info-val {
-      font-weight: 700;
-      color: #0f172a;
-      margin-top: 2px;
-    }
-    .tables-row {
-      display: flex;
-      gap: 14px;
-      margin-bottom: 18px;
-    }
-    .col {
-      flex: 1;
-      border: 1px solid #cbd5e1;
-      border-radius: 6px;
-      overflow: hidden;
-    }
-    .col-header {
-      background: #f1f5f9;
-      padding: 8px 12px;
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: #334155;
-      display: flex;
-      justify-content: space-between;
-      border-bottom: 1px solid #cbd5e1;
-    }
-    .col-body {
-      padding: 10px 12px;
-    }
-    .table-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 5.5px 0;
-      font-size: 11px;
-      border-bottom: 1px dashed #e2e8f0;
-    }
-    .table-row:last-child {
-      border-bottom: none;
-    }
-    .col-footer {
-      background: #f8fafc;
-      padding: 9px 12px;
-      font-size: 11px;
-      font-weight: 800;
-      display: flex;
-      justify-content: space-between;
-      border-top: 1px solid #cbd5e1;
-    }
-    .net-salary-card {
-      background: #ecfdf5;
-      border: 2px solid #a7f3d0;
-      border-radius: 8px;
-      padding: 16px 20px;
+    .no-print-bar {
+      max-width: 840px;
+      margin: 0 auto 16px auto;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 18px;
-    }
-    .net-label {
-      font-size: 12px;
-      font-weight: 800;
-      color: #065f46;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .net-sub {
-      font-size: 10px;
-      color: #047857;
-      margin-top: 2px;
-    }
-    .net-amount {
-      font-size: 22px;
-      font-weight: 900;
-      color: #064e3b;
-    }
-    .benefits-box {
+      padding: 10px 16px;
       background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 6px;
-      padding: 12px 14px;
-      margin-bottom: 22px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-family: system-ui, sans-serif;
     }
-    .benefits-title {
-      font-size: 10px;
+    .no-print-bar button {
+      padding: 7px 18px;
+      font-size: 13px;
       font-weight: 700;
-      text-transform: uppercase;
-      color: #475569;
-      letter-spacing: 0.5px;
-      margin-bottom: 6px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
     }
-    .benefits-grid {
-      display: flex;
-      justify-content: space-between;
-      font-size: 11px;
+    .btn-print {
+      background: #0284c7;
+      color: #ffffff;
+    }
+    .btn-close {
+      background: #e2e8f0;
       color: #334155;
     }
-    .footer-signatures {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      margin-top: 36px;
-      padding-top: 16px;
-      border-top: 1px solid #e2e8f0;
+    .payslip-wrapper {
+      max-width: 840px;
+      margin: 0 auto;
+      border: 3px solid #000000;
+      background: #ffffff;
     }
-    .sig-box {
+    .main-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+      line-height: 1.4;
+      color: #000000;
+    }
+    .main-table td,
+    .main-table th {
+      color: #000000;
+    }
+    .header-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .header-logo-box {
+      width: 190px;
+      padding: 10px 14px;
       text-align: center;
-      width: 170px;
+      vertical-align: middle;
     }
-    .sig-line {
-      border-bottom: 1px solid #94a3b8;
-      margin-bottom: 6px;
+    .header-info-box {
+      padding: 12px 20px;
+      text-align: left;
+      vertical-align: middle;
     }
-    .sig-title {
-      font-size: 10px;
-      color: #64748b;
+    .company-title {
+      font-size: 18px;
+      font-weight: 800;
       text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #000000;
+      line-height: 1.2;
+    }
+    .company-addr {
+      font-size: 11.5px;
+      font-weight: 500;
+      color: #000000;
+      margin-top: 5px;
+      line-height: 1.35;
+    }
+    .payslip-period {
+      font-size: 13.5px;
+      color: #000000;
+      margin-top: 8px;
+    }
+    .thick-border-b {
+      border-bottom: 2px solid #000000;
+    }
+    .grid-cell {
+      border: 1.5px solid #000000;
+      padding: 5px 12px;
+      font-size: 12.5px;
+    }
+    .cell-label {
       font-weight: 600;
     }
-    .disclaimer {
-      font-size: 10px;
-      color: #94a3b8;
+    .cell-value {
+      font-weight: 700;
+    }
+    .text-right {
+      text-align: right;
+    }
+    .text-center {
       text-align: center;
-      margin-top: 20px;
+    }
+    .font-bold {
+      font-weight: 700;
+    }
+    .font-extrabold {
+      font-weight: 800;
     }
     @media print {
-      body { padding: 0; background: none; }
-      .payslip-wrapper { border: none; padding: 0; }
+      body {
+        padding: 0;
+        margin: 0;
+      }
+      .no-print-bar {
+        display: none !important;
+      }
+      .payslip-wrapper {
+        max-width: 100% !important;
+        width: 100% !important;
+        border: 3px solid #000000 !important;
+      }
     }
   </style>
 </head>
 <body>
+  <div class="no-print-bar">
+    <span style="font-size: 12px; font-weight: 600; color: #475569;">
+      Payslip Print Preview — ${empName} (${monthLabel} ${payslip.year})
+    </span>
+    <div style="display: flex; gap: 8px;">
+      <button class="btn-print" onclick="window.print()">Print / Save as PDF</button>
+      <button class="btn-close" onclick="window.close()">Close Window</button>
+    </div>
+  </div>
+
   <div class="payslip-wrapper">
-    <div class="header">
-      <div>
-        <div class="company-name">${payslip.company_name || "Company Payslip"}</div>
-        <div class="company-sub">${payslip.company_code ? `Company Code: ${payslip.company_code} • ` : ""}Official Monthly Payslip</div>
-      </div>
-      <div class="payslip-badge">
-        <div class="badge-title">Payslip — ${monthLabel} ${payslip.year}</div>
-        <div class="badge-status">Status: <span class="status-paid">${payslip.payment_status}</span></div>
-      </div>
-    </div>
-
-    <div class="info-grid">
-      <div class="info-item">
-        <div class="info-label">Employee Name</div>
-        <div class="info-val">${empName}</div>
-      </div>
-      <div class="info-item">
-        <div class="info-label">Employee ID</div>
-        <div class="info-val">${payslip.employee_code || `ID-${payslip.user_id}`}</div>
-      </div>
-      <div class="info-item">
-        <div class="info-label">Designation</div>
-        <div class="info-val">${payslip.designation_name || "Employee"}</div>
-      </div>
-      <div class="info-item">
-        <div class="info-label">Department</div>
-        <div class="info-val">${payslip.department_name || "General"}</div>
-      </div>
-
-      <div class="info-item">
-        <div class="info-label">Joining Date</div>
-        <div class="info-val">${payslip.joining_date ? new Date(payslip.joining_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}</div>
-      </div>
-      <div class="info-item">
-        <div class="info-label">Bank Name</div>
-        <div class="info-val">${payslip.bank_name || "—"}</div>
-      </div>
-      <div class="info-item">
-        <div class="info-label">Bank A/C No.</div>
-        <div class="info-val">${payslip.account_number || "—"}</div>
-      </div>
-      <div class="info-item">
-        <div class="info-label">UAN / PF No.</div>
-        <div class="info-val">${payslip.uan_number || payslip.pf_number || "—"}</div>
-      </div>
-
-      <div class="info-item">
-        <div class="info-label">Total Days</div>
-        <div class="info-val">${payslip.working_days || 30} Days</div>
-      </div>
-      <div class="info-item">
-        <div class="info-label">Paid Days</div>
-        <div class="info-val" style="color: #059669;">${payslip.paid_days || 30} Days</div>
-      </div>
-      <div class="info-item">
-        <div class="info-label">LOP Days</div>
-        <div class="info-val" style="color: #dc2626;">${payslip.loss_of_pay_days || 0} Days</div>
-      </div>
-      <div class="info-item">
-        <div class="info-label">PAN Number</div>
-        <div class="info-val">${payslip.pan_number || "—"}</div>
-      </div>
-    </div>
-
-    <div class="tables-row">
-      <div class="col">
-        <div class="col-header">
-          <span>Earnings Component</span>
-          <span>Amount (INR)</span>
-        </div>
-        <div class="col-body">
-          <div class="table-row">
-            <span>Basic Pay (${payslip.basic_percentage || 50}%)</span>
-            <span>${formatCurrency(payslip.basic_earned)}</span>
+    <!-- 1. Header (Logo + Company Details) -->
+    <table class="header-table thick-border-b">
+      <tr>
+        <td class="header-logo-box">
+          <div style="display: flex; align-items: center; justify-content: center; min-height: 56px;">
+            <img src="${logoSrc}" alt="${companyName}" style="max-height: 56px; max-width: 170px; width: auto; height: auto; object-fit: contain; display: block; margin: 0 auto;" onerror="this.style.display='none'; document.getElementById('alt-swirl').style.display='block';" />
           </div>
-          <div class="table-row">
-            <span>House Rent Allowance (HRA)</span>
-            <span>${formatCurrency(payslip.hra_earned)}</span>
-          </div>
-          <div class="table-row">
-            <span>Other Allowances</span>
-            <span>${formatCurrency(payslip.other_allowances_earned)}</span>
-          </div>
-        </div>
-        <div class="col-footer">
-          <span>Total Gross Earnings</span>
-          <span style="color: #1e3a8a;">${formatCurrency(payslip.gross_earned)}</span>
-        </div>
-      </div>
+          <div id="alt-swirl" style="display: none; font-size: 16px; font-weight: 800; color: #ea580c; text-align: center;">${companyName}</div>
+        </td>
+        <td class="header-info-box">
+          <div class="company-title">${companyName}</div>
+          <div class="company-addr">${companyAddress}</div>
+          <div class="payslip-period">Pay Slip for <strong style="font-weight: 800;">${monthLabel} ${payslip.year}</strong></div>
+        </td>
+      </tr>
+    </table>
 
-      <div class="col">
-        <div class="col-header">
-          <span>Deductions Component</span>
-          <span>Amount (INR)</span>
-        </div>
-        <div class="col-body">
-          <div class="table-row">
-            <span>Employee PF (${payslip.employee_pf_rate || 12}%)</span>
-            <span style="color: #dc2626;">${formatCurrency(payslip.employee_pf)}</span>
-          </div>
-          <div class="table-row">
-            <span>Employee ESI (${payslip.employee_esi_rate || 0.75}%)</span>
-            <span style="color: #dc2626;">${formatCurrency(payslip.employee_esi)}</span>
-          </div>
-          <div class="table-row">
-            <span>Professional Tax</span>
-            <span style="color: #dc2626;">${formatCurrency(payslip.professional_tax)}</span>
-          </div>
-        </div>
-        <div class="col-footer">
-          <span>Total Deductions</span>
-          <span style="color: #991b1b;">${formatCurrency(payslip.total_deductions)}</span>
-        </div>
-      </div>
-    </div>
+    <!-- 2. Employee Details Block (2 Columns with center line, NO internal horizontal borders) -->
+    <table class="header-table thick-border-b">
+      <tr>
+        <td style="width: 50%; vertical-align: top; padding: 7px 14px;">
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td style="padding: 2.5px 0; width: 44%; font-weight: 500; font-size: 12.5px;">Employee ID</td>
+              <td style="padding: 2.5px 0; font-weight: 700; font-size: 12.5px;">${employeeCode}</td>
+            </tr>
+            <tr>
+              <td style="padding: 2.5px 0; font-weight: 500; font-size: 12.5px;">Employee Name</td>
+              <td style="padding: 2.5px 0; font-weight: 700; font-size: 12.5px;">${empName}</td>
+            </tr>
+            <tr>
+              <td style="padding: 2.5px 0; font-weight: 500; font-size: 12.5px;">Designation</td>
+              <td style="padding: 2.5px 0; font-weight: 700; font-size: 12.5px;">${designation}</td>
+            </tr>
+            <tr>
+              <td style="padding: 2.5px 0; font-weight: 500; font-size: 12.5px;">Department</td>
+              <td style="padding: 2.5px 0; font-weight: 700; font-size: 12.5px;">${department}</td>
+            </tr>
+            <tr>
+              <td style="padding: 2.5px 0; font-weight: 500; font-size: 12.5px;">Date of Joining</td>
+              <td style="padding: 2.5px 0; font-weight: 700; font-size: 12.5px;">${joiningDate}</td>
+            </tr>
+          </table>
+        </td>
+        <td style="width: 50%; vertical-align: top; padding: 7px 14px;">
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td style="padding: 2.5px 0; width: 44%; font-weight: 500; font-size: 12.5px;">UAN</td>
+              <td style="padding: 2.5px 0; font-weight: 700; font-size: 12.5px;">${uan}</td>
+            </tr>
+            <tr>
+              <td style="padding: 2.5px 0; font-weight: 500; font-size: 12.5px;">Bank</td>
+              <td style="padding: 2.5px 0; font-weight: 700; font-size: 12.5px;">${bankName}</td>
+            </tr>
+            <tr>
+              <td style="padding: 2.5px 0; font-weight: 500; font-size: 12.5px;">Account No.</td>
+              <td style="padding: 2.5px 0; font-weight: 700; font-size: 12.5px;">${accountNo}</td>
+            </tr>
+            <tr>
+              <td style="padding: 2.5px 0; font-size: 12.5px;">&nbsp;</td>
+              <td style="padding: 2.5px 0; font-size: 12.5px;">&nbsp;</td>
+            </tr>
+            <tr>
+              <td style="padding: 2.5px 0; font-size: 12.5px;">&nbsp;</td>
+              <td style="padding: 2.5px 0; font-size: 12.5px;">&nbsp;</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
 
-    <div class="net-salary-card">
-      <div>
-        <div class="net-label">Net Take-Home Salary</div>
-        <div class="net-sub">(Total Gross Earnings - Total Deductions)</div>
-      </div>
-      <div class="net-amount">${formatCurrency(payslip.net_pay)}</div>
-    </div>
+    <!-- 3. Blank Spacer Row -->
+    <div style="height: 12px; border-bottom: 2px solid #000000; background: #ffffff;"></div>
 
-    <div class="benefits-box">
-      <div class="benefits-title">Employer Contributions (Benefits)</div>
-      <div class="benefits-grid">
-        <div>Employer PF (${payslip.employer_pf_rate || 13}%): <strong>${formatCurrency(payslip.employer_pf)}</strong></div>
-        <div>Employer ESI (${payslip.employer_esi_rate || 3.25}%): <strong>${formatCurrency(payslip.employer_esi)}</strong></div>
-        <div>Gratuity (${payslip.gratuity_rate || 4.81}%): <strong>${formatCurrency(payslip.gratuity)}</strong></div>
-        <div>CTC Earned: <strong>${formatCurrency(payslip.ctc_earned)}</strong></div>
-      </div>
-    </div>
+    <!-- 4. Main Data Grid: Attendance, Earnings & Deductions -->
+    <table class="main-table">
+      <!-- Attendance Rows -->
+      <tr>
+        <td class="grid-cell cell-label" style="width: 25%;">Gross Salary</td>
+        <td class="grid-cell cell-value text-right" style="width: 25%;">${formatCurrency(grossEarned)}</td>
+        <td class="grid-cell" style="width: 25%;">&nbsp;</td>
+        <td class="grid-cell" style="width: 25%;">&nbsp;</td>
+      </tr>
+      <tr>
+        <td class="grid-cell cell-label">Total Working Days</td>
+        <td class="grid-cell cell-value text-right">${totalWorkingDays}</td>
+        <td class="grid-cell cell-label">Leaves</td>
+        <td class="grid-cell cell-value text-right">${leaveDays}</td>
+      </tr>
+      <tr>
+        <td class="grid-cell cell-label">LOP Days</td>
+        <td class="grid-cell cell-value text-right">${lopDays}</td>
+        <td class="grid-cell cell-label">Paid Days</td>
+        <td class="grid-cell cell-value text-right">${paidDays}</td>
+      </tr>
 
-    <div class="footer-signatures">
-      <div class="sig-box">
-        <div class="sig-line"></div>
-        <div class="sig-title">Employee Signature</div>
-      </div>
-      <div class="sig-box">
-        <div class="sig-line"></div>
-        <div class="sig-title">Authorized Signatory</div>
-      </div>
-    </div>
+      <!-- Section Headers -->
+      <tr>
+        <th colspan="2" class="grid-cell text-center font-extrabold" style="font-size: 13.5px; padding: 7px 10px; border-top: 2px solid #000000; border-bottom: 2px solid #000000;">
+          Earnings
+        </th>
+        <th colspan="2" class="grid-cell text-center font-extrabold" style="font-size: 13.5px; padding: 7px 10px; border-top: 2px solid #000000; border-bottom: 2px solid #000000;">
+          Deductions
+        </th>
+      </tr>
 
-    <div class="disclaimer">
-      This is a computer-generated document and does not require a physical signature if verified digitally.
-    </div>
+      <!-- Component Rows -->
+      <tr>
+        <td class="grid-cell cell-label">Basic</td>
+        <td class="grid-cell cell-value text-right">${formatCurrency(basicEarned)}</td>
+        <td class="grid-cell cell-label">PF</td>
+        <td class="grid-cell cell-value text-right">${formatCurrency(pfDeduction)}</td>
+      </tr>
+      <tr>
+        <td class="grid-cell cell-label">HRA</td>
+        <td class="grid-cell cell-value text-right">${formatCurrency(hraEarned)}</td>
+        <td class="grid-cell cell-label">PT</td>
+        <td class="grid-cell cell-value text-right">${formatCurrency(ptDeduction)}</td>
+      </tr>
+      <tr>
+        <td class="grid-cell cell-label">Other Allowances</td>
+        <td class="grid-cell cell-value text-right">${formatCurrency(otherEarned)}</td>
+        <td class="grid-cell cell-label">${hasEsi ? "ESI" : "&nbsp;"}</td>
+        <td class="grid-cell cell-value text-right">${hasEsi ? formatCurrency(esiDeduction) : "&nbsp;"}</td>
+      </tr>
+
+      <!-- Blank Spacer Row between components and Totals -->
+      <tr>
+        <td class="grid-cell">&nbsp;</td>
+        <td class="grid-cell">&nbsp;</td>
+        <td class="grid-cell">&nbsp;</td>
+        <td class="grid-cell">&nbsp;</td>
+      </tr>
+
+      <!-- Totals Row -->
+      <tr>
+        <td class="grid-cell font-extrabold">Total Earnings</td>
+        <td class="grid-cell font-extrabold text-right">${formatCurrency(grossEarned)}</td>
+        <td class="grid-cell font-extrabold">Total Deductions</td>
+        <td class="grid-cell font-extrabold text-right">${formatCurrency(totalDeductions)}</td>
+      </tr>
+
+      <!-- Net Salary Row -->
+      <tr>
+        <td colspan="2" style="border: none; border-top: 1.5px solid #000000;">&nbsp;</td>
+        <td class="grid-cell font-extrabold" style="font-size: 13.5px; border-top: 2px solid #000000;">Net Salary</td>
+        <td class="grid-cell font-extrabold text-right" style="font-size: 13.5px; border-top: 2px solid #000000;">${formatCurrency(netPay)}</td>
+      </tr>
+    </table>
   </div>
 
   <script>

@@ -195,8 +195,10 @@ export const PayrollSettingsTab: React.FC = () => {
   // Quick live simulator for ₹71,555 monthly CTC
   const sampleCtc = 71555;
   const simBasic = Math.round(sampleCtc * (settings.basicPercentage / 100));
-  const simPfWage = simBasic > 15000 ? 15000 : simBasic;
-  const simEmpPf = simBasic > 15000 ? 1800 : Math.round(simBasic * (settings.employeePfRate / 100));
+  const simPfCap = Number(settings.statutoryPfWageLimit || 15000);
+  const simPfCapAmount = Math.round(simPfCap * (settings.employeePfRate / 100));
+  const simPfWage = settings.usePfWageCeiling && simBasic > simPfCap ? simPfCap : simBasic;
+  const simEmpPf = settings.usePfWageCeiling && simBasic > simPfCap ? simPfCapAmount : Math.round(simBasic * (settings.employeePfRate / 100));
   const simEsiLimit = Number(settings.statutoryEsiGrossLimit || 21000);
   const simEmpEsi = simBasic > simEsiLimit ? 0 : Math.round(simBasic * (settings.employeeEsiRate / 100));
   const simPt = Number(settings.professionalTax || 0);
@@ -453,7 +455,13 @@ export const PayrollSettingsTab: React.FC = () => {
                   />
                   <span className="absolute right-3 top-2.5 text-xs font-bold text-slate-400">%</span>
                 </div>
-                <p className="text-[11px] text-slate-400 mt-1">12.00% if Basic ≤ ₹15,000; fixed ₹1,800 if Basic &gt; ₹15,000</p>
+                <p className="text-[11px] text-slate-400 mt-1">
+                  {settings.usePfWageCeiling ? (
+                    `${settings.employeePfRate}% if Basic ≤ ₹${Number(settings.statutoryPfWageLimit || 15000).toLocaleString('en-IN')}; capped at ₹${Math.round(Number(settings.statutoryPfWageLimit || 15000) * (settings.employeePfRate / 100)).toLocaleString('en-IN')} if Basic > ₹${Number(settings.statutoryPfWageLimit || 15000).toLocaleString('en-IN')}`
+                  ) : (
+                    `${settings.employeePfRate}% applied directly on Basic Pay (no ceiling)`
+                  )}
+                </p>
               </div>
 
               <div>
@@ -585,7 +593,9 @@ export const PayrollSettingsTab: React.FC = () => {
                     Statutory PF Wage Ceiling Rule
                   </h3>
                   <p className="text-xs text-slate-500">
-                    Indian EPFO standard ₹15,000 wage ceiling limit rule
+                    {settings.usePfWageCeiling 
+                      ? `Statutory ₹${Number(settings.statutoryPfWageLimit || 15000).toLocaleString('en-IN')} wage ceiling limit rule` 
+                      : "PF wage ceiling rule disabled (calculated on full Basic Pay)"}
                   </p>
                 </div>
               </div>
@@ -598,7 +608,11 @@ export const PayrollSettingsTab: React.FC = () => {
                     Enforce Statutory PF Wage Ceiling
                   </div>
                   <div className="text-[11px] text-slate-500 mt-0.5">
-                    Caps EPF to ₹1,800/mo when Basic exceeds ₹15,000 (12% applies only if Basic ≤ ₹15,000)
+                    {settings.usePfWageCeiling ? (
+                      `Caps EPF to ₹${Math.round(Number(settings.statutoryPfWageLimit || 15000) * (settings.employeePfRate / 100)).toLocaleString('en-IN')}/mo when Basic exceeds ₹${Number(settings.statutoryPfWageLimit || 15000).toLocaleString('en-IN')} (${settings.employeePfRate}% applies only if Basic ≤ ₹${Number(settings.statutoryPfWageLimit || 15000).toLocaleString('en-IN')})`
+                    ) : (
+                      `Ceiling is disabled. EPF is calculated at ${settings.employeePfRate}% on full Basic Pay without cap.`
+                    )}
                   </div>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">

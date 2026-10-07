@@ -9,6 +9,7 @@ import {
   User,
   Laptop,
   Receipt,
+  Banknote,
   ChevronRight,
   Sparkles,
   LayoutGrid,
@@ -55,6 +56,12 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ onTabChange }) => {
       title: "My Assets",
       subtitle: "Assigned Devices",
       icon: Laptop,
+    },
+    {
+      id: "payroll",
+      title: "My Payslips",
+      subtitle: "Download & View",
+      icon: Banknote,
     },
     {
       id: "expenses",

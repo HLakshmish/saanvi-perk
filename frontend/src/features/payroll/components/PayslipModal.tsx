@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { X, Printer, Download, Building2, User, Calendar, CheckCircle2 } from "lucide-react";
+import { X, Printer, Download } from "lucide-react";
 import { Payslip } from "../types/payroll.types";
 import { downloadPayslipPdf } from "../utils/payslipPdf";
 
@@ -30,30 +30,64 @@ export const PayslipModal: React.FC<PayslipModalProps> = ({ payslip, onClose }) 
   if (!payslip) return null;
 
   const handlePrint = () => {
-    window.print();
+    downloadPayslipPdf(payslip);
   };
 
   const formatCurrency = (val?: number | string) => {
-    if (val === undefined || val === null) return "₹0.00";
+    if (val === undefined || val === null || val === "") return "₹0.00";
     const num = typeof val === "string" ? parseFloat(val) : val;
     if (isNaN(num)) return "₹0.00";
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
       currency: "INR",
       minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     }).format(num);
   };
 
   const monthLabel = MONTH_NAMES[payslip.month] || `Month ${payslip.month}`;
   const empName = `${payslip.first_name || ""} ${payslip.last_name || ""}`.trim() || `Employee #${payslip.user_id}`;
+  const logoSrc = payslip.company_logo || "/images/company_logo.png";
+  const companyName = payslip.company_name || "SAANVI TECHNOLOGIES";
+  const companyAddress = "NO 3/68/2, First Floor,Main road ,NH-66,Saligram,Udupi, Karnataka, 576225";
+  const employeeCode = payslip.employee_code || `EMP-${payslip.user_id}`;
+  const designation = payslip.designation_name || "—";
+  const department = payslip.department_name || "—";
+  const joiningDate = payslip.joining_date
+    ? new Date(payslip.joining_date).toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
+    : "—";
+  const uan = payslip.uan_number || payslip.pf_number || "—";
+  const bankName = payslip.bank_name || "—";
+  const accountNo = payslip.account_number || "—";
+
+  const totalWorkingDays = payslip.working_days || 30;
+  const paidDays = payslip.paid_days !== undefined ? payslip.paid_days : totalWorkingDays;
+  const lopDays = payslip.loss_of_pay_days || 0;
+  const leaveDays = Math.max(0, totalWorkingDays - paidDays - lopDays);
+
+  const basicEarned = payslip.basic_earned || 0;
+  const hraEarned = payslip.hra_earned || 0;
+  const otherEarned = payslip.other_allowances_earned || 0;
+  const grossEarned = payslip.gross_earned || (Number(basicEarned) + Number(hraEarned) + Number(otherEarned));
+
+  const pfDeduction = payslip.employee_pf || 0;
+  const ptDeduction = payslip.professional_tax || 0;
+  const esiDeduction = payslip.employee_esi || 0;
+  const hasEsi = Number(esiDeduction) > 0;
+  const totalDeductions = payslip.total_deductions || (Number(pfDeduction) + Number(ptDeduction) + Number(esiDeduction));
+  const netPay = payslip.net_pay || (Number(grossEarned) - Number(totalDeductions));
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4 overflow-y-auto print:p-0 print:bg-white print:static">
-      <div className="bg-white rounded-3xl max-w-3xl w-full border border-slate-200 shadow-2xl overflow-hidden my-8 print:shadow-none print:border-none print:my-0 print:max-w-none">
-        {/* Actions bar (Hidden in print) */}
-        <div className="px-6 py-3.5 border-b border-slate-100 flex items-center justify-between bg-slate-50 print:hidden">
-          <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-            Payslip Preview — {monthLabel} {payslip.year}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4 overflow-y-auto">
+      <div className="bg-white rounded-2xl max-w-4xl w-full border border-slate-300 shadow-2xl overflow-hidden my-6">
+        {/* Actions bar */}
+        <div className="px-6 py-3.5 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+          <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+            Payslip View — {monthLabel} {payslip.year} ({empName})
           </span>
           <div className="flex items-center gap-2">
             <button
@@ -80,227 +114,187 @@ export const PayslipModal: React.FC<PayslipModalProps> = ({ payslip, onClose }) 
           </div>
         </div>
 
-        {/* Printable Formal Payslip Container */}
-        <div className="p-8 sm:p-10 space-y-6 text-slate-900 print:p-6" id="printable-payslip">
-          {/* Header */}
-          <div className="border-b-2 border-slate-800 pb-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-black tracking-tight text-slate-900 uppercase">
-                {payslip.company_name || "Company Payslip"}
-              </h1>
-              <p className="text-xs text-slate-500 font-medium mt-0.5">
-                {payslip.company_code ? `Company Code: ${payslip.company_code} • Official Payslip` : "Official Payslip"}
-              </p>
-            </div>
-            <div className="text-right">
-              <div className="inline-block px-3 py-1 rounded-md bg-slate-900 text-white font-extrabold text-xs uppercase tracking-wider">
-                Payslip for {monthLabel} {payslip.year}
-              </div>
-              <div className="text-[11px] text-slate-500 font-medium mt-1">
-                Status: <span className="font-bold text-emerald-600">{payslip.payment_status}</span>
-                {payslip.rates_applied?.effectiveDate && (
-                  <span className="ml-2 text-slate-400 font-normal">
-                    • Policy Date: {new Date(payslip.rates_applied.effectiveDate).toLocaleDateString("en-IN")}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
+        {/* Payslip Template View matching user specification */}
+        <div className="p-6 sm:p-8 overflow-x-auto bg-slate-100 flex justify-center">
+          <div className="bg-white max-w-[840px] w-full border-[3px] border-black shadow-sm">
+            {/* 1. Header (Logo + Company Details) */}
+            <table className="w-full border-collapse border-b-2 border-black">
+              <tbody>
+                <tr>
+                  <td className="w-[190px] p-3 text-center align-middle">
+                    <div className="flex items-center justify-center min-h-[56px]">
+                      <img
+                        src={logoSrc}
+                        alt={companyName}
+                        className="max-h-[56px] max-w-[170px] w-auto h-auto object-contain block mx-auto"
+                        onError={(e) => {
+                          (e.target as HTMLElement).style.display = "none";
+                          const fb = document.getElementById("modal-alt-swirl");
+                          if (fb) fb.style.display = "block";
+                        }}
+                      />
+                    </div>
+                    <div id="modal-alt-swirl" className="hidden font-black text-base text-orange-600 text-center">
+                      {companyName}
+                    </div>
+                  </td>
+                  <td className="p-3.5 pl-5 text-left align-middle">
+                    <div className="text-lg font-black uppercase tracking-wide text-black leading-tight">
+                      {companyName}
+                    </div>
+                    <div className="text-xs font-medium mt-1 text-black leading-snug">
+                      {companyAddress}
+                    </div>
+                    <div className="text-sm mt-2 text-black">
+                      Pay Slip for <strong className="font-extrabold">{monthLabel} {payslip.year}</strong>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
 
-          {/* Employee & Bank Info Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs">
-            <div>
-              <div className="text-slate-400 font-medium text-[11px]">Employee Name</div>
-              <div className="font-bold text-slate-900 mt-0.5">{empName}</div>
-            </div>
-            <div>
-              <div className="text-slate-400 font-medium text-[11px]">Employee ID</div>
-              <div className="font-bold text-slate-900 mt-0.5">{payslip.employee_code || `ID-${payslip.user_id}`}</div>
-            </div>
-            <div>
-              <div className="text-slate-400 font-medium text-[11px]">Designation</div>
-              <div className="font-bold text-slate-900 mt-0.5">{payslip.designation_name || "—"}</div>
-            </div>
-            <div>
-              <div className="text-slate-400 font-medium text-[11px]">Department</div>
-              <div className="font-bold text-slate-900 mt-0.5">{payslip.department_name || "—"}</div>
-            </div>
+            {/* 2. Employee Details Block (2 Columns with center line, NO internal horizontal borders) */}
+            <table className="w-full border-collapse border-b-2 border-black text-xs sm:text-[13px]">
+              <tbody>
+                <tr>
+                  <td className="w-1/2 align-top p-2.5 px-4">
+                    <table className="w-full border-collapse">
+                      <tbody>
+                        <tr>
+                          <td className="py-1 w-[44%] font-medium text-black">Employee ID</td>
+                          <td className="py-1 font-bold text-black">{employeeCode}</td>
+                        </tr>
+                        <tr>
+                          <td className="py-1 font-medium text-black">Employee Name</td>
+                          <td className="py-1 font-bold text-black">{empName}</td>
+                        </tr>
+                        <tr>
+                          <td className="py-1 font-medium text-black">Designation</td>
+                          <td className="py-1 font-bold text-black">{designation}</td>
+                        </tr>
+                        <tr>
+                          <td className="py-1 font-medium text-black">Department</td>
+                          <td className="py-1 font-bold text-black">{department}</td>
+                        </tr>
+                        <tr>
+                          <td className="py-1 font-medium text-black">Date of Joining</td>
+                          <td className="py-1 font-bold text-black">{joiningDate}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </td>
+                  <td className="w-1/2 align-top p-2.5 px-4">
+                    <table className="w-full border-collapse">
+                      <tbody>
+                        <tr>
+                          <td className="py-1 w-[44%] font-medium text-black">UAN</td>
+                          <td className="py-1 font-bold text-black">{uan}</td>
+                        </tr>
+                        <tr>
+                          <td className="py-1 font-medium text-black">Bank</td>
+                          <td className="py-1 font-bold text-black">{bankName}</td>
+                        </tr>
+                        <tr>
+                          <td className="py-1 font-medium text-black">Account No.</td>
+                          <td className="py-1 font-bold text-black">{accountNo}</td>
+                        </tr>
+                        <tr>
+                          <td className="py-1">&nbsp;</td>
+                          <td className="py-1">&nbsp;</td>
+                        </tr>
+                        <tr>
+                          <td className="py-1">&nbsp;</td>
+                          <td className="py-1">&nbsp;</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
 
-            <div>
-              <div className="text-slate-400 font-medium text-[11px]">Joining Date</div>
-              <div className="font-bold text-indigo-900 mt-0.5">
-                {payslip.joining_date
-                  ? new Date(payslip.joining_date).toLocaleDateString("en-IN", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    })
-                  : "—"}
-              </div>
-            </div>
-            <div>
-              <div className="text-slate-400 font-medium text-[11px]">Bank Name</div>
-              <div className="font-bold text-slate-900 mt-0.5">{payslip.bank_name || "—"}</div>
-            </div>
-            <div>
-              <div className="text-slate-400 font-medium text-[11px]">Bank A/C No.</div>
-              <div className="font-bold text-slate-900 mt-0.5">{payslip.account_number || "—"}</div>
-            </div>
-            <div>
-              <div className="text-slate-400 font-medium text-[11px]">UAN / PF No.</div>
-              <div className="font-bold text-slate-900 mt-0.5">{payslip.uan_number || payslip.pf_number || "—"}</div>
-            </div>
-            <div>
-              <div className="text-slate-400 font-medium text-[11px]">PAN / ESI No.</div>
-              <div className="font-bold text-slate-900 mt-0.5">{payslip.pan_number || payslip.esi_number || "—"}</div>
-            </div>
+            {/* 3. Blank Spacer Row */}
+            <div className="h-3.5 border-b-2 border-black bg-white"></div>
 
-            <div>
-              <div className="text-slate-400 font-medium text-[11px]">Total Days</div>
-              <div className="font-bold text-slate-900 mt-0.5">{payslip.working_days || 30} Days</div>
-            </div>
-            <div>
-              <div className="text-slate-400 font-medium text-[11px]">Paid Days</div>
-              <div className="font-bold text-emerald-700 mt-0.5">{payslip.paid_days || 30} Days</div>
-            </div>
-            <div>
-              <div className="text-slate-400 font-medium text-[11px]">LOP Days</div>
-              <div className="font-bold text-rose-600 mt-0.5">{payslip.loss_of_pay_days || 0} Days</div>
-            </div>
-            <div>
-              <div className="text-slate-400 font-medium text-[11px]">Payment Date</div>
-              <div className="font-bold text-slate-900 mt-0.5">
-                {payslip.payment_date
-                  ? new Date(payslip.payment_date).toLocaleDateString("en-IN")
-                  : "End of Month"}
-              </div>
-            </div>
-          </div>
+            {/* 4. Main Data Grid: Attendance, Earnings & Deductions */}
+            <table className="w-full border-collapse text-xs sm:text-[13px] leading-relaxed">
+              <tbody>
+                {/* Attendance Rows */}
+                <tr>
+                  <td className="w-1/4 border-[1.5px] border-black px-3 py-1.5 font-semibold text-black">Gross Salary</td>
+                  <td className="w-1/4 border-[1.5px] border-black px-3 py-1.5 font-bold text-right text-black">{formatCurrency(grossEarned)}</td>
+                  <td className="w-1/4 border-[1.5px] border-black px-3 py-1.5">&nbsp;</td>
+                  <td className="w-1/4 border-[1.5px] border-black px-3 py-1.5">&nbsp;</td>
+                </tr>
+                <tr>
+                  <td className="border-[1.5px] border-black px-3 py-1.5 font-semibold text-black">Total Working Days</td>
+                  <td className="border-[1.5px] border-black px-3 py-1.5 font-bold text-right text-black">{totalWorkingDays}</td>
+                  <td className="border-[1.5px] border-black px-3 py-1.5 font-semibold text-black">Leaves</td>
+                  <td className="border-[1.5px] border-black px-3 py-1.5 font-bold text-right text-black">{leaveDays}</td>
+                </tr>
+                <tr>
+                  <td className="border-[1.5px] border-black px-3 py-1.5 font-semibold text-black">LOP Days</td>
+                  <td className="border-[1.5px] border-black px-3 py-1.5 font-bold text-right text-black">{lopDays}</td>
+                  <td className="border-[1.5px] border-black px-3 py-1.5 font-semibold text-black">Paid Days</td>
+                  <td className="border-[1.5px] border-black px-3 py-1.5 font-bold text-right text-black">{paidDays}</td>
+                </tr>
 
-          {/* Earnings & Deductions Split Table */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Earnings Column */}
-            <div className="border border-slate-200 rounded-2xl overflow-hidden">
-              <div className="bg-slate-100 px-4 py-2 font-bold text-xs uppercase tracking-wider text-slate-700 border-b border-slate-200 flex justify-between">
-                <span>Earnings</span>
-                <span>Amount (₹)</span>
-              </div>
-              <div className="p-4 space-y-2.5 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-slate-600">
-                    Basic Pay + DA + RA ({payslip.basic_percentage !== undefined && payslip.basic_percentage !== null ? `${payslip.basic_percentage}%` : "50%"})
-                  </span>
-                  <span className="font-semibold">{formatCurrency(payslip.basic_earned)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-600">House Rent Allowance (HRA)</span>
-                  <span className="font-semibold">{formatCurrency(payslip.hra_earned)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-600">Other Allowances</span>
-                  <span className="font-semibold">{formatCurrency(payslip.other_allowances_earned)}</span>
-                </div>
-              </div>
-              <div className="bg-slate-50 px-4 py-2.5 font-extrabold text-xs uppercase tracking-wider text-indigo-900 border-t border-slate-200 flex justify-between">
-                <span>Total Gross Earnings</span>
-                <span className="text-sm font-black">{formatCurrency(payslip.gross_earned)}</span>
-              </div>
-            </div>
+                {/* Section Headers */}
+                <tr>
+                  <th colSpan={2} className="border-y-2 border-x-[1.5px] border-black px-3 py-1.5 text-center font-extrabold text-sm text-black">
+                    Earnings
+                  </th>
+                  <th colSpan={2} className="border-y-2 border-x-[1.5px] border-black px-3 py-1.5 text-center font-extrabold text-sm text-black">
+                    Deductions
+                  </th>
+                </tr>
 
-            {/* Deductions Column */}
-            <div className="border border-slate-200 rounded-2xl overflow-hidden">
-              <div className="bg-slate-100 px-4 py-2 font-bold text-xs uppercase tracking-wider text-slate-700 border-b border-slate-200 flex justify-between">
-                <span>Deductions</span>
-                <span>Amount (₹)</span>
-              </div>
-              <div className="p-4 space-y-2.5 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-slate-600">
-                    Employee EPF ({payslip.employee_pf_rate !== undefined && payslip.employee_pf_rate !== null ? `${payslip.employee_pf_rate}%` : "12%"})
-                  </span>
-                  <span className="font-semibold text-rose-600">{formatCurrency(payslip.employee_pf)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-600">
-                    Employee ESI {Number(payslip.employee_esi) === 0 ? "(Exempt > ₹21k)" : `(${payslip.employee_esi_rate !== undefined && payslip.employee_esi_rate !== null ? `${payslip.employee_esi_rate}%` : "0.75%"})`}
-                  </span>
-                  <span className="font-semibold text-rose-600">{formatCurrency(payslip.employee_esi)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-600">Professional Tax (PT)</span>
-                  <span className="font-semibold text-rose-600">{formatCurrency(payslip.professional_tax)}</span>
-                </div>
-              </div>
-              <div className="bg-slate-50 px-4 py-2.5 font-extrabold text-xs uppercase tracking-wider text-rose-900 border-t border-slate-200 flex justify-between">
-                <span>Total Deductions</span>
-                <span className="text-sm font-black">{formatCurrency(payslip.total_deductions)}</span>
-              </div>
-            </div>
-          </div>
+                {/* Breakdown Rows */}
+                <tr>
+                  <td className="border-[1.5px] border-black px-3 py-1.5 font-semibold text-black">Basic</td>
+                  <td className="border-[1.5px] border-black px-3 py-1.5 font-bold text-right text-black">{formatCurrency(basicEarned)}</td>
+                  <td className="border-[1.5px] border-black px-3 py-1.5 font-semibold text-black">PF</td>
+                  <td className="border-[1.5px] border-black px-3 py-1.5 font-bold text-right text-black">{formatCurrency(pfDeduction)}</td>
+                </tr>
+                <tr>
+                  <td className="border-[1.5px] border-black px-3 py-1.5 font-semibold text-black">HRA</td>
+                  <td className="border-[1.5px] border-black px-3 py-1.5 font-bold text-right text-black">{formatCurrency(hraEarned)}</td>
+                  <td className="border-[1.5px] border-black px-3 py-1.5 font-semibold text-black">PT</td>
+                  <td className="border-[1.5px] border-black px-3 py-1.5 font-bold text-right text-black">{formatCurrency(ptDeduction)}</td>
+                </tr>
+                <tr>
+                  <td className="border-[1.5px] border-black px-3 py-1.5 font-semibold text-black">Other Allowances</td>
+                  <td className="border-[1.5px] border-black px-3 py-1.5 font-bold text-right text-black">{formatCurrency(otherEarned)}</td>
+                  <td className="border-[1.5px] border-black px-3 py-1.5 font-semibold text-black">{hasEsi ? "ESI" : "\u00A0"}</td>
+                  <td className="border-[1.5px] border-black px-3 py-1.5 font-bold text-right text-black">{hasEsi ? formatCurrency(esiDeduction) : "\u00A0"}</td>
+                </tr>
 
-          {/* Net Pay Highlight Banner */}
-          <div className="p-5 rounded-2xl bg-emerald-50 border-2 border-emerald-300 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div>
-              <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider">
-                Net Take-Home Salary Transferred
-              </span>
-              <div className="text-xs text-emerald-700 mt-0.5">
-                (Total Gross Earnings - Total Deductions)
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="text-2xl font-black text-emerald-900">{formatCurrency(payslip.net_pay)}</div>
-            </div>
-          </div>
+                {/* Blank Spacer Row between components and Totals */}
+                <tr>
+                  <td className="border-[1.5px] border-black px-3 py-1.5">&nbsp;</td>
+                  <td className="border-[1.5px] border-black px-3 py-1.5">&nbsp;</td>
+                  <td className="border-[1.5px] border-black px-3 py-1.5">&nbsp;</td>
+                  <td className="border-[1.5px] border-black px-3 py-1.5">&nbsp;</td>
+                </tr>
 
-          {/* Employer Contributions Box */}
-          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs">
-            <div className="font-bold text-slate-700 uppercase tracking-wider text-[11px] mb-2 flex items-center justify-between">
-              <span>Employer&apos;s Contributions (Benefits)</span>
-              {payslip.rates_applied?.versionName && (
-                <span className="text-[10px] text-slate-500 font-medium normal-case">
-                  Policy: {payslip.rates_applied.versionName}
-                </span>
-              )}
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="flex justify-between sm:block">
-                <span className="text-slate-500">
-                  Employer PF ({payslip.employer_pf_rate !== undefined && payslip.employer_pf_rate !== null ? `${payslip.employer_pf_rate}%` : "13%"}):
-                </span>
-                <span className="font-semibold text-slate-900 ml-1">{formatCurrency(payslip.employer_pf)}</span>
-              </div>
-              <div className="flex justify-between sm:block">
-                <span className="text-slate-500">
-                  Employer ESI {Number(payslip.employer_esi) === 0 ? "(Exempt > ₹21k)" : `(${payslip.employer_esi_rate !== undefined && payslip.employer_esi_rate !== null ? `${payslip.employer_esi_rate}%` : "3.25%"})`}:
-                </span>
-                <span className="font-semibold text-slate-900 ml-1">{formatCurrency(payslip.employer_esi)}</span>
-              </div>
-              <div className="flex justify-between sm:block">
-                <span className="text-slate-500">
-                  Gratuity ({payslip.gratuity_rate !== undefined && payslip.gratuity_rate !== null ? `${payslip.gratuity_rate}%` : "4.81%"}):
-                </span>
-                <span className="font-semibold text-slate-900 ml-1">{formatCurrency(payslip.gratuity)}</span>
-              </div>
-            </div>
-          </div>
+                {/* Totals */}
+                <tr>
+                  <td className="border-[1.5px] border-black px-3 py-1.5 font-extrabold text-black">Total Earnings</td>
+                  <td className="border-[1.5px] border-black px-3 py-1.5 font-extrabold text-right text-black">{formatCurrency(grossEarned)}</td>
+                  <td className="border-[1.5px] border-black px-3 py-1.5 font-extrabold text-black">Total Deductions</td>
+                  <td className="border-[1.5px] border-black px-3 py-1.5 font-extrabold text-right text-black">{formatCurrency(totalDeductions)}</td>
+                </tr>
 
-          {/* Signatures & Footer */}
-          <div className="pt-8 grid grid-cols-2 gap-8 text-center text-xs text-slate-500">
-            <div>
-              <div className="border-t border-slate-300 pt-2 font-bold text-slate-700">
-                Employer / Authorized Signatory
-              </div>
-            </div>
-            <div>
-              <div className="border-t border-slate-300 pt-2 font-bold text-slate-700">
-                Employee Signature
-              </div>
-            </div>
-          </div>
-
-          <div className="text-center text-[10px] text-slate-400">
-            This is a computer generated payslip and does not require a physical seal if authorized digitally.
+                {/* Net Salary */}
+                <tr>
+                  <td colSpan={2} className="border-t-[1.5px] border-black px-3 py-2">&nbsp;</td>
+                  <td className="border-t-2 border-[1.5px] border-black px-3 py-2 font-extrabold text-sm text-black">Net Salary</td>
+                  <td className="border-t-2 border-[1.5px] border-black px-3 py-2 font-extrabold text-sm text-right text-black">
+                    {formatCurrency(netPay)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>

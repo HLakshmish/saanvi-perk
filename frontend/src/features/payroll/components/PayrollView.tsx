@@ -13,6 +13,8 @@ import { EmployeeSalaryList } from "./EmployeeSalaryList";
 import { PayslipsView } from "./PayslipsView";
 import { PayrollSettingsTab } from "./PayrollSettingsTab";
 
+import { EmployeePayslipsView } from "./EmployeePayslipsView";
+
 interface PayrollViewProps {
   currentRole?: string;
   currentUserName?: string;
@@ -30,13 +32,10 @@ export const PayrollView: React.FC<PayrollViewProps> = ({
 
   if (isEmployee) {
     return (
-      <div className="w-full py-12 flex flex-col items-center justify-center bg-white border border-slate-200/80 rounded-3xl p-6 text-center shadow-xs">
-        <Banknote className="w-12 h-12 text-slate-300 mb-3" />
-        <h3 className="text-sm font-extrabold text-slate-700">Access Restricted</h3>
-        <p className="text-xs text-slate-400 max-w-xs mt-1">
-          Payroll calculations and settings are only accessible by administrative personnel.
-        </p>
-      </div>
+      <EmployeePayslipsView
+        currentUserId={currentUserId}
+        currentUserName={currentUserName}
+      />
     );
   }
 

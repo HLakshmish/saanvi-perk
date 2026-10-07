@@ -75,6 +75,7 @@ export interface SalaryBreakupResult {
     gratuityRate: number;
     statutoryPfWageLimit: number;
     usePfWageCeiling: boolean;
+    statutoryEsiGrossLimit?: number;
   };
   monthly: SalaryBreakupMonthly;
   annual: SalaryBreakupAnnual;
@@ -173,6 +174,7 @@ export interface Payslip {
   pan_number?: string;
   company_name?: string;
   company_code?: string;
+  company_logo?: string;
   month: number;
   year: number;
   working_days: number;

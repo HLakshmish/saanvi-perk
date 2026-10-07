@@ -7,4 +7,5 @@ export * from "./components/AssignSalaryModal";
 export * from "./components/PayslipsView";
 export * from "./components/PayslipModal";
 export * from "./components/PayrollSettingsTab";
+export * from "./components/EmployeePayslipsView";
 
