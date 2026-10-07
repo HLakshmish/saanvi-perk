@@ -19,7 +19,31 @@ const properties = {
             userId: { type: 'number' },
             firstName: { type: 'string' },
             lastName: { type: 'string', nullable: true },
-            employeeCode: { type: 'string' }
+            employeeCode: { type: 'string' },
+            officialEmail: { type: 'string', nullable: true },
+            department: {
+                type: 'object',
+                nullable: true,
+                properties: {
+                    departmentId: { type: 'number' },
+                    departmentName: { type: 'string' }
+                }
+            },
+            designation: {
+                type: 'object',
+                nullable: true,
+                properties: {
+                    designationId: { type: 'number' },
+                    designationName: { type: 'string' }
+                }
+            },
+            personalInformation: {
+                type: 'object',
+                nullable: true,
+                properties: {
+                    gender: { type: 'string', nullable: true }
+                }
+            }
         }
     }
 };

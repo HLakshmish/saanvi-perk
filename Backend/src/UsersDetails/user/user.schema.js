@@ -24,6 +24,7 @@ const userResponseProperties = {
     createdAt: { type: 'string', format: 'date-time' },
     updatedAt: { type: 'string', format: 'date-time' },
     dateOfBirth: { type: 'string', format: 'date-time', nullable: true },
+    gender: { type: 'string', nullable: true },
     roles: {
         type: 'array',
         nullable: true,

@@ -20,7 +20,7 @@ import {
   Layers,
   FileText,
 } from "lucide-react";
-import { getAttendances } from "../api/attendance.api";
+import { getAttendances, fetchAttendanceRequests } from "../api/attendance.api";
 import { AttendanceRegularizeModal } from "./AttendanceRegularizeModal";
 import { getEmployees } from "@/features/employees/api/employees.api";
 import { getCurrentUserId } from "@/features/expenses/api/expenses.api";
@@ -49,6 +49,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
 }) => {
   const isEmployee = currentRole === "employee";
   const [attendances, setAttendances] = useState<any[]>([]);
+  const [attendanceRequests, setAttendanceRequests] = useState<any[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [holidays, setHolidays] = useState<HolidayRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -79,8 +80,8 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
     setIsLoading(true);
     try {
       if (isEmployee) {
-        // Employees: load their attendance logs + company holidays
-        const [attRes, holRes] = await Promise.all([
+        // Employees: load their attendance logs + company holidays + attendance requests
+        const [attRes, holRes, reqRes] = await Promise.all([
           getAttendances({
             userId: loggedInUserId || undefined,
           }).catch((err) => {
@@ -88,6 +89,10 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
             return { success: false, data: [] };
           }),
           getHolidays().catch(() => ({ success: false, data: [] })),
+          fetchAttendanceRequests(loggedInUserId || undefined).catch((err) => {
+            console.error("Error loading attendance requests:", err);
+            return { success: false, data: [] };
+          }),
         ]);
 
         const attList = Array.isArray(attRes?.data)
@@ -96,6 +101,14 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
           ? attRes
           : [];
         setAttendances(attList);
+
+        const reqList = Array.isArray(reqRes?.data)
+          ? reqRes.data
+          : Array.isArray(reqRes)
+          ? reqRes
+          : [];
+        setAttendanceRequests(reqList);
+
         if (holRes.success && holRes.data) {
           setHolidays(holRes.data);
         }
@@ -281,7 +294,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
       isToday: boolean;
       isWeekend: boolean;
       dayOfWeek: string;
-      status: "PRESENT" | "HALF_DAY" | "WO" | "HOLIDAY" | "ABSENT" | "NOT_CLOCKED_IN";
+      status: "PRESENT" | "HALF_DAY" | "WO" | "HOLIDAY" | "ABSENT" | "NOT_CLOCKED_IN" | "REGULARIZATION_PENDING";
       statusLabel: string;
       checkInTime?: string | null;
       checkOutTime?: string | null;
@@ -299,14 +312,46 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
       const isWeekend = dayOfWeekIdx === 0 || dayOfWeekIdx === 6;
       const isToday = isTodayDate(cellDate);
 
+      // Helper to generate matching date keys (ISO, Local, Raw)
+      const getDateKeys = (dateInput: any): string[] => {
+        if (!dateInput) return [];
+        try {
+          const d = new Date(dateInput);
+          if (isNaN(d.getTime())) return [];
+          const isoStr = d.toISOString().split("T")[0];
+          const y = d.getFullYear();
+          const m = String(d.getMonth() + 1).padStart(2, "0");
+          const day = String(d.getDate()).padStart(2, "0");
+          const localStr = `${y}-${m}-${day}`;
+          let rawStr = "";
+          if (typeof dateInput === "string") {
+            rawStr = dateInput.split("T")[0];
+          }
+          return Array.from(new Set([isoStr, localStr, rawStr].filter(Boolean)));
+        } catch {
+          return [];
+        }
+      };
+
       // Check if employee has a raw attendance punch for this date
       const matchedPunch = attendances.find((att) => {
-        const attDateStr = att.attendanceDate
-          ? new Date(att.attendanceDate).toISOString().split("T")[0]
-          : att.checkInTime
-          ? new Date(att.checkInTime).toISOString().split("T")[0]
-          : "";
-        return attDateStr === dateKey;
+        const keys = [
+          ...getDateKeys(att.attendanceDate),
+          ...getDateKeys(att.checkInTime),
+        ];
+        return keys.includes(dateKey);
+      });
+
+      // Check if employee has a pending regularization request for this date
+      const matchedRequest = attendanceRequests.find((req) => {
+        const reqStatus = String(req.status || "").toUpperCase();
+        if (reqStatus === "REJECTED" || reqStatus === "CANCELLED") return false;
+        const keys = [
+          ...getDateKeys(req.shiftDate),
+          ...getDateKeys(req.attendanceDate),
+          ...getDateKeys(req.checkInTime),
+        ];
+        return keys.includes(dateKey);
       });
 
       // Check if holiday
@@ -320,7 +365,29 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
         return checkTime >= startTime && checkTime <= endTime;
       });
 
-      if (matchedPunch && matchedPunch.checkInTime) {
+      if (matchedRequest && String(matchedRequest.status || "").toUpperCase() === "PENDING") {
+        // Pending attendance regularization request exists for this date (overrides raw punch status display)
+        const mins = matchedPunch ? computeDayWorkingMinutes(matchedPunch, isToday) : 0;
+        const hrs = Math.floor(mins / 60);
+        const remMins = mins % 60;
+        const workStr = mins > 0 ? `${hrs}h ${remMins}m` : "--";
+
+        logs.push({
+          date: cellDate,
+          dateKey,
+          displayDate: formatCardDate(cellDate),
+          isToday,
+          isWeekend,
+          dayOfWeek: cellDate.toLocaleDateString("en-US", { weekday: "short" }),
+          status: "REGULARIZATION_PENDING",
+          statusLabel: "Regularization Pending",
+          checkInTime: matchedPunch?.checkInTime || matchedRequest.checkInTime || null,
+          checkOutTime: matchedPunch?.checkOutTime || matchedRequest.checkOutTime || null,
+          workingMinutes: mins,
+          workingHoursStr: workStr,
+          rawAttendance: matchedPunch || null,
+        });
+      } else if (matchedPunch && matchedPunch.checkInTime) {
         // Employee worked on this day (whether weekday or weekend) -> Determine status by hours
         const mins = computeDayWorkingMinutes(matchedPunch, isToday);
         const hrs = Math.floor(mins / 60);
@@ -427,7 +494,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
     }
 
     return logs;
-  }, [currentMonthDate, attendances, holidays]);
+  }, [currentMonthDate, attendances, attendanceRequests, holidays]);
 
   // Month-wise Overview Stats
   const monthOverviewStats = useMemo(() => {
@@ -695,6 +762,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                 const isPresent = log.status === "PRESENT";
                 const isHalfDay = log.status === "HALF_DAY";
                 const isAbsent = log.status === "ABSENT";
+                const isPendingReq = log.status === "REGULARIZATION_PENDING";
 
                 return (
                   <div
@@ -705,6 +773,8 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                         ? "border-slate-200/70 bg-slate-50/40 hover:bg-slate-50/80"
                         : isHoliday
                         ? "border-purple-200/80 bg-purple-50/20 hover:bg-purple-50/40"
+                        : isPendingReq
+                        ? "border-amber-200/80 bg-amber-50/20 hover:bg-amber-50/40"
                         : "border-slate-200/80"
                     }`}
                     title="Click to request attendance correction"
@@ -714,7 +784,9 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                       <div className="flex items-center gap-2.5">
                         <div
                           className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${
-                            isPresent
+                            isPendingReq
+                              ? "bg-amber-50 text-amber-700 border border-amber-200"
+                              : isPresent
                               ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                               : isHalfDay
                               ? "bg-amber-50 text-amber-700 border border-amber-200"
@@ -742,7 +814,9 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                       {log.statusLabel !== "--" && (
                         <span
                           className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
-                            isPresent
+                            isPendingReq
+                              ? "bg-amber-100 text-amber-800 border border-amber-300 font-extrabold"
+                              : isPresent
                               ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
                               : isHalfDay
                               ? "bg-amber-100 text-amber-800 border border-amber-200"
@@ -817,6 +891,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                       const isPresent = log.status === "PRESENT";
                       const isHalfDay = log.status === "HALF_DAY";
                       const isAbsent = log.status === "ABSENT";
+                      const isPendingReq = log.status === "REGULARIZATION_PENDING";
 
                       return (
                         <TableRow
@@ -827,6 +902,8 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                               ? "bg-slate-50/30 text-slate-500 hover:bg-slate-100/70"
                               : isHoliday
                               ? "bg-purple-50/20 hover:bg-purple-50/50"
+                              : isPendingReq
+                              ? "bg-amber-50/20 hover:bg-amber-50/50"
                               : log.isToday
                               ? "bg-brand-primary-light/40 hover:bg-brand-primary-light/60"
                               : ""
@@ -838,7 +915,9 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                             <div className="flex items-center gap-2.5">
                               <div
                                 className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${
-                                  isPresent
+                                  isPendingReq
+                                    ? "bg-amber-50 text-amber-700 border border-amber-200"
+                                    : isPresent
                                     ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                                     : isHalfDay
                                     ? "bg-amber-50 text-amber-700 border border-amber-200"
@@ -900,7 +979,9 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                             {log.statusLabel !== "--" && (
                               <span
                                 className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider inline-block ${
-                                  isPresent
+                                  isPendingReq
+                                    ? "bg-amber-100 text-amber-800 border border-amber-300 font-extrabold"
+                                    : isPresent
                                     ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
                                     : isHalfDay
                                     ? "bg-amber-100 text-amber-800 border border-amber-200"

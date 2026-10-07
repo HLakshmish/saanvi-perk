@@ -35,7 +35,11 @@ class AttendanceRepository {
                         userId: true,
                         firstName: true,
                         lastName: true,
-                        employeeCode: true
+                        employeeCode: true,
+                        officialEmail: true,
+                        department: { select: { departmentId: true, departmentName: true } },
+                        designation: { select: { designationId: true, designationName: true } },
+                        personalInformation: { select: { gender: true } }
                     }
                 }
             }

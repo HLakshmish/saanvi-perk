@@ -56,10 +56,11 @@ class UserRepository {
             where: whereClause,
             include: {
                 userRoles: { select: { role: { select: { roleId: true, roleName: true, roleCode: true } } } },
-                department: { select: { departmentName: true } },
-                designation: { select: { designationName: true } },
+                department: { select: { departmentId: true, departmentName: true } },
+                designation: { select: { designationId: true, designationName: true } },
                 company: { select: { companyName: true } },
                 location: { select: { locationName: true, city: true, state: true } },
+                personalInformation: { select: { dateOfBirth: true, gender: true } },
                 updatedByUser: { select: { firstName: true, lastName: true } },
                 createdByUser: { select: { firstName: true, lastName: true } }
             }

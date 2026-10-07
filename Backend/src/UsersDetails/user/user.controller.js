@@ -99,7 +99,7 @@ class UserController {
             const users = await userService.getAllUsers(companyId);
             
             const formattedUsers = users.map(u => {
-                const { password, userRoles, ...rest } = u;
+                const { password, userRoles, personalInformation, ...rest } = u;
                 if (userRoles && userRoles.length > 0) {
                     rest.roles = userRoles.map(ur => ({
                         roleId: ur.role.roleId,
@@ -108,6 +108,8 @@ class UserController {
                 } else {
                     rest.roles = [];
                 }
+                rest.gender = personalInformation?.gender || null;
+                rest.dateOfBirth = personalInformation?.dateOfBirth || null;
                 return rest;
             });
 
@@ -242,7 +244,7 @@ class UserController {
             const users = await userService.getAllUsers(companyId);
             
             const formattedUsers = users.map(u => {
-                const { password, userRoles, ...rest } = u;
+                const { password, userRoles, personalInformation, ...rest } = u;
                 if (userRoles && userRoles.length > 0) {
                     rest.roles = userRoles.map(ur => ({
                         roleId: ur.role.roleId,
@@ -251,6 +253,8 @@ class UserController {
                 } else {
                     rest.roles = [];
                 }
+                rest.gender = personalInformation?.gender || null;
+                rest.dateOfBirth = personalInformation?.dateOfBirth || null;
                 return rest;
             });
 
