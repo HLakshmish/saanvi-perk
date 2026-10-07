@@ -4,15 +4,22 @@ const prisma = require("../config/prisma");
 class AttendanceService {
     calculateAttendanceStatus(data) {
         if (data.checkInTime && data.checkOutTime) {
-            const diffMs = data.checkOutTime.getTime() - data.checkInTime.getTime();
-            data.workingMinutes = Math.floor(diffMs / 60000);
+            const inTime = new Date(data.checkInTime).getTime();
+            const outTime = new Date(data.checkOutTime).getTime();
+            if (!isNaN(inTime) && !isNaN(outTime)) {
+                let diffMs = outTime - inTime;
+                if (diffMs < 0) {
+                    diffMs += 24 * 60 * 60 * 1000; // Night shift crossing midnight
+                }
+                data.workingMinutes = Math.floor(diffMs / 60000);
+            }
         }
 
-        if (data.workingMinutes !== undefined) {
+        if (data.workingMinutes !== undefined && data.workingMinutes !== null) {
             const workingHours = data.workingMinutes / 60;
             if (workingHours >= 8) {
                 data.attendanceStatus = 'PRESENT';
-            } else if (workingHours > 4 && workingHours < 8) {
+            } else if (workingHours >= 4 && workingHours < 8) {
                 data.attendanceStatus = 'HALF_DAY';
             } else {
                 data.attendanceStatus = 'ABSENT';

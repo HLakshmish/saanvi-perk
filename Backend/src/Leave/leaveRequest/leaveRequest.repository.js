@@ -75,7 +75,10 @@ class LeaveRequestRepository {
                     select: {
                         userId: true,
                         firstName: true,
-                        lastName: true
+                        lastName: true,
+                        employeeCode: true,
+                        department: { select: { departmentId: true, departmentName: true } },
+                        personalInformation: { select: { gender: true } }
                     }
                 },
                 approvedUser: {

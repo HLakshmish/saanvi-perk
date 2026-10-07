@@ -42,7 +42,7 @@ class PayrollRepository {
                 // Drop legacy company_id UNIQUE constraint if exists to support date-based versioning
                 await prisma.$executeRawUnsafe(`
                     ALTER TABLE payroll_settings DROP CONSTRAINT IF EXISTS payroll_settings_company_id_key;
-                `).catch(() => {});
+                `).catch(() => { });
 
                 // Add date-based versioning columns to payroll_settings
                 await prisma.$executeRawUnsafe(`
@@ -51,7 +51,7 @@ class PayrollRepository {
                     ALTER TABLE payroll_settings ADD COLUMN IF NOT EXISTS version_name VARCHAR(100);
                     ALTER TABLE payroll_settings ADD COLUMN IF NOT EXISTS remarks TEXT;
                     UPDATE payroll_settings SET effective_from = '2024-01-01' WHERE effective_from IS NULL;
-                `).catch(() => {});
+                `).catch(() => { });
 
                 // Deduplicate any rows having the exact same (company_id, effective_from)
                 await prisma.$executeRawUnsafe(`
@@ -60,7 +60,7 @@ class PayrollRepository {
                     WHERE a.company_id = b.company_id
                       AND a.effective_from = b.effective_from
                       AND (a.updated_at < b.updated_at OR (a.updated_at = b.updated_at AND a.id < b.id));
-                `).catch(() => {});
+                `).catch(() => { });
 
                 // Chain effective_to dates so that historical policies end 1 day prior to the next version
                 await prisma.$executeRawUnsafe(`
@@ -73,7 +73,7 @@ class PayrollRepository {
                     SET effective_to = (o.next_eff_from - INTERVAL '1 day')::date
                     FROM ordered o
                     WHERE p.id = o.id AND o.next_eff_from IS NOT NULL;
-                `).catch(() => {});
+                `).catch(() => { });
 
                 // Ensure only the single latest version per company has effective_to = NULL (Active)
                 await prisma.$executeRawUnsafe(`
@@ -85,13 +85,13 @@ class PayrollRepository {
                     UPDATE payroll_settings
                     SET effective_to = NULL
                     WHERE id IN (SELECT id FROM latest);
-                `).catch(() => {});
+                `).catch(() => { });
 
                 // Ensure unique index per company and effective_from so overlapping duplicates cannot occur
                 await prisma.$executeRawUnsafe(`
                     CREATE UNIQUE INDEX IF NOT EXISTS idx_payroll_settings_company_eff 
                     ON payroll_settings (company_id, effective_from);
-                `).catch(() => {});
+                `).catch(() => { });
 
                 // Create employee_salary_structures table
                 await prisma.$executeRawUnsafe(`
@@ -182,7 +182,7 @@ class PayrollRepository {
                     ALTER TABLE employee_payslips ADD COLUMN IF NOT EXISTS employer_esi_rate NUMERIC(5, 2) DEFAULT 3.25;
                     ALTER TABLE employee_payslips ADD COLUMN IF NOT EXISTS gratuity_rate NUMERIC(5, 2) DEFAULT 4.81;
                     ALTER TABLE employee_payslips ADD COLUMN IF NOT EXISTS rates_applied JSONB;
-                `).catch(() => {});
+                `).catch(() => { });
 
                 // Create employee_salary_history table for hike & revision tracking with complete component breakdown
                 await prisma.$executeRawUnsafe(`
@@ -258,7 +258,7 @@ class PayrollRepository {
                     ALTER TABLE employee_salary_history ADD COLUMN IF NOT EXISTS rates_applied JSONB;
                     ALTER TABLE employee_salary_structures ADD COLUMN IF NOT EXISTS effective_to DATE;
                     ALTER TABLE employee_salary_history ADD COLUMN IF NOT EXISTS effective_to DATE;
-                `).catch(() => {});
+                `).catch(() => { });
 
                 // Backfill any salary history records missing breakdown from current structure
                 await prisma.$executeRawUnsafe(`
@@ -289,7 +289,7 @@ class PayrollRepository {
                         gratuity_annual = s.gratuity_annual
                     FROM employee_salary_structures s
                     WHERE h.user_id = s.user_id AND h.company_id = s.company_id AND h.basic_monthly IS NULL;
-                `).catch(() => {});
+                `).catch(() => { });
 
                 // Note: PF cap normalization is managed dynamically by payroll service based on company settings
 
@@ -305,7 +305,7 @@ class PayrollRepository {
                         net_salary_monthly = monthly_gross - (employee_pf_monthly + professional_tax_monthly),
                         net_salary_annual = annual_gross - (employee_pf_annual + professional_tax_annual)
                     WHERE basic_monthly > 21000 AND (employee_esi_monthly > 0 OR employer_esi_monthly > 0);
-                `).catch(() => {});
+                `).catch(() => { });
 
                 // Backfill effective_to for prior history rows based on the subsequent revision start date
                 await prisma.$executeRawUnsafe(`
@@ -324,7 +324,7 @@ class PayrollRepository {
                         WHERE h2.user_id = h.user_id AND h2.company_id = h.company_id
                           AND h2.effective_date > h.effective_date
                       );
-                `).catch(() => {});
+                `).catch(() => { });
 
                 // Restore / sync employee_salary_structures from latest history if structure row is missing
                 await prisma.$executeRawUnsafe(`
@@ -376,7 +376,7 @@ class PayrollRepository {
                         WHERE s.user_id = h.user_id AND s.company_id = h.company_id
                       )
                     ORDER BY h.company_id, h.user_id, h.effective_date DESC, h.created_at DESC;
-                `).catch(() => {});
+                `).catch(() => { });
 
                 // Remove any invalid historical payslips generated prior to the employee's joining date
                 await prisma.$executeRawUnsafe(`
@@ -385,14 +385,14 @@ class PayrollRepository {
                     WHERE p.user_id = u.user_id
                       AND u.joining_date IS NOT NULL
                       AND u.joining_date > (make_date(p.year, p.month, 1) + INTERVAL '1 month' - INTERVAL '1 day')::date;
-                `).catch(() => {});
+                `).catch(() => { });
 
                 // Remove any prematurely generated payslips for current ongoing or future months
                 await prisma.$executeRawUnsafe(`
                     DELETE FROM employee_payslips
                     WHERE year > EXTRACT(YEAR FROM CURRENT_DATE)
                        OR (year = EXTRACT(YEAR FROM CURRENT_DATE) AND month >= EXTRACT(MONTH FROM CURRENT_DATE));
-                `).catch(() => {});
+                `).catch(() => { });
 
                 this.initialized = true;
             } catch (err) {
@@ -436,7 +436,7 @@ class PayrollRepository {
             WHERE a.company_id = $1 AND b.company_id = $1
               AND a.effective_from = b.effective_from
               AND (a.updated_at < b.updated_at OR (a.updated_at = b.updated_at AND a.id < b.id));
-        `, companyId).catch(() => {});
+        `, companyId).catch(() => { });
 
         // 2. Chain older versions so effective_to ends strictly 1 day before the next version starts
         await prisma.$executeRawUnsafe(`
@@ -451,7 +451,7 @@ class PayrollRepository {
                 updated_at = CURRENT_TIMESTAMP
             FROM ordered o
             WHERE p.id = o.id AND o.next_eff_from IS NOT NULL;
-        `, companyId).catch(() => {});
+        `, companyId).catch(() => { });
 
         // 3. Ensure strictly ONLY the single latest version has effective_to = NULL (Active)
         await prisma.$executeRawUnsafe(`
@@ -466,7 +466,7 @@ class PayrollRepository {
             SET effective_to = NULL,
                 updated_at = CURRENT_TIMESTAMP
             WHERE company_id = $1 AND id IN (SELECT id FROM latest);
-        `, companyId).catch(() => {});
+        `, companyId).catch(() => { });
     }
 
     async getSettingsHistory(companyId) {
@@ -500,8 +500,8 @@ class PayrollRepository {
 
     async upsertSettings(companyId, data, updatedBy) {
         await this.ensureTables();
-        const effFrom = data.effectiveFrom 
-            ? new Date(data.effectiveFrom).toISOString().split('T')[0] 
+        const effFrom = data.effectiveFrom
+            ? new Date(data.effectiveFrom).toISOString().split('T')[0]
             : new Date().toISOString().split('T')[0];
 
         // Check if an existing version exists for this EXACT effective_from date
@@ -557,7 +557,7 @@ class PayrollRepository {
             await prisma.$executeRawUnsafe(
                 `DELETE FROM payroll_settings WHERE company_id = $1 AND effective_from = $2::date AND id <> $3`,
                 companyId, effFrom, saved.id
-            ).catch(() => {});
+            ).catch(() => { });
         } else {
             const rows = await prisma.$queryRawUnsafe(`
                 INSERT INTO payroll_settings (
@@ -695,12 +695,13 @@ class PayrollRepository {
         let query = `
             SELECT s.*, 
                    u.user_id, u.first_name, u.last_name, u.employee_code, u.official_email,
-                   d.designation_name, dept.department_name,
+                   d.designation_name, dept.department_name, pi.gender,
                    h.hike_percentage, h.hike_amount, h.previous_annual_ctc, h.revision_type, h.remarks as hike_remarks
             FROM users u
             LEFT JOIN employee_salary_structures s ON u.user_id = s.user_id AND s.company_id = $1
             LEFT JOIN designations d ON u.designation_id = d.designation_id
             LEFT JOIN departments dept ON u.department_id = dept.department_id
+            LEFT JOIN personal_information pi ON u.user_id = pi.user_id
             LEFT JOIN LATERAL (
                 SELECT hike_percentage, hike_amount, previous_annual_ctc, revision_type, remarks
                 FROM employee_salary_history
@@ -820,7 +821,7 @@ class PayrollRepository {
                 WHERE user_id = $2 AND company_id = $3
                   AND effective_date < $1::date
                   AND (effective_to IS NULL OR effective_to >= $1::date);
-            `, effDate, userId, companyId).catch(() => {});
+            `, effDate, userId, companyId).catch(() => { });
 
         } else {
             const rows = await prisma.$queryRawUnsafe(`
@@ -1011,8 +1012,8 @@ class PayrollRepository {
                    d.designation_name, dept.department_name,
                    b.bank_name, b.account_number, b.ifsc_code,
                    pf.uan_number, pf.pf_number, esi.esi_number,
-                   pi.pan_number,
-                   c.company_name, c.company_code, c.company_logo
+                   c.company_name, c.company_code, c.company_logo,
+                   pi.pan_number, pi.gender
             FROM employee_payslips p
             JOIN users u ON p.user_id = u.user_id
             JOIN company_details c ON p.company_id = c.company_id

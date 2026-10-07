@@ -19,7 +19,16 @@ class AttendanceRequestRepository {
         return await prisma.attendanceRequest.findMany({
             where: query,
             include: {
-                user: { select: { firstName: true, lastName: true, employeeCode: true } },
+                user: {
+                    select: {
+                        userId: true,
+                        firstName: true,
+                        lastName: true,
+                        employeeCode: true,
+                        department: { select: { departmentId: true, departmentName: true } },
+                        personalInformation: { select: { gender: true } }
+                    }
+                },
                 approvedUser: { select: { firstName: true, lastName: true } }
             },
             orderBy: { createdAt: 'desc' }

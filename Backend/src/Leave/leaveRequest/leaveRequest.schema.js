@@ -21,7 +21,24 @@ const leaveRequestResponseProperties = {
         properties: {
             userId: { type: 'number' },
             firstName: { type: 'string' },
-            lastName: { type: 'string', nullable: true }
+            lastName: { type: 'string', nullable: true },
+            employeeCode: { type: 'string', nullable: true },
+            officialEmail: { type: 'string', nullable: true },
+            department: {
+                type: 'object',
+                nullable: true,
+                properties: {
+                    departmentId: { type: 'number' },
+                    departmentName: { type: 'string' }
+                }
+            },
+            personalInformation: {
+                type: 'object',
+                nullable: true,
+                properties: {
+                    gender: { type: 'string', nullable: true }
+                }
+            }
         }
     },
     approvedUser: {
