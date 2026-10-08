@@ -22,6 +22,7 @@ model CompanyDetails {
   website      String?
 
   gstNumber          String? @map("gst_number")
+  pfNumber           String? @map("pf_number")
   panNumber          String? @map("pan_number")
   cinNumber          String? @map("cin_number")
   registrationNumber String? @map("registration_number")

@@ -6,6 +6,7 @@ const companyBodyProperties = {
     companyPhone: { type: 'string', nullable: true },
     website: { type: 'string', nullable: true },
     gstNumber: { type: 'string', nullable: true },
+    pfNumber: { type: 'string', nullable: true },
     panNumber: { type: 'string', nullable: true },
     cinNumber: { type: 'string', nullable: true },
     registrationNumber: { type: 'string', nullable: true },

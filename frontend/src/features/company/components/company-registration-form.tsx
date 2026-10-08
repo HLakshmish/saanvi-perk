@@ -28,6 +28,7 @@ const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 const PHONE_REGEX = /^\+?[0-9\s\-()]{7,15}$/;
 const WEBSITE_REGEX = /^(https?:\/\/)?(www\.)?[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+([\/?].*)?$/i;
 const GST_REGEX = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+const PF_REGEX = /^[A-Z0-9\/-]{5,25}$/i;
 const PAN_REGEX = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
 const CODE_REGEX = /^[A-Z0-9_-]{2,10}$/;
 const NAME_REGEX = /^[a-zA-Z\s'-]{2,50}$/;
@@ -60,6 +61,7 @@ export function CompanyRegistrationForm({ onSuccess, editCompany }: CompanyRegis
 
     // Tax & Compliance
     gstNumber: "",
+    pfNumber: "",
     panNumber: "",
     industryType: "Information Technology",
 
@@ -91,6 +93,7 @@ export function CompanyRegistrationForm({ onSuccess, editCompany }: CompanyRegis
         companyPhone: editCompany.companyPhone || "",
         website: editCompany.website || "",
         gstNumber: editCompany.gstNumber || "",
+        pfNumber: editCompany.pfNumber || "",
         panNumber: editCompany.panNumber || "",
         industryType: editCompany.industryType || "Information Technology",
         workingHoursPerDay: editCompany.workingHoursPerDay || 8,
@@ -180,6 +183,11 @@ export function CompanyRegistrationForm({ onSuccess, editCompany }: CompanyRegis
           return "Invalid GSTIN format (e.g. 29AAAAA0000A1Z5).";
         return null;
 
+      case "pfNumber":
+        if (trimmed && !PF_REGEX.test(trimmed))
+          return "Invalid PF Registration Number format.";
+        return null;
+
       case "panNumber":
         if (trimmed && !PAN_REGEX.test(trimmed))
           return "Invalid PAN format (e.g. AAAAA0000A).";
@@ -251,6 +259,12 @@ export function CompanyRegistrationForm({ onSuccess, editCompany }: CompanyRegis
       if (errGst) {
         errors.gstNumber = errGst;
         if (!firstErrorField) firstErrorField = "gstNumber";
+      }
+
+      const errPf = validateSingleField("pfNumber", formData.pfNumber || "");
+      if (errPf) {
+        errors.pfNumber = errPf;
+        if (!firstErrorField) firstErrorField = "pfNumber";
       }
 
       const errPan = validateSingleField("panNumber", formData.panNumber || "");
@@ -349,6 +363,7 @@ export function CompanyRegistrationForm({ onSuccess, editCompany }: CompanyRegis
       companyPhone: formData.companyPhone?.trim(),
       website: formData.website?.trim(),
       gstNumber: formData.gstNumber?.trim().toUpperCase(),
+      pfNumber: formData.pfNumber?.trim().toUpperCase(),
       panNumber: formData.panNumber?.trim().toUpperCase(),
       superAdmin: {
         ...formData.superAdmin,
@@ -619,7 +634,7 @@ export function CompanyRegistrationForm({ onSuccess, editCompany }: CompanyRegis
               </div>
 
               {/* Tax & Compliance Identification */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-slate-100">
                 <Input
                   id="gstNumber"
                   label="GST Number"
@@ -631,6 +646,19 @@ export function CompanyRegistrationForm({ onSuccess, editCompany }: CompanyRegis
                     setFieldErrors((prev) => ({ ...prev, gstNumber: err || "" }));
                   }}
                   error={fieldErrors["gstNumber"]}
+                />
+
+                <Input
+                  id="pfNumber"
+                  label="PF Number"
+                  placeholder="MH/BAN/0012345/000/0000123"
+                  value={formData.pfNumber || ""}
+                  onChange={(e) => handleChange("pfNumber", e.target.value.toUpperCase())}
+                  onBlur={(e) => {
+                    const err = validateSingleField("pfNumber", e.target.value);
+                    setFieldErrors((prev) => ({ ...prev, pfNumber: err || "" }));
+                  }}
+                  error={fieldErrors["pfNumber"]}
                 />
 
                 <Input

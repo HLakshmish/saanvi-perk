@@ -16,6 +16,7 @@ export interface CreateCompanyInput {
 
   // Tax & Compliance
   gstNumber?: string;
+  pfNumber?: string;
   panNumber?: string;
   cinNumber?: string;
   registrationNumber?: string;
@@ -58,6 +59,7 @@ export interface Company {
   website?: string;
   companyLogo?: string;
   gstNumber?: string;
+  pfNumber?: string;
   panNumber?: string;
   industryType?: string;
   city?: string;

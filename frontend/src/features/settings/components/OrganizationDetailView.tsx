@@ -17,6 +17,8 @@ interface OrgData {
   companyCode: string;
   companyName: string;
   companyEmail: string;
+  gstNumber: string;
+  pfNumber: string;
   address1: string;
   address2: string;
   city: string;
@@ -34,6 +36,8 @@ const EMPTY_ORG_DATA: OrgData = {
   companyCode: "",
   companyName: "",
   companyEmail: "",
+  gstNumber: "",
+  pfNumber: "",
   address1: "",
   address2: "",
   city: "",
@@ -116,6 +120,8 @@ export const OrganizationDetailView: React.FC<OrganizationDetailViewProps> = ({ 
           companyCode: selectedCompany.companyCode || "",
           companyName: selectedCompany.companyName || "",
           companyEmail: selectedCompany.companyEmail || "",
+          gstNumber: selectedCompany.gstNumber || "",
+          pfNumber: selectedCompany.pfNumber || "",
           address1: primaryLoc.addressLine1 || selectedCompany.city || "",
           address2: primaryLoc.addressLine2 || "",
           city: primaryLoc.city || selectedCompany.city || "",
@@ -154,6 +160,8 @@ export const OrganizationDetailView: React.FC<OrganizationDetailViewProps> = ({ 
       companyPhone: formData.phone,
       website: formData.website,
       companyLogo: formData.logoUrl,
+      gstNumber: formData.gstNumber,
+      pfNumber: formData.pfNumber,
     };
 
     const locationPayload = {
@@ -553,6 +561,42 @@ export const OrganizationDetailView: React.FC<OrganizationDetailViewProps> = ({ 
                       />
                     ) : (
                       <p className="font-semibold text-slate-800">{orgData.phone || "-"}</p>
+                    )}
+                  </div>
+
+                  {/* GST Number */}
+                  <div className="space-y-1">
+                    <span className="text-slate-400 font-bold uppercase text-[10px] tracking-wider block">
+                      GST Number
+                    </span>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={formData.gstNumber}
+                        onChange={(e) => setFormData({ ...formData, gstNumber: e.target.value.toUpperCase() })}
+                        placeholder="Enter GST number"
+                        className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-brand-primary"
+                      />
+                    ) : (
+                      <p className="font-bold text-slate-800 font-mono">{orgData.gstNumber || "-"}</p>
+                    )}
+                  </div>
+
+                  {/* PF Number */}
+                  <div className="space-y-1">
+                    <span className="text-slate-400 font-bold uppercase text-[10px] tracking-wider block">
+                      PF Number
+                    </span>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={formData.pfNumber}
+                        onChange={(e) => setFormData({ ...formData, pfNumber: e.target.value.toUpperCase() })}
+                        placeholder="Enter PF number"
+                        className="w-full border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 focus:outline-none focus:border-brand-primary"
+                      />
+                    ) : (
+                      <p className="font-bold text-slate-800 font-mono">{orgData.pfNumber || "-"}</p>
                     )}
                   </div>
 
