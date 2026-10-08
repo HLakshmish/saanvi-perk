@@ -442,6 +442,7 @@ export default function OwnerDashboardPage() {
                       <span>Tax & Compliance</span>
                     </div>
                     <div className="text-slate-600">GST Number: <span className="text-slate-900 font-semibold font-mono">{selectedCompany.gstNumber || "N/A"}</span></div>
+                    <div className="text-slate-600">PF Number: <span className="text-slate-900 font-semibold font-mono">{selectedCompany.pfNumber || "N/A"}</span></div>
                     <div className="text-slate-600">PAN Number: <span className="text-slate-900 font-semibold font-mono">{selectedCompany.panNumber || "N/A"}</span></div>
                   </div>
 
