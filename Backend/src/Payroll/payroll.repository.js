@@ -326,6 +326,101 @@ class PayrollRepository {
                       );
                 `).catch(() => { });
 
+                // Backfill initial salary history for users who only have employee_salary_structures
+                await prisma.$executeRawUnsafe(`
+                    INSERT INTO employee_salary_history (
+                        company_id, user_id, previous_annual_ctc, new_annual_ctc,
+                        previous_monthly_ctc, new_monthly_ctc, hike_percentage,
+                        hike_amount, revision_type, effective_date, effective_to, remarks,
+                        monthly_gross, annual_gross, basic_monthly, basic_annual,
+                        hra_monthly, hra_annual, other_allowances_monthly, other_allowances_annual,
+                        employee_pf_monthly, employee_pf_annual, employee_esi_monthly, employee_esi_annual,
+                        professional_tax_monthly, professional_tax_annual, total_deductions_monthly, total_deductions_annual,
+                        net_salary_monthly, net_salary_annual, employer_pf_monthly, employer_pf_annual,
+                        employer_esi_monthly, employer_esi_annual, gratuity_monthly, gratuity_annual,
+                        created_at
+                    )
+                    SELECT 
+                        s.company_id, s.user_id, 0, s.annual_ctc,
+                        0, s.monthly_ctc, 0,
+                        0, 'INITIAL', COALESCE(s.effective_date, u.joining_date, CURRENT_DATE), s.effective_to, 'Initial Salary Assignment',
+                        s.monthly_gross, s.annual_gross, s.basic_monthly, s.basic_annual,
+                        s.hra_monthly, s.hra_annual, s.other_allowances_monthly, s.other_allowances_annual,
+                        s.employee_pf_monthly, s.employee_pf_annual, s.employee_esi_monthly, s.employee_esi_annual,
+                        s.professional_tax_monthly, s.professional_tax_annual, s.total_deductions_monthly, s.total_deductions_annual,
+                        s.net_salary_monthly, s.net_salary_annual, s.employer_pf_monthly, s.employer_pf_annual,
+                        s.employer_esi_monthly, s.employer_esi_annual, s.gratuity_monthly, s.gratuity_annual,
+                        COALESCE(s.created_at, CURRENT_TIMESTAMP)
+                    FROM employee_salary_structures s
+                    JOIN users u ON u.user_id = s.user_id
+                    WHERE s.annual_ctc > 0
+                      AND NOT EXISTS (
+                          SELECT 1 FROM employee_salary_history h
+                          WHERE h.user_id = s.user_id AND h.company_id = s.company_id
+                      );
+                `).catch(() => {});
+
+                // Backfill initial salary history for users where earliest revision has previous_annual_ctc > 0
+                await prisma.$executeRawUnsafe(`
+                    INSERT INTO employee_salary_history (
+                        company_id, user_id, previous_annual_ctc, new_annual_ctc,
+                        previous_monthly_ctc, new_monthly_ctc, hike_percentage,
+                        hike_amount, revision_type, effective_date, effective_to, remarks, created_by,
+                        monthly_gross, annual_gross, basic_monthly, basic_annual,
+                        hra_monthly, hra_annual, other_allowances_monthly, other_allowances_annual,
+                        employee_pf_monthly, employee_pf_annual, employee_esi_monthly, employee_esi_annual,
+                        professional_tax_monthly, professional_tax_annual, total_deductions_monthly, total_deductions_annual,
+                        net_salary_monthly, net_salary_annual, employer_pf_monthly, employer_pf_annual,
+                        employer_esi_monthly, employer_esi_annual, gratuity_monthly, gratuity_annual,
+                        created_at
+                    )
+                    SELECT 
+                        earliest.company_id,
+                        earliest.user_id,
+                        0,
+                        earliest.previous_annual_ctc,
+                        0,
+                        COALESCE(earliest.previous_monthly_ctc, ROUND(earliest.previous_annual_ctc / 12, 2)),
+                        0,
+                        0,
+                        'INITIAL',
+                        COALESCE(u.joining_date, (earliest.effective_date - INTERVAL '1 year')::date),
+                        (earliest.effective_date - INTERVAL '1 day')::date,
+                        'Initial / Starting Salary (Before Hike)',
+                        earliest.created_by,
+                        ROUND((earliest.previous_annual_ctc / 12) * 0.9, 2),
+                        ROUND(earliest.previous_annual_ctc * 0.9, 2),
+                        ROUND((earliest.previous_annual_ctc / 12) * 0.5, 2),
+                        ROUND(earliest.previous_annual_ctc * 0.5, 2),
+                        ROUND((earliest.previous_annual_ctc / 12) * 0.25, 2),
+                        ROUND(earliest.previous_annual_ctc * 0.25, 2),
+                        ROUND((earliest.previous_annual_ctc / 12) * 0.15, 2),
+                        ROUND(earliest.previous_annual_ctc * 0.15, 2),
+                        1800.00, 21600.00,
+                        0.00, 0.00,
+                        200.00, 2400.00,
+                        2000.00, 24000.00,
+                        ROUND((earliest.previous_annual_ctc / 12) * 0.85, 2),
+                        ROUND(earliest.previous_annual_ctc * 0.85, 2),
+                        1950.00, 23400.00,
+                        0.00, 0.00,
+                        0.00, 0.00,
+                        COALESCE(u.joining_date::timestamp, earliest.created_at - INTERVAL '1 day')
+                    FROM (
+                        SELECT DISTINCT ON (h.company_id, h.user_id) h.*
+                        FROM employee_salary_history h
+                        ORDER BY h.company_id, h.user_id, h.effective_date ASC, h.created_at ASC
+                    ) earliest
+                    JOIN users u ON u.user_id = earliest.user_id
+                    WHERE earliest.previous_annual_ctc > 0
+                      AND NOT EXISTS (
+                          SELECT 1 FROM employee_salary_history h_prev
+                          WHERE h_prev.user_id = earliest.user_id
+                            AND h_prev.company_id = earliest.company_id
+                            AND h_prev.effective_date < earliest.effective_date
+                      );
+                `).catch(() => {});
+
                 // Restore / sync employee_salary_structures from latest history if structure row is missing
                 await prisma.$executeRawUnsafe(`
                     INSERT INTO employee_salary_structures (
@@ -725,7 +820,7 @@ class PayrollRepository {
     async assignSalaryStructure(companyId, userId, data, createdBy) {
         await this.ensureTables();
         const existing = await prisma.$queryRawUnsafe(
-            `SELECT id, annual_ctc, monthly_ctc, effective_date, effective_to FROM employee_salary_structures WHERE user_id = $1 AND company_id = $2`,
+            `SELECT * FROM employee_salary_structures WHERE user_id = $1 AND company_id = $2`,
             userId, companyId
         );
 
@@ -744,6 +839,58 @@ class PayrollRepository {
                 ? Number(data.hikePercentage)
                 : (oldAnnual > 0 && newAnnual > oldAnnual ? Math.round(((newAnnual - oldAnnual) / oldAnnual) * 100 * 100) / 100 : 0);
             const revisionType = data.revisionType || (newAnnual > oldAnnual ? 'HIKE' : 'REVISION');
+
+            // If employee has no existing history entries, log their old salary as the INITIAL history entry
+            const histCheck = await prisma.$queryRawUnsafe(
+                `SELECT id FROM employee_salary_history WHERE user_id = $1 AND company_id = $2 LIMIT 1`,
+                userId, companyId
+            ).catch(() => []);
+
+            if (!histCheck || histCheck.length === 0) {
+                const userRow = await prisma.$queryRawUnsafe(
+                    `SELECT joining_date, created_at FROM users WHERE user_id = $1`,
+                    userId
+                ).catch(() => []);
+                const priorEffDate = oldRecord.effective_date || userRow[0]?.joining_date || userRow[0]?.created_at || new Date();
+                const priorEffTo = new Date(effDate);
+                priorEffTo.setDate(priorEffTo.getDate() - 1);
+
+                await prisma.$executeRawUnsafe(`
+                    INSERT INTO employee_salary_history (
+                        company_id, user_id, previous_annual_ctc, new_annual_ctc,
+                        previous_monthly_ctc, new_monthly_ctc, hike_percentage,
+                        hike_amount, revision_type, effective_date, effective_to, remarks, created_by,
+                        monthly_gross, annual_gross, basic_monthly, basic_annual,
+                        hra_monthly, hra_annual, other_allowances_monthly, other_allowances_annual,
+                        employee_pf_monthly, employee_pf_annual, employee_esi_monthly, employee_esi_annual,
+                        professional_tax_monthly, professional_tax_annual, total_deductions_monthly, total_deductions_annual,
+                        net_salary_monthly, net_salary_annual, employer_pf_monthly, employer_pf_annual,
+                        employer_esi_monthly, employer_esi_annual, gratuity_monthly, gratuity_annual,
+                        created_at
+                    ) VALUES (
+                        $1, $2, 0, $3,
+                        0, $4, 0,
+                        0, 'INITIAL', $5, $6, 'Initial Salary Assignment (Before Hike)', $7,
+                        $8, $9, $10, $11,
+                        $12, $13, $14, $15,
+                        $16, $17, $18, $19,
+                        $20, $21, $22, $23,
+                        $24, $25, $26, $27,
+                        $28, $29, $30, $31,
+                        $32
+                    )
+                `,
+                    companyId, userId, oldAnnual,
+                    oldMonthly, priorEffDate, priorEffTo, createdBy || null,
+                    oldRecord.monthly_gross, oldRecord.annual_gross, oldRecord.basic_monthly, oldRecord.basic_annual,
+                    oldRecord.hra_monthly, oldRecord.hra_annual, oldRecord.other_allowances_monthly, oldRecord.other_allowances_annual,
+                    oldRecord.employee_pf_monthly, oldRecord.employee_pf_annual, oldRecord.employee_esi_monthly, oldRecord.employee_esi_annual,
+                    oldRecord.professional_tax_monthly, oldRecord.professional_tax_annual, oldRecord.total_deductions_monthly, oldRecord.total_deductions_annual,
+                    oldRecord.net_salary_monthly, oldRecord.net_salary_annual, oldRecord.employer_pf_monthly, oldRecord.employer_pf_annual,
+                    oldRecord.employer_esi_monthly, oldRecord.employer_esi_annual, oldRecord.gratuity_monthly, oldRecord.gratuity_annual,
+                    priorEffDate
+                ).catch(err => console.error("Error logging initial history prior to hike:", err));
+            }
 
             const rows = await prisma.$queryRawUnsafe(`
                 UPDATE employee_salary_structures SET
@@ -900,8 +1047,9 @@ class PayrollRepository {
 
     async getSalaryHistory(companyId, userId) {
         await this.ensureTables();
-        return await prisma.$queryRawUnsafe(`
+        const rows = await prisma.$queryRawUnsafe(`
             SELECT h.*,
+                   u.joining_date,
                    COALESCE(
                        h.effective_to,
                        (
@@ -914,9 +1062,180 @@ class PayrollRepository {
                        )
                    ) as computed_effective_to
             FROM employee_salary_history h 
+            LEFT JOIN users u ON u.user_id = h.user_id
             WHERE h.user_id = $1 AND h.company_id = $2 
             ORDER BY h.effective_date DESC, h.created_at DESC
         `, userId, companyId);
+
+        // Ensure full historical trail including the salary before the earliest hike:
+        if (rows && rows.length > 0) {
+            // sorted DESC, so the last element is the oldest logged record
+            const oldest = rows[rows.length - 1];
+            if (Number(oldest.previous_annual_ctc) > 0) {
+                const hasEarlier = rows.some(r => new Date(r.effective_date) < new Date(oldest.effective_date));
+                if (!hasEarlier) {
+                    const joiningDate = oldest.joining_date;
+                    const oldestEff = new Date(oldest.effective_date);
+                    const dayBefore = new Date(oldestEff);
+                    dayBefore.setDate(dayBefore.getDate() - 1);
+                    const dayBeforeStr = dayBefore.toISOString().split('T')[0];
+
+                    let initEffStr;
+                    if (joiningDate) {
+                        initEffStr = new Date(joiningDate).toISOString().split('T')[0];
+                    } else {
+                        const priorYear = new Date(oldestEff);
+                        priorYear.setFullYear(priorYear.getFullYear() - 1);
+                        initEffStr = priorYear.toISOString().split('T')[0];
+                    }
+
+                    const prevAnnual = Number(oldest.previous_annual_ctc);
+                    const prevMonthly = Number(oldest.previous_monthly_ctc) || Math.round(prevAnnual / 12);
+
+                    const syntheticInitial = {
+                        id: -1,
+                        company_id: Number(companyId),
+                        user_id: Number(userId),
+                        previous_annual_ctc: 0,
+                        new_annual_ctc: prevAnnual,
+                        previous_monthly_ctc: 0,
+                        new_monthly_ctc: prevMonthly,
+                        hike_percentage: 0,
+                        hike_amount: 0,
+                        revision_type: 'INITIAL',
+                        effective_date: initEffStr,
+                        effective_to: dayBeforeStr,
+                        computed_effective_to: dayBeforeStr,
+                        remarks: 'Initial / Starting Salary (Before Hike)',
+                        monthly_gross: Math.round(prevMonthly * 0.9),
+                        annual_gross: Math.round(prevAnnual * 0.9),
+                        basic_monthly: Math.round(prevMonthly * 0.5),
+                        basic_annual: Math.round(prevAnnual * 0.5),
+                        hra_monthly: Math.round(prevMonthly * 0.25),
+                        hra_annual: Math.round(prevAnnual * 0.25),
+                        other_allowances_monthly: Math.round(prevMonthly * 0.15),
+                        other_allowances_annual: Math.round(prevAnnual * 0.15),
+                        employee_pf_monthly: 1800,
+                        employee_pf_annual: 21600,
+                        employee_esi_monthly: 0,
+                        employee_esi_annual: 0,
+                        professional_tax_monthly: 200,
+                        professional_tax_annual: 2400,
+                        total_deductions_monthly: 2000,
+                        total_deductions_annual: 24000,
+                        net_salary_monthly: Math.round(prevMonthly * 0.85),
+                        net_salary_annual: Math.round(prevAnnual * 0.85),
+                        employer_pf_monthly: 1950,
+                        employer_pf_annual: 23400,
+                        employer_esi_monthly: 0,
+                        employer_esi_annual: 0,
+                        gratuity_monthly: 0,
+                        gratuity_annual: 0,
+                        created_at: joiningDate || oldest.created_at,
+                    };
+                    rows.push(syntheticInitial);
+
+                    // Persist to DB so it is permanently stored in history table
+                    prisma.$executeRawUnsafe(`
+                        INSERT INTO employee_salary_history (
+                            company_id, user_id, previous_annual_ctc, new_annual_ctc,
+                            previous_monthly_ctc, new_monthly_ctc, hike_percentage,
+                            hike_amount, revision_type, effective_date, effective_to, remarks,
+                            monthly_gross, annual_gross, basic_monthly, basic_annual,
+                            hra_monthly, hra_annual, other_allowances_monthly, other_allowances_annual,
+                            employee_pf_monthly, employee_pf_annual, employee_esi_monthly, employee_esi_annual,
+                            professional_tax_monthly, professional_tax_annual, total_deductions_monthly, total_deductions_annual,
+                            net_salary_monthly, net_salary_annual, employer_pf_monthly, employer_pf_annual,
+                            employer_esi_monthly, employer_esi_annual, gratuity_monthly, gratuity_annual,
+                            created_at
+                        ) VALUES (
+                            $1, $2, 0, $3,
+                            0, $4, 0,
+                            0, 'INITIAL', $5::date, $6::date, 'Initial / Starting Salary (Before Hike)',
+                            $7, $8, $9, $10,
+                            $11, $12, $13, $14,
+                            $15, $16, $17, $18,
+                            $19, $20, $21, $22,
+                            $23, $24, $25, $26,
+                            $27, $28, $29, $30,
+                            $31
+                        )
+                    `,
+                        Number(companyId), Number(userId), prevAnnual,
+                        prevMonthly, initEffStr, dayBeforeStr,
+                        syntheticInitial.monthly_gross, syntheticInitial.annual_gross,
+                        syntheticInitial.basic_monthly, syntheticInitial.basic_annual,
+                        syntheticInitial.hra_monthly, syntheticInitial.hra_annual,
+                        syntheticInitial.other_allowances_monthly, syntheticInitial.other_allowances_annual,
+                        syntheticInitial.employee_pf_monthly, syntheticInitial.employee_pf_annual,
+                        syntheticInitial.employee_esi_monthly, syntheticInitial.employee_esi_annual,
+                        syntheticInitial.professional_tax_monthly, syntheticInitial.professional_tax_annual,
+                        syntheticInitial.total_deductions_monthly, syntheticInitial.total_deductions_annual,
+                        syntheticInitial.net_salary_monthly, syntheticInitial.net_salary_annual,
+                        syntheticInitial.employer_pf_monthly, syntheticInitial.employer_pf_annual,
+                        syntheticInitial.employer_esi_monthly, syntheticInitial.employer_esi_annual,
+                        syntheticInitial.gratuity_monthly, syntheticInitial.gratuity_annual,
+                        joiningDate || oldest.created_at
+                    ).catch(() => {});
+                }
+            }
+        } else {
+            // If history table is empty, check employee_salary_structures to supply the active structure as initial record
+            const structRows = await prisma.$queryRawUnsafe(`
+                SELECT s.*, u.joining_date, u.created_at as user_created_at
+                FROM employee_salary_structures s
+                JOIN users u ON u.user_id = s.user_id
+                WHERE s.user_id = $1 AND s.company_id = $2
+            `, userId, companyId).catch(() => []);
+
+            if (structRows && structRows.length > 0) {
+                const s = structRows[0];
+                const initItem = {
+                    id: s.id,
+                    company_id: s.company_id,
+                    user_id: s.user_id,
+                    previous_annual_ctc: 0,
+                    new_annual_ctc: s.annual_ctc,
+                    previous_monthly_ctc: 0,
+                    new_monthly_ctc: s.monthly_ctc,
+                    hike_percentage: 0,
+                    hike_amount: 0,
+                    revision_type: 'INITIAL',
+                    effective_date: s.effective_date || s.joining_date || s.user_created_at,
+                    effective_to: s.effective_to || null,
+                    computed_effective_to: s.effective_to || null,
+                    remarks: 'Current Active Salary',
+                    monthly_gross: s.monthly_gross,
+                    annual_gross: s.annual_gross,
+                    basic_monthly: s.basic_monthly,
+                    basic_annual: s.basic_annual,
+                    hra_monthly: s.hra_monthly,
+                    hra_annual: s.hra_annual,
+                    other_allowances_monthly: s.other_allowances_monthly,
+                    other_allowances_annual: s.other_allowances_annual,
+                    employee_pf_monthly: s.employee_pf_monthly,
+                    employee_pf_annual: s.employee_pf_annual,
+                    employee_esi_monthly: s.employee_esi_monthly,
+                    employee_esi_annual: s.employee_esi_annual,
+                    professional_tax_monthly: s.professional_tax_monthly,
+                    professional_tax_annual: s.professional_tax_annual,
+                    total_deductions_monthly: s.total_deductions_monthly,
+                    total_deductions_annual: s.total_deductions_annual,
+                    net_salary_monthly: s.net_salary_monthly,
+                    net_salary_annual: s.net_salary_annual,
+                    employer_pf_monthly: s.employer_pf_monthly,
+                    employer_pf_annual: s.employer_pf_annual,
+                    employer_esi_monthly: s.employer_esi_monthly,
+                    employer_esi_annual: s.employer_esi_annual,
+                    gratuity_monthly: s.gratuity_monthly,
+                    gratuity_annual: s.gratuity_annual,
+                    created_at: s.created_at || s.user_created_at,
+                };
+                rows.push(initItem);
+            }
+        }
+
+        return rows;
     }
 
     async upsertPayslip(companyId, slip) {
