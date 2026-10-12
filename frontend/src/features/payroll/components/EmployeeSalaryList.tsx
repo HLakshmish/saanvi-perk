@@ -17,6 +17,9 @@ import {
   History,
   Clock,
   ArrowUpRight,
+  ArrowRight,
+  Sparkles,
+  Award,
 } from "lucide-react";
 import { EmployeeSalaryStructure, SalaryHistoryItem } from "../types/payroll.types";
 import { getAllSalaryStructures, getSalaryHistory } from "../api/payroll.api";
@@ -548,11 +551,12 @@ export const EmployeeSalaryList: React.FC<EmployeeSalaryListProps> = ({
       {/* Salary & Hike History Modal */}
       {isHistoryModalOpen && selectedEmployeeForHistory && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl max-w-xl w-full border border-slate-200 shadow-2xl overflow-hidden my-8 animate-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-3xl max-w-xl w-full border border-slate-200 shadow-2xl overflow-hidden my-6 animate-in zoom-in-95 duration-200">
+            {/* Header */}
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                  <History className="w-4 h-4" />
+                <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-2xs">
+                  <History className="w-5 h-5" />
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-slate-900">
@@ -574,10 +578,11 @@ export const EmployeeSalaryList: React.FC<EmployeeSalaryListProps> = ({
               </button>
             </div>
 
+            {/* Timeline Container */}
             <div className="p-6 max-h-[70vh] overflow-y-auto space-y-4">
               {isLoadingHistory ? (
                 <div className="py-12 text-center text-slate-400 font-medium text-xs">
-                  Loading revision history...
+                  Loading salary history...
                 </div>
               ) : historyList.length === 0 ? (
                 <div className="py-12 text-center">
@@ -590,108 +595,200 @@ export const EmployeeSalaryList: React.FC<EmployeeSalaryListProps> = ({
                   </p>
                 </div>
               ) : (
-                <div className="relative border-l-2 border-indigo-100 ml-3 pl-5 space-y-5">
-                  {historyList.map((item, idx) => (
-                    <div key={item.id || idx} className="relative">
-                      {/* Timeline dot */}
-                      <div className={`absolute -left-[27px] top-1.5 w-3 h-3 rounded-full border-2 border-white ring-2 ${
-                        idx === 0 ? "bg-emerald-600 ring-emerald-100" : "bg-indigo-600 ring-indigo-100"
-                      }`} />
+                <div className="relative border-l-2 border-indigo-200 ml-3.5 pl-6 space-y-5">
+                  {historyList.map((item, idx) => {
+                    const isOngoing = !(item.computed_effective_to || item.effective_to);
+                    const isHike = Number(item.hike_percentage) > 0 || Number(item.hike_amount) > 0;
+                    const hasPrior = Number(item.previous_annual_ctc) > 0;
+                    const isInitial = item.revision_type === "INITIAL" || (!hasPrior && !isHike);
+                    const keyId = item.id || idx;
 
-                      <div className="bg-slate-50/80 rounded-2xl p-4 border border-slate-200/70 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center flex-wrap gap-1.5 text-xs">
-                            <span className="font-bold text-slate-800 flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs">
-                              <Calendar className="w-3.5 h-3.5 text-indigo-600" />
-                              <span className="text-[10px] text-slate-400 font-semibold uppercase">From:</span>
-                              <span className="font-bold text-slate-900">
-                                {item.effective_date
-                                  ? new Date(item.effective_date).toLocaleDateString("en-IN", {
+                    return (
+                      <div key={keyId} className="relative">
+                        {/* Timeline node */}
+                        <div
+                          className={`absolute -left-[33px] top-1.5 w-3.5 h-3.5 rounded-full border-2 border-white shadow-xs ${
+                            idx === 0
+                              ? "bg-emerald-600 ring-4 ring-emerald-100"
+                              : isInitial
+                              ? "bg-indigo-600 ring-4 ring-indigo-100"
+                              : "bg-sky-600 ring-4 ring-sky-100"
+                          }`}
+                        />
+
+                        <div className="bg-slate-50/90 rounded-2xl p-4 border border-slate-200/80 shadow-2xs space-y-3">
+                          {/* Date range & Status Badge Bar */}
+                          <div className="flex items-center justify-between flex-wrap gap-2">
+                            <div className="flex items-center flex-wrap gap-1.5 text-xs">
+                              <span className="font-bold text-slate-800 flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs">
+                                <Calendar className="w-3.5 h-3.5 text-indigo-600" />
+                                <span className="text-[10px] text-slate-400 font-semibold uppercase">From:</span>
+                                <span className="font-bold text-slate-900">
+                                  {item.effective_date
+                                    ? new Date(item.effective_date).toLocaleDateString("en-IN", {
+                                        day: "2-digit",
+                                        month: "short",
+                                        year: "numeric",
+                                      })
+                                    : "Start"}
+                                </span>
+                              </span>
+                              <span className="text-slate-400 font-bold">➔</span>
+                              <span
+                                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border shadow-2xs ${
+                                  isOngoing
+                                    ? "bg-emerald-50 border-emerald-200 text-emerald-800 font-bold"
+                                    : "bg-white border-slate-200 text-slate-900 font-bold"
+                                }`}
+                              >
+                                <span className="text-[10px] text-slate-400 font-semibold uppercase">To:</span>
+                                {!isOngoing ? (
+                                  <span>
+                                    {new Date(
+                                      (item.computed_effective_to || item.effective_to)!
+                                    ).toLocaleDateString("en-IN", {
                                       day: "2-digit",
                                       month: "short",
                                       year: "numeric",
-                                    })
-                                  : "Start"}
+                                    })}
+                                  </span>
+                                ) : (
+                                  <span className="text-emerald-700 font-extrabold flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                    Ongoing / Present
+                                  </span>
+                                )}
                               </span>
-                            </span>
-                            <span className="text-slate-400 font-bold">➔</span>
-                            <span
-                              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border shadow-2xs ${
-                                (item.computed_effective_to || item.effective_to)
-                                  ? "bg-white border-slate-200 text-slate-900 font-bold"
-                                  : "bg-emerald-50 border-emerald-200 text-emerald-800 font-bold"
-                              }`}
-                            >
-                              <span className="text-[10px] text-slate-400 font-semibold uppercase">To:</span>
-                              {(item.computed_effective_to || item.effective_to) ? (
-                                <span>
-                                  {new Date(
-                                    (item.computed_effective_to || item.effective_to)!
-                                  ).toLocaleDateString("en-IN", {
+                            </div>
+
+                            {/* Revision Type / Hike Pill */}
+                            {isHike ? (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-800 shadow-2xs">
+                                <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
+                                +{item.hike_percentage}% Hike
+                              </span>
+                            ) : isInitial ? (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-100 text-indigo-800 shadow-2xs">
+                                <Sparkles className="w-3 h-3 text-indigo-600" />
+                                Starting / Initial Salary
+                              </span>
+                            ) : (
+                              <span className="px-2.5 py-0.5 rounded-md text-[10px] font-semibold bg-slate-200 text-slate-700">
+                                {item.revision_type || "REVISION"}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Salary Amount Cards */}
+                          {hasPrior ? (
+                            /* Hike or Revision: Prominently show Previous Salary vs Revised Salary */
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                              {/* Previous Salary Before Hike */}
+                              <div className="p-3 rounded-xl bg-white border border-slate-200 shadow-2xs space-y-0.5">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                    Previous Salary (Before Hike)
+                                  </span>
+                                </div>
+                                <div className="text-base font-black text-slate-700">
+                                  {formatCurrency(item.previous_annual_ctc)}
+                                  <span className="text-[11px] font-medium text-slate-400 ml-1">/ yr</span>
+                                </div>
+                                <div className="text-[11px] text-slate-500 font-semibold">
+                                  {formatCurrency(
+                                    Number(item.previous_monthly_ctc) ||
+                                      Math.round(Number(item.previous_annual_ctc) / 12)
+                                  )}{" "}
+                                  / month
+                                </div>
+                              </div>
+
+                              {/* Revised Salary After Hike */}
+                              <div className="p-3 rounded-xl bg-emerald-50/70 border border-emerald-200 shadow-2xs space-y-0.5">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider">
+                                    Revised Salary (After Hike)
+                                  </span>
+                                  {Number(item.hike_amount) > 0 && (
+                                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.2 rounded">
+                                      +{formatCurrency(item.hike_amount)}
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="text-base font-black text-emerald-950">
+                                  {formatCurrency(item.new_annual_ctc)}
+                                  <span className="text-[11px] font-medium text-emerald-700 ml-1">/ yr</span>
+                                </div>
+                                <div className="text-[11px] text-emerald-800 font-semibold">
+                                  {formatCurrency(
+                                    Number(item.new_monthly_ctc) ||
+                                      Math.round(Number(item.new_annual_ctc) / 12)
+                                  )}{" "}
+                                  / month
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            /* Starting Initial Salary */
+                            <div className="p-3.5 rounded-xl bg-indigo-50/70 border border-indigo-200/90 shadow-2xs">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-bold text-indigo-700 uppercase tracking-wider">
+                                  Initial / Starting CTC (At Joining)
+                                </span>
+                                <span className="text-[10px] font-bold text-indigo-600 bg-white px-2 py-0.5 rounded border border-indigo-100">
+                                  Base Baseline
+                                </span>
+                              </div>
+                              <div className="text-base font-black text-indigo-950 mt-1">
+                                {formatCurrency(item.new_annual_ctc)}
+                                <span className="text-[11px] font-medium text-indigo-600 ml-1">/ year</span>
+                              </div>
+                              <div className="text-[11px] text-indigo-700 font-semibold">
+                                {formatCurrency(
+                                  Number(item.new_monthly_ctc) ||
+                                    Math.round(Number(item.new_annual_ctc) / 12)
+                                )}{" "}
+                                / month
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Remarks / Reason */}
+                          {item.remarks && (
+                            <p className="text-[11px] text-slate-600 italic bg-white p-2.5 rounded-lg border border-slate-100">
+                              "{item.remarks}"
+                            </p>
+                          )}
+
+                          {/* Recorded on Footer */}
+                          <div className="text-[10px] text-slate-400 pt-1 border-t border-slate-200/50 flex items-center justify-between">
+                            <span>
+                              Recorded on:{" "}
+                              {item.created_at
+                                ? new Date(item.created_at).toLocaleString("en-IN", {
                                     day: "2-digit",
                                     month: "short",
                                     year: "numeric",
-                                  })}
-                                </span>
-                              ) : (
-                                <span className="text-emerald-700 font-extrabold">
-                                  Ongoing / Present
-                                </span>
-                              )}
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })
+                                : "System Recorded"}
                             </span>
+                            {isOngoing && (
+                              <span className="font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 text-[9px]">
+                                Current Active Structure
+                              </span>
+                            )}
                           </div>
-                          {Number(item.hike_percentage) > 0 ? (
-                            <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800">
-                              <TrendingUp className="w-3 h-3 text-emerald-600" />
-                              +{item.hike_percentage}% Hike
-                            </span>
-                          ) : (
-                            <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-200 text-slate-700">
-                              {item.revision_type || "REVISION"}
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="flex items-center gap-2 text-xs">
-                          <span className="text-slate-500">
-                            {formatCurrency(item.previous_annual_ctc)}
-                          </span>
-                          <span className="text-slate-400">➔</span>
-                          <span className="font-extrabold text-slate-900">
-                            {formatCurrency(item.new_annual_ctc)} / yr
-                          </span>
-                          {Number(item.hike_amount) > 0 && (
-                            <span className="text-[11px] font-bold text-emerald-700">
-                              (+{formatCurrency(item.hike_amount)})
-                            </span>
-                          )}
-                        </div>
-
-                        {item.remarks && (
-                          <p className="text-[11px] text-slate-600 italic bg-white p-2 rounded-lg border border-slate-100">
-                            "{item.remarks}"
-                          </p>
-                        )}
-
-                        <div className="text-[10px] text-slate-400">
-                          Recorded on:{" "}
-                          {item.created_at
-                            ? new Date(item.created_at).toLocaleString("en-IN", {
-                                day: "2-digit",
-                                month: "short",
-                                year: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })
-                            : "N/A"}
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
 
+            {/* Modal Bottom Actions */}
             <div className="px-6 py-3.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
               <button
                 onClick={() => {
@@ -701,7 +798,7 @@ export const EmployeeSalaryList: React.FC<EmployeeSalaryListProps> = ({
                   setSelectedEmployeeForHike(emp);
                   setViewMode("assign");
                 }}
-                className="px-3 py-1.5 text-xs font-bold rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition-all flex items-center gap-1.5 cursor-pointer"
+                className="px-4 py-2 text-xs font-bold rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
               >
                 <TrendingUp className="w-3.5 h-3.5" />
                 <span>Revise / Hike Salary</span>
@@ -711,7 +808,7 @@ export const EmployeeSalaryList: React.FC<EmployeeSalaryListProps> = ({
                   setIsHistoryModalOpen(false);
                   setSelectedEmployeeForHistory(null);
                 }}
-                className="px-4 py-1.5 text-xs font-semibold rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 transition-all cursor-pointer"
+                className="px-5 py-2 text-xs font-semibold rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 transition-all cursor-pointer"
               >
                 Close
               </button>

@@ -962,9 +962,22 @@ export const AssignSalaryModal: React.FC<AssignSalaryModalProps> = ({
                             </span>
                           )}
                         </div>
-                        <div className="text-slate-600 font-semibold mt-0.5">
-                          {formatCurrency(h.new_annual_ctc)} / yr
-                        </div>
+                        {Number(h.previous_annual_ctc) > 0 ? (
+                          <div className="text-slate-600 font-semibold mt-1 flex items-center gap-1.5 flex-wrap">
+                            <span className="text-slate-400 text-[11px]">Prev: {formatCurrency(h.previous_annual_ctc)}</span>
+                            <span className="text-slate-300">➔</span>
+                            <span className="font-bold text-slate-900">{formatCurrency(h.new_annual_ctc)} / yr</span>
+                            {Number(h.hike_amount) > 0 && (
+                              <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-1 py-0.5 rounded">
+                                +{formatCurrency(h.hike_amount)}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="text-indigo-900 font-bold mt-1 text-[11px]">
+                            Initial Starting CTC: {formatCurrency(h.new_annual_ctc)} / yr
+                          </div>
+                        )}
                         {h.remarks && (
                           <div className="text-[11px] text-slate-500 italic mt-0.5">"{h.remarks}"</div>
                         )}

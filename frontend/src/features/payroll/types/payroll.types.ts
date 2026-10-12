@@ -152,6 +152,32 @@ export interface SalaryHistoryItem {
   computed_effective_to?: string | null;
   remarks?: string;
   created_at?: string;
+  joining_date?: string;
+  monthly_gross?: number | string;
+  annual_gross?: number | string;
+  basic_monthly?: number | string;
+  basic_annual?: number | string;
+  hra_monthly?: number | string;
+  hra_annual?: number | string;
+  other_allowances_monthly?: number | string;
+  other_allowances_annual?: number | string;
+  employee_pf_monthly?: number | string;
+  employee_pf_annual?: number | string;
+  employee_esi_monthly?: number | string;
+  employee_esi_annual?: number | string;
+  professional_tax_monthly?: number | string;
+  professional_tax_annual?: number | string;
+  total_deductions_monthly?: number | string;
+  total_deductions_annual?: number | string;
+  net_salary_monthly?: number | string;
+  net_salary_annual?: number | string;
+  employer_pf_monthly?: number | string;
+  employer_pf_annual?: number | string;
+  employer_esi_monthly?: number | string;
+  employer_esi_annual?: number | string;
+  gratuity_monthly?: number | string;
+  gratuity_annual?: number | string;
+  rates_applied?: any;
 }
 
 export interface Payslip {
