@@ -11,6 +11,7 @@ interface AttendanceCardProps {
   onCheckIn: () => void;
   onCheckOut: () => void;
   isLoadingLocation?: boolean;
+  isOnApprovedLeave?: boolean;
 }
 
 // Convert any format (e.g. "10:54:13", "10:54:13 AM", ISO string, or "10:54 AM") to "10:54 AM"
@@ -67,6 +68,7 @@ export const AttendanceCard: React.FC<AttendanceCardProps> = ({
   onCheckIn,
   onCheckOut,
   isLoadingLocation = false,
+  isOnApprovedLeave = false,
 }) => {
   const isCheckedOut = !isCheckedIn && !!checkOutTime;
 
@@ -81,6 +83,11 @@ export const AttendanceCard: React.FC<AttendanceCardProps> = ({
         <h3 className="text-sm sm:text-base font-extrabold text-white tracking-tight">
           Check In / Out
         </h3>
+        {isOnApprovedLeave && (
+          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-white/20 text-white border border-white/30">
+            On Leave
+          </span>
+        )}
       </div>
 
       {/* Center Circular Timer Gauge */}
@@ -112,7 +119,15 @@ export const AttendanceCard: React.FC<AttendanceCardProps> = ({
       {/* Bottom Action Buttons: Check In & Check Out */}
       <div className="z-10 pt-1.5 grid grid-cols-2 gap-2.5 sm:gap-3">
         {/* Check In Button */}
-        {isCheckedIn ? (
+        {isOnApprovedLeave ? (
+          <button
+            disabled={true}
+            className="py-3 px-3 rounded-2xl font-bold text-xs sm:text-sm border border-white/20 bg-white/5 text-white/50 flex items-center justify-center cursor-not-allowed"
+            title="You are on approved leave today"
+          >
+            <span>On Leave</span>
+          </button>
+        ) : isCheckedIn ? (
           <button
             disabled={true}
             className="py-3 px-3 rounded-2xl font-bold text-xs sm:text-sm border border-brand-accent bg-transparent text-brand-accent flex items-center justify-center cursor-default"
@@ -140,7 +155,15 @@ export const AttendanceCard: React.FC<AttendanceCardProps> = ({
         )}
 
         {/* Check Out Button */}
-        {isCheckedOut ? (
+        {isOnApprovedLeave ? (
+          <button
+            disabled={true}
+            className="py-3 px-3 rounded-2xl font-bold text-xs sm:text-sm border border-white/20 bg-white/5 text-white/50 flex items-center justify-center cursor-not-allowed"
+            title="You are on approved leave today"
+          >
+            <span>Check Out</span>
+          </button>
+        ) : isCheckedOut ? (
           <button
             disabled={true}
             className="py-3 px-3 rounded-2xl font-bold text-xs sm:text-sm border border-brand-accent bg-transparent text-brand-accent flex items-center justify-center cursor-default"
@@ -168,8 +191,17 @@ export const AttendanceCard: React.FC<AttendanceCardProps> = ({
         )}
       </div>
 
+      {/* Leave Notice Banner */}
+      {isOnApprovedLeave && (
+        <div className="z-10 mt-3 py-2 px-3 bg-white/15 border border-white/20 rounded-xl flex items-center justify-center gap-2 text-center">
+          <span className="text-[11px] sm:text-xs font-semibold text-white">
+            You are on approved leave today. Check-in is not allowed.
+          </span>
+        </div>
+      )}
+
       {/* Confirmation Message when checked out for today */}
-      {isCheckedOut && (
+      {!isOnApprovedLeave && isCheckedOut && (
         <div className="z-10 mt-3 py-2 px-3 bg-white/10 border border-white/10 rounded-xl flex items-center justify-center gap-2 text-center">
           <CheckCircle2 className="w-3.5 h-3.5 text-brand-accent shrink-0" />
           <span className="text-[11px] sm:text-xs font-semibold text-white">

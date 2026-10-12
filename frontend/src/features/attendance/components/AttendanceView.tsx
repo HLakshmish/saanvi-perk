@@ -21,6 +21,7 @@ import {
   FileText,
 } from "lucide-react";
 import { getAttendances, fetchAttendanceRequests } from "../api/attendance.api";
+import { fetchLeaveRequests } from "@/features/leaves/api/leaves.api";
 import { AttendanceRegularizeModal } from "./AttendanceRegularizeModal";
 import { getEmployees } from "@/features/employees/api/employees.api";
 import { getCurrentUserId } from "@/features/expenses/api/expenses.api";
@@ -50,6 +51,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
   const isEmployee = currentRole === "employee";
   const [attendances, setAttendances] = useState<any[]>([]);
   const [attendanceRequests, setAttendanceRequests] = useState<any[]>([]);
+  const [leaveRequests, setLeaveRequests] = useState<any[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [holidays, setHolidays] = useState<HolidayRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -80,8 +82,8 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
     setIsLoading(true);
     try {
       if (isEmployee) {
-        // Employees: load their attendance logs + company holidays + attendance requests
-        const [attRes, holRes, reqRes] = await Promise.all([
+        // Employees: load their attendance logs + company holidays + attendance requests + leave requests
+        const [attRes, holRes, reqRes, leaveRes] = await Promise.all([
           getAttendances({
             userId: loggedInUserId || undefined,
           }).catch((err) => {
@@ -93,6 +95,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
             console.error("Error loading attendance requests:", err);
             return { success: false, data: [] };
           }),
+          fetchLeaveRequests(loggedInUserId || undefined).catch(() => ({ success: false, data: [] })),
         ]);
 
         const attList = Array.isArray(attRes?.data)
@@ -112,9 +115,12 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
         if (holRes.success && holRes.data) {
           setHolidays(holRes.data);
         }
+        if (leaveRes.success && Array.isArray(leaveRes.data)) {
+          setLeaveRequests(leaveRes.data);
+        }
       } else {
-        // SuperAdmin / Admin: load all records, holidays, and employees list
-        const [attRes, empRes, holRes] = await Promise.all([
+        // SuperAdmin / Admin: load all records, holidays, employees list, and leave requests
+        const [attRes, empRes, holRes, leaveRes] = await Promise.all([
           getAttendances().catch((err) => {
             console.error("Error loading attendances:", err);
             return { success: false, data: [] };
@@ -124,6 +130,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
             return [];
           }),
           getHolidays().catch(() => ({ success: false, data: [] })),
+          fetchLeaveRequests().catch(() => ({ success: false, data: [] })),
         ]);
 
         const attList = Array.isArray(attRes?.data)
@@ -135,6 +142,9 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
         setEmployees(Array.isArray(empRes) ? empRes : []);
         if (holRes.success && holRes.data) {
           setHolidays(holRes.data);
+        }
+        if (leaveRes.success && Array.isArray(leaveRes.data)) {
+          setLeaveRequests(leaveRes.data);
         }
       }
     } catch (err) {
@@ -294,7 +304,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
       isToday: boolean;
       isWeekend: boolean;
       dayOfWeek: string;
-      status: "PRESENT" | "HALF_DAY" | "WO" | "HOLIDAY" | "ABSENT" | "NOT_CLOCKED_IN" | "REGULARIZATION_PENDING";
+      status: "PRESENT" | "HALF_DAY" | "WO" | "HOLIDAY" | "ABSENT" | "NOT_CLOCKED_IN" | "REGULARIZATION_PENDING" | "LEAVE";
       statusLabel: string;
       checkInTime?: string | null;
       checkOutTime?: string | null;
@@ -365,7 +375,36 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
         return checkTime >= startTime && checkTime <= endTime;
       });
 
-      if (matchedRequest && String(matchedRequest.status || "").toUpperCase() === "PENDING") {
+      // Priority 1: Check if employee has an approved planned leave for this date
+      const matchedLeave = leaveRequests.find((lr) => {
+        if (String(lr.status).toUpperCase() !== "APPROVED") return false;
+        if (lr.reason && String(lr.reason).startsWith("Auto-")) return false;
+        const checkTime = new Date(year, month, day).getTime();
+        const start = new Date(lr.fromDate);
+        const startTime = new Date(start.getFullYear(), start.getMonth(), start.getDate()).getTime();
+        const end = new Date(lr.toDate);
+        const endTime = new Date(end.getFullYear(), end.getMonth(), end.getDate()).getTime();
+        return checkTime >= startTime && checkTime <= endTime;
+      });
+
+      if (matchedLeave && (!matchedPunch || !matchedPunch.checkInTime || Number(matchedLeave.numberOfDays) >= 1)) {
+        // Approved Leave -> On Leave
+        logs.push({
+          date: cellDate,
+          dateKey,
+          displayDate: formatCardDate(cellDate),
+          isToday,
+          isWeekend,
+          dayOfWeek: cellDate.toLocaleDateString("en-US", { weekday: "short" }),
+          status: "LEAVE",
+          statusLabel: Number(matchedLeave.numberOfDays) < 1 ? "On Leave (Half Day)" : "On Leave",
+          holidayName: matchedLeave.leaveType?.leaveName || "Approved Leave",
+          checkInTime: null,
+          checkOutTime: null,
+          workingMinutes: 0,
+          workingHoursStr: "--",
+        });
+      } else if (matchedRequest && String(matchedRequest.status || "").toUpperCase() === "PENDING") {
         // Pending attendance regularization request exists for this date (overrides raw punch status display)
         const mins = matchedPunch ? computeDayWorkingMinutes(matchedPunch, isToday) : 0;
         const hrs = Math.floor(mins / 60);
@@ -562,7 +601,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
 
   // Combine attendance records with employee details for Admin view
   const attendanceRows = useMemo(() => {
-    return attendances.map((att) => {
+    const rows = attendances.map((att) => {
       const emp = employees.find(
         (e) => String(e.id) === String(att.userId) || Number(e.id) === Number(att.userId)
       );
@@ -576,7 +615,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
 
       // Directly use attendanceStatus calculated and returned from backend
       const rawStatus = String(att.attendanceStatus || "PRESENT").toUpperCase();
-      let computedStatus: "PRESENT" | "HALF_DAY" | "ABSENT" = "PRESENT";
+      let computedStatus: "PRESENT" | "HALF_DAY" | "ABSENT" | "LEAVE" = "PRESENT";
       let computedStatusLabel = "Present";
 
       if (rawStatus === "HALF_DAY") {
@@ -602,7 +641,53 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
         computedMins: mins,
       };
     });
-  }, [attendances, employees, currentUserName]);
+
+    // Also include employees on approved leave for selectedDate who have no raw punch
+    if (selectedDate && Array.isArray(leaveRequests)) {
+      employees.forEach((emp) => {
+        const hasRow = rows.some((r) => {
+          const rDate = r.attendanceDate ? new Date(r.attendanceDate).toISOString().split("T")[0] : "";
+          return (Number(r.userId) === Number(emp.id) || String(r.userId) === String(emp.id)) && rDate === selectedDate;
+        });
+        if (hasRow) return;
+
+        const empLeave = leaveRequests.find((lr) => {
+          if (Number(lr.userId) !== Number(emp.id)) return false;
+          if (String(lr.status).toUpperCase() !== "APPROVED") return false;
+          if (lr.reason && String(lr.reason).startsWith("Auto-")) return false;
+          const sDate = new Date(selectedDate).getTime();
+          const lStart = new Date(lr.fromDate);
+          lStart.setHours(0, 0, 0, 0);
+          const lEnd = new Date(lr.toDate);
+          lEnd.setHours(23, 59, 59, 999);
+          return sDate >= lStart.getTime() && sDate <= lEnd.getTime();
+        });
+
+        if (empLeave) {
+          rows.push({
+            attendanceId: `leave-${emp.id}-${selectedDate}`,
+            userId: emp.id,
+            attendanceDate: selectedDate,
+            checkInTime: null,
+            checkOutTime: null,
+            workingMinutes: 0,
+            attendanceStatus: "LEAVE",
+            remarks: empLeave.leaveType?.leaveName || "Approved Leave",
+            employeeName: emp.name,
+            employeeCode: emp.employeeCode || "N/A",
+            department: emp.department || "General",
+            designation: emp.designation || "Staff",
+            profilePic: emp.profilePic,
+            computedStatus: "LEAVE",
+            computedStatusLabel: "On Leave",
+            computedMins: 0,
+          });
+        }
+      });
+    }
+
+    return rows;
+  }, [attendances, employees, currentUserName, selectedDate, leaveRequests]);
 
   // Filtered rows for Admin Table
   const filteredAdminRows = useMemo(() => {
@@ -891,6 +976,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                       const isPresent = log.status === "PRESENT";
                       const isHalfDay = log.status === "HALF_DAY";
                       const isAbsent = log.status === "ABSENT";
+                      const isLeave = log.status === "LEAVE";
                       const isPendingReq = log.status === "REGULARIZATION_PENDING";
 
                       return (
@@ -902,6 +988,8 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                               ? "bg-slate-50/30 text-slate-500 hover:bg-slate-100/70"
                               : isHoliday
                               ? "bg-purple-50/20 hover:bg-purple-50/50"
+                              : isLeave
+                              ? "bg-blue-50/20 hover:bg-blue-50/50"
                               : isPendingReq
                               ? "bg-amber-50/20 hover:bg-amber-50/50"
                               : log.isToday
@@ -925,6 +1013,10 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                                     ? "bg-slate-100 text-slate-500 border border-slate-200"
                                     : isHoliday
                                     ? "bg-purple-50 text-purple-700 border border-purple-200"
+                                    : isLeave
+                                    ? "bg-blue-50 text-blue-700 border border-blue-200"
+                                    : isAbsent
+                                    ? "bg-rose-50 text-rose-700 border border-rose-200"
                                     : "bg-slate-100 text-slate-400"
                                 }`}
                               >
@@ -989,6 +1081,8 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                                     ? "bg-slate-100 text-slate-700 border border-slate-300 font-extrabold"
                                     : isHoliday
                                     ? "bg-purple-100 text-purple-800 border border-purple-200"
+                                    : isLeave
+                                    ? "bg-blue-100 text-blue-800 border border-blue-200"
                                     : isAbsent
                                     ? "bg-rose-100 text-rose-800 border border-rose-200"
                                     : "bg-slate-100 text-slate-600 border border-slate-200"
@@ -1136,7 +1230,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
 
         {/* Status Filter Tabs */}
         <div className="flex items-center gap-1.5 self-stretch sm:self-auto overflow-x-auto">
-          {["ALL", "PRESENT", "HALF_DAY", "ABSENT"].map((status) => (
+          {["ALL", "PRESENT", "HALF_DAY", "ABSENT", "LEAVE"].map((status) => (
             <button
               key={status}
               onClick={() => setStatusFilter(status)}
@@ -1152,6 +1246,8 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                 ? "Present"
                 : status === "HALF_DAY"
                 ? "Half Day"
+                : status === "LEAVE"
+                ? "On Leave"
                 : "Absent"}
             </button>
           ))}
@@ -1240,6 +1336,8 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                             ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
                             : row.computedStatus === "HALF_DAY"
                             ? "bg-amber-100 text-amber-800 border border-amber-200"
+                            : row.computedStatus === "LEAVE"
+                            ? "bg-blue-100 text-blue-800 border border-blue-200"
                             : "bg-rose-100 text-rose-800 border border-rose-200"
                         }`}
                       >
@@ -1428,6 +1526,8 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                                   ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
                                   : row.computedStatus === "HALF_DAY"
                                   ? "bg-amber-100 text-amber-800 border border-amber-200"
+                                  : row.computedStatus === "LEAVE"
+                                  ? "bg-blue-100 text-blue-800 border border-blue-200"
                                   : "bg-rose-100 text-rose-800 border border-rose-200"
                               }`}
                             >

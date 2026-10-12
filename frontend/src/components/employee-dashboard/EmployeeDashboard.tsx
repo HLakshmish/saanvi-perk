@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   CalendarDays,
@@ -71,6 +71,23 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
     compBal: 0.0,
     isLoading: true,
   });
+  const [rawLeaveRequests, setRawLeaveRequests] = useState<any[]>([]);
+
+  // Check if current user is on approved leave today
+  const isApprovedLeaveToday = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return rawLeaveRequests.some((r: any) => {
+      if (String(r.status).toUpperCase() !== "APPROVED") return false;
+      if (r.reason && String(r.reason).startsWith("Auto-")) return false;
+      if (r.numberOfDays !== undefined && r.numberOfDays !== null && Number(r.numberOfDays) < 1) return false;
+      const from = new Date(r.fromDate);
+      from.setHours(0, 0, 0, 0);
+      const to = new Date(r.toDate);
+      to.setHours(23, 59, 59, 999);
+      return today >= from && today <= to;
+    });
+  }, [rawLeaveRequests]);
 
   // Attendance Widget State (with persistence)
   const [isCheckedIn, setIsCheckedIn] = useState<boolean>(false);
@@ -337,6 +354,11 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
 
   // Handle Check-In Click
   const handleCheckIn = async () => {
+    if (isApprovedLeaveToday) {
+      toast.error("You are on approved leave today. Check-in is not allowed.");
+      return;
+    }
+
     if (checkOutTime) {
       toast.info("You have already checked out for today. See you tomorrow! 👋");
       return;
@@ -359,22 +381,6 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
       hour12: true,
     });
 
-    setIsCheckedIn(true);
-    setCheckInTime(timeStr);
-    setCheckOutTime(null);
-    setSeconds(0);
-    setLastCoords(coords);
-
-    if (typeof window !== "undefined" && userId) {
-      localStorage.setItem(getUserKey(CHECKIN_ACTIVE_KEY, userId), "true");
-      localStorage.setItem(getUserKey(CHECKIN_TIMESTAMP_KEY, userId), now.toISOString());
-      localStorage.setItem(getUserKey(CHECKIN_DISPLAY_KEY, userId), timeStr);
-      localStorage.removeItem(getUserKey(CHECKOUT_DISPLAY_KEY, userId));
-      localStorage.removeItem(getUserKey(CHECKOUT_TIMESTAMP_KEY, userId));
-      localStorage.removeItem(getUserKey(WORKED_SECONDS_KEY, userId));
-      localStorage.setItem(getUserKey(CHECKIN_COORDS_KEY, userId), JSON.stringify(coords));
-    }
-
     // Persist to Backend Database for Admin records
     if (userId) {
       const year = now.getFullYear();
@@ -382,36 +388,64 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
       const day = String(now.getDate()).padStart(2, "0");
       const todayDate = `${year}-${month}-${day}`;
 
-      createAttendanceCheckIn({
-        userId,
-        attendanceDate: todayDate,
-        checkInTime: now.toISOString(),
-        checkInLatitude: coords.latitude,
-        checkInLongitude: coords.longitude,
-        attendanceStatus: "PRESENT",
-      })
-        .then((res) => {
-          if (res?.data?.attendanceId && typeof window !== "undefined") {
-            localStorage.setItem(getUserKey("sa_attendance_id", userId), String(res.data.attendanceId));
-          } else if (res?.message?.includes("already exists") || res?.error?.includes("already exists")) {
-            toast.info("You have already checked out for today. See you tomorrow! 👋");
-          }
-        })
-        .catch((err) => {
-          const msg = err?.message || "";
-          if (msg.includes("already exists")) {
-            toast.info("You have already checked out for today. See you tomorrow! 👋");
-          } else {
-            console.warn("Could not sync check-in with backend attendance table:", err);
-          }
+      try {
+        const res = await createAttendanceCheckIn({
+          userId,
+          attendanceDate: todayDate,
+          checkInTime: now.toISOString(),
+          checkInLatitude: coords.latitude,
+          checkInLongitude: coords.longitude,
+          attendanceStatus: "PRESENT",
         });
-    }
 
-    toast.success(`Checked in successfully at ${timeStr}`);
+        if (res?.message?.includes("already exists") || res?.error?.includes("already exists")) {
+          toast.info("You have already checked out for today. See you tomorrow! 👋");
+          return;
+        }
+
+        if (res?.success === false) {
+          toast.error(res?.message || res?.error || "Check-in blocked.");
+          return;
+        }
+
+        setIsCheckedIn(true);
+        setCheckInTime(timeStr);
+        setCheckOutTime(null);
+        setSeconds(0);
+        setLastCoords(coords);
+
+        if (typeof window !== "undefined") {
+          localStorage.setItem(getUserKey(CHECKIN_ACTIVE_KEY, userId), "true");
+          localStorage.setItem(getUserKey(CHECKIN_TIMESTAMP_KEY, userId), now.toISOString());
+          localStorage.setItem(getUserKey(CHECKIN_DISPLAY_KEY, userId), timeStr);
+          localStorage.removeItem(getUserKey(CHECKOUT_DISPLAY_KEY, userId));
+          localStorage.removeItem(getUserKey(CHECKOUT_TIMESTAMP_KEY, userId));
+          localStorage.removeItem(getUserKey(WORKED_SECONDS_KEY, userId));
+          localStorage.setItem(getUserKey(CHECKIN_COORDS_KEY, userId), JSON.stringify(coords));
+          if (res?.data?.attendanceId) {
+            localStorage.setItem(getUserKey("sa_attendance_id", userId), String(res.data.attendanceId));
+          }
+        }
+
+        toast.success(`Checked in successfully at ${timeStr}`);
+      } catch (err: any) {
+        const msg = err?.message || "";
+        if (msg.includes("already exists")) {
+          toast.info("You have already checked out for today. See you tomorrow! 👋");
+        } else {
+          toast.error(msg || "Could not check in.");
+        }
+      }
+    }
   };
 
   // Handle Check-Out Click
   const handleCheckOut = async () => {
+    if (isApprovedLeaveToday) {
+      toast.error("You are on approved leave today. Check-out is not allowed.");
+      return;
+    }
+
     setIsLoadingLocation(true);
     const coords = await fetchUserLocation();
     setIsLoadingLocation(false);
@@ -429,19 +463,6 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
       hour12: true,
     });
 
-    setIsCheckedIn(false);
-    setCheckOutTime(timeStr);
-
-    if (typeof window !== "undefined" && userId) {
-      localStorage.removeItem(getUserKey(CHECKIN_ACTIVE_KEY, userId));
-      localStorage.removeItem(getUserKey(CHECKIN_TIMESTAMP_KEY, userId));
-      localStorage.removeItem(getUserKey(CHECKIN_DISPLAY_KEY, userId));
-      localStorage.removeItem(getUserKey(CHECKIN_COORDS_KEY, userId));
-      localStorage.setItem(getUserKey(CHECKOUT_DISPLAY_KEY, userId), timeStr);
-      localStorage.setItem(getUserKey(CHECKOUT_TIMESTAMP_KEY, userId), now.toISOString());
-      localStorage.setItem(getUserKey(WORKED_SECONDS_KEY, userId), String(seconds));
-    }
-
     // Persist Check-Out in Backend Database
     const savedAttendanceId =
       typeof window !== "undefined" && userId
@@ -458,9 +479,23 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
         });
         // Immediately refresh leave balances & attendance records
         await loadDashboardData();
-      } catch (err) {
-        console.warn("Could not sync check-out with backend attendance table:", err);
+      } catch (err: any) {
+        toast.error(err?.message || "Could not sync check-out with backend");
+        return;
       }
+    }
+
+    setIsCheckedIn(false);
+    setCheckOutTime(timeStr);
+
+    if (typeof window !== "undefined" && userId) {
+      localStorage.removeItem(getUserKey(CHECKIN_ACTIVE_KEY, userId));
+      localStorage.removeItem(getUserKey(CHECKIN_TIMESTAMP_KEY, userId));
+      localStorage.removeItem(getUserKey(CHECKIN_DISPLAY_KEY, userId));
+      localStorage.removeItem(getUserKey(CHECKIN_COORDS_KEY, userId));
+      localStorage.setItem(getUserKey(CHECKOUT_DISPLAY_KEY, userId), timeStr);
+      localStorage.setItem(getUserKey(CHECKOUT_TIMESTAMP_KEY, userId), now.toISOString());
+      localStorage.setItem(getUserKey(WORKED_SECONDS_KEY, userId), String(seconds));
     }
 
     toast.success("You've successfully checked out for today");
@@ -527,6 +562,7 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
       const totalAccumulated = accumulatedSick + accumulatedComp + accumulatedEarned + accumulatedLop;
 
       const reqs = (leaveReqsRes.success && Array.isArray(leaveReqsRes.data)) ? leaveReqsRes.data : [];
+      setRawLeaveRequests(reqs);
       let availedSick = 0;
       let availedComp = 0;
       let availedEarned = 0;
@@ -795,6 +831,7 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
         onCheckIn={handleCheckIn}
         onCheckOut={handleCheckOut}
         isLoadingLocation={isLoadingLocation}
+        isOnApprovedLeave={isApprovedLeaveToday}
       />
 
       {/* 3. App Services Hub: Sidebar Sections in 3 or 4 Column Grid */}
