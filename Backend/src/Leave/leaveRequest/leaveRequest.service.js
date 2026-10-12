@@ -6,6 +6,15 @@ class LeaveRequestService {
     async calculateEmployeeLeaveBalance(companyId, userId, leaveTypeId, isCompOff) {
         if (!leaveTypeId) return 0;
 
+        if (companyId && userId) {
+            try {
+                const attendanceService = require("../../Attendance/attendance.service");
+                await attendanceService.syncAbsences({ companyId, userId });
+            } catch (err) {
+                console.error("Error syncing absences in leave balance:", err);
+            }
+        }
+
         if (isCompOff) {
             try {
                 const compOffDetails = await compOffAssignService.getUserCompOffDetails(companyId, userId);
@@ -339,6 +348,14 @@ class LeaveRequestService {
     }
 
     async getAllLeaveRequests(companyId, userId, isCompOff) {
+        if (companyId) {
+            try {
+                const attendanceService = require("../../Attendance/attendance.service");
+                await attendanceService.syncAbsences({ companyId, userId });
+            } catch (err) {
+                console.error("Error syncing absences in getAllLeaveRequests:", err);
+            }
+        }
         const requests = await leaveRequestRepository.getAllLeaveRequests(companyId, userId, isCompOff);
         return await this.mapSuperAdminApprovers(requests, companyId);
     }
