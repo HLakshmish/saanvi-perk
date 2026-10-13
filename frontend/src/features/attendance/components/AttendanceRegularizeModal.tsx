@@ -256,11 +256,13 @@ export const AttendanceRegularizeModal: React.FC<AttendanceRegularizeModalProps>
         }
       }
 
-      // 2. Check existing active leave requests covering this date
+      // 2. Check existing active planned leave requests covering this date (exclude auto-generated deductions)
       if (leaveRes && leaveRes.success && Array.isArray(leaveRes.data)) {
         const activeLeaves = leaveRes.data.filter((l: any) => {
           const st = (l.status || "").toUpperCase();
-          return st !== "REJECTED" && st !== "CANCELLED";
+          if (st === "REJECTED" || st === "CANCELLED") return false;
+          if (l.reason && String(l.reason).startsWith("Auto-")) return false;
+          return true;
         });
 
         for (const leave of activeLeaves) {

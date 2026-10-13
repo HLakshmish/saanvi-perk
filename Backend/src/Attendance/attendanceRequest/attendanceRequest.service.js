@@ -3,7 +3,7 @@ const attendanceRepository = require("../attendance.repository");
 
 class AttendanceRequestService {
     async createRequest(data) {
-        if (data.shiftDate) data.shiftDate = new Date(data.shiftDate);
+        if (data.shiftDate) data.shiftDate = attendanceRepository.normalizeDate(data.shiftDate);
         if (data.checkInTime) data.checkInTime = new Date(data.checkInTime);
         if (data.checkOutTime) data.checkOutTime = new Date(data.checkOutTime);
 
@@ -70,9 +70,12 @@ class AttendanceRequestService {
             const existingAttendance = await attendanceRepository.getAttendanceByUserAndDate(req.companyId, req.userId, req.shiftDate);
             
             if (existingAttendance) {
-                const updateData = {};
+                const updateData = {
+                    attendanceStatus: 'PRESENT'
+                };
                 if (req.checkInTime) updateData.checkInTime = req.checkInTime;
                 if (req.checkOutTime) updateData.checkOutTime = req.checkOutTime;
+                if (req.remarks) updateData.remarks = req.remarks;
                 
                 await attendanceService.updateAttendance(existingAttendance.attendanceId, updateData);
             } else {
@@ -82,6 +85,7 @@ class AttendanceRequestService {
                     attendanceDate: req.shiftDate,
                     checkInTime: req.checkInTime,
                     checkOutTime: req.checkOutTime,
+                    attendanceStatus: 'PRESENT',
                     remarks: req.remarks
                 });
             }

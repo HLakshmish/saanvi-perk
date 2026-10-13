@@ -11,7 +11,7 @@ async function routes(fastify, options) {
     });
 
     fastify.post("/", opts(schema.createRequestSchema), controller.createRequest.bind(controller));
-    fastify.get("/", opts(schema.getAllSchema, 'VIEW_ATTENDANCE_REQUESTS'), controller.getAllRequests.bind(controller));
+    fastify.get("/", opts(schema.getAllSchema), controller.getAllRequests.bind(controller));
     fastify.put("/:id/status", opts(schema.updateStatusSchema, 'MANAGE_ATTENDANCE_REQUESTS'), controller.updateRequestStatus.bind(controller));
 }
 

@@ -450,7 +450,7 @@ export const LeavesView: React.FC = () => {
     let availedLop = 0;
 
     rawRequests
-      .filter((r: any) => Number(r.userId) === Number(targetUserId) && String(r.status).toUpperCase() === "APPROVED")
+      .filter((r: any) => Number(r.userId) === Number(targetUserId) && String(r.status).toUpperCase() === "APPROVED" && !(r.reason && String(r.reason).startsWith("Auto-")))
       .forEach((item: any) => {
         let leaveTypeName = "Leave";
         if (item.leaveType) {
@@ -472,10 +472,10 @@ export const LeavesView: React.FC = () => {
       });
 
     return {
-      sick: sickLimit - availedSick,
-      comp: compLimit - availedComp,
-      earned: earnedLimit - availedEarned,
-      lop: lopLimit - availedLop,
+      sick: Math.max(0, sickLimit - availedSick),
+      comp: Math.max(0, compLimit - availedComp),
+      earned: Math.max(0, earnedLimit - availedEarned),
+      lop: Math.max(0, lopLimit - availedLop),
     };
   };
 

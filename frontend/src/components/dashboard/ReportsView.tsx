@@ -736,6 +736,7 @@ export const ReportsView: React.FC = () => {
     if (rawLeaveData) {
       rawLeaveData.forEach((l: any) => {
         if (l.status?.toUpperCase() !== "APPROVED") return;
+        if (l.reason && String(l.reason).startsWith("Auto-")) return;
         const uId = l.userId || l.user_id;
         if (!uId) return;
         const existing = map.get(Number(uId)) || { user: l.user, leaveCounts: {} };

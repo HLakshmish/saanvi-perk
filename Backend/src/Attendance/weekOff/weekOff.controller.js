@@ -84,7 +84,11 @@ class WeekOffController {
             if (request.user.role === 'OWNER' && request.query.companyId) {
                 companyId = Number(request.query.companyId);
             } else if (request.user.role === 'USER') {
-                userId = request.user.userId;
+                const perms = request.user.permissions || [];
+                const canViewAll = perms.includes('VIEW_WEEK_OFFS') || perms.includes('MANAGE_WEEK_OFFS');
+                if (!canViewAll) {
+                    userId = request.user.userId;
+                }
             }
             const assignments = await weekOffService.getAssignedWeekOffs(companyId, userId);
             reply.code(200).send({ success: true, data: assignments });

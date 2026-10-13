@@ -2,16 +2,29 @@ const attendanceRepository = require("./attendance.repository");
 const prisma = require("../config/prisma");
 
 class AttendanceService {
+    constructor() {
+        this.syncingCompanies = new Set();
+    }
+
     calculateAttendanceStatus(data) {
         if (data.checkInTime && data.checkOutTime) {
-            const inTime = new Date(data.checkInTime).getTime();
-            const outTime = new Date(data.checkOutTime).getTime();
-            if (!isNaN(inTime) && !isNaN(outTime)) {
-                let diffMs = outTime - inTime;
-                if (diffMs < 0) {
-                    diffMs += 24 * 60 * 60 * 1000; // Night shift crossing midnight
+            const inDate = new Date(data.checkInTime);
+            const outDate = new Date(data.checkOutTime);
+            if (!isNaN(inDate.getTime()) && !isNaN(outDate.getTime())) {
+                let inMinutes = inDate.getUTCHours() * 60 + inDate.getUTCMinutes();
+                let outMinutes = outDate.getUTCHours() * 60 + outDate.getUTCMinutes();
+                let diffMins = outMinutes - inMinutes;
+                if (diffMins < 0) {
+                    diffMins += 24 * 60; // Night shift crossing midnight
                 }
-                data.workingMinutes = Math.floor(diffMs / 60000);
+                data.workingMinutes = diffMins;
+                if (diffMins > 480) {
+                    data.overtimeMinutes = diffMins - 480;
+                    data.earlyCheckoutMinutes = 0;
+                } else {
+                    data.overtimeMinutes = 0;
+                    data.earlyCheckoutMinutes = 480 - diffMins;
+                }
             }
         }
 
@@ -24,6 +37,11 @@ class AttendanceService {
             } else {
                 data.attendanceStatus = 'ABSENT';
             }
+        } else if (data.checkInTime) {
+            // Checked in, but has not checked out yet -> Active / Present
+            data.attendanceStatus = 'PRESENT';
+        } else if (!data.attendanceStatus) {
+            data.attendanceStatus = 'PRESENT';
         }
     }
 
@@ -104,11 +122,67 @@ class AttendanceService {
         return dayOfWeek === 0 || dayOfWeek === 6;
     }
 
+    async cleanupDuplicates(companyId, userId) {
+        try {
+            const where = { companyId };
+            if (userId) where.userId = Number(userId);
+
+            const atts = await prisma.attendance.findMany({
+                where,
+                select: { attendanceId: true, companyId: true, userId: true, attendanceDate: true, checkInTime: true, checkOutTime: true },
+                orderBy: { attendanceId: 'asc' }
+            });
+
+            const seen = new Map();
+            const dupAttIds = [];
+            for (const a of atts) {
+                const dStr = a.attendanceDate ? a.attendanceDate.toISOString().split('T')[0] : '';
+                const key = `${a.userId}_${dStr}`;
+                if (seen.has(key)) {
+                    const prev = seen.get(key);
+                    // If current has punch but existing doesn't, delete existing and keep current
+                    if ((a.checkInTime || a.checkOutTime) && !prev.checkInTime && !prev.checkOutTime) {
+                        dupAttIds.push(prev.attendanceId);
+                        seen.set(key, a);
+                    } else {
+                        dupAttIds.push(a.attendanceId);
+                    }
+                } else {
+                    seen.set(key, a);
+                }
+            }
+
+            if (dupAttIds.length > 0) {
+                await prisma.attendance.deleteMany({
+                    where: { attendanceId: { in: dupAttIds } }
+                });
+            }
+
+            // Clean all legacy auto-generated absence leave records from leave_requests
+            await prisma.leaveRequest.deleteMany({
+                where: {
+                    ...where,
+                    reason: { startsWith: 'Auto-' }
+                }
+            });
+        } catch (e) {
+            console.warn("Auto-cleanup of duplicate attendances failed:", e.message);
+        }
+    }
+
     async syncAbsences(options = {}) {
         const { companyId, userId, fromDate, toDate } = options;
         if (!companyId) return;
 
+        const lockKey = `${companyId}_${userId || 'all'}`;
+        if (this.syncingCompanies.has(lockKey)) {
+            return;
+        }
+        this.syncingCompanies.add(lockKey);
+
         try {
+            await this.cleanupDuplicates(companyId, userId);
+
             const userWhere = { companyId, status: 'ACTIVE' };
             if (userId) userWhere.userId = Number(userId);
             const users = await prisma.user.findMany({
@@ -120,7 +194,7 @@ class AttendanceService {
             const userIds = users.map(u => u.userId);
 
             const now = new Date();
-            const todayUtcStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
+            const todayUtcStart = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0));
             const yesterdayUtcEnd = new Date(todayUtcStart.getTime() - 1);
 
             // Default date range: check the last 60 days up to yesterday
@@ -224,49 +298,31 @@ class AttendanceService {
                         return aDate >= curStart && aDate <= curEnd;
                     });
 
-                    // If half-day attendance, ensure 0.5 day leave deduction exists
+                    // If half-day attendance, skip (half-day is recorded in attendance)
                     if (userAtt && userAtt.attendanceStatus === 'HALF_DAY') {
-                        const existingLeave = approvedLeaves.find(l => {
-                            if (l.userId !== user.userId) return false;
-                            const lStart = new Date(l.fromDate);
-                            const lEnd = new Date(l.toDate);
-                            return curEnd >= lStart && curStart <= lEnd;
-                        });
-
-                        if (!existingLeave) {
-                            if (!applicableLeaveTypeId) {
-                                applicableLeaveTypeId = await this.getApplicableLeaveType(companyId, user.userId);
-                            }
-                            if (applicableLeaveTypeId) {
-                                const createdLeave = await prisma.leaveRequest.create({
-                                    data: {
-                                        companyId,
-                                        userId: user.userId,
-                                        leaveTypeId: applicableLeaveTypeId,
-                                        fromDate: curStart,
-                                        toDate: curStart,
-                                        numberOfDays: 0.5,
-                                        reason: 'Auto-generated due to HALF_DAY attendance',
-                                        status: 'APPROVED'
-                                    }
-                                });
-                                approvedLeaves.push(createdLeave);
-                            }
-                        } else if (existingLeave.reason && existingLeave.reason.startsWith('Auto-') && Number(existingLeave.numberOfDays) !== 0.5) {
-                            await prisma.leaveRequest.update({
-                                where: { leaveRequestId: existingLeave.leaveRequestId },
-                                data: {
-                                    numberOfDays: 0.5,
-                                    reason: 'Auto-updated due to HALF_DAY attendance'
-                                }
-                            });
-                            existingLeave.numberOfDays = 0.5;
-                        }
                         continue;
                     }
 
                     // If attended (punch exists or status is PRESENT) -> skip!
                     if (userAtt && (userAtt.checkInTime || userAtt.attendanceStatus === 'PRESENT')) {
+                        // Ensure no lingering auto-leave deduction remains for this present day
+                        const lingeringAuto = approvedLeaves.find(l => {
+                            if (l.userId !== user.userId) return false;
+                            if (!l.reason || !l.reason.startsWith('Auto-')) return false;
+                            const lStart = new Date(l.fromDate);
+                            const lEnd = new Date(l.toDate);
+                            return curEnd >= lStart && curStart <= lEnd;
+                        });
+                        if (lingeringAuto) {
+                            await prisma.leaveRequest.deleteMany({
+                                where: {
+                                    companyId,
+                                    userId: user.userId,
+                                    fromDate: curStart,
+                                    reason: { startsWith: 'Auto-' }
+                                }
+                            });
+                        }
                         continue;
                     }
 
@@ -275,87 +331,42 @@ class AttendanceService {
                         applicableLeaveTypeId = await this.getApplicableLeaveType(companyId, user.userId);
                     }
 
-                    // Create attendance record if not exists
+                    // Create attendance record if not exists (Attendance marks absence; it does not consume paid leave quota)
                     if (!userAtt) {
-                        const createdAtt = await attendanceRepository.createAttendance({
-                            companyId,
-                            userId: user.userId,
-                            attendanceDate: curStart,
-                            attendanceStatus: 'ABSENT',
-                            remarks: 'Absent - no check-in/check-out recorded'
-                        });
-                        attendances.push(createdAtt);
-                    }
-
-                    // Check if absent leave deduction already exists (Idempotent!)
-                    const existingDeduction = approvedLeaves.find(l => {
-                        if (l.userId !== user.userId) return false;
-                        const lStart = new Date(l.fromDate);
-                        const lEnd = new Date(l.toDate);
-                        return curEnd >= lStart && curStart <= lEnd;
-                    });
-
-                    if (!existingDeduction && applicableLeaveTypeId) {
-                        const createdLeave = await prisma.leaveRequest.create({
-                            data: {
+                        const dbAtt = await prisma.attendance.findFirst({
+                            where: {
                                 companyId,
                                 userId: user.userId,
-                                leaveTypeId: applicableLeaveTypeId,
-                                fromDate: curStart,
-                                toDate: curStart,
-                                numberOfDays: 1,
-                                reason: 'Auto-generated due to ABSENT attendance',
-                                status: 'APPROVED'
+                                attendanceDate: curStart
                             }
                         });
-                        approvedLeaves.push(createdLeave);
+                        if (!dbAtt) {
+                            const createdAtt = await attendanceRepository.createAttendance({
+                                companyId,
+                                userId: user.userId,
+                                attendanceDate: curStart,
+                                attendanceStatus: 'ABSENT',
+                                remarks: 'Absent - no check-in/check-out recorded'
+                            });
+                            attendances.push(createdAtt);
+                        } else {
+                            attendances.push(dbAtt);
+                        }
                     }
                 }
             }
         } catch (err) {
             console.error("Error synchronizing absences:", err);
+        } finally {
+            this.syncingCompanies.delete(lockKey);
         }
     }
 
     async reflectAttendanceInLeave(data) {
-        if (data.attendanceStatus === 'ABSENT' || data.attendanceStatus === 'HALF_DAY') {
-            const leaveTypeId = await this.getApplicableLeaveType(data.companyId, data.userId);
-
-            if (leaveTypeId) {
-                const numberOfDays = data.attendanceStatus === 'ABSENT' ? 1 : 0.5;
-                const existingLeave = await prisma.leaveRequest.findFirst({
-                    where: {
-                        companyId: data.companyId,
-                        userId: data.userId,
-                        fromDate: data.attendanceDate
-                    }
-                });
-
-                if (!existingLeave) {
-                    await prisma.leaveRequest.create({
-                        data: {
-                            companyId: data.companyId,
-                            userId: data.userId,
-                            leaveTypeId: leaveTypeId,
-                            fromDate: data.attendanceDate,
-                            toDate: data.attendanceDate,
-                            numberOfDays: numberOfDays,
-                            reason: `Auto-generated due to ${data.attendanceStatus} attendance`,
-                            status: 'APPROVED'
-                        }
-                    });
-                } else if (existingLeave.numberOfDays !== numberOfDays || (existingLeave.reason && existingLeave.reason.startsWith('Auto-'))) {
-                    await prisma.leaveRequest.update({
-                        where: { leaveRequestId: existingLeave.leaveRequestId },
-                        data: {
-                            numberOfDays: numberOfDays,
-                            reason: `Auto-updated due to ${data.attendanceStatus} attendance`
-                        }
-                    });
-                }
-            }
-        } else if (data.attendanceStatus === 'PRESENT') {
-            const existingLeave = await prisma.leaveRequest.findFirst({
+        // Attendance records should not create paid leave deductions.
+        // If user is marked PRESENT, clean up any legacy auto-generated absence records for this date.
+        if (data.attendanceStatus === 'PRESENT') {
+            await prisma.leaveRequest.deleteMany({
                 where: {
                     companyId: data.companyId,
                     userId: data.userId,
@@ -363,26 +374,20 @@ class AttendanceService {
                     reason: { startsWith: 'Auto-' }
                 }
             });
-            if (existingLeave) {
-                await prisma.leaveRequest.delete({
-                    where: { leaveRequestId: existingLeave.leaveRequestId }
-                });
-            }
         }
     }
 
     async createAttendance(data) {
         // Parse dates if they are strings
-        if (data.attendanceDate) data.attendanceDate = new Date(data.attendanceDate);
+        const targetDate = attendanceRepository.normalizeDate(data.attendanceDate || data.checkInTime || new Date());
+        data.attendanceDate = targetDate;
         if (data.checkInTime) data.checkInTime = new Date(data.checkInTime);
         if (data.checkOutTime) data.checkOutTime = new Date(data.checkOutTime);
 
         // Prevent check-in if user has an approved leave for this date
-        const targetDate = data.attendanceDate || (data.checkInTime ? new Date(data.checkInTime) : new Date());
         const startOfDay = new Date(targetDate);
-        startOfDay.setHours(0, 0, 0, 0);
         const endOfDay = new Date(targetDate);
-        endOfDay.setHours(23, 59, 59, 999);
+        endOfDay.setUTCHours(23, 59, 59, 999);
 
         const approvedLeave = await prisma.leaveRequest.findFirst({
             where: {
@@ -405,7 +410,32 @@ class AttendanceService {
         this.calculateAttendanceStatus(data);
 
         const existing = await attendanceRepository.getAttendanceByUserAndDate(data.companyId, data.userId, data.attendanceDate);
-        if (existing) throw new Error("Attendance record already exists for this user on this date");
+        if (existing) {
+            // If an ABSENT placeholder was created without punch, update it to check-in
+            if (existing.attendanceStatus === 'ABSENT' && !existing.checkInTime) {
+                const updatePayload = {
+                    checkInTime: data.checkInTime || new Date(),
+                    checkOutTime: data.checkOutTime ?? null,
+                    checkInLatitude: data.checkInLatitude ?? null,
+                    checkInLongitude: data.checkInLongitude ?? null,
+                    checkOutLatitude: data.checkOutLatitude ?? null,
+                    checkOutLongitude: data.checkOutLongitude ?? null,
+                    workingMinutes: data.workingMinutes ?? null,
+                    overtimeMinutes: data.overtimeMinutes ?? null,
+                    earlyCheckoutMinutes: data.earlyCheckoutMinutes ?? null,
+                    attendanceStatus: data.attendanceStatus || 'PRESENT',
+                    remarks: data.remarks || null
+                };
+                const updated = await attendanceRepository.updateAttendance(existing.attendanceId, updatePayload);
+                try {
+                    await this.reflectAttendanceInLeave({ ...updated, attendanceStatus: updatePayload.attendanceStatus });
+                } catch (err) {
+                    console.error("Error reflecting attendance in leave:", err);
+                }
+                return updated;
+            }
+            throw new Error("Attendance record already exists for this user on this date");
+        }
 
         const attendance = await attendanceRepository.createAttendance(data);
 
@@ -425,27 +455,32 @@ class AttendanceService {
     }
 
     async getAllAttendances(query) {
+        if (query.userId) {
+            query.userId = Number(query.userId);
+        }
         if (query.companyId) {
+            query.companyId = Number(query.companyId);
             await this.syncAbsences({ companyId: query.companyId, userId: query.userId });
         }
         // Parse date for query if provided
-        if (query.attendanceDate) query.attendanceDate = new Date(query.attendanceDate);
+        if (query.attendanceDate) {
+            query.attendanceDate = attendanceRepository.normalizeDate(query.attendanceDate);
+        }
         return await attendanceRepository.getAllAttendances(query);
     }
 
     async updateAttendance(id, data) {
         const attendance = await this.getAttendanceById(id);
 
-        if (data.attendanceDate) data.attendanceDate = new Date(data.attendanceDate);
+        if (data.attendanceDate) data.attendanceDate = attendanceRepository.normalizeDate(data.attendanceDate);
         if (data.checkInTime) data.checkInTime = new Date(data.checkInTime);
         if (data.checkOutTime) data.checkOutTime = new Date(data.checkOutTime);
 
         // Prevent check-out if user has an approved leave for this date
         const targetDate = data.attendanceDate || attendance.attendanceDate || (data.checkOutTime ? new Date(data.checkOutTime) : new Date());
-        const startOfDay = new Date(targetDate);
-        startOfDay.setHours(0, 0, 0, 0);
-        const endOfDay = new Date(targetDate);
-        endOfDay.setHours(23, 59, 59, 999);
+        const startOfDay = attendanceRepository.normalizeDate(targetDate);
+        const endOfDay = new Date(startOfDay);
+        endOfDay.setUTCHours(23, 59, 59, 999);
 
         const approvedLeave = await prisma.leaveRequest.findFirst({
             where: {

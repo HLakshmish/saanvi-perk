@@ -968,11 +968,12 @@ export const LeaveAccumulationsDetailView: React.FC<LeaveAccumulationsDetailView
                                   (req: any) =>
                                     Number(req.userId) === Number(alloc.userId) &&
                                     Number(req.leaveTypeId) === Number(alloc.leaveTypeId) &&
-                                    String(req.status).toUpperCase() === "APPROVED"
+                                    String(req.status).toUpperCase() === "APPROVED" &&
+                                    !(req.reason && String(req.reason).startsWith("Auto-"))
                                 )
                                 .reduce((sum: number, req: any) => sum + Number(req.numberOfDays), 0);
                               
-                              const balance = Number(alloc.numberOfLeaves) - availedDays;
+                              const balance = Math.max(0, Number(alloc.numberOfLeaves) - availedDays);
                               const isCompOffType = lt ? (lt.leaveName.toLowerCase().includes("comp") || lt.leaveCode.toLowerCase().includes("comp")) : false;
                               const empCompOff = isCompOffType ? compOffSummary.find((c: any) => Number(c.userId) === Number(alloc.userId)) : null;
                               const effectiveAllocated = empCompOff ? empCompOff.summary.validEarned : Number(alloc.numberOfLeaves);

@@ -52,7 +52,7 @@ const createSchema = {
     description: 'Create a new attendance record',
     tags: ['Attendance'],
     summary: 'Creates a new attendance record in the system',
-    body: { type: 'object', required: ['userId', 'attendanceDate', 'attendanceStatus'], properties },
+    body: { type: 'object', required: ['userId', 'attendanceDate'], properties },
     response: { 201: { type: 'object', properties: { success: { type: 'boolean' }, message: { type: 'string' }, data: { type: 'object', properties: { attendanceId: { type: 'number' }, companyId: { type: 'number' }, ...properties } } } } }
 };
 

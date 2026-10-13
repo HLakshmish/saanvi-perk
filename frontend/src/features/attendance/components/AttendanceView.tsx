@@ -461,7 +461,10 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
         let dayStatus: "PRESENT" | "HALF_DAY" | "ABSENT" = "PRESENT";
         let dayStatusLabel = isWeekend ? "Present (WO Worked)" : "Present";
 
-        if (rawStatus === "HALF_DAY") {
+        if (isToday && !matchedPunch.checkOutTime) {
+          dayStatus = "PRESENT";
+          dayStatusLabel = "Present (Active)";
+        } else if (rawStatus === "HALF_DAY") {
           dayStatus = "HALF_DAY";
           dayStatusLabel = "Half Day";
         } else if (rawStatus === "ABSENT") {
@@ -556,7 +559,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
     }
 
     return logs;
-  }, [currentMonthDate, attendances, attendanceRequests, holidays]);
+  }, [currentMonthDate, attendances, attendanceRequests, holidays, leaveRequests]);
 
   // Month-wise Overview Stats
   const monthOverviewStats = useMemo(() => {
@@ -624,7 +627,23 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
 
   // Combine attendance records with employee details for Admin view
   const attendanceRows = useMemo(() => {
-    const rows = attendances.map((att) => {
+    // Deduplicate attendance records by userId + attendanceDate (keep latest / one with punches)
+    const uniqueAttsMap = new Map<string, any>();
+    attendances.forEach((att) => {
+      const d = att.attendanceDate ? new Date(att.attendanceDate).toISOString().split("T")[0] : "";
+      const key = `${att.userId}_${d}`;
+      const existing = uniqueAttsMap.get(key);
+      if (!existing) {
+        uniqueAttsMap.set(key, att);
+      } else {
+        if ((att.checkInTime || att.checkOutTime) && !existing.checkInTime && !existing.checkOutTime) {
+          uniqueAttsMap.set(key, att);
+        }
+      }
+    });
+    const dedupedAttendances = Array.from(uniqueAttsMap.values());
+
+    const rows = dedupedAttendances.map((att) => {
       const emp = employees.find(
         (e) => String(e.id) === String(att.userId) || Number(e.id) === Number(att.userId)
       );
@@ -665,8 +684,11 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
       };
     });
 
-    // Also include employees on approved leave for selectedDate who have no raw punch
-    if (selectedDate && Array.isArray(leaveRequests)) {
+    // Also include employees on approved leave or not clocked in for selectedDate who have no raw punch
+    if (selectedDate) {
+      const todayStr = new Date().toISOString().split("T")[0];
+      const isToday = selectedDate === todayStr;
+
       employees.forEach((emp) => {
         const hasRow = rows.some((r) => {
           const rDate = r.attendanceDate ? new Date(r.attendanceDate).toISOString().split("T")[0] : "";
@@ -674,17 +696,19 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
         });
         if (hasRow) return;
 
-        const empLeave = leaveRequests.find((lr) => {
-          if (Number(lr.userId) !== Number(emp.id)) return false;
-          if (String(lr.status).toUpperCase() !== "APPROVED") return false;
-          if (lr.reason && String(lr.reason).startsWith("Auto-")) return false;
-          const sDate = new Date(selectedDate).getTime();
-          const lStart = new Date(lr.fromDate);
-          lStart.setHours(0, 0, 0, 0);
-          const lEnd = new Date(lr.toDate);
-          lEnd.setHours(23, 59, 59, 999);
-          return sDate >= lStart.getTime() && sDate <= lEnd.getTime();
-        });
+        const empLeave = Array.isArray(leaveRequests)
+          ? leaveRequests.find((lr) => {
+              if (Number(lr.userId) !== Number(emp.id)) return false;
+              if (String(lr.status).toUpperCase() !== "APPROVED") return false;
+              if (lr.reason && String(lr.reason).startsWith("Auto-")) return false;
+              const sDate = new Date(selectedDate).getTime();
+              const lStart = new Date(lr.fromDate);
+              lStart.setHours(0, 0, 0, 0);
+              const lEnd = new Date(lr.toDate);
+              lEnd.setHours(23, 59, 59, 999);
+              return sDate >= lStart.getTime() && sDate <= lEnd.getTime();
+            })
+          : null;
 
         if (empLeave) {
           rows.push({
@@ -705,12 +729,46 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
             computedStatusLabel: "On Leave",
             computedMins: 0,
           });
+        } else if (!isEmployee) {
+          // Employee has no punch on selectedDate (Admin table view)
+          const isHol = holidays.some((h) => {
+            if (h.holidayType === "WEEK_OFF") return false;
+            const hStart = new Date(h.startDate).toISOString().split("T")[0];
+            const hEnd = new Date(h.endDate || h.startDate).toISOString().split("T")[0];
+            return selectedDate >= hStart && selectedDate <= hEnd;
+          });
+
+          const selDateObj = new Date(selectedDate);
+          const day = selDateObj.getUTCDay();
+          const isWeekend = day === 0 || day === 6;
+
+          const statusLabel = isToday ? "Not Clocked In" : isHol ? "Holiday" : isWeekend ? "Week-Off" : "Absent";
+          const statusKey: "PRESENT" | "HALF_DAY" | "ABSENT" | "LEAVE" = isHol || isWeekend ? "LEAVE" : "ABSENT";
+
+          rows.push({
+            attendanceId: `absent-${emp.id}-${selectedDate}`,
+            userId: emp.id,
+            attendanceDate: selectedDate,
+            checkInTime: null,
+            checkOutTime: null,
+            workingMinutes: 0,
+            attendanceStatus: statusKey,
+            remarks: isToday ? "Not clocked in yet" : statusLabel,
+            employeeName: emp.name,
+            employeeCode: emp.employeeCode || "N/A",
+            department: emp.department || "General",
+            designation: emp.designation || "Staff",
+            profilePic: emp.profilePic,
+            computedStatus: statusKey,
+            computedStatusLabel: statusLabel,
+            computedMins: 0,
+          });
         }
       });
     }
 
     return rows;
-  }, [attendances, employees, currentUserName, selectedDate, leaveRequests]);
+  }, [attendances, employees, currentUserName, selectedDate, leaveRequests, isEmployee, holidays]);
 
   // Filtered rows for Admin Table
   const filteredAdminRows = useMemo(() => {
@@ -743,14 +801,18 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
       return d === today;
     });
 
-    const presentCount = todayRecords.length;
+    const presentCount = todayRecords.filter(
+      (r) => r.checkInTime || r.computedStatus === "PRESENT" || r.computedStatus === "HALF_DAY"
+    ).length;
     const currentlyActive = todayRecords.filter((r) => r.checkInTime && !r.checkOutTime).length;
     const completedShifts = todayRecords.filter((r) => r.checkInTime && r.checkOutTime).length;
+    const notClockedIn = Math.max(0, employees.length - todayRecords.filter((r) => r.checkInTime).length);
 
     return {
       present: presentCount,
       active: currentlyActive,
       completed: completedShifts,
+      notClockedIn,
       totalEmployees: employees.length,
     };
   }, [attendanceRows, employees]);
@@ -1261,7 +1323,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
             </div>
           </div>
           <p className="text-xl sm:text-2xl font-extrabold text-slate-900 mt-2">
-            {Math.max(0, adminMetrics.totalEmployees - adminMetrics.present)}
+            {adminMetrics.notClockedIn}
           </p>
         </div>
       </div>

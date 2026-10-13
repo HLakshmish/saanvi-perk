@@ -82,7 +82,9 @@ export const LeavesSummaryTab: React.FC<LeavesSummaryTabProps> = ({
   const balanceLop = accumulatedLop - availedLop;
   const totalBalance = balanceSick + balanceComp + balanceEarned + balanceLop;
 
-  const availablePercentage = totalAccumulated > 0 ? (totalBalance / totalAccumulated) * 100 : 0;
+  const availablePercentage = totalAccumulated > 0 
+    ? Math.max(0, Math.min(100, (totalBalance / totalAccumulated) * 100)) 
+    : 0;
 
   // Custom Ring Gauge for the Leave Wallet
   const LeaveWalletGauge = ({ percentage, value }: { percentage: number; value: number }) => {
@@ -328,11 +330,12 @@ export const LeavesSummaryTab: React.FC<LeavesSummaryTabProps> = ({
             {leaveBreakdown.map((item) => {
               const Icon = item.icon;
               const hasAllocation = item.total > 0;
-              const isFullyUsed = hasAllocation && item.available === 0;
+              const isOverdrawn = hasAllocation && item.available < 0;
+              const isFullyUsed = hasAllocation && item.available <= 0;
               
-              // Calculate percent of use
+              // Calculate percent of use (clamped between 0 and 100)
               const utilizationPercentage = hasAllocation 
-                ? (item.available / item.total) * 100 
+                ? Math.max(0, Math.min(100, (item.available / item.total) * 100))
                 : 0;
 
               return (
@@ -364,47 +367,51 @@ export const LeavesSummaryTab: React.FC<LeavesSummaryTabProps> = ({
                       </span>
                     </div>
 
-                    {/* Radial utilization gauge */}
-                    {hasAllocation ? (
-                      <MiniGauge percentage={utilizationPercentage} color={item.color} />
-                    ) : (
-                      <div className="w-[50px] h-[50px] rounded-full border-2 border-dashed border-slate-200 flex items-center justify-center text-[9px] font-extrabold text-slate-400">
-                        None
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Card Bottom: Accrued vs Used totals */}
-                  <div className="border-t border-slate-100 pt-3 flex items-center justify-between text-[10px] font-bold text-slate-500">
-                    <span>Used {item.used.toFixed(1)}</span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
-                    <span>Total {item.total.toFixed(1)}</span>
-                  </div>
-
-                  {/* State text tag & Expiry Badge */}
-                  <div className="text-[9px] font-bold flex flex-wrap items-center gap-1.5 mt-0.5">
-                    {!hasAllocation ? (
-                      <span className="text-slate-400 bg-slate-50 px-2 py-0.5 rounded-md">No Allocation</span>
-                    ) : isFullyUsed ? (
-                      <span className="text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md flex items-center gap-1">
-                        <Zap className="w-2.5 h-2.5 text-rose-500" /> Fully Used
-                      </span>
-                    ) : item.used > 0 ? (
-                      <span className="text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md">Partially Used</span>
-                    ) : (
-                      <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">Full Available</span>
-                    )}
-
-                    {item.code === "COFF" && compOffExpiryDate && (
-                      <span className="text-amber-800 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded-md font-bold flex items-center gap-1">
-                        <span>⏳</span> Valid until {compOffExpiryDate}
-                      </span>
-                    )}
-                  </div>
-
+                  {/* Radial utilization gauge */}
+                  {hasAllocation ? (
+                    <MiniGauge percentage={utilizationPercentage} color={item.color} />
+                  ) : (
+                    <div className="w-[50px] h-[50px] rounded-full border-2 border-dashed border-slate-200 flex items-center justify-center text-[9px] font-extrabold text-slate-400">
+                      None
+                    </div>
+                  )}
                 </div>
-              );
-            })}
+
+                {/* Card Bottom: Accrued vs Used totals */}
+                <div className="border-t border-slate-100 pt-3 flex items-center justify-between text-[10px] font-bold text-slate-500">
+                  <span>Used {item.used.toFixed(1)}</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+                  <span>Total {item.total.toFixed(1)}</span>
+                </div>
+
+                {/* State text tag & Expiry Badge */}
+                <div className="text-[9px] font-bold flex flex-wrap items-center gap-1.5 mt-0.5">
+                  {!hasAllocation ? (
+                    <span className="text-slate-400 bg-slate-50 px-2 py-0.5 rounded-md">No Allocation</span>
+                  ) : isOverdrawn ? (
+                    <span className="text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md flex items-center gap-1">
+                      <AlertCircle className="w-2.5 h-2.5 text-rose-500" /> Overdrawn ({Math.abs(item.available).toFixed(1)})
+                    </span>
+                  ) : isFullyUsed ? (
+                    <span className="text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md flex items-center gap-1">
+                      <Zap className="w-2.5 h-2.5 text-rose-500" /> Fully Used
+                    </span>
+                  ) : item.used > 0 ? (
+                    <span className="text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md">Partially Used</span>
+                  ) : (
+                    <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">Full Available</span>
+                  )}
+
+                  {item.code === "COFF" && compOffExpiryDate && (
+                    <span className="text-amber-800 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded-md font-bold flex items-center gap-1">
+                      <span>⏳</span> Valid until {compOffExpiryDate}
+                    </span>
+                  )}
+                </div>
+
+              </div>
+            );
+          })}
           </div>
         </div>
       )}

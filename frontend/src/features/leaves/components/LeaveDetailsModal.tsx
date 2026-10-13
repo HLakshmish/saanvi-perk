@@ -66,11 +66,11 @@ export const LeaveDetailsModal: React.FC<LeaveDetailsModalProps> = ({
                 }
 
                 const approvedReqs = (allReqs.success && Array.isArray(allReqs.data))
-                  ? allReqs.data.filter((r: any) => Number(r.userId) === Number(reqData.userId) && Number(r.leaveTypeId) === Number(reqData.leaveTypeId) && String(r.status).toUpperCase() === "APPROVED")
+                  ? allReqs.data.filter((r: any) => Number(r.userId) === Number(reqData.userId) && Number(r.leaveTypeId) === Number(reqData.leaveTypeId) && String(r.status).toUpperCase() === "APPROVED" && !(r.reason && String(r.reason).startsWith("Auto-")))
                   : [];
                 const totalUsed = approvedReqs.reduce((sum: number, r: any) => sum + Number(r.numberOfDays || 0), 0);
 
-                reqData.employeeLeaveBalance = totalAllocated - totalUsed;
+                reqData.employeeLeaveBalance = Math.max(0, totalAllocated - totalUsed);
                 reqData.balanceAfterApproval = reqData.employeeLeaveBalance - Number(reqData.numberOfDays || 0);
               } catch (e) {
                 reqData.employeeLeaveBalance = 0;
