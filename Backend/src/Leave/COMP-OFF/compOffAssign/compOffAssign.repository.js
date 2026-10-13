@@ -151,6 +151,15 @@ class CompOffAssignRepository {
             orderBy: { fromDate: 'desc' }
         });
 
+        // 7. Fetch approved comp-off work permission requests for this user
+        const approvedCompOffRequests = await prisma.compOffRequest.findMany({
+            where: {
+                companyId,
+                userId,
+                status: 'APPROVED'
+            }
+        });
+
         return {
             user,
             assignedPolicy: policy,
@@ -163,7 +172,8 @@ class CompOffAssignRepository {
             attendances,
             holidays,
             weekOffAssigns,
-            leaveRequests
+            leaveRequests,
+            approvedCompOffRequests
         };
     }
 
@@ -246,12 +256,20 @@ class CompOffAssignRepository {
             }
         });
 
+        const approvedCompOffRequests = await prisma.compOffRequest.findMany({
+            where: {
+                companyId,
+                status: 'APPROVED'
+            }
+        });
+
         return {
             users,
             attendances,
             holidays,
             weekOffAssigns,
-            leaveRequests
+            leaveRequests,
+            approvedCompOffRequests
         };
     }
 }

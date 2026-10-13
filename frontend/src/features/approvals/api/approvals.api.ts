@@ -41,16 +41,21 @@ export const fetchAllApprovals = async (): Promise<{
 
   const attUrl = `${API_BASE_URL}/api/attendance-requests`;
 
+  const compOffUrl = companyId
+    ? `${API_BASE_URL}/api/comp-off-requests?companyId=${companyId}`
+    : `${API_BASE_URL}/api/comp-off-requests`;
+
   const accumUrl = companyId
     ? `${API_BASE_URL}/api/leave-accumulations?companyId=${companyId}`
     : `${API_BASE_URL}/api/leave-accumulations`;
 
   try {
-    const [leaveRes, reimbRes, attRes, accumRes] = await Promise.all([
+    const [leaveRes, reimbRes, attRes, accumRes, compOffRes] = await Promise.all([
       fetch(leaveUrl, { headers }).then((r) => r.json()).catch(() => ({ success: false, data: [] })),
       fetch(reimbUrl, { headers }).then((r) => r.json()).catch(() => ({ success: false, data: [] })),
       fetch(attUrl, { headers }).then((r) => r.json()).catch(() => ({ success: false, data: [] })),
       fetch(accumUrl, { headers }).then((r) => r.json()).catch(() => ({ success: false, data: [] })),
+      fetch(compOffUrl, { headers }).then((r) => r.json()).catch(() => ({ success: false, data: [] })),
     ]);
 
     const items: UnifiedApprovalItem[] = [];
@@ -201,6 +206,37 @@ export const fetchAllApprovals = async (): Promise<{
       });
     }
 
+    // 4. Process Comp-Off Work Permission Requests
+    if (compOffRes.success && Array.isArray(compOffRes.data)) {
+      compOffRes.data.forEach((c: any) => {
+        const status = (c.status || "PENDING").toUpperCase();
+        const workDateStr = c.workDate ? new Date(c.workDate).toLocaleDateString("en-GB").replace(/\//g, "-") : "";
+        const empName = c.user ? `${c.user.firstName} ${c.user.lastName || ""}`.trim() : `Employee #${c.userId}`;
+        const typeLabel = c.requestType === "HOLIDAY" ? "Holiday" : "Week-Off";
+        const title = `Comp-Off Permission: ${typeLabel}${c.holidayOrWeekOffName ? ` (${c.holidayOrWeekOffName})` : ""}`;
+
+        items.push({
+          id: `compoff-${c.id}`,
+          rawId: c.id,
+          moduleType: "COMP_OFF",
+          employeeId: c.userId,
+          employeeName: empName,
+          requestDate: c.createdAt ? new Date(c.createdAt).toLocaleDateString("en-GB").replace(/\//g, "-") : workDateStr,
+          title,
+          category: "Comp-Off Permission",
+          amountOrDays: "1 Day",
+          numericValue: 1,
+          periodOrDate: workDateStr || "N/A",
+          reason: c.reason || "Permission to work on holiday/week-off",
+          status: status as any,
+          approvedBy: c.approvedUser ? `${c.approvedUser.firstName} ${c.approvedUser.lastName || ""}`.trim() : (c.approvedBy ? String(c.approvedBy) : undefined),
+          approvedAt: c.approvedAt ? new Date(c.approvedAt).toLocaleDateString("en-GB").replace(/\//g, "-") : undefined,
+          remarks: c.remarks,
+          rejectionReason: c.rejectionReason,
+        });
+      });
+    }
+
     // Sort by latest request date / ID descending
     items.sort((a, b) => b.rawId - a.rawId);
 
@@ -215,6 +251,7 @@ export const fetchAllApprovals = async (): Promise<{
       (i) => i.moduleType === "REIMBURSEMENT" && (i.status === "PENDING" || i.status === "UNDER_REVIEW")
     ).length;
     const attendancePending = items.filter((i) => i.moduleType === "ATTENDANCE" && i.status === "PENDING").length;
+    const compOffPending = items.filter((i) => i.moduleType === "COMP_OFF" && i.status === "PENDING").length;
 
     const stats: ApprovalStats = {
       total,
@@ -225,6 +262,7 @@ export const fetchAllApprovals = async (): Promise<{
       leavesPending,
       reimbursementsPending,
       attendancePending,
+      compOffPending,
     };
 
     return { success: true, data: items, stats };
@@ -241,6 +279,7 @@ export const fetchAllApprovals = async (): Promise<{
         leavesPending: 0,
         reimbursementsPending: 0,
         attendancePending: 0,
+        compOffPending: 0,
       },
       error: error.message || "Failed to fetch approvals",
     };
@@ -248,7 +287,7 @@ export const fetchAllApprovals = async (): Promise<{
 };
 
 /**
- * Update single approval status (Leave, Reimbursement, or Attendance)
+ * Update single approval status (Leave, Reimbursement, Attendance, or Comp-Off)
  */
 export const updateApprovalStatus = async (
   item: UnifiedApprovalItem,
@@ -297,6 +336,22 @@ export const updateApprovalStatus = async (
         return { success: true, message: result.message || `Attendance request ${payload.status.toLowerCase()} successfully` };
       }
       return { success: false, error: result.message || "Failed to update attendance request status" };
+    } else if (item.moduleType === "COMP_OFF") {
+      const url = `${API_BASE_URL}/api/comp-off-requests/${item.rawId}/status`;
+      const res = await fetch(url, {
+        method: "PUT",
+        headers,
+        body: JSON.stringify({
+          status: payload.status,
+          rejectionReason: payload.rejectionReason || undefined,
+          remarks: payload.remarks || undefined,
+        }),
+      });
+      const result = await res.json();
+      if (res.ok && result.success) {
+        return { success: true, message: result.message || `Comp-off request ${payload.status.toLowerCase()} successfully` };
+      }
+      return { success: false, error: result.message || "Failed to update comp-off request status" };
     } else {
       // Reimbursement Claim
       const url = companyId

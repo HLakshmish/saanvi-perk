@@ -1,6 +1,6 @@
 const repository = require("./compOffAssign.repository");
 
-function evaluateCompOffForAttendance(att, holidays, weekOffAssigns, policy, assignmentDetails) {
+function evaluateCompOffForAttendance(att, holidays, weekOffAssigns, policy, assignmentDetails, approvedCompOffRequests = []) {
     const attDate = new Date(att.attendanceDate);
     attDate.setHours(0, 0, 0, 0);
 
@@ -67,6 +67,27 @@ function evaluateCompOffForAttendance(att, holidays, weekOffAssigns, policy, ass
 
     const isEligible = (isHoliday && policy.holidayWorked) || (isWeekOff && policy.weekOffWorked);
     if (!isEligible) return null;
+
+    // 3. Comp-Off Work Permission Approval is REQUIRED
+    // Employee must have an APPROVED permission request from Reporting Manager/Admin for this date
+    // No approved permission = NO COMP-OFF
+    if (!Array.isArray(approvedCompOffRequests) || approvedCompOffRequests.length === 0) {
+        return null;
+    }
+    const matchedApprovedRequest = approvedCompOffRequests.find(r => {
+        const rDate = new Date(r.workDate);
+        rDate.setHours(0, 0, 0, 0);
+        return rDate.getTime() === attDate.getTime() && String(r.status).toUpperCase() === 'APPROVED';
+    });
+    if (!matchedApprovedRequest) {
+        return null;
+    }
+
+    // 4. Employee must have actually checked in and checked out
+    // If checked in but no valid checkout -> No Comp-Off
+    if (!att.checkInTime || !att.checkOutTime) {
+        return null;
+    }
 
     let earnedCompOffDays = 0;
     if (policy.regularHoursEnabled && att.workingMinutes !== undefined && att.workingMinutes !== null) {
@@ -156,7 +177,8 @@ class CompOffAssignService {
                 data.holidays,
                 data.weekOffAssigns,
                 policy,
-                data.assignmentDetails
+                data.assignmentDetails,
+                data.approvedCompOffRequests
             );
 
             if (!compOffResult) return;
@@ -246,10 +268,20 @@ class CompOffAssignService {
             requestsByUser.get(req.userId).push(req);
         });
 
+        // Group approved comp-off requests by userId
+        const compOffRequestsByUser = new Map();
+        (data.approvedCompOffRequests || []).forEach(r => {
+            if (!compOffRequestsByUser.has(r.userId)) {
+                compOffRequestsByUser.set(r.userId, []);
+            }
+            compOffRequestsByUser.get(r.userId).push(r);
+        });
+
         const employees = data.users.map(user => {
             const userAtts = attendancesByUser.get(user.userId) || [];
             const userWeekOffs = weekOffsByUser.get(user.userId) || [];
             const userReqs = requestsByUser.get(user.userId) || [];
+            const userApprovedCompOffReqs = compOffRequestsByUser.get(user.userId) || [];
             const activeAssignment = user.compOffAssigns && user.compOffAssigns.length > 0 ? user.compOffAssigns[0] : null;
             const policy = activeAssignment ? activeAssignment.policy : null;
 
@@ -265,7 +297,8 @@ class CompOffAssignService {
                         data.holidays,
                         userWeekOffs,
                         policy,
-                        activeAssignment
+                        activeAssignment,
+                        userApprovedCompOffReqs
                     );
 
                     if (!compOffResult) return;
@@ -353,6 +386,10 @@ class CompOffAssignService {
             totalEmployees: filteredEmployees.length,
             employees: filteredEmployees
         };
+    }
+
+    evaluateCompOffForAttendance(att, holidays, weekOffAssigns, policy, assignmentDetails, approvedCompOffRequests) {
+        return evaluateCompOffForAttendance(att, holidays, weekOffAssigns, policy, assignmentDetails, approvedCompOffRequests);
     }
 }
 

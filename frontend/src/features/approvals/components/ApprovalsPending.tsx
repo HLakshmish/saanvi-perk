@@ -16,7 +16,7 @@ export const ApprovalsPending: React.FC<ApprovalsPendingProps> = ({ onDataChange
   const [items, setItems] = useState<UnifiedApprovalItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [typeFilter, setTypeFilter] = useState<"ALL" | "LEAVE" | "REIMBURSEMENT" | "ATTENDANCE">("ALL");
+  const [typeFilter, setTypeFilter] = useState<"ALL" | "LEAVE" | "REIMBURSEMENT" | "ATTENDANCE" | "COMP_OFF">("ALL");
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
 
   // Modals state
@@ -78,7 +78,7 @@ export const ApprovalsPending: React.FC<ApprovalsPendingProps> = ({ onDataChange
         <div>
           <h2 className="text-base font-bold text-brand-primary">Pending Approvals</h2>
           <p className="text-xs text-slate-500 font-semibold mt-0.5">
-            Review and approve leave applications, reimbursement claims, and attendance requests.
+            Review and approve leave applications, reimbursement claims, attendance requests, and comp-off permissions.
           </p>
         </div>
 
@@ -104,6 +104,8 @@ export const ApprovalsPending: React.FC<ApprovalsPendingProps> = ({ onDataChange
                   ? "Leaves"
                   : typeFilter === "REIMBURSEMENT"
                   ? "Reimbursements"
+                  : typeFilter === "COMP_OFF"
+                  ? "Comp-Off"
                   : "Attendance"}
               </span>
               <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
@@ -116,6 +118,7 @@ export const ApprovalsPending: React.FC<ApprovalsPendingProps> = ({ onDataChange
                   { key: "LEAVE", label: "Leaves Only" },
                   { key: "REIMBURSEMENT", label: "Reimbursements" },
                   { key: "ATTENDANCE", label: "Attendance" },
+                  { key: "COMP_OFF", label: "Comp-Off" },
                 ].map((t) => (
                   <button
                     key={t.key}

@@ -1,9 +1,9 @@
-export type ApprovalModuleType = "LEAVE" | "REIMBURSEMENT" | "ATTENDANCE";
+export type ApprovalModuleType = "LEAVE" | "REIMBURSEMENT" | "ATTENDANCE" | "COMP_OFF";
 
 export type ApprovalStatus = "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED" | "PAID" | "UNDER_REVIEW";
 
 export interface UnifiedApprovalItem {
-  id: string; // "leave-12", "reimb-34", or "attendance-56"
+  id: string; // "leave-12", "reimb-34", "attendance-56", or "compoff-78"
   rawId: number;
   moduleType: ApprovalModuleType;
   employeeId: number;
@@ -12,7 +12,7 @@ export interface UnifiedApprovalItem {
   avatarUrl?: string;
   requestDate: string; // ISO date or formatted
   title: string; // "Casual Leave (2 Days)", "Travel Reimbursement (₹4,500)", or "Attendance Regularization"
-  category: string; // "Casual Leave", "Travel Expense", or "Attendance Correction"
+  category: string; // "Casual Leave", "Travel Expense", "Attendance Correction", or "Comp-Off Permission"
   amountOrDays: string; // "2.0 Days", "₹4,500.00", or "09:30 - 18:30"
   numericValue: number; // 2 or 4500
   periodOrDate: string; // "24-08-2026 to 25-08-2026" or "15-08-2026"
@@ -48,4 +48,5 @@ export interface ApprovalStats {
   leavesPending: number;
   reimbursementsPending: number;
   attendancePending: number;
+  compOffPending?: number;
 }

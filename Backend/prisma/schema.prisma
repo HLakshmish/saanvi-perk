@@ -66,6 +66,7 @@ model CompanyDetails {
   leaveYearEndProcesses    LeaveYearEndProcess[]
   compOffPolicies          CompOffPolicy[]
   compOffAssigns           CompOffAssign[]
+  compOffRequests          CompOffRequest[]
   weekOffs                 WeekOff[]
   weekOffAssigns           WeekOffAssign[]
   assets              AssetDetails[]
@@ -285,6 +286,9 @@ model User {
   reimbursementClaims    ReimbursementClaim[]
   approvedReimbursements ReimbursementClaim[]   @relation("ReimbursementApprovedBy")
   reimbursementHistories ReimbursementHistory[]
+
+  compOffRequests          CompOffRequest[]     @relation("CompOffRequestUser")
+  approvedCompOffRequests  CompOffRequest[]     @relation("CompOffRequestApprovedBy")
 
   userRoles UserRole[]
 
@@ -1329,6 +1333,38 @@ model CompOffAssign {
   updatedUser User?          @relation("CompOffAssignUpdatedBy", fields: [updatedBy], references: [userId])
 
   @@map("comp_off_assigns")
+}
+
+// ==========================
+// Comp Off Request (Holiday / Week-off Work Permission)
+// ==========================
+model CompOffRequest {
+  id                   Int          @id @default(autoincrement()) @map("id")
+  companyId            Int          @map("company_id")
+  userId               Int          @map("user_id")
+
+  workDate             DateTime     @map("work_date") @db.Date
+  requestType          String       @default("HOLIDAY") @map("request_type") @db.VarChar(50)
+  holidayOrWeekOffName String?      @map("holiday_or_week_off_name") @db.VarChar(150)
+  reason               String       @map("reason")
+
+  status               LeaveStatus  @default(PENDING) @map("status")
+
+  reportingToId        Int?         @map("reporting_to_id")
+  approvedBy           Int?         @map("approved_by")
+  approvedAt           DateTime?    @map("approved_at")
+  rejectionReason      String?      @map("rejection_reason")
+  remarks              String?      @map("remarks")
+
+  createdAt            DateTime     @default(now()) @map("created_at")
+  updatedAt            DateTime     @updatedAt @map("updated_at")
+
+  company      CompanyDetails @relation(fields: [companyId], references: [companyId], onDelete: Cascade)
+  user         User           @relation("CompOffRequestUser", fields: [userId], references: [userId], onDelete: Cascade)
+  approvedUser User?          @relation("CompOffRequestApprovedBy", fields: [approvedBy], references: [userId])
+
+  @@unique([companyId, userId, workDate])
+  @@map("comp_off_requests")
 }
 
 // ==========================
