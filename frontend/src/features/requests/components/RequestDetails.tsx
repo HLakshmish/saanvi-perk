@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { ArrowLeft, CheckCircle2, XCircle, Clock, Loader2, Calendar, FileText } from "lucide-react";
 
 // API Helpers
-import { fetchAttendanceRequests } from "@/features/attendance/api/attendance.api";
+import { fetchAttendanceRequests, fetchCompOffRequests } from "@/features/attendance/api/attendance.api";
 import { fetchLeaveRequests } from "@/features/leaves/api/leaves.api";
 import { fetchReimbursementClaims, fetchReimbursementHistory, getCompanyIdCookie, getCurrentUserId } from "@/features/expenses/api/expenses.api";
 import { getUserById, getEmployees } from "@/features/employees/api/employees.api";
@@ -163,6 +163,19 @@ export const RequestDetails: React.FC<RequestDetailsProps> = ({
           if (historyRes.success && Array.isArray(historyRes.data)) {
             fetchedHistory = historyRes.data;
           }
+        } else if (source === "compoff") {
+          const res = await fetchCompOffRequests({ userId: filterUserId });
+          if (res.success && Array.isArray(res.data)) {
+            const matched = res.data.find((req: any) => req.id === dbId);
+            if (matched) {
+              fetchedDetails = matched;
+              userId = matched.userId;
+            } else {
+              throw new Error("Comp-Off work permission request not found.");
+            }
+          } else {
+            throw new Error(res.message || "Failed to load comp-off requests.");
+          }
         } else {
           throw new Error("Invalid request source type.");
         }
@@ -249,7 +262,7 @@ export const RequestDetails: React.FC<RequestDetailsProps> = ({
       <div className="border border-gray-200 rounded-xl p-5 sm:p-6 bg-white space-y-6">
         <div className="flex items-center justify-between border-b border-gray-100 pb-3">
           <h3 className="text-sm font-bold text-brand-primary uppercase tracking-wider">
-            {source} Details
+            {source === "compoff" ? "Comp-Off Work Permission" : source} Details
           </h3>
           <div>{getStatusBadge(details.status)}</div>
         </div>
@@ -408,6 +421,44 @@ export const RequestDetails: React.FC<RequestDetailsProps> = ({
                   {details.description || "—"}
                 </p>
               </div>
+            </div>
+          </div>
+        )}
+
+        {source === "compoff" && (
+          <div className="space-y-4">
+            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wide">
+              Comp-Off Work Permission Request Info
+            </h4>
+            <div className="grid grid-cols-2 gap-y-4 gap-x-2 text-xs">
+              <div>
+                <span className="text-gray-400 font-medium">Work Date</span>
+                <p className="text-gray-900 font-semibold mt-1 font-mono">{formatDate(details.workDate)}</p>
+              </div>
+              <div>
+                <span className="text-gray-400 font-medium">Off-Day Type</span>
+                <p className="text-gray-900 font-semibold mt-1 capitalize font-medium">
+                  {details.requestType ? String(details.requestType).replace("_", " ") : "Holiday / Week-Off"}
+                </p>
+              </div>
+              <div className="col-span-2">
+                <span className="text-gray-400 font-medium">Holiday / Week-Off Detail</span>
+                <p className="text-gray-900 font-semibold mt-1">{details.holidayOrWeekOffName || "—"}</p>
+              </div>
+              <div className="col-span-2">
+                <span className="text-gray-400 font-medium">Reason for Working</span>
+                <p className="text-gray-900 font-semibold mt-1 bg-slate-50 border border-slate-100 p-3 rounded-lg">
+                  {details.reason || "—"}
+                </p>
+              </div>
+              {details.remarks && (
+                <div className="col-span-2">
+                  <span className="text-gray-400 font-medium">Manager Remarks</span>
+                  <p className="text-gray-900 font-semibold mt-1 bg-slate-50 border border-slate-100 p-3 rounded-lg">
+                    {details.remarks}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         )}

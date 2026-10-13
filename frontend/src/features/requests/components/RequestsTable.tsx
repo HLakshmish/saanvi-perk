@@ -23,18 +23,18 @@ import {
 } from "@/components/ui/table";
 
 // API Helpers
-import { fetchAttendanceRequests } from "@/features/attendance/api/attendance.api";
+import { fetchAttendanceRequests, fetchCompOffRequests } from "@/features/attendance/api/attendance.api";
 import { fetchLeaveRequests } from "@/features/leaves/api/leaves.api";
 import { fetchReimbursementClaims, getCompanyIdCookie, getCurrentUserId } from "@/features/expenses/api/expenses.api";
 import { getEmployees } from "@/features/employees/api/employees.api";
 
 export interface RequestHistoryItem {
-  id: string; // "source-id", e.g., "attendance-5"
+  id: string; // "source-id", e.g., "attendance-5", "compoff-5"
   requestDate: string; // "DD-MM-YYYY"
-  requestType: "Attendance" | "Leave" | "Reimbursement";
+  requestType: "Attendance" | "Leave" | "Reimbursement" | "Comp-Off";
   lastActionTakenBy: string;
   status: string;
-  source: "attendance" | "leave" | "reimbursement";
+  source: "attendance" | "leave" | "reimbursement" | "compoff";
   rawDate: Date; // Keep raw Date for chronological sorting
   employeeName?: string; // For search filtering without adding extra UI column
 }
@@ -127,7 +127,7 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
         return;
       }
 
-      // Fetch all three sources concurrently
+      // Fetch all sources concurrently
       const results = await Promise.allSettled([
         fetchAttendanceRequests(filterUserId).catch((err) => {
           throw new Error(`Attendance: ${err.message || err}`);
@@ -137,6 +137,9 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
         }),
         fetchReimbursementClaims(companyId || 0, filterUserId).catch((err) => {
           throw new Error(`Reimbursement: ${err.message || err}`);
+        }),
+        fetchCompOffRequests({ userId: filterUserId }).catch((err) => {
+          throw new Error(`Comp-Off: ${err.message || err}`);
         }),
       ]);
 
@@ -265,6 +268,36 @@ export const RequestsTable: React.FC<RequestsTableProps> = ({ onRowClick }) => {
         }
       } else {
         errorsList.push(claimRes.reason?.message || "Failed to fetch reimbursement claims.");
+      }
+
+      // Process Comp-Off Requests
+      const compOffRes = results[3];
+      if (compOffRes.status === "fulfilled") {
+        const val = compOffRes.value;
+        if (val.success && Array.isArray(val.data)) {
+          val.data.forEach((req: any) => {
+            let lastAction = "—";
+            if (req.approvedUser) {
+              lastAction = `${req.approvedUser.firstName} ${req.approvedUser.lastName || ""}`.trim();
+            } else if (req.approvedBy) {
+              lastAction = formatApproverNameLocal(req.approvedBy);
+            }
+            normalizedItems.push({
+              id: `compoff-${req.id}`,
+              requestDate: formatDateToDDMMYYYY(req.workDate),
+              requestType: "Comp-Off",
+              lastActionTakenBy: lastAction,
+              status: normalizeStatus(req.status),
+              source: "compoff",
+              rawDate: req.workDate ? new Date(req.workDate) : new Date(req.createdAt || Date.now()),
+              employeeName: getReqEmployeeName(req),
+            });
+          });
+        } else if (val.success === false) {
+          errorsList.push(val.message || "Failed to fetch comp-off requests.");
+        }
+      } else {
+        errorsList.push(compOffRes.reason?.message || "Failed to fetch comp-off requests.");
       }
 
       // Sort by newest requests first

@@ -23,6 +23,7 @@ import {
 import { getAttendances, fetchAttendanceRequests } from "../api/attendance.api";
 import { fetchLeaveRequests } from "@/features/leaves/api/leaves.api";
 import { AttendanceRegularizeModal } from "./AttendanceRegularizeModal";
+import { CompOffRequestModal } from "./CompOffRequestModal";
 import { getEmployees } from "@/features/employees/api/employees.api";
 import { getCurrentUserId } from "@/features/expenses/api/expenses.api";
 import { getHolidays, HolidayRecord } from "@/features/organization/api/calendar.api";
@@ -70,9 +71,31 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
   const [regularizeLog, setRegularizeLog] = useState<any | null>(null);
   const [isRegularizeModalOpen, setIsRegularizeModalOpen] = useState(false);
 
+  // Comp-Off Work Permission Modal State
+  const [isCompOffModalOpen, setIsCompOffModalOpen] = useState(false);
+  const [compOffModalDate, setCompOffModalDate] = useState<Date | null>(null);
+  const [compOffHolidayName, setCompOffHolidayName] = useState<string | null>(null);
+
   const handleOpenRegularizeModal = (log: any) => {
     setRegularizeLog(log);
     setIsRegularizeModalOpen(true);
+  };
+
+  const handleOpenCompOffModal = (date?: Date | null, holidayOrWeekOffName?: string | null) => {
+    setCompOffModalDate(date || new Date());
+    setCompOffHolidayName(holidayOrWeekOffName || null);
+    setIsCompOffModalOpen(true);
+  };
+
+  const handleEmployeeCardOrRowClick = (log: any) => {
+    if (log.status === "WO" || log.status === "HOLIDAY") {
+      handleOpenCompOffModal(
+        log.date,
+        log.holidayName || (log.status === "WO" ? `${log.dayOfWeek} (Week-Off)` : null)
+      );
+    } else {
+      handleOpenRegularizeModal(log);
+    }
   };
 
   const loggedInUserId = getCurrentUserId();
@@ -749,19 +772,29 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
             </p>
           </div>
 
-          {/* Month Switcher Controls */}
-          <div className="flex items-center gap-2 bg-slate-100/80 border border-slate-200/60 rounded-2xl p-1 shrink-0 self-start sm:self-auto shadow-3xs">
+          {/* Controls: Request Comp-Off & Month Switcher */}
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0 self-start sm:self-auto">
             <button
-              onClick={() => navigateMonth("prev")}
-              className="p-1.5 rounded-xl hover:bg-white hover:shadow-3xs text-slate-600 hover:text-slate-900 transition-all cursor-pointer"
-              aria-label="Previous Month"
+              onClick={() => handleOpenCompOffModal(new Date())}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-2xl bg-brand-primary text-brand-btn-text text-xs font-bold hover:brightness-105 active:scale-95 shadow-3xs transition-all cursor-pointer"
+              title="Request permission to work on an upcoming holiday or week-off"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <Coffee className="w-3.5 h-3.5" />
+              <span>+ Request Comp-Off</span>
             </button>
 
-            <span className="px-3 py-1 font-extrabold text-xs text-slate-800 min-w-[130px] text-center">
-              {currentMonthDate.toLocaleString("en-US", { month: "long", year: "numeric" })}
-            </span>
+            <div className="flex items-center gap-2 bg-slate-100/80 border border-slate-200/60 rounded-2xl p-1 shadow-3xs">
+              <button
+                onClick={() => navigateMonth("prev")}
+                className="p-1.5 rounded-xl hover:bg-white hover:shadow-3xs text-slate-600 hover:text-slate-900 transition-all cursor-pointer"
+                aria-label="Previous Month"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+
+              <span className="px-3 py-1 font-extrabold text-xs text-slate-800 min-w-[130px] text-center">
+                {currentMonthDate.toLocaleString("en-US", { month: "long", year: "numeric" })}
+              </span>
 
             <button
               onClick={() => navigateMonth("next")}
@@ -778,6 +811,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
             </button>
           </div>
         </div>
+      </div>
 
         {/* Month-Wise Attendance Overview Metrics */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -852,7 +886,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                 return (
                   <div
                     key={log.dateKey}
-                    onClick={() => handleOpenRegularizeModal(log)}
+                    onClick={() => handleEmployeeCardOrRowClick(log)}
                     className={`p-4 rounded-2xl border shadow-2xs transition-all space-y-3 cursor-pointer hover:shadow-md hover:border-brand-primary/50 group bg-white ${
                       isWO
                         ? "border-slate-200/70 bg-slate-50/40 hover:bg-slate-50/80"
@@ -862,7 +896,11 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                         ? "border-amber-200/80 bg-amber-50/20 hover:bg-amber-50/40"
                         : "border-slate-200/80"
                     }`}
-                    title="Click to request attendance correction"
+                    title={
+                      isWO || isHoliday
+                        ? "Click to request Comp-Off work permission"
+                        : "Click to request attendance correction"
+                    }
                   >
                     {/* Top Header: Date & Status */}
                     <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
@@ -982,7 +1020,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                       return (
                         <TableRow
                           key={log.dateKey}
-                          onClick={() => handleOpenRegularizeModal(log)}
+                          onClick={() => handleEmployeeCardOrRowClick(log)}
                           className={`transition-colors cursor-pointer hover:bg-brand-primary-light/40 group ${
                             isWO
                               ? "bg-slate-50/30 text-slate-500 hover:bg-slate-100/70"
@@ -996,7 +1034,11 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                               ? "bg-brand-primary-light/40 hover:bg-brand-primary-light/60"
                               : ""
                           }`}
-                          title="Click row to request attendance correction"
+                          title={
+                            isWO || isHoliday
+                              ? "Click row to request Comp-Off work permission"
+                              : "Click row to request attendance correction"
+                          }
                         >
                           {/* Date Column */}
                           <TableCell className="sm:px-6">
@@ -1111,6 +1153,15 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
           currentCheckIn={regularizeLog?.checkInTime}
           currentCheckOut={regularizeLog?.checkOutTime}
           currentStatusLabel={regularizeLog?.statusLabel}
+        />
+
+        {/* Comp-Off Work Permission Request Modal */}
+        <CompOffRequestModal
+          isOpen={isCompOffModalOpen}
+          onClose={() => setIsCompOffModalOpen(false)}
+          onSuccess={() => loadData()}
+          initialDate={compOffModalDate}
+          initialHolidayOrWeekOffName={compOffHolidayName}
         />
       </div>
     );

@@ -176,3 +176,72 @@ export async function downloadAttendanceReport(params: {
   link.click();
   link.parentNode?.removeChild(link);
 }
+
+// 6. Comp-Off Work Permission Requests
+export interface CompOffRequestPayload {
+  userId?: number;
+  workDate: string;
+  requestType?: "HOLIDAY" | "WEEK_OFF" | "OTHER";
+  holidayOrWeekOffName?: string;
+  reason: string;
+  companyId?: number;
+}
+
+export async function createCompOffRequest(data: CompOffRequestPayload) {
+  const token = getAuthToken();
+  const res = await fetch(`${API_BASE_URL}/api/comp-off-requests`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(data),
+  });
+
+  const json = await res.json();
+  return json;
+}
+
+export async function fetchCompOffRequests(
+  filterOrParams?: number | { userId?: number; status?: string; companyId?: number }
+) {
+  const token = getAuthToken();
+  const query = new URLSearchParams();
+  if (typeof filterOrParams === "number") {
+    query.append("userId", String(filterOrParams));
+  } else if (filterOrParams && typeof filterOrParams === "object") {
+    if (filterOrParams.userId) query.append("userId", String(filterOrParams.userId));
+    if (filterOrParams.status) query.append("status", filterOrParams.status);
+    if (filterOrParams.companyId) query.append("companyId", String(filterOrParams.companyId));
+  }
+
+  const url = `${API_BASE_URL}/api/comp-off-requests${query.toString() ? `?${query.toString()}` : ""}`;
+  const res = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  const json = await res.json();
+  return json;
+}
+
+export async function updateCompOffRequestStatus(
+  id: number,
+  payload: { status: "APPROVED" | "REJECTED" | "CANCELLED"; rejectionReason?: string; remarks?: string }
+) {
+  const token = getAuthToken();
+  const res = await fetch(`${API_BASE_URL}/api/comp-off-requests/${id}/status`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const json = await res.json();
+  return json;
+}
