@@ -10,19 +10,28 @@ class AttendanceRepository {
             include: { user: true }
         });
     }
+    normalizeDate(date) {
+        if (!date) return new Date();
+        if (typeof date === 'string') {
+            const parts = date.split('T')[0].split('-');
+            if (parts.length === 3) {
+                const y = parseInt(parts[0], 10);
+                const m = parseInt(parts[1], 10) - 1;
+                const d = parseInt(parts[2], 10);
+                return new Date(Date.UTC(y, m, d, 0, 0, 0, 0));
+            }
+        }
+        const d = new Date(date);
+        return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0));
+    }
+
     async getAttendanceByUserAndDate(companyId, userId, date) {
-        const start = new Date(date);
-        start.setHours(0, 0, 0, 0);
-        const end = new Date(date);
-        end.setHours(23, 59, 59, 999);
+        const targetDate = this.normalizeDate(date);
         return await prisma.attendance.findFirst({
             where: {
                 companyId,
                 userId,
-                attendanceDate: {
-                    gte: start,
-                    lte: end
-                }
+                attendanceDate: targetDate
             }
         });
     }

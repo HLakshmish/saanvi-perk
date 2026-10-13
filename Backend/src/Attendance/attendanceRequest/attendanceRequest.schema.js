@@ -4,10 +4,10 @@ const createRequestSchema = {
         type: 'object',
         required: ['shiftDate', 'reason', 'remarks'],
         properties: {
-            shiftDate: { type: 'string', format: 'date-time' },
+            shiftDate: { type: 'string' },
             reason: { type: 'string', enum: ['BUSINESS_TOUR', 'FORGOT_ID', 'NEW_JOINEE', 'ON_DUTY', 'OTHERS'] },
-            checkInTime: { type: 'string', format: 'date-time', nullable: true },
-            checkOutTime: { type: 'string', format: 'date-time', nullable: true },
+            checkInTime: { type: 'string', nullable: true },
+            checkOutTime: { type: 'string', nullable: true },
             isNextDay: { type: 'boolean' },
             remarks: { type: 'string' }
         }

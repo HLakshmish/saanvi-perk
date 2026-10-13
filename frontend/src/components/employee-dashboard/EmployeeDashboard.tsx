@@ -102,9 +102,16 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
 
   const isDateToday = (dStr?: string | null) => {
     if (!dStr) return false;
+    const datePart = dStr.split("T")[0];
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    const todayYMD = `${year}-${month}-${day}`;
+    if (datePart === todayYMD) return true;
+
     const d = new Date(dStr);
     if (isNaN(d.getTime()) || d.getFullYear() < 2024) return false;
-    const today = new Date();
     return (
       d.getFullYear() === today.getFullYear() &&
       d.getMonth() === today.getMonth() &&
@@ -231,7 +238,7 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
         // Strictly match records belonging to THIS user from TODAY
         const userTodayRecord = records.find((r: any) => {
           const matchesUser = String(r.userId) === String(userId) || Number(r.userId) === Number(userId);
-          const matchesDate = isDateToday(r.attendanceDate) || isDateToday(r.checkInTime) || isDateToday(r.createdAt);
+          const matchesDate = isDateToday(r.attendanceDate) || isDateToday(r.createdAt);
           return matchesUser && matchesDate;
         });
 
@@ -240,7 +247,7 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
             localStorage.setItem(getUserKey("sa_attendance_id", userId), String(userTodayRecord.attendanceId));
           }
 
-          if (userTodayRecord.checkInTime && isDateToday(userTodayRecord.checkInTime)) {
+          if (userTodayRecord.checkInTime) {
             const checkInDateObj = new Date(userTodayRecord.checkInTime);
             const checkInFormatted = checkInDateObj.toLocaleTimeString("en-IN", {
               hour: "2-digit",
@@ -249,7 +256,7 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
             });
             setCheckInTime(checkInFormatted);
 
-            if (userTodayRecord.checkOutTime && isDateToday(userTodayRecord.checkOutTime)) {
+            if (userTodayRecord.checkOutTime) {
               const checkOutDateObj = new Date(userTodayRecord.checkOutTime);
               const checkOutFormatted = checkOutDateObj.toLocaleTimeString("en-IN", {
                 hour: "2-digit",
@@ -258,9 +265,17 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
               });
               setIsCheckedIn(false);
               setCheckOutTime(checkOutFormatted);
-              const totalSecs = userTodayRecord.workingMinutes
-                ? Math.min(24 * 3600, userTodayRecord.workingMinutes * 60)
-                : Math.min(24 * 3600, Math.max(0, Math.floor((checkOutDateObj.getTime() - checkInDateObj.getTime()) / 1000)));
+
+              let totalSecs = 0;
+              if (userTodayRecord.workingMinutes !== null && userTodayRecord.workingMinutes !== undefined) {
+                totalSecs = Math.min(24 * 3600, Number(userTodayRecord.workingMinutes) * 60);
+              } else {
+                let inM = checkInDateObj.getUTCHours() * 60 + checkInDateObj.getUTCMinutes();
+                let outM = checkOutDateObj.getUTCHours() * 60 + checkOutDateObj.getUTCMinutes();
+                let diffM = outM - inM;
+                if (diffM < 0) diffM += 24 * 60;
+                totalSecs = diffM * 60;
+              }
               setSeconds(totalSecs);
 
               if (typeof window !== "undefined") {
@@ -272,9 +287,16 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
             } else {
               setIsCheckedIn(true);
               setCheckOutTime(null);
+
+              // Calculate elapsed seconds today since check-in
+              const now = new Date();
+              let inMinutes = checkInDateObj.getUTCHours() * 60 + checkInDateObj.getUTCMinutes();
+              let nowMinutes = now.getUTCHours() * 60 + now.getUTCMinutes();
+              let diffMinutes = nowMinutes - inMinutes;
+              if (diffMinutes < 0) diffMinutes += 24 * 60;
               const elapsed = Math.max(
                 0,
-                Math.min(24 * 3600, Math.floor((Date.now() - checkInDateObj.getTime()) / 1000))
+                Math.min(24 * 3600, diffMinutes * 60 + now.getUTCSeconds())
               );
               setSeconds(elapsed);
 
@@ -305,47 +327,57 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
     return () => clearInterval(interval);
   }, [isCheckedIn]);
 
-  // Fetch device geolocation with browser permission prompt
+  // Fetch device geolocation with fast fallback
   const fetchUserLocation = (): Promise<{ latitude: number; longitude: number } | null> => {
     return new Promise((resolve) => {
       if (typeof window === "undefined" || !navigator.geolocation) {
-        toast.error("GPS location is strictly required to punch attendance, but Geolocation is not supported by your browser.");
         resolve(null);
         return;
       }
 
+      let finished = false;
+
+      // Fast fallback to low accuracy if high accuracy takes > 2.5 seconds
+      const fallbackTimer = setTimeout(() => {
+        if (!finished) {
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              if (!finished && pos?.coords) {
+                finished = true;
+                resolve({
+                  latitude: pos.coords.latitude,
+                  longitude: pos.coords.longitude,
+                });
+              }
+            },
+            () => {
+              if (!finished) {
+                finished = true;
+                resolve(null);
+              }
+            },
+            { enableHighAccuracy: false, timeout: 3000, maximumAge: 60000 }
+          );
+        }
+      }, 2500);
+
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          if (
-            position &&
-            position.coords &&
-            typeof position.coords.latitude === "number" &&
-            typeof position.coords.longitude === "number"
-          ) {
+          if (!finished && position?.coords) {
+            finished = true;
+            clearTimeout(fallbackTimer);
             resolve({
               latitude: position.coords.latitude,
               longitude: position.coords.longitude,
             });
-          } else {
-            toast.error("Could not obtain valid GPS coordinates. Please ensure your device GPS is turned on.");
-            resolve(null);
           }
         },
-        (error) => {
-          let msg = "Could not obtain your GPS location.";
-          if (error.code === error.PERMISSION_DENIED) {
-            msg = "Location permission denied. GPS location is strictly required to check in/out. Please enable location access in your browser settings.";
-          } else if (error.code === error.POSITION_UNAVAILABLE) {
-            msg = "GPS location is currently unavailable. Please enable device location / GPS.";
-          } else if (error.code === error.TIMEOUT) {
-            msg = "GPS location request timed out. Please check your GPS signal and try again.";
-          }
-          toast.error(msg);
-          resolve(null);
+        () => {
+          // Fallback timer will attempt low accuracy or resolve null
         },
         {
           enableHighAccuracy: true,
-          timeout: 10000,
+          timeout: 3000,
           maximumAge: 0,
         }
       );
@@ -368,10 +400,8 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
     const coords = await fetchUserLocation();
     setIsLoadingLocation(false);
 
-    // Strictly enforce GPS requirement: Do not proceed without coordinates
-    if (!coords || typeof coords.latitude !== "number" || typeof coords.longitude !== "number") {
-      toast.error("Check-in blocked: GPS location is mandatory to punch in.");
-      return;
+    if (!coords) {
+      toast.info("GPS coordinates unavailable; proceeding with office timestamp.");
     }
 
     const now = new Date();
@@ -393,13 +423,13 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
           userId,
           attendanceDate: todayDate,
           checkInTime: now.toISOString(),
-          checkInLatitude: coords.latitude,
-          checkInLongitude: coords.longitude,
+          checkInLatitude: coords?.latitude,
+          checkInLongitude: coords?.longitude,
           attendanceStatus: "PRESENT",
         });
 
         if (res?.message?.includes("already exists") || res?.error?.includes("already exists")) {
-          toast.info("You have already checked out for today. See you tomorrow! 👋");
+          toast.info("You have already checked in for today.");
           return;
         }
 
@@ -412,7 +442,7 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
         setCheckInTime(timeStr);
         setCheckOutTime(null);
         setSeconds(0);
-        setLastCoords(coords);
+        if (coords) setLastCoords(coords);
 
         if (typeof window !== "undefined") {
           localStorage.setItem(getUserKey(CHECKIN_ACTIVE_KEY, userId), "true");
@@ -421,7 +451,7 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
           localStorage.removeItem(getUserKey(CHECKOUT_DISPLAY_KEY, userId));
           localStorage.removeItem(getUserKey(CHECKOUT_TIMESTAMP_KEY, userId));
           localStorage.removeItem(getUserKey(WORKED_SECONDS_KEY, userId));
-          localStorage.setItem(getUserKey(CHECKIN_COORDS_KEY, userId), JSON.stringify(coords));
+          if (coords) localStorage.setItem(getUserKey(CHECKIN_COORDS_KEY, userId), JSON.stringify(coords));
           if (res?.data?.attendanceId) {
             localStorage.setItem(getUserKey("sa_attendance_id", userId), String(res.data.attendanceId));
           }
@@ -431,7 +461,7 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
       } catch (err: any) {
         const msg = err?.message || "";
         if (msg.includes("already exists")) {
-          toast.info("You have already checked out for today. See you tomorrow! 👋");
+          toast.info("You have already checked in for today.");
         } else {
           toast.error(msg || "Could not check in.");
         }
@@ -450,12 +480,6 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
     const coords = await fetchUserLocation();
     setIsLoadingLocation(false);
 
-    // Strictly enforce GPS requirement: Do not proceed without coordinates
-    if (!coords || typeof coords.latitude !== "number" || typeof coords.longitude !== "number") {
-      toast.error("Check-out blocked: GPS location is mandatory to punch out.");
-      return;
-    }
-
     const now = new Date();
     const timeStr = now.toLocaleTimeString("en-US", {
       hour: "2-digit",
@@ -463,18 +487,39 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
       hour12: true,
     });
 
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const todayDate = `${year}-${month}-${day}`;
+
     // Persist Check-Out in Backend Database
-    const savedAttendanceId =
+    let savedAttendanceId =
       typeof window !== "undefined" && userId
         ? localStorage.getItem(getUserKey("sa_attendance_id", userId))
         : null;
+
+    if (!savedAttendanceId && userId) {
+      try {
+        const attRes = await getAttendances({ userId, attendanceDate: todayDate });
+        const records = Array.isArray(attRes?.data) ? attRes.data : Array.isArray(attRes) ? attRes : [];
+        const todayRec = records.find((r: any) => Number(r.userId) === Number(userId));
+        if (todayRec?.attendanceId) {
+          savedAttendanceId = String(todayRec.attendanceId);
+          if (typeof window !== "undefined") {
+            localStorage.setItem(getUserKey("sa_attendance_id", userId), savedAttendanceId);
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
 
     if (savedAttendanceId) {
       try {
         await updateAttendanceCheckOut(Number(savedAttendanceId), {
           checkOutTime: now.toISOString(),
-          checkOutLatitude: coords.latitude,
-          checkOutLongitude: coords.longitude,
+          checkOutLatitude: coords?.latitude,
+          checkOutLongitude: coords?.longitude,
           workingMinutes: Math.round(seconds / 60),
         });
         // Immediately refresh leave balances & attendance records

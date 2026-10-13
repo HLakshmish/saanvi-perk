@@ -6,15 +6,6 @@ class LeaveRequestService {
     async calculateEmployeeLeaveBalance(companyId, userId, leaveTypeId, isCompOff) {
         if (!leaveTypeId) return 0;
 
-        if (companyId && userId) {
-            try {
-                const attendanceService = require("../../Attendance/attendance.service");
-                await attendanceService.syncAbsences({ companyId, userId });
-            } catch (err) {
-                console.error("Error syncing absences in leave balance:", err);
-            }
-        }
-
         if (isCompOff) {
             try {
                 const compOffDetails = await compOffAssignService.getUserCompOffDetails(companyId, userId);
@@ -61,12 +52,15 @@ class LeaveRequestService {
                 userId,
                 companyId,
                 leaveTypeId,
-                status: 'APPROVED'
+                status: 'APPROVED',
+                NOT: {
+                    reason: { startsWith: 'Auto-' }
+                }
             }
         });
 
         const totalUsed = approvedRequests.reduce((sum, r) => sum + (Number(r.numberOfDays) || 0), 0);
-        return totalAllocated - totalUsed;
+        return Math.max(0, totalAllocated - totalUsed);
     }
 
     async validateAndApplyLeavePolicy(data) {

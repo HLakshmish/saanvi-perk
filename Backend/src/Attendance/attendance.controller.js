@@ -1,4 +1,51 @@
 const attendanceService = require("./attendance.service");
+const prisma = require("../config/prisma");
+
+async function checkCanManageAttendance(user) {
+    if (!user) return false;
+    if (['OWNER', 'SUPERADMIN', 'ADMIN', 'HR', 'MANAGER'].includes(user.role)) {
+        return true;
+    }
+    const perms = user.permissions || [];
+    if (perms.includes('MANAGE_ATTENDANCE')) {
+        return true;
+    }
+    if (user.userId) {
+        try {
+            const dbUser = await prisma.user.findUnique({
+                where: { userId: Number(user.userId) },
+                include: {
+                    userRoles: {
+                        include: {
+                            role: {
+                                include: {
+                                    rolePermissions: {
+                                        include: { permission: true }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            if (dbUser && dbUser.userRoles) {
+                return dbUser.userRoles.some(ur => {
+                    const code = (ur.role?.roleCode || '').toUpperCase();
+                    const name = (ur.role?.roleName || '').toUpperCase();
+                    const hasPerm = ur.role?.rolePermissions?.some(rp =>
+                        rp.permission?.permissionCode === 'MANAGE_ATTENDANCE'
+                    );
+                    return hasPerm ||
+                           code.includes('ADMIN') || code.includes('HR') || code.includes('MGR') || code.includes('MANAGER') ||
+                           name.includes('ADMIN') || name.includes('HR') || name.includes('MANAGER');
+                });
+            }
+        } catch (e) {
+            console.error("Error checking attendance view permissions:", e);
+        }
+    }
+    return false;
+}
 
 class AttendanceController {
     async createAttendance(request, reply) {
@@ -12,12 +59,22 @@ class AttendanceController {
         try {
             const attendance = await attendanceService.getAttendanceById(Number(request.params.id));
             if (attendance.companyId !== request.user.companyId) return reply.code(403).send({ success: false, message: "Forbidden" });
+            const canViewAll = await checkCanManageAttendance(request.user);
+            if (!canViewAll && Number(attendance.userId) !== Number(request.user.userId)) {
+                return reply.code(403).send({ success: false, message: "Forbidden" });
+            }
             reply.code(200).send({ success: true, data: attendance });
         } catch (error) { reply.code(404).send({ success: false, message: error.message }); }
     }
     async getAllAttendances(request, reply) {
         try {
             const query = { ...request.query, companyId: request.user.companyId };
+            const canViewAll = await checkCanManageAttendance(request.user);
+            if (!canViewAll) {
+                query.userId = request.user.userId;
+            } else if (request.query.userId) {
+                query.userId = Number(request.query.userId);
+            }
             const attendances = await attendanceService.getAllAttendances(query);
             reply.code(200).send({ success: true, data: attendances });
         } catch (error) { reply.code(500).send({ success: false, message: error.message }); }
@@ -41,6 +98,12 @@ class AttendanceController {
     async downloadReport(request, reply) {
         try {
             const query = { ...request.query, companyId: request.user.companyId };
+            const canViewAll = await checkCanManageAttendance(request.user);
+            if (!canViewAll) {
+                query.userId = request.user.userId;
+            } else if (request.query.userId) {
+                query.userId = Number(request.query.userId);
+            }
             const attendances = await attendanceService.getAllAttendances(query);
             
             const headers = ['Attendance ID', 'User ID', 'Date', 'Status', 'Check In Time', 'Check Out Time', 'Working Minutes', 'Overtime Minutes', 'Remarks'];
@@ -68,6 +131,12 @@ class AttendanceController {
     async viewReport(request, reply) {
         try {
             const query = { ...request.query, companyId: request.user.companyId };
+            const canViewAll = await checkCanManageAttendance(request.user);
+            if (!canViewAll) {
+                query.userId = request.user.userId;
+            } else if (request.query.userId) {
+                query.userId = Number(request.query.userId);
+            }
             const attendances = await attendanceService.getAllAttendances(query);
             reply.code(200).send({ success: true, data: attendances });
         } catch (error) { reply.code(500).send({ success: false, message: error.message }); }

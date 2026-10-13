@@ -1,6 +1,7 @@
 const repository = require("./compOffRequest.repository");
 const prisma = require("../../../config/prisma");
 const attendanceService = require("../../../Attendance/attendance.service");
+const attendanceRepository = require("../../../Attendance/attendance.repository");
 
 class CompOffRequestService {
     async createRequest(data) {
@@ -9,8 +10,7 @@ class CompOffRequestService {
             throw new Error("companyId, userId, workDate, and reason are required.");
         }
 
-        const dateObj = new Date(workDate);
-        dateObj.setHours(0, 0, 0, 0);
+        const dateObj = attendanceRepository.normalizeDate(workDate);
 
         // 1. Fetch user to check active status and reporting manager
         const user = await prisma.user.findFirst({
@@ -49,10 +49,9 @@ class CompOffRequestService {
         let holidayName = "";
         const matchedHoliday = holidays.find(h => {
             if (h.holidayType === 'WEEK_OFF') return false;
-            const start = new Date(h.startDate);
-            start.setHours(0, 0, 0, 0);
-            const end = new Date(h.endDate || h.startDate);
-            end.setHours(23, 59, 59, 999);
+            const start = attendanceRepository.normalizeDate(h.startDate);
+            const end = attendanceRepository.normalizeDate(h.endDate || h.startDate);
+            end.setUTCHours(23, 59, 59, 999);
             return dateObj >= start && dateObj <= end;
         });
 
