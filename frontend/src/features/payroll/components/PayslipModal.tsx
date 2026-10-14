@@ -59,7 +59,29 @@ export const PayslipModal: React.FC<PayslipModalProps> = ({ payslip, onClose }) 
   const empName = `${payslip.first_name || ""} ${payslip.last_name || ""}`.trim() || `Employee #${payslip.user_id}`;
   const logoSrc = payslip.company_logo || "/images/company_logo.png";
   const companyName = payslip.company_name || "SAANVI TECHNOLOGIES";
-  const companyAddress = "NO 3/68/2, First Floor,Main road ,NH-66,Saligram,Udupi, Karnataka, 576225";
+  const defaultAddress = "NO 3/68/2, First Floor,Main road ,NH-66,Saligram,Udupi, Karnataka, 576225";
+  const assignedLocationAddress =
+    payslip.location_address?.trim() ||
+    [
+      payslip.location_address_line1,
+      payslip.location_address_line2,
+      payslip.location_city,
+      payslip.location_state,
+      payslip.location_pincode,
+    ]
+      .filter((p): p is string => Boolean(p && String(p).trim()))
+      .join(", ") ||
+    [
+      payslip.location_name,
+      payslip.location_city,
+      payslip.location_state,
+      payslip.location_pincode,
+    ]
+      .filter((p): p is string => Boolean(p && String(p).trim()))
+      .join(", ");
+
+  const displayAddress = assignedLocationAddress || defaultAddress;
+  const locationName = payslip.location_name || payslip.location_city || "—";
   const employeeCode = payslip.employee_code || `EMP-${payslip.user_id}`;
   const designation = payslip.designation_name || "—";
   const department = payslip.department_name || "—";
@@ -98,16 +120,6 @@ export const PayslipModal: React.FC<PayslipModalProps> = ({ payslip, onClose }) 
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      {/* Floating Quick Close Button on Viewport */}
-      <button
-        onClick={onClose}
-        className="fixed top-3 right-3 sm:top-5 sm:right-6 z-60 px-3.5 py-2 rounded-full bg-rose-600 hover:bg-rose-700 text-white shadow-2xl border border-white/20 hover:scale-105 transition-all cursor-pointer flex items-center gap-1.5 text-xs font-black"
-        title="Close (Esc)"
-      >
-        <X className="w-4 h-4 stroke-[3]" />
-        <span>Close View</span>
-      </button>
-
       <div className="bg-white rounded-2xl max-w-4xl w-full h-[92vh] max-h-[92vh] flex flex-col border border-slate-300 shadow-2xl overflow-hidden relative">
         {/* Fixed Header Actions bar */}
         <div className="shrink-0 px-5 sm:px-6 py-3 border-b border-slate-200 flex items-center justify-between bg-slate-50 z-20 shadow-xs">
@@ -148,13 +160,6 @@ export const PayslipModal: React.FC<PayslipModalProps> = ({ payslip, onClose }) 
             <span className="text-xs text-slate-500 font-semibold">
               Preview of Official Payslip Document
             </span>
-            <button
-              onClick={onClose}
-              className="px-3 py-1 rounded-lg bg-white border border-slate-300 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-300 text-slate-700 text-xs font-bold inline-flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer"
-            >
-              <X className="w-3.5 h-3.5" />
-              <span>Close View</span>
-            </button>
           </div>
 
           <div className="bg-white max-w-[840px] w-full border-[3px] border-black shadow-sm">
@@ -184,7 +189,7 @@ export const PayslipModal: React.FC<PayslipModalProps> = ({ payslip, onClose }) 
                       {companyName}
                     </div>
                     <div className="text-xs font-medium mt-1 text-black leading-snug">
-                      {companyAddress}
+                      {displayAddress}
                     </div>
                     <div className="text-sm mt-2 text-black">
                       Pay Slip for <strong className="font-extrabold">{monthLabel} {payslip.year}</strong>
@@ -240,8 +245,8 @@ export const PayslipModal: React.FC<PayslipModalProps> = ({ payslip, onClose }) 
                           <td className="py-1 font-bold text-black">{accountNo}</td>
                         </tr>
                         <tr>
-                          <td className="py-1">&nbsp;</td>
-                          <td className="py-1">&nbsp;</td>
+                          <td className="py-1 w-[44%] font-medium text-black">Location</td>
+                          <td className="py-1 font-bold text-black">{locationName}</td>
                         </tr>
                         <tr>
                           <td className="py-1">&nbsp;</td>
@@ -342,16 +347,9 @@ export const PayslipModal: React.FC<PayslipModalProps> = ({ payslip, onClose }) 
         {/* Bottom Footer Actions Bar */}
         <div className="shrink-0 px-5 sm:px-6 py-3.5 border-t border-slate-200 bg-white flex items-center justify-between z-20">
           <span className="text-xs text-slate-500 font-medium">
-            Press <kbd className="px-1.5 py-0.5 rounded bg-slate-200 text-slate-700 font-mono text-[11px]">Esc</kbd> or click Close to exit
+            Press <kbd className="px-1.5 py-0.5 rounded bg-slate-200 text-slate-700 font-mono text-[11px]">Esc</kbd> or click outside to exit
           </span>
           <div className="flex items-center gap-2">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs inline-flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer"
-            >
-              <X className="w-4 h-4 text-slate-500" />
-              <span>Close</span>
-            </button>
             <button
               onClick={() => downloadPayslipPdf(payslip)}
               className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs inline-flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"

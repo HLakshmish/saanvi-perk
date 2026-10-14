@@ -46,7 +46,29 @@ export function downloadPayslipPdf(payslip: Payslip) {
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const logoSrc = payslip.company_logo || (origin ? `${origin}/images/company_logo.png` : "/images/company_logo.png");
   const companyName = payslip.company_name || "SAANVI TECHNOLOGIES";
-  const companyAddress = "NO 3/68/2, First Floor,Main road ,NH-66,Saligram,Udupi, Karnataka, 576225";
+  const defaultAddress = "NO 3/68/2, First Floor,Main road ,NH-66,Saligram,Udupi, Karnataka, 576225";
+  const assignedLocationAddress =
+    payslip.location_address?.trim() ||
+    [
+      payslip.location_address_line1,
+      payslip.location_address_line2,
+      payslip.location_city,
+      payslip.location_state,
+      payslip.location_pincode,
+    ]
+      .filter((p): p is string => Boolean(p && String(p).trim()))
+      .join(", ") ||
+    [
+      payslip.location_name,
+      payslip.location_city,
+      payslip.location_state,
+      payslip.location_pincode,
+    ]
+      .filter((p): p is string => Boolean(p && String(p).trim()))
+      .join(", ");
+
+  const displayAddress = assignedLocationAddress || defaultAddress;
+  const locationName = payslip.location_name || payslip.location_city || "—";
   const employeeCode = payslip.employee_code || `EMP-${payslip.user_id}`;
   const designation = payslip.designation_name || "—";
   const department = payslip.department_name || "—";
@@ -246,7 +268,7 @@ export function downloadPayslipPdf(payslip: Payslip) {
         </td>
         <td class="header-info-box">
           <div class="company-title">${companyName}</div>
-          <div class="company-addr">${companyAddress}</div>
+          <div class="company-addr">${displayAddress}</div>
           <div class="payslip-period">Pay Slip for <strong style="font-weight: 800;">${monthLabel} ${payslip.year}</strong></div>
         </td>
       </tr>
@@ -294,8 +316,8 @@ export function downloadPayslipPdf(payslip: Payslip) {
               <td style="padding: 2.5px 0; font-weight: 700; font-size: 12.5px;">${accountNo}</td>
             </tr>
             <tr>
-              <td style="padding: 2.5px 0; font-size: 12.5px;">&nbsp;</td>
-              <td style="padding: 2.5px 0; font-size: 12.5px;">&nbsp;</td>
+              <td style="padding: 2.5px 0; width: 44%; font-weight: 500; font-size: 12.5px;">Location</td>
+              <td style="padding: 2.5px 0; font-weight: 700; font-size: 12.5px;">${locationName}</td>
             </tr>
             <tr>
               <td style="padding: 2.5px 0; font-size: 12.5px;">&nbsp;</td>

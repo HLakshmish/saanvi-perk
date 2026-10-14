@@ -1329,6 +1329,18 @@ class PayrollRepository {
             SELECT p.*,
                    u.first_name, u.last_name, u.employee_code, u.official_email, u.joining_date,
                    d.designation_name, dept.department_name,
+                   loc.office_location_id, loc.location_name,
+                   loc.address_line1 as location_address_line1,
+                   loc.address_line2 as location_address_line2,
+                   loc.city as location_city,
+                   loc.state as location_state,
+                   loc.country as location_country,
+                   loc.pincode as location_pincode,
+                   loc.office_phone_number as location_phone,
+                   COALESCE(
+                       NULLIF(CONCAT_WS(', ', NULLIF(TRIM(loc.address_line1), ''), NULLIF(TRIM(loc.address_line2), ''), NULLIF(TRIM(loc.city), ''), NULLIF(TRIM(loc.state), ''), NULLIF(TRIM(loc.pincode), '')), ''),
+                       NULLIF(CONCAT_WS(', ', NULLIF(TRIM(loc.location_name), ''), NULLIF(TRIM(loc.city), ''), NULLIF(TRIM(loc.state), ''), NULLIF(TRIM(loc.pincode), '')), '')
+                   ) as location_address,
                    b.bank_name, b.account_number, b.ifsc_code,
                    pf.uan_number, pf.pf_number, esi.esi_number,
                    c.company_name, c.company_code, c.company_logo,
@@ -1338,6 +1350,7 @@ class PayrollRepository {
             JOIN company_details c ON p.company_id = c.company_id
             LEFT JOIN designations d ON u.designation_id = d.designation_id
             LEFT JOIN departments dept ON u.department_id = dept.department_id
+            LEFT JOIN office_locations loc ON u.location_id = loc.office_location_id
             LEFT JOIN bank_details b ON u.user_id = b.user_id
             LEFT JOIN pf_details pf ON u.user_id = pf.user_id
             LEFT JOIN esi_details esi ON u.user_id = esi.user_id
@@ -1380,15 +1393,28 @@ class PayrollRepository {
             SELECT p.*,
                    u.first_name, u.last_name, u.employee_code, u.official_email, u.joining_date,
                    d.designation_name, dept.department_name,
+                   loc.office_location_id, loc.location_name,
+                   loc.address_line1 as location_address_line1,
+                   loc.address_line2 as location_address_line2,
+                   loc.city as location_city,
+                   loc.state as location_state,
+                   loc.country as location_country,
+                   loc.pincode as location_pincode,
+                   loc.office_phone_number as location_phone,
+                   COALESCE(
+                       NULLIF(CONCAT_WS(', ', NULLIF(TRIM(loc.address_line1), ''), NULLIF(TRIM(loc.address_line2), ''), NULLIF(TRIM(loc.city), ''), NULLIF(TRIM(loc.state), ''), NULLIF(TRIM(loc.pincode), '')), ''),
+                       NULLIF(CONCAT_WS(', ', NULLIF(TRIM(loc.location_name), ''), NULLIF(TRIM(loc.city), ''), NULLIF(TRIM(loc.state), ''), NULLIF(TRIM(loc.pincode), '')), '')
+                   ) as location_address,
                    b.bank_name, b.account_number, b.ifsc_code,
                    pf.uan_number, pf.pf_number, esi.esi_number,
                    pi.pan_number,
-                   c.company_name, c.company_code
+                   c.company_name, c.company_code, c.company_logo
             FROM employee_payslips p
             JOIN users u ON p.user_id = u.user_id
             JOIN company_details c ON p.company_id = c.company_id
             LEFT JOIN designations d ON u.designation_id = d.designation_id
             LEFT JOIN departments dept ON u.department_id = dept.department_id
+            LEFT JOIN office_locations loc ON u.location_id = loc.office_location_id
             LEFT JOIN bank_details b ON u.user_id = b.user_id
             LEFT JOIN pf_details pf ON u.user_id = pf.user_id
             LEFT JOIN esi_details esi ON u.user_id = esi.user_id
