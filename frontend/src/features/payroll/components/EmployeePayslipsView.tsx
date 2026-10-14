@@ -310,7 +310,7 @@ export const EmployeePayslipsView: React.FC<EmployeePayslipsViewProps> = ({
                           {monthName} {p.year}
                         </div>
                         <div className="text-[11px] text-slate-500 mt-0.5">
-                          {p.designation_name || "Employee"} • {p.company_name || "NextGen Software"}
+                          {p.designation_name || "Employee"} • {p.company_name || "Saanvi Technologies"}{p.location_name ? ` • ${p.location_name}` : ""}
                         </div>
                       </td>
                       <td className="py-4 px-4 text-center font-bold text-slate-700">

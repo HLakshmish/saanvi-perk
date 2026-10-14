@@ -534,6 +534,11 @@ export const PayslipsView: React.FC<PayslipsViewProps> = ({
                             <div className="font-bold text-slate-900">{empName}</div>
                             <div className="text-[11px] text-slate-400">
                               {p.employee_code || "EMP"} • {p.official_email || "N/A"}
+                              {p.location_name && (
+                                <span className="ml-1 text-slate-500">
+                                  • {p.location_name}
+                                </span>
+                              )}
                               {p.joining_date && (
                                 <span className="ml-1 text-slate-500">
                                   • Joined:{" "}

@@ -1,9 +1,16 @@
 const prisma = require("../../config/prisma");
+const { Prisma } = require("@prisma/client");
 
 class UserRepository {
     async createUser(data) {
         const { roleIds, dateOfBirth, ...userData } = data;
-        const createData = { ...userData };
+        const createData = {};
+        for (const [key, value] of Object.entries(userData)) {
+            if (!Prisma?.UserScalarFieldEnum || Prisma.UserScalarFieldEnum[key]) {
+                createData[key] = value;
+            }
+        }
+
         if (roleIds && roleIds.length > 0) {
             createData.userRoles = {
                 create: roleIds.map(id => ({ roleId: id }))
@@ -76,8 +83,15 @@ class UserRepository {
 
         const { roleIds, ...updateData } = data;
         
+        const validUpdateData = {};
+        for (const [key, value] of Object.entries(updateData)) {
+            if (!Prisma?.UserScalarFieldEnum || Prisma.UserScalarFieldEnum[key]) {
+                validUpdateData[key] = value;
+            }
+        }
+
         if (roleIds) {
-            updateData.userRoles = {
+            validUpdateData.userRoles = {
                 deleteMany: {},
                 create: roleIds.map(id => ({ roleId: id }))
             };
@@ -85,7 +99,7 @@ class UserRepository {
 
         return await prisma.user.update({
             where: { userId },
-            data: updateData,
+            data: validUpdateData,
             include: {
                 userRoles: { select: { role: { select: { roleId: true, roleName: true, roleCode: true } } } },
                 department: { select: { departmentName: true } },

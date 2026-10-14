@@ -191,6 +191,16 @@ export interface Payslip {
   joining_date?: string;
   designation_name?: string;
   department_name?: string;
+  office_location_id?: number;
+  location_name?: string;
+  location_address?: string;
+  location_address_line1?: string;
+  location_address_line2?: string;
+  location_city?: string;
+  location_state?: string;
+  location_country?: string;
+  location_pincode?: string;
+  location_phone?: string;
   bank_name?: string;
   account_number?: string;
   ifsc_code?: string;
