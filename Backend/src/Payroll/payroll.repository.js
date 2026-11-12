@@ -1,5 +1,42 @@
 const prisma = require("../config/prisma");
 
+function normalizeDate(d) {
+    if (!d) return null;
+    if (d instanceof Date) {
+        if (isNaN(d.getTime())) return null;
+        return d.toISOString().split('T')[0];
+    }
+    const str = String(d).trim();
+    if (!str || str.toLowerCase() === 'null' || str.toLowerCase() === 'undefined') return null;
+
+    // Handle DD/MM/YYYY or DD-MM-YYYY (e.g. 01/01/2024 or 15-04-2024)
+    const ddmmyyyy = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+    if (ddmmyyyy) {
+        const day = ddmmyyyy[1].padStart(2, '0');
+        const month = ddmmyyyy[2].padStart(2, '0');
+        const year = ddmmyyyy[3];
+        return `${year}-${month}-${day}`;
+    }
+
+    // Handle YYYY/MM/DD or YYYY-MM-DD
+    const yyyymmdd = str.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+    if (yyyymmdd) {
+        const year = yyyymmdd[1];
+        const month = yyyymmdd[2].padStart(2, '0');
+        const day = yyyymmdd[3].padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    try {
+        const parsed = new Date(str);
+        if (!isNaN(parsed.getTime())) {
+            return parsed.toISOString().split('T')[0];
+        }
+    } catch (_) {}
+
+    return str;
+}
+
 class PayrollRepository {
     constructor() {
         this.initialized = false;
@@ -502,25 +539,50 @@ class PayrollRepository {
 
     async getSettings(companyId, targetDate = null) {
         await this.ensureTables();
-        if (targetDate) {
-            const rows = await prisma.$queryRawUnsafe(
+        const normalized = normalizeDate(targetDate);
+
+        if (normalized) {
+            // 1. Direct window match: target date falls within [effective_from, effective_to]
+            const windowRows = await prisma.$queryRawUnsafe(
+                `SELECT * FROM payroll_settings 
+                 WHERE company_id = $1 
+                   AND (effective_from <= $2::date OR effective_from IS NULL)
+                   AND (effective_to IS NULL OR effective_to >= $2::date)
+                 ORDER BY effective_from DESC NULLS LAST, created_at DESC 
+                 LIMIT 1`,
+                companyId, normalized
+            ).catch(() => []);
+            if (windowRows && windowRows[0]) return windowRows[0];
+
+            // 2. Fallback: most recent policy starting on or before target date
+            const priorRows = await prisma.$queryRawUnsafe(
                 `SELECT * FROM payroll_settings 
                  WHERE company_id = $1 AND (effective_from <= $2::date OR effective_from IS NULL)
-                 ORDER BY effective_from DESC, created_at DESC 
+                 ORDER BY effective_from DESC NULLS LAST, created_at DESC 
                  LIMIT 1`,
-                companyId, targetDate
-            );
-            if (rows[0]) return rows[0];
+                companyId, normalized
+            ).catch(() => []);
+            if (priorRows && priorRows[0]) return priorRows[0];
+
+            // 3. Fallback: if targetDate is earlier than all configured policies, pick the earliest policy
+            const earliestRows = await prisma.$queryRawUnsafe(
+                `SELECT * FROM payroll_settings 
+                 WHERE company_id = $1 
+                 ORDER BY effective_from ASC NULLS LAST, created_at ASC 
+                 LIMIT 1`,
+                companyId
+            ).catch(() => []);
+            if (earliestRows && earliestRows[0]) return earliestRows[0];
         }
 
         const rows = await prisma.$queryRawUnsafe(
             `SELECT * FROM payroll_settings 
              WHERE company_id = $1 
-             ORDER BY effective_from DESC, created_at DESC 
+             ORDER BY effective_from DESC NULLS LAST, created_at DESC 
              LIMIT 1`,
             companyId
-        );
-        return rows[0] || null;
+        ).catch(() => []);
+        return rows && rows[0] ? rows[0] : null;
     }
 
     async rechainSettingsVersions(companyId) {
@@ -533,7 +595,7 @@ class PayrollRepository {
               AND (a.updated_at < b.updated_at OR (a.updated_at = b.updated_at AND a.id < b.id));
         `, companyId).catch(() => { });
 
-        // 2. Chain older versions so effective_to ends strictly 1 day before the next version starts
+        // 2. Chain older versions so they end 1 day prior to the next version start
         await prisma.$executeRawUnsafe(`
             WITH ordered AS (
                 SELECT id, company_id, effective_from,
@@ -542,24 +604,23 @@ class PayrollRepository {
                 WHERE company_id = $1
             )
             UPDATE payroll_settings p
-            SET effective_to = (o.next_eff_from - INTERVAL '1 day')::date,
-                updated_at = CURRENT_TIMESTAMP
+            SET effective_to = (o.next_eff_from - INTERVAL '1 day')::date
             FROM ordered o
-            WHERE p.id = o.id AND o.next_eff_from IS NOT NULL;
+            WHERE p.id = o.id AND o.next_eff_from IS NOT NULL
+              AND (p.effective_to IS NULL OR p.effective_to >= o.next_eff_from);
         `, companyId).catch(() => { });
 
-        // 3. Ensure strictly ONLY the single latest version has effective_to = NULL (Active)
+        // 3. Ensure the single latest version has effective_to = NULL (Active)
         await prisma.$executeRawUnsafe(`
             WITH latest AS (
                 SELECT id
                 FROM payroll_settings
                 WHERE company_id = $1
-                ORDER BY effective_from DESC, updated_at DESC
+                ORDER BY effective_from DESC NULLS LAST, created_at DESC
                 LIMIT 1
             )
             UPDATE payroll_settings
-            SET effective_to = NULL,
-                updated_at = CURRENT_TIMESTAMP
+            SET effective_to = NULL
             WHERE company_id = $1 AND id IN (SELECT id FROM latest);
         `, companyId).catch(() => { });
     }
@@ -571,7 +632,7 @@ class PayrollRepository {
             `SELECT DISTINCT ON (effective_from) * 
              FROM payroll_settings 
              WHERE company_id = $1 
-             ORDER BY effective_from DESC, updated_at DESC`,
+             ORDER BY effective_from DESC NULLS LAST, updated_at DESC`,
             companyId
         );
     }
@@ -595,9 +656,8 @@ class PayrollRepository {
 
     async upsertSettings(companyId, data, updatedBy) {
         await this.ensureTables();
-        const effFrom = data.effectiveFrom
-            ? new Date(data.effectiveFrom).toISOString().split('T')[0]
-            : new Date().toISOString().split('T')[0];
+        const effFrom = normalizeDate(data.effectiveFrom) || new Date().toISOString().split('T')[0];
+        const effTo = normalizeDate(data.effectiveTo) || null;
 
         // Check if an existing version exists for this EXACT effective_from date
         const existingVersion = await prisma.$queryRawUnsafe(
@@ -621,11 +681,12 @@ class PayrollRepository {
                     statutory_pf_wage_limit = COALESCE($10, statutory_pf_wage_limit),
                     use_pf_wage_ceiling = COALESCE($11, use_pf_wage_ceiling),
                     statutory_esi_gross_limit = COALESCE($12, statutory_esi_gross_limit),
-                    version_name = COALESCE($13, version_name),
-                    remarks = COALESCE($14, remarks),
-                    updated_by = $15,
+                    effective_to = $13::date,
+                    version_name = COALESCE($14, version_name),
+                    remarks = COALESCE($15, remarks),
+                    updated_by = $16,
                     updated_at = CURRENT_TIMESTAMP
-                WHERE company_id = $16 AND effective_from = $17::date
+                WHERE company_id = $17 AND effective_from = $18::date
                 RETURNING *
             `,
                 data.basicPercentage,
@@ -640,6 +701,7 @@ class PayrollRepository {
                 data.statutoryPfWageLimit,
                 data.usePfWageCeiling,
                 data.statutoryEsiGrossLimit,
+                effTo,
                 data.versionName || null,
                 data.remarks || null,
                 updatedBy || null,
@@ -667,8 +729,8 @@ class PayrollRepository {
                     COALESCE($5, 12.00), COALESCE($6, 0.75), COALESCE($7, 200.00),
                     COALESCE($8, 13.00), COALESCE($9, 3.25), COALESCE($10, 4.81),
                     COALESCE($11, 15000.00), COALESCE($12, TRUE), COALESCE($13, 21000.00),
-                    $14::date, NULL, $15, $16,
-                    $17
+                    $14::date, $15::date, $16, $17,
+                    $18
                 )
                 RETURNING *
             `,
@@ -686,6 +748,7 @@ class PayrollRepository {
                 data.usePfWageCeiling,
                 data.statutoryEsiGrossLimit,
                 effFrom,
+                effTo,
                 data.versionName || `Policy starting ${effFrom}`,
                 data.remarks || null,
                 updatedBy || null
@@ -693,7 +756,7 @@ class PayrollRepository {
             saved = rows[0];
         }
 
-        // Rechain all versions to guarantee strictly zero overlap and only one active version
+        // Rechain versions without wiping user explicit effective_to
         await this.rechainSettingsVersions(companyId);
 
         return saved;

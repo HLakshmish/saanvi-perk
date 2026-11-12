@@ -20,6 +20,7 @@ const updateSettingsSchema = {
         properties: {
             companyId: { type: 'number' },
             effectiveFrom: { type: 'string' },
+            effectiveTo: { type: ['string', 'null'] },
             versionName: { type: 'string' },
             remarks: { type: 'string' },
             basicPercentage: { type: 'number', minimum: 0, maximum: 100 },
@@ -50,7 +51,8 @@ const calculateBreakupSchema = {
             monthlyCtc: { type: 'number' },
             monthlyGross: { type: 'number' },
             basicAmount: { type: 'number' },
-            effectiveDate: { type: 'string' }
+            effectiveDate: { type: 'string' },
+            effectiveTo: { type: ['string', 'null'] }
         }
     }
 };
@@ -70,6 +72,7 @@ const assignSalarySchema = {
             monthlyGross: { type: 'number' },
             basicAmount: { type: 'number' },
             effectiveDate: { type: 'string' },
+            effectiveTo: { type: ['string', 'null'] },
             hikePercentage: { type: 'number' },
             previousCtc: { type: 'number' },
             revisionType: { type: 'string' },
@@ -86,7 +89,8 @@ const getSalaryStructuresSchema = {
         type: 'object',
         properties: {
             companyId: { type: 'number' },
-            search: { type: 'string' }
+            search: { type: 'string' },
+            date: { type: 'string' }
         }
     }
 };

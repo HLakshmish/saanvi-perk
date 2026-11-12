@@ -9,6 +9,20 @@ const app = Fastify({
     logger: true,
 });
 
+// Allow empty body when content-type is set to application/json (e.g. DELETE or empty POST requests)
+app.addContentTypeParser("application/json", { parseAs: "string" }, (req, body, done) => {
+    if (!body || (typeof body === "string" && body.trim() === "")) {
+        done(null, null);
+        return;
+    }
+    try {
+        done(null, JSON.parse(body));
+    } catch (err) {
+        err.statusCode = 400;
+        done(err, undefined);
+    }
+});
+
 // Register plugins
 app.register(corsPlugin);
 app.register(swaggerPlugin);
