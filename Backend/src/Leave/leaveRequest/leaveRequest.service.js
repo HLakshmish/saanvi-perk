@@ -68,8 +68,36 @@ class LeaveRequestService {
         const userId = Number(data.userId);
         const leaveTypeId = Number(data.leaveTypeId);
         const fromDateObj = new Date(data.fromDate);
+        const toDateObj = new Date(data.toDate);
         const numDays = Number(data.numberOfDays);
         const isCompOff = Boolean(data.isCompOff);
+
+        if (isNaN(fromDateObj.getTime())) {
+            throw new Error("Invalid fromDate.");
+        }
+        if (isNaN(toDateObj.getTime())) {
+            throw new Error("Invalid toDate.");
+        }
+        if (fromDateObj > toDateObj) {
+            throw new Error("To Date cannot be before From Date.");
+        }
+        if (isNaN(numDays) || numDays <= 0) {
+            throw new Error("Number of days must be greater than zero.");
+        }
+
+        // Check for active overlapping leave requests for this user
+        const overlappingLeave = await prisma.leaveRequest.findFirst({
+            where: {
+                userId,
+                companyId,
+                status: { notIn: ['REJECTED', 'CANCELLED'] },
+                fromDate: { lte: toDateObj },
+                toDate: { gte: fromDateObj }
+            }
+        });
+        if (overlappingLeave) {
+            throw new Error("A leave request already exists overlapping the selected date range.");
+        }
 
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -110,8 +138,8 @@ class LeaveRequestService {
 
         // 1. COMP-OFF VALIDATION & ENFORCEMENT
         if (isCompOff) {
-            // Fetch user comp-off balance and validation
-            const compOffDetails = await compOffAssignService.getUserCompOffDetails(companyId, userId);
+            // Fetch user comp-off balance and validation evaluated against requested leave date
+            const compOffDetails = await compOffAssignService.getUserCompOffDetails(companyId, userId, fromDateObj);
             const availableCompOff = compOffDetails.remainingCompOffDays ?? compOffDetails.totalCompOffDays ?? 0;
 
             if (availableCompOff < numDays) {

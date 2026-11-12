@@ -228,7 +228,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
     let current = new Date(start);
 
     while (current <= end) {
-      const currStr = current.toISOString().slice(0, 10);
+      const currStr = toYMD(current);
       const isHol = Boolean(getDateHoliday(currStr));
       const isWo = Boolean(getDateWeekOff(currStr));
 
@@ -489,6 +489,7 @@ export const ApplyLeaveModal: React.FC<ApplyLeaveModalProps> = ({
       isHalfDay,
       fromDate,
       toDate,
+      numberOfDays: requestedDays,
       reason: reason.trim() || "Personal Reason",
       userId: selectedEmployeeId > 0 ? selectedEmployeeId : undefined,
       isCompOff: isCompType,

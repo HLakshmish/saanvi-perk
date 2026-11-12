@@ -276,20 +276,24 @@ export const LeavesView: React.FC = () => {
 
   const handleApplyLeaveSubmit = async (data: ApplyLeaveInput): Promise<{ success: boolean; error?: string } | boolean> => {
     try {
-      const start = new Date(data.fromDate);
-      const end = new Date(data.toDate);
+      // Use exact numberOfDays calculated by ApplyLeaveModal (which factors in company holidays and week-offs)
+      let days = data.numberOfDays;
+      if (days === undefined || days === null) {
+        const start = new Date(data.fromDate);
+        const end = new Date(data.toDate);
 
-      let workingDays = 0;
-      let current = new Date(start);
-      while (current <= end) {
-        const dayOfWeek = current.getDay(); // 0 is Sunday, 6 is Saturday
-        if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-          workingDays++;
+        let workingDays = 0;
+        let current = new Date(start);
+        while (current <= end) {
+          const dayOfWeek = current.getDay(); // 0 is Sunday, 6 is Saturday
+          if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+            workingDays++;
+          }
+          current.setDate(current.getDate() + 1);
         }
-        current.setDate(current.getDate() + 1);
-      }
 
-      const days = data.isHalfDay ? 0.5 : (workingDays === 0 ? 1 : workingDays);
+        days = data.isHalfDay ? 0.5 : (workingDays === 0 ? 1 : workingDays);
+      }
 
       const currentUserId = getCurrentUserId();
       const targetUserId = data.userId ? Number(data.userId) : (currentUserId ? Number(currentUserId) : undefined);

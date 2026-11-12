@@ -25,11 +25,17 @@ async function leaveRequestRoutes(fastify, options) {
     fastify.get("/:id", opts(getLeaveRequestByIdSchema, 'VIEW_LEAVES'), leaveRequestController.getLeaveRequestById.bind(leaveRequestController));
     fastify.get("/", opts(getAllLeaveRequestsSchema, 'VIEW_LEAVES'), leaveRequestController.getAllLeaveRequests.bind(leaveRequestController));
     
-    // MANAGE_LEAVES typically for HR/Managers to approve/reject
-    fastify.put("/:id/status", opts(updateLeaveRequestStatusSchema, 'MANAGE_LEAVES'), leaveRequestController.updateLeaveRequestStatus.bind(leaveRequestController));
+    // Status update: Managers/HR can approve/reject; employees can cancel their own pending request
+    fastify.put("/:id/status", {
+        schema: updateLeaveRequestStatusSchema,
+        preValidation: [fastify.authenticate]
+    }, leaveRequestController.updateLeaveRequestStatus.bind(leaveRequestController));
     
-    // Deletion might be restricted
-    fastify.delete("/:id", opts(deleteLeaveRequestSchema, 'MANAGE_LEAVES'), leaveRequestController.deleteLeaveRequest.bind(leaveRequestController));
+    // Deletion: Managers/HR or employees cancelling their own pending request
+    fastify.delete("/:id", {
+        schema: deleteLeaveRequestSchema,
+        preValidation: [fastify.authenticate]
+    }, leaveRequestController.deleteLeaveRequest.bind(leaveRequestController));
 }
 
 module.exports = leaveRequestRoutes;

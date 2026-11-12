@@ -14,6 +14,8 @@ import {
 import { snackbar as toast } from "@/components/ui/snackbar";
 import { createCompOffRequest } from "../api/attendance.api";
 import { getHolidays, HolidayRecord } from "@/features/organization/api/calendar.api";
+import { getAssignedWeekOffs, getWeekOffs } from "@/features/settings/api/weekOff.api";
+import { WeekOffRecord, WeekOffAssignRecord } from "@/features/settings/types/weekOff.types";
 
 function toYMD(dateInput: string | Date | undefined | null): string {
   if (!dateInput) return "";
@@ -49,6 +51,8 @@ export const CompOffRequestModal: React.FC<CompOffRequestModalProps> = ({
   });
   const [reason, setReason] = useState<string>("");
   const [holidays, setHolidays] = useState<HolidayRecord[]>([]);
+  const [assignedWeekOffs, setAssignedWeekOffs] = useState<WeekOffAssignRecord[]>([]);
+  const [globalWeekOffs, setGlobalWeekOffs] = useState<WeekOffRecord[]>([]);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [mounted, setMounted] = useState<boolean>(false);
 
@@ -64,39 +68,85 @@ export const CompOffRequestModal: React.FC<CompOffRequestModalProps> = ({
         setWorkDate(toYMD(new Date()));
       }
       setReason("");
-      getHolidays()
-        .then((res) => {
-          if (res.success && Array.isArray(res.data)) {
-            setHolidays(res.data);
-          }
+      Promise.all([
+        getHolidays().catch(() => ({ success: false, data: [] as HolidayRecord[] })),
+        getAssignedWeekOffs().catch(() => ({ success: false, data: [] as WeekOffAssignRecord[] })),
+        getWeekOffs().catch(() => ({ success: false, data: [] as WeekOffRecord[] })),
+      ])
+        .then(([holRes, assignRes, weekOffRes]) => {
+          if (holRes.success && Array.isArray(holRes.data)) setHolidays(holRes.data);
+          if (assignRes.success && Array.isArray(assignRes.data)) setAssignedWeekOffs(assignRes.data);
+          if (weekOffRes.success && Array.isArray(weekOffRes.data)) setGlobalWeekOffs(weekOffRes.data);
         })
         .catch(() => {});
     }
   }, [isOpen, initialDate]);
 
+  // Helper: Check if date is a Week Off
+  const getDateWeekOff = (dateStr: string): { isWeekOff: boolean; label?: string } | null => {
+    if (!dateStr) return null;
+    const d = new Date(dateStr + "T00:00:00");
+    if (isNaN(d.getTime())) return null;
+
+    const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const dayName = daysOfWeek[d.getDay()];
+
+    let activeRules: Array<{ frequency: string; dayOfWeek: string; duration: string }> = [];
+
+    if (assignedWeekOffs.length > 0 && assignedWeekOffs[0].weekOff?.rules) {
+      activeRules = assignedWeekOffs[0].weekOff.rules;
+    } else if (globalWeekOffs.length > 0 && globalWeekOffs[0].rules) {
+      activeRules = globalWeekOffs[0].rules;
+    }
+
+    if (activeRules.length > 0) {
+      const match = activeRules.find((rule) => {
+        if (rule.dayOfWeek.toLowerCase() !== dayName.toLowerCase()) return false;
+        if (rule.frequency === "Every") return true;
+
+        const dom = d.getDate();
+        const nth = Math.ceil(dom / 7);
+        if (rule.frequency === "First" && nth === 1) return true;
+        if (rule.frequency === "Second" && nth === 2) return true;
+        if (rule.frequency === "Third" && nth === 3) return true;
+        if (rule.frequency === "Fourth" && nth === 4) return true;
+        if (rule.frequency === "Fifth" && nth === 5) return true;
+
+        return false;
+      });
+
+      if (match) {
+        return { isWeekOff: true, label: `${dayName} (Week-Off)` };
+      }
+    } else {
+      // Standard default week-off (Sunday & Saturday)
+      if (d.getDay() === 0 || d.getDay() === 6) {
+        return { isWeekOff: true, label: `${dayName} (Week-Off)` };
+      }
+    }
+
+    return null;
+  };
+
   if (!isOpen || !mounted) return null;
 
-  // Determine date type (Holiday / Week-Off / Regular)
-  const dateObj = workDate ? new Date(`${workDate}T00:00:00`) : new Date();
-  const dayOfWeek = dateObj.getDay(); // 0 is Sunday, 6 is Saturday
-  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-
   const matchedHoliday = holidays.find((h) => {
+    if (h.status === false || h.holidayType === "WEEK_OFF") return false;
     const startStr = toYMD(h.startDate);
     const endStr = toYMD(h.endDate || h.startDate);
     return workDate >= startStr && workDate <= endStr;
   });
 
   const isHoliday = !!matchedHoliday;
-  const isEligible = isHoliday || isWeekend;
+  const matchedWeekOff = !isHoliday ? getDateWeekOff(workDate) : null;
+  const isWeekOff = !!matchedWeekOff?.isWeekOff;
+  const isEligible = isHoliday || isWeekOff;
 
-  const requestType = isHoliday ? "HOLIDAY" : isWeekend ? "WEEK_OFF" : "OTHER";
+  const requestType = isHoliday ? "HOLIDAY" : isWeekOff ? "WEEK_OFF" : "OTHER";
   const holidayOrWeekOffName = isHoliday
     ? matchedHoliday.holidayName
-    : isWeekend
-    ? dayOfWeek === 0
-      ? "Sunday (Week-Off)"
-      : "Saturday (Week-Off)"
+    : isWeekOff
+    ? matchedWeekOff?.label || "Weekly Off"
     : initialHolidayOrWeekOffName || "";
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -200,13 +250,13 @@ export const CompOffRequestModal: React.FC<CompOffRequestModalProps> = ({
                     </span>
                   </div>
                 </div>
-              ) : isWeekend ? (
+              ) : isWeekOff ? (
                 <div className="p-3.5 rounded-2xl bg-blue-50 border border-blue-200 text-blue-900 text-xs flex items-start gap-2.5">
                   <Calendar className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold block">{dayOfWeek === 0 ? "Sunday" : "Saturday"} Week-Off</span>
+                    <span className="font-bold block">{holidayOrWeekOffName}</span>
                     <span className="text-[11px] text-blue-700 font-medium">
-                      This date is an official weekend / week-off. You will be eligible for Comp-Off after manager approval and attendance completion.
+                      This date is an official week-off. You will be eligible for Comp-Off after manager approval and attendance completion.
                     </span>
                   </div>
                 </div>
