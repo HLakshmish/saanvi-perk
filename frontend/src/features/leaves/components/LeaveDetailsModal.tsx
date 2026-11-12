@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X, Loader2, Calendar, User, CheckCircle2, XCircle, Clock, Trash2 } from "lucide-react";
-import { fetchLeaveRequestById, deleteLeaveRequest, fetchLeaveRequests } from "../api/leaves.api";
+import { fetchLeaveRequestById, deleteLeaveRequest, fetchLeaveRequests, getCurrentUserId } from "../api/leaves.api";
 import { fetchLeaveAccumulations } from "@/features/settings/api/settings.api";
 import { snackbar as toast } from "@/components/ui/snackbar";
 
@@ -183,6 +183,9 @@ export const LeaveDetailsModal: React.FC<LeaveDetailsModalProps> = ({
   const isUserAdminOrSuper = isAdminOrSuperAdmin !== undefined 
     ? isAdminOrSuperAdmin 
     : (userRole === "superadmin" || userRole === "admin");
+  const currentUserId = getCurrentUserId();
+  const isOwner = details?.userId !== undefined && currentUserId !== null && Number(details.userId) === Number(currentUserId);
+  const canCancel = details?.status === "PENDING" && (isUserAdminOrSuper || isOwner);
 
   const handleDelete = async () => {
     if (!leaveRequestId) return;
@@ -379,7 +382,7 @@ export const LeaveDetailsModal: React.FC<LeaveDetailsModalProps> = ({
         {/* Footer */}
         <div className="flex items-center justify-between p-4 border-t border-slate-100 bg-slate-50/50">
           <div>
-            {isUserAdminOrSuper && details?.status === "PENDING" && (
+            {canCancel && (
               <button
                 type="button"
                 disabled={isDeleting}

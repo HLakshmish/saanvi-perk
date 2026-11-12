@@ -137,7 +137,7 @@ class CompOffAssignRepository {
             include: { weekOff: { include: { rules: true } } }
         });
 
-        // 6. Fetch approved leave requests for the policy's leaveTypeId or where isCompOff is true
+        // 6. Fetch approved and pending leave requests for the policy's leaveTypeId or where isCompOff is true
         const leaveRequests = await prisma.leaveRequest.findMany({
             where: {
                 companyId,
@@ -146,7 +146,7 @@ class CompOffAssignRepository {
                     { isCompOff: true },
                     { leaveTypeId: policy.leaveTypeId }
                 ],
-                status: 'APPROVED'
+                status: { in: ['APPROVED', 'PENDING'] }
             },
             orderBy: { fromDate: 'desc' }
         });

@@ -40,6 +40,7 @@ export interface ApplyLeaveInput {
   reason: string;
   userId?: number;
   isCompOff?: boolean;
+  numberOfDays?: number;
 }
 
 export interface CompOffInput {

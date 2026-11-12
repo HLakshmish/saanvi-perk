@@ -120,14 +120,11 @@ class LeaveRequestController {
 
             const leaveRequest = await leaveRequestService.getLeaveRequestById(Number(id), companyId);
             
-            // Basic check so normal users only see their own requests (can be refined via permissions)
+            // Check authorization: Regular users without manage permissions can only view their own requests
             if (request.user.role === 'USER' && Number(leaveRequest.userId) !== Number(request.user.userId)) {
-                const hasViewLeavesPermission = request.user.permissions && (request.user.permissions.includes('VIEW_LEAVES') || request.user.permissions.includes('MANAGE_LEAVES'));
-                if (!hasViewLeavesPermission) {
-                    const canManage = await checkCanManageLeaves(request.user);
-                    if (!canManage) {
-                        return reply.code(403).send({ success: false, message: "Forbidden: Cannot view other user's leave request." });
-                    }
+                const canManage = await checkCanManageLeaves(request.user);
+                if (!canManage) {
+                    return reply.code(403).send({ success: false, message: "Forbidden: Cannot view other user's leave request." });
                 }
             }
 
@@ -146,12 +143,9 @@ class LeaveRequestController {
             if (request.user.role === 'OWNER') {
                 companyId = request.query.companyId ? Number(request.query.companyId) : undefined;
             } else if (request.user.role === 'USER') {
-                const hasViewLeavesPermission = request.user.permissions && (request.user.permissions.includes('VIEW_LEAVES') || request.user.permissions.includes('MANAGE_LEAVES'));
-                if (!hasViewLeavesPermission) {
-                    const canManage = await checkCanManageLeaves(request.user);
-                    if (!canManage) {
-                        filterUserId = request.user.userId; // Regular users only see their own
-                    }
+                const canManage = await checkCanManageLeaves(request.user);
+                if (!canManage) {
+                    filterUserId = Number(request.user.userId); // Standard users strictly forced to their own userId
                 }
             }
 
@@ -172,24 +166,47 @@ class LeaveRequestController {
                 targetCompanyId = request.query.companyId ? Number(request.query.companyId) : undefined;
             } 
             
+            const existing = await leaveRequestService.getLeaveRequestById(Number(id), targetCompanyId);
+            if (!existing) {
+                return reply.code(404).send({ success: false, message: "Leave request not found." });
+            }
+
+            const statusUpper = (status || '').toUpperCase();
+
             // Only specific roles can approve/reject
-            if (['APPROVED', 'REJECTED'].includes(status) && request.user.role === 'USER') {
-                const hasManageLeavesPermission = request.user.permissions && request.user.permissions.includes('MANAGE_LEAVES');
-                if (!hasManageLeavesPermission) {
-                    const canManage = await checkCanManageLeaves(request.user);
-                    if (!canManage) {
-                        return reply.code(403).send({ success: false, message: "Forbidden: Not authorized to approve/reject leave requests." });
+            if (['APPROVED', 'REJECTED'].includes(statusUpper)) {
+                if (request.user.role === 'USER') {
+                    const hasManageLeavesPermission = request.user.permissions && request.user.permissions.includes('MANAGE_LEAVES');
+                    if (!hasManageLeavesPermission) {
+                        const canManage = await checkCanManageLeaves(request.user);
+                        if (!canManage) {
+                            return reply.code(403).send({ success: false, message: "Forbidden: Not authorized to approve/reject leave requests." });
+                        }
                     }
                 }
+            } else if (statusUpper === 'CANCELLED') {
+                if (request.user.role === 'USER') {
+                    const canManage = await checkCanManageLeaves(request.user);
+                    if (!canManage) {
+                        if (Number(existing.userId) !== Number(request.user.userId)) {
+                            return reply.code(403).send({ success: false, message: "Forbidden: You cannot cancel another employee's leave request." });
+                        }
+                        if (existing.status !== 'PENDING') {
+                            return reply.code(400).send({ success: false, message: "Only PENDING leave requests can be cancelled." });
+                        }
+                    }
+                }
+            } else {
+                return reply.code(400).send({ success: false, message: "Invalid status value." });
             }
 
             const statusData = {
-                status,
+                status: statusUpper,
                 remarks,
                 rejectionReason
             };
 
-            if (['APPROVED', 'REJECTED'].includes(status)) {
+            if (['APPROVED', 'REJECTED'].includes(statusUpper)) {
                 // SUPERADMIN and OWNER exist in separate tables, not User. 
                 // Assigning their ID to approvedBy causes a Foreign Key constraint error.
                 if (request.user.role !== 'SUPERADMIN' && request.user.role !== 'OWNER') {
@@ -216,11 +233,26 @@ class LeaveRequestController {
                 companyId = request.query.companyId ? Number(request.query.companyId) : undefined;
             }
 
-            // Optional: You might want to allow users to delete their own "PENDING" requests.
-            // For now, adhering to MANAGE_LEAVE_REQUESTS permission.
+            const existingRequest = await leaveRequestService.getLeaveRequestById(Number(id), companyId);
+            if (!existingRequest) {
+                return reply.code(404).send({ success: false, message: "Leave request not found." });
+            }
+
+            if (request.user.role === 'USER') {
+                const canManage = await checkCanManageLeaves(request.user);
+                if (!canManage) {
+                    // Regular employees can only cancel their OWN requests, and ONLY if status is PENDING
+                    if (Number(existingRequest.userId) !== Number(request.user.userId)) {
+                        return reply.code(403).send({ success: false, message: "Forbidden: You cannot cancel another employee's leave request." });
+                    }
+                    if (existingRequest.status !== 'PENDING') {
+                        return reply.code(400).send({ success: false, message: "Only PENDING leave requests can be cancelled." });
+                    }
+                }
+            }
 
             await leaveRequestService.deleteLeaveRequest(Number(id), companyId);
-            reply.code(200).send({ success: true, message: "Leave request deleted successfully" });
+            reply.code(200).send({ success: true, message: "Leave request cancelled successfully" });
         } catch (error) {
             reply.code(400).send({ success: false, message: error.message });
         }
@@ -235,12 +267,9 @@ class LeaveRequestController {
             if (request.user.role === 'OWNER') {
                 companyId = request.query.companyId ? Number(request.query.companyId) : undefined;
             } else if (request.user.role === 'USER') {
-                const hasViewLeavesPermission = request.user.permissions && (request.user.permissions.includes('VIEW_LEAVES') || request.user.permissions.includes('MANAGE_LEAVES'));
-                if (!hasViewLeavesPermission) {
-                    const canManage = await checkCanManageLeaves(request.user);
-                    if (!canManage) {
-                        filterUserId = request.user.userId;
-                    }
+                const canManage = await checkCanManageLeaves(request.user);
+                if (!canManage) {
+                    filterUserId = Number(request.user.userId);
                 }
             }
 
@@ -281,12 +310,9 @@ class LeaveRequestController {
             if (request.user.role === 'OWNER') {
                 companyId = request.query.companyId ? Number(request.query.companyId) : undefined;
             } else if (request.user.role === 'USER') {
-                const hasViewLeavesPermission = request.user.permissions && (request.user.permissions.includes('VIEW_LEAVES') || request.user.permissions.includes('MANAGE_LEAVES'));
-                if (!hasViewLeavesPermission) {
-                    const canManage = await checkCanManageLeaves(request.user);
-                    if (!canManage) {
-                        filterUserId = request.user.userId;
-                    }
+                const canManage = await checkCanManageLeaves(request.user);
+                if (!canManage) {
+                    filterUserId = Number(request.user.userId);
                 }
             }
 

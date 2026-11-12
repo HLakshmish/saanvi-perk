@@ -153,16 +153,16 @@ class CompOffAssignService {
         return await repository.delete(id, companyId);
     }
 
-    async getUserCompOffDetails(companyId, userId) {
+    async getUserCompOffDetails(companyId, userId, targetDate = null) {
         const data = await repository.getUserCompOffData(companyId, userId);
         const policy = data.assignedPolicy;
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        const evalDate = targetDate ? new Date(targetDate) : new Date();
+        evalDate.setHours(0, 0, 0, 0);
 
-        // 1. Calculate total availed days (approved leave requests)
+        // 1. Calculate total availed days (include approved and pending leave requests)
         let totalAvailed = 0;
         data.leaveRequests.forEach(req => {
-            if (req.status === 'APPROVED') {
+            if (req.status === 'APPROVED' || req.status === 'PENDING') {
                 totalAvailed += Number(req.numberOfDays) || 0;
             }
         });
@@ -193,15 +193,15 @@ class CompOffAssignService {
                 validTo.setHours(0, 0, 0, 0);
             }
 
-            // 2. remainingDays = expiryDate - today
+            // 2. remainingDays = expiryDate - evalDate
             let daysRemaining = null;
             if (validTo) {
-                const diffMs = validTo.getTime() - today.getTime();
+                const diffMs = validTo.getTime() - evalDate.getTime();
                 daysRemaining = Math.round(diffMs / (1000 * 60 * 60 * 24));
             }
 
-            // 3. Only count if remaining days to use comp-off > 0
-            const isEligible = daysRemaining !== null ? daysRemaining > 0 : true;
+            // 3. Only count if remaining days to use comp-off >= 0
+            const isEligible = daysRemaining !== null ? daysRemaining >= 0 : true;
 
             if (isEligible) {
                 validEarned += earnedCompOffDays;

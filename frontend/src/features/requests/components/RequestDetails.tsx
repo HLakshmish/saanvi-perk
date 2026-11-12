@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ArrowLeft, CheckCircle2, XCircle, Clock, Loader2, Calendar, FileText } from "lucide-react";
+import { ArrowLeft, CheckCircle2, XCircle, Clock, Loader2, Calendar, FileText, Trash2 } from "lucide-react";
+import { snackbar as toast } from "@/components/ui/snackbar";
 
 // API Helpers
-import { fetchAttendanceRequests, fetchCompOffRequests } from "@/features/attendance/api/attendance.api";
-import { fetchLeaveRequests } from "@/features/leaves/api/leaves.api";
+import { fetchAttendanceRequests, fetchCompOffRequests, deleteCompOffRequest } from "@/features/attendance/api/attendance.api";
+import { fetchLeaveRequests, deleteLeaveRequest } from "@/features/leaves/api/leaves.api";
 import { fetchReimbursementClaims, fetchReimbursementHistory, getCompanyIdCookie, getCurrentUserId } from "@/features/expenses/api/expenses.api";
 import { getUserById, getEmployees } from "@/features/employees/api/employees.api";
 
@@ -24,12 +25,42 @@ export const RequestDetails: React.FC<RequestDetailsProps> = ({
   const [history, setHistory] = useState<any[]>([]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [employeesMap, setEmployeesMap] = useState<Map<string, string>>(new Map());
+  const [isCancelling, setIsCancelling] = useState(false);
 
   // Parse source and database ID
   const dashIndex = requestId.indexOf("-");
   const source = dashIndex !== -1 ? requestId.substring(0, dashIndex) : "";
   const dbIdStr = dashIndex !== -1 ? requestId.substring(dashIndex + 1) : requestId;
   const dbId = parseInt(dbIdStr, 10);
+
+  const handleCancelRequest = async () => {
+    const reqTypeLabel = source === "compoff" ? "comp-off" : source === "leave" ? "leave" : "this";
+    if (!confirm(`Are you sure you want to cancel this ${reqTypeLabel} request?`)) return;
+    setIsCancelling(true);
+    try {
+      if (source === "compoff") {
+        const res = await deleteCompOffRequest(dbId);
+        if (res.success) {
+          toast.success("Comp-off request cancelled successfully.");
+          onBack();
+        } else {
+          toast.error(res.message || "Failed to cancel comp-off request.");
+        }
+      } else if (source === "leave") {
+        const res = await deleteLeaveRequest(dbId);
+        if (res.success) {
+          toast.success("Leave request cancelled successfully.");
+          onBack();
+        } else {
+          toast.error(res.error || res.message || "Failed to cancel leave request.");
+        }
+      }
+    } catch (err: any) {
+      toast.error(err.message || "An unexpected error occurred.");
+    } finally {
+      setIsCancelling(false);
+    }
+  };
 
   // Utility: Date formatter in DD-MMM-YYYY format (e.g., 11-Aug-2026)
   const formatDate = (dateStr: string | Date | null | undefined): string => {
@@ -599,17 +630,34 @@ export const RequestDetails: React.FC<RequestDetailsProps> = ({
     <div className="space-y-6">
       {/* Back Button and Section Title */}
       <div className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 shadow-2xs">
-        <div className="flex items-center gap-3 mb-6">
-          <button
-            onClick={onBack}
-            className="p-1.5 hover:bg-slate-100 rounded-lg transition-all border border-gray-200 text-brand-primary cursor-pointer"
-            title="Back to History"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </button>
-          <h2 className="text-base font-bold text-brand-primary">
-            Request Detail View
-          </h2>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onBack}
+              className="p-1.5 hover:bg-slate-100 rounded-lg transition-all border border-gray-200 text-brand-primary cursor-pointer"
+              title="Back to History"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+            <h2 className="text-base font-bold text-brand-primary">
+              Request Detail View
+            </h2>
+          </div>
+          {(source === "compoff" || source === "leave") && details?.status === "PENDING" && (
+            <button
+              type="button"
+              disabled={isCancelling}
+              onClick={handleCancelRequest}
+              className="px-4 py-2 bg-rose-600 hover:bg-rose-700 disabled:bg-rose-400 text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+            >
+              {isCancelling ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Trash2 className="w-3.5 h-3.5" />
+              )}
+              <span>Cancel Request</span>
+            </button>
+          )}
         </div>
 
         {/* Conditional Layouts based on fetching states */}
