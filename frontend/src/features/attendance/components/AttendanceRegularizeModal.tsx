@@ -229,6 +229,13 @@ export const AttendanceRegularizeModal: React.FC<AttendanceRegularizeModalProps>
       ]);
 
       const selectedYMD = toYMD(modalDate);
+      const todayStr = toYMD(new Date());
+
+      if (selectedYMD > todayStr) {
+        toast.error("Attendance regularization cannot be requested for future dates.");
+        setIsSubmitting(false);
+        return;
+      }
 
       // 1. Check existing active attendance regularization requests for this date
       let attRequestsList: any[] = [];
@@ -291,6 +298,17 @@ export const AttendanceRegularizeModal: React.FC<AttendanceRegularizeModalProps>
       // 2. Check-In & Check-Out times are constructed from local time inputs:
       const inDateLocal = new Date(year, month, day, inH || 9, inM || 0, 0, 0);
       const outDateLocal = new Date(year, month, isNextDay ? day + 1 : day, outH || 18, outM || 0, 0, 0);
+
+      if (!isNextDay && outDateLocal <= inDateLocal) {
+        toast.error("Check-out time must be after check-in time. If your shift was overnight, please check 'Night Shift'.");
+        setIsSubmitting(false);
+        return;
+      }
+      if (inDateLocal.getTime() === outDateLocal.getTime()) {
+        toast.error("Check-in and check-out times cannot be identical.");
+        setIsSubmitting(false);
+        return;
+      }
 
       const payload: AttendanceRequestPayload = {
         shiftDate: shiftDateUtc.toISOString(),
@@ -381,6 +399,7 @@ export const AttendanceRegularizeModal: React.FC<AttendanceRegularizeModalProps>
                       setModalDate(new Date(y, m - 1, d, 0, 0, 0));
                     }
                   }}
+                  max={toYMD(new Date())}
                   className="mt-0.5 px-2.5 py-1.5 rounded-lg border border-brand-primary/30 bg-white font-extrabold text-brand-primary text-xs focus:outline-none focus:ring-2 focus:ring-brand-primary/20 cursor-pointer shadow-2xs"
                   required
                 />

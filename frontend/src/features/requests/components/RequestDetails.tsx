@@ -5,7 +5,7 @@ import { ArrowLeft, CheckCircle2, XCircle, Clock, Loader2, Calendar, FileText, T
 import { snackbar as toast } from "@/components/ui/snackbar";
 
 // API Helpers
-import { fetchAttendanceRequests, fetchCompOffRequests, deleteCompOffRequest } from "@/features/attendance/api/attendance.api";
+import { fetchAttendanceRequests, fetchCompOffRequests, deleteCompOffRequest, deleteAttendanceRequest } from "@/features/attendance/api/attendance.api";
 import { fetchLeaveRequests, deleteLeaveRequest } from "@/features/leaves/api/leaves.api";
 import { fetchReimbursementClaims, fetchReimbursementHistory, getCompanyIdCookie, getCurrentUserId } from "@/features/expenses/api/expenses.api";
 import { getUserById, getEmployees } from "@/features/employees/api/employees.api";
@@ -33,8 +33,17 @@ export const RequestDetails: React.FC<RequestDetailsProps> = ({
   const dbIdStr = dashIndex !== -1 ? requestId.substring(dashIndex + 1) : requestId;
   const dbId = parseInt(dbIdStr, 10);
 
+  const currentUserId = getCurrentUserId();
+  let userRole: string | null = null;
+  if (typeof window !== "undefined") {
+    userRole = document.cookie.match(/(?:^|; )user_role=([^;]*)/)?.[1] || localStorage.getItem("user_role");
+  }
+  const isPrivileged = userRole === "admin" || userRole === "superadmin" || userRole === "owner";
+  const isOwner = details?.userId !== undefined && currentUserId !== null && Number(details.userId) === Number(currentUserId);
+  const canCancel = (source === "compoff" || source === "leave" || source === "attendance") && details?.status === "PENDING" && (isPrivileged || isOwner);
+
   const handleCancelRequest = async () => {
-    const reqTypeLabel = source === "compoff" ? "comp-off" : source === "leave" ? "leave" : "this";
+    const reqTypeLabel = source === "compoff" ? "comp-off" : source === "leave" ? "leave" : source === "attendance" ? "attendance regularization" : "this";
     if (!confirm(`Are you sure you want to cancel this ${reqTypeLabel} request?`)) return;
     setIsCancelling(true);
     try {
@@ -52,7 +61,15 @@ export const RequestDetails: React.FC<RequestDetailsProps> = ({
           toast.success("Leave request cancelled successfully.");
           onBack();
         } else {
-          toast.error(res.error || res.message || "Failed to cancel leave request.");
+          toast.error(res.error || "Failed to cancel leave request.");
+        }
+      } else if (source === "attendance") {
+        const res = await deleteAttendanceRequest(dbId);
+        if (res.success) {
+          toast.success("Attendance regularization request cancelled successfully.");
+          onBack();
+        } else {
+          toast.error(res.message || "Failed to cancel attendance request.");
         }
       }
     } catch (err: any) {
@@ -643,7 +660,7 @@ export const RequestDetails: React.FC<RequestDetailsProps> = ({
               Request Detail View
             </h2>
           </div>
-          {(source === "compoff" || source === "leave") && details?.status === "PENDING" && (
+          {canCancel && (
             <button
               type="button"
               disabled={isCancelling}

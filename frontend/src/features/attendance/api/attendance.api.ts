@@ -258,3 +258,16 @@ export async function deleteCompOffRequest(id: number) {
   const json = await res.json();
   return json;
 }
+
+export async function deleteAttendanceRequest(id: number) {
+  const token = getAuthToken();
+  const res = await fetch(`${API_BASE_URL}/api/attendance-requests/${id}`, {
+    method: "DELETE",
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  const json = await res.json();
+  return json;
+}

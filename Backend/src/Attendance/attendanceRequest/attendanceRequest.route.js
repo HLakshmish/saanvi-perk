@@ -1,18 +1,13 @@
 const controller = require("./attendanceRequest.controller");
 const schema = require("./attendanceRequest.schema");
-const requirePermission = require("../../middleware/checkPermission");
 
 async function routes(fastify, options) {
-    const opts = (s, permissionCode) => ({
-        schema: s,
-        preValidation: permissionCode 
-            ? [fastify.authenticate, requirePermission(permissionCode)]
-            : [fastify.authenticate]
-    });
+    fastify.addHook("preValidation", fastify.authenticate);
 
-    fastify.post("/", opts(schema.createRequestSchema), controller.createRequest.bind(controller));
-    fastify.get("/", opts(schema.getAllSchema), controller.getAllRequests.bind(controller));
-    fastify.put("/:id/status", opts(schema.updateStatusSchema, 'MANAGE_ATTENDANCE_REQUESTS'), controller.updateRequestStatus.bind(controller));
+    fastify.post("/", { schema: schema.createRequestSchema }, controller.createRequest.bind(controller));
+    fastify.get("/", { schema: schema.getAllSchema }, controller.getAllRequests.bind(controller));
+    fastify.put("/:id/status", { schema: schema.updateStatusSchema }, controller.updateRequestStatus.bind(controller));
+    fastify.delete("/:id", { schema: schema.deleteRequestSchema }, controller.deleteRequest.bind(controller));
 }
 
 module.exports = routes;
