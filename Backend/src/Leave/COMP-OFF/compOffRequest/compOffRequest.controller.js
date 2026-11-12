@@ -52,7 +52,7 @@ class CompOffRequestController {
     async create(request, reply) {
         try {
             let companyId = request.user?.companyId;
-            if (request.user?.role === 'SUPER_ADMIN' || request.user?.role === 'OWNER') {
+            if (['SUPERADMIN', 'SUPER_ADMIN', 'OWNER'].includes(request.user?.role)) {
                 companyId = request.body.companyId || companyId;
             }
 
@@ -90,7 +90,7 @@ class CompOffRequestController {
         try {
             const { id } = request.params;
             let companyId = request.user?.companyId;
-            if (request.user?.role === 'SUPER_ADMIN' || request.user?.role === 'OWNER') {
+            if (['SUPERADMIN', 'SUPER_ADMIN', 'OWNER'].includes(request.user?.role)) {
                 companyId = request.query.companyId || companyId;
             }
 
@@ -116,7 +116,7 @@ class CompOffRequestController {
     async getAll(request, reply) {
         try {
             let companyId = request.user?.companyId;
-            if (request.user?.role === 'SUPER_ADMIN' || request.user?.role === 'OWNER') {
+            if (['SUPERADMIN', 'SUPER_ADMIN', 'OWNER'].includes(request.user?.role)) {
                 companyId = request.query.companyId || companyId;
             }
 
@@ -143,7 +143,7 @@ class CompOffRequestController {
         try {
             const { id } = request.params;
             let companyId = request.user?.companyId;
-            if (request.user?.role === 'SUPER_ADMIN' || request.user?.role === 'OWNER') {
+            if (['SUPERADMIN', 'SUPER_ADMIN', 'OWNER'].includes(request.user?.role)) {
                 companyId = request.query.companyId || companyId;
             }
 
@@ -193,7 +193,7 @@ class CompOffRequestController {
         try {
             const { id } = request.params;
             let companyId = request.user?.companyId;
-            if (request.user?.role === 'SUPER_ADMIN' || request.user?.role === 'OWNER') {
+            if (['SUPERADMIN', 'SUPER_ADMIN', 'OWNER'].includes(request.user?.role)) {
                 companyId = request.query.companyId || companyId;
             }
 

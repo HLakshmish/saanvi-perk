@@ -50,7 +50,15 @@ async function checkCanManageAttendance(user) {
 class AttendanceController {
     async createAttendance(request, reply) {
         try {
-            const data = { ...request.body, companyId: request.user.companyId };
+            let targetUserId = Number(request.user.userId);
+            if (request.body.userId && Number(request.body.userId) !== targetUserId) {
+                const canManage = await checkCanManageAttendance(request.user);
+                if (!canManage) {
+                    return reply.code(403).send({ success: false, message: "Forbidden: Cannot clock in for another user." });
+                }
+                targetUserId = Number(request.body.userId);
+            }
+            const data = { ...request.body, companyId: request.user.companyId, userId: targetUserId };
             const attendance = await attendanceService.createAttendance(data);
             reply.code(201).send({ success: true, message: "Attendance record created", data: attendance });
         } catch (error) { reply.code(400).send({ success: false, message: error.message }); }
@@ -83,6 +91,22 @@ class AttendanceController {
         try {
             const attendance = await attendanceService.getAttendanceById(Number(request.params.id));
             if (attendance.companyId !== request.user.companyId) return reply.code(403).send({ success: false, message: "Forbidden" });
+
+            const canManage = await checkCanManageAttendance(request.user);
+            if (!canManage) {
+                // Non-managers can ONLY update their OWN attendance record
+                if (Number(attendance.userId) !== Number(request.user.userId)) {
+                    return reply.code(403).send({ success: false, message: "Forbidden: Cannot update another user's attendance record." });
+                }
+                // Non-managers can ONLY update check-out fields (clocking out)
+                const allowedKeys = ['checkOutTime', 'checkOutLatitude', 'checkOutLongitude', 'remarks'];
+                const payloadKeys = Object.keys(request.body);
+                const hasUnauthorizedKeys = payloadKeys.some(k => !allowedKeys.includes(k));
+                if (hasUnauthorizedKeys) {
+                    return reply.code(403).send({ success: false, message: "Forbidden: Non-managers can only record check-out." });
+                }
+            }
+
             const updated = await attendanceService.updateAttendance(Number(request.params.id), request.body);
             reply.code(200).send({ success: true, message: "Attendance record updated", data: updated });
         } catch (error) { reply.code(400).send({ success: false, message: error.message }); }
@@ -91,6 +115,12 @@ class AttendanceController {
         try {
             const attendance = await attendanceService.getAttendanceById(Number(request.params.id));
             if (attendance.companyId !== request.user.companyId) return reply.code(403).send({ success: false, message: "Forbidden" });
+
+            const canManage = await checkCanManageAttendance(request.user);
+            if (!canManage) {
+                return reply.code(403).send({ success: false, message: "Forbidden: You are not authorized to delete attendance records." });
+            }
+
             await attendanceService.deleteAttendance(Number(request.params.id));
             reply.code(200).send({ success: true, message: "Attendance record deleted" });
         } catch (error) { reply.code(400).send({ success: false, message: error.message }); }
