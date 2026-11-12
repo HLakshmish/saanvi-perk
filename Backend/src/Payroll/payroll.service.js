@@ -1,6 +1,43 @@
 const payrollRepository = require("./payroll.repository");
 const prisma = require("../config/prisma");
 
+function normalizeDate(d) {
+    if (!d) return null;
+    if (d instanceof Date) {
+        if (isNaN(d.getTime())) return null;
+        return d.toISOString().split('T')[0];
+    }
+    const str = String(d).trim();
+    if (!str || str.toLowerCase() === 'null' || str.toLowerCase() === 'undefined') return null;
+
+    // Handle DD/MM/YYYY or DD-MM-YYYY
+    const ddmmyyyy = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+    if (ddmmyyyy) {
+        const day = ddmmyyyy[1].padStart(2, '0');
+        const month = ddmmyyyy[2].padStart(2, '0');
+        const year = ddmmyyyy[3];
+        return `${year}-${month}-${day}`;
+    }
+
+    // Handle YYYY/MM/DD or YYYY-MM-DD
+    const yyyymmdd = str.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+    if (yyyymmdd) {
+        const year = yyyymmdd[1];
+        const month = yyyymmdd[2].padStart(2, '0');
+        const day = yyyymmdd[3].padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    try {
+        const parsed = new Date(str);
+        if (!isNaN(parsed.getTime())) {
+            return parsed.toISOString().split('T')[0];
+        }
+    } catch (_) {}
+
+    return str;
+}
+
 class PayrollService {
     // Default system rates if not configured in DB yet
     getDefaultSettings() {
@@ -21,7 +58,8 @@ class PayrollService {
     }
 
     async getSettings(companyId, targetDate = null) {
-        const settings = await payrollRepository.getSettings(companyId, targetDate);
+        const normalized = normalizeDate(targetDate);
+        const settings = await payrollRepository.getSettings(companyId, normalized);
         if (!settings) {
             return {
                 companyId,
@@ -36,8 +74,8 @@ class PayrollService {
         return {
             id: settings.id,
             companyId: settings.company_id,
-            effectiveFrom: settings.effective_from ? new Date(settings.effective_from).toISOString().split('T')[0] : '2024-01-01',
-            effectiveTo: settings.effective_to ? new Date(settings.effective_to).toISOString().split('T')[0] : null,
+            effectiveFrom: normalizeDate(settings.effective_from) || '2024-01-01',
+            effectiveTo: normalizeDate(settings.effective_to) || null,
             versionName: settings.version_name || null,
             remarks: settings.remarks || null,
             basicPercentage: Number(settings.basic_percentage),
@@ -189,7 +227,12 @@ class PayrollService {
 
         // Allowances
         const remainingGross = Math.max(0, monthlyGrossCalc - basicMonthly);
-        const hraMonthly = Math.round((remainingGross / 2) * 100) / 100;
+        const hraPct = Number(rates.hraPercentage !== undefined ? rates.hraPercentage : 25.00);
+        const otherPct = Number(rates.otherAllowancesPercentage !== undefined ? rates.otherAllowancesPercentage : 25.00);
+        const allowanceSum = hraPct + otherPct;
+        const hraRatio = allowanceSum > 0 ? (hraPct / allowanceSum) : 0.5;
+
+        const hraMonthly = Math.round(remainingGross * hraRatio * 100) / 100;
         const otherAllowancesMonthly = Math.round((remainingGross - hraMonthly) * 100) / 100;
 
         // Employee Deductions
@@ -224,7 +267,12 @@ class PayrollService {
 
         return {
             ratesApplied: {
+                effectiveFrom: rates.effectiveFrom || null,
+                effectiveTo: rates.effectiveTo || null,
+                versionName: rates.versionName || null,
                 basicPercentage: rates.basicPercentage,
+                hraPercentage: rates.hraPercentage,
+                otherAllowancesPercentage: rates.otherAllowancesPercentage,
                 employeePfRate: epfRate,
                 employeeEsiRate: rates.employeeEsiRate,
                 professionalTax: rates.professionalTax,
@@ -271,7 +319,8 @@ class PayrollService {
     }
 
     async calculateBreakup(companyId, payload) {
-        const settings = await this.getSettings(companyId, payload.effectiveDate || null);
+        const effDate = normalizeDate(payload.effectiveDate) || null;
+        const settings = await this.getSettings(companyId, effDate);
         return this.calculateSalaryBreakup(payload, settings);
     }
 
@@ -284,7 +333,8 @@ class PayrollService {
             throw new Error("Employee not found in this company.");
         }
 
-        const effDate = payload.effectiveDate || new Date().toISOString().split('T')[0];
+        const effDate = normalizeDate(payload.effectiveDate) || new Date().toISOString().split('T')[0];
+        const effTo = normalizeDate(payload.effectiveTo) || null;
         const settings = await this.getSettings(companyId, effDate);
         const breakup = this.calculateSalaryBreakup(payload, settings);
 
@@ -316,7 +366,7 @@ class PayrollService {
             gratuityMonthly: breakup.monthly.gratuity,
             gratuityAnnual: breakup.annual.gratuity,
             effectiveDate: effDate,
-            effectiveTo: payload.effectiveTo || null,
+            effectiveTo: effTo,
             hikePercentage: payload.hikePercentage,
             previousCtc: payload.previousCtc,
             revisionType: payload.revisionType,
@@ -336,11 +386,99 @@ class PayrollService {
     }
 
     async getSalaryStructure(companyId, userId, targetDate = null) {
-        return await payrollRepository.getSalaryStructureByUserId(Number(userId), Number(companyId), targetDate);
+        const normalized = normalizeDate(targetDate);
+        const structure = await payrollRepository.getSalaryStructureByUserId(Number(userId), Number(companyId), normalized);
+        if (!structure) return null;
+
+        const effDate = normalized || normalizeDate(structure.effective_date) || new Date().toISOString().split('T')[0];
+        const settings = await this.getSettings(companyId, effDate);
+
+        if (structure.annual_ctc && Number(structure.annual_ctc) > 0) {
+            try {
+                const computed = this.calculateSalaryBreakup({
+                    annualCtc: Number(structure.annual_ctc),
+                    monthlyCtc: Number(structure.monthly_ctc)
+                }, settings);
+
+                return {
+                    ...structure,
+                    basic_monthly: computed.monthly.basicPay,
+                    basic_annual: computed.annual.basicPay,
+                    hra_monthly: computed.monthly.hra,
+                    hra_annual: computed.annual.hra,
+                    other_allowances_monthly: computed.monthly.otherAllowances,
+                    other_allowances_annual: computed.annual.otherAllowances,
+                    employee_pf_monthly: computed.monthly.employeePf,
+                    employee_pf_annual: computed.annual.employeePf,
+                    employee_esi_monthly: computed.monthly.employeeEsi,
+                    employee_esi_annual: computed.annual.employeeEsi,
+                    professional_tax_monthly: computed.monthly.professionalTax,
+                    professional_tax_annual: computed.annual.professionalTax,
+                    totalDeductionsMonthly: computed.monthly.totalDeductions,
+                    totalDeductionsAnnual: computed.annual.totalDeductions,
+                    net_salary_monthly: computed.monthly.netSalary,
+                    net_salary_annual: computed.annual.netSalary,
+                    employer_pf_monthly: computed.monthly.employerPf,
+                    employer_pf_annual: computed.annual.employerPf,
+                    employer_esi_monthly: computed.monthly.employerEsi,
+                    employer_esi_annual: computed.annual.employerEsi,
+                    gratuity_monthly: computed.monthly.gratuity,
+                    gratuity_annual: computed.annual.gratuity,
+                    ratesApplied: computed.ratesApplied
+                };
+            } catch (e) {
+                console.error("Error computing dynamic structure breakup:", e);
+            }
+        }
+
+        return structure;
     }
 
     async getAllSalaryStructures(companyId, search) {
-        return await payrollRepository.getAllSalaryStructures(Number(companyId), search);
+        const list = await payrollRepository.getAllSalaryStructures(Number(companyId), search);
+        if (!list || list.length === 0) return [];
+
+        const today = new Date().toISOString().split('T')[0];
+        const settings = await this.getSettings(companyId, today);
+
+        return list.map(item => {
+            if (item.annual_ctc && Number(item.annual_ctc) > 0) {
+                try {
+                    const computed = this.calculateSalaryBreakup({
+                        annualCtc: Number(item.annual_ctc),
+                        monthlyCtc: Number(item.monthly_ctc)
+                    }, settings);
+
+                    return {
+                        ...item,
+                        basic_monthly: computed.monthly.basicPay,
+                        basic_annual: computed.annual.basicPay,
+                        hra_monthly: computed.monthly.hra,
+                        hra_annual: computed.annual.hra,
+                        other_allowances_monthly: computed.monthly.otherAllowances,
+                        other_allowances_annual: computed.annual.otherAllowances,
+                        employee_pf_monthly: computed.monthly.employeePf,
+                        employee_pf_annual: computed.annual.employeePf,
+                        employee_esi_monthly: computed.monthly.employeeEsi,
+                        employee_esi_annual: computed.annual.employeeEsi,
+                        professional_tax_monthly: computed.monthly.professionalTax,
+                        professional_tax_annual: computed.annual.professionalTax,
+                        total_deductions_monthly: computed.monthly.totalDeductions,
+                        total_deductions_annual: computed.annual.totalDeductions,
+                        net_salary_monthly: computed.monthly.netSalary,
+                        net_salary_annual: computed.annual.netSalary,
+                        employer_pf_monthly: computed.monthly.employerPf,
+                        employer_pf_annual: computed.annual.employerPf,
+                        employer_esi_monthly: computed.monthly.employerEsi,
+                        employer_esi_annual: computed.annual.employerEsi,
+                        gratuity_monthly: computed.monthly.gratuity,
+                        gratuity_annual: computed.annual.gratuity,
+                        ratesApplied: computed.ratesApplied
+                    };
+                } catch (e) {}
+            }
+            return item;
+        });
     }
 
     async generateMonthlyPayroll(companyId, { month, year, userIds }) {
@@ -427,33 +565,21 @@ class PayrollService {
                 continue;
             }
 
-            // Ensure component breakup values are populated (compute dynamically from CTC if needed)
-            let basicMonthly = Number(structure.basic_monthly || 0);
-            let hraMonthly = Number(structure.hra_monthly || 0);
-            let otherAllowancesMonthly = Number(structure.other_allowances_monthly || 0);
-            let employeePfMonthly = Number(structure.employee_pf_monthly || 0);
-            let employeeEsiMonthly = Number(structure.employee_esi_monthly || 0);
-            let professionalTaxMonthly = Number(structure.professional_tax_monthly || 0);
-            let employerPfMonthly = Number(structure.employer_pf_monthly || 0);
-            let employerEsiMonthly = Number(structure.employer_esi_monthly || 0);
-            let gratuityMonthly = Number(structure.gratuity_monthly || 0);
+            // Dynamically calculate component breakup using the Date-Based statutory policy active on targetDateStr
+            const computedBreakup = this.calculateSalaryBreakup({
+                annualCtc: Number(structure.annual_ctc),
+                monthlyCtc: Number(structure.monthly_ctc)
+            }, settings);
 
-            if ((!basicMonthly || basicMonthly === 0) && Number(structure.annual_ctc || 0) > 0) {
-                try {
-                    const computed = this.calculateSalaryBreakup({ annualCtc: Number(structure.annual_ctc) }, settings);
-                    basicMonthly = computed.monthly.basicPay;
-                    hraMonthly = computed.monthly.hra;
-                    otherAllowancesMonthly = computed.monthly.otherAllowances;
-                    employeePfMonthly = computed.monthly.employeePf;
-                    employeeEsiMonthly = computed.monthly.employeeEsi;
-                    professionalTaxMonthly = computed.monthly.professionalTax;
-                    employerPfMonthly = computed.monthly.employerPf;
-                    employerEsiMonthly = computed.monthly.employerEsi;
-                    gratuityMonthly = computed.monthly.gratuity;
-                } catch (e) {
-                    console.error("Error computing dynamic salary breakup:", e);
-                }
-            }
+            let basicMonthly = computedBreakup.monthly.basicPay;
+            let hraMonthly = computedBreakup.monthly.hra;
+            let otherAllowancesMonthly = computedBreakup.monthly.otherAllowances;
+            let employeePfMonthly = computedBreakup.monthly.employeePf;
+            let employeeEsiMonthly = computedBreakup.monthly.employeeEsi;
+            let professionalTaxMonthly = computedBreakup.monthly.professionalTax;
+            let employerPfMonthly = computedBreakup.monthly.employerPf;
+            let employerEsiMonthly = computedBreakup.monthly.employerEsi;
+            let gratuityMonthly = computedBreakup.monthly.gratuity;
 
             // Calculate working days & pro-ration for employees joining/leaving mid-month
             const totalDaysInMonth = daysInMonth;

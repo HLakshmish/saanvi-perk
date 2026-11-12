@@ -26,12 +26,16 @@ function getCompanyIdCookie(): number | null {
   return null;
 }
 
-function getHeaders(): HeadersInit {
+function getHeaders(hasBody = true): HeadersInit {
   const token = getAuthToken();
-  return {
-    "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {})
-  };
+  const headers: Record<string, string> = {};
+  if (hasBody) {
+    headers["Content-Type"] = "application/json";
+  }
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  return headers;
 }
 
 // 1. Get Payroll Settings (dynamic rates, optionally for a specific effective date)
@@ -44,7 +48,7 @@ export async function getPayrollSettings(date?: string, companyId?: number): Pro
 
     const qStr = query.toString();
     const url = qStr ? `${API_BASE_URL}/api/payroll/settings?${qStr}` : `${API_BASE_URL}/api/payroll/settings`;
-    const res = await fetch(url, { method: "GET", headers: getHeaders() });
+    const res = await fetch(url, { method: "GET", headers: getHeaders(false) });
     const json = await res.json();
     if (res.ok && json.success) {
       return { success: true, data: json.data };
@@ -61,7 +65,7 @@ export async function getPayrollSettingsHistory(companyId?: number): Promise<{ s
     const cId = companyId || getCompanyIdCookie();
     const query = cId ? `?companyId=${cId}` : "";
     const url = `${API_BASE_URL}/api/payroll/settings/history${query}`;
-    const res = await fetch(url, { method: "GET", headers: getHeaders() });
+    const res = await fetch(url, { method: "GET", headers: getHeaders(false) });
     const json = await res.json();
     if (res.ok && json.success) {
       return { success: true, data: json.data };
@@ -79,7 +83,7 @@ export async function deletePayrollSettingsVersion(id: number, companyId?: numbe
     const query = cId ? `?companyId=${cId}` : "";
     const res = await fetch(`${API_BASE_URL}/api/payroll/settings/versions/${id}${query}`, {
       method: "DELETE",
-      headers: getHeaders()
+      headers: getHeaders(false)
     });
     const json = await res.json();
     if (res.ok && json.success) {
@@ -172,7 +176,7 @@ export async function getSalaryHistory(
     const query = cId ? `?companyId=${cId}` : "";
     const res = await fetch(`${API_BASE_URL}/api/payroll/salaries/${userId}/history${query}`, {
       method: "GET",
-      headers: getHeaders()
+      headers: getHeaders(false)
     });
     const json = await res.json();
     if (res.ok && json.success) {
@@ -194,7 +198,7 @@ export async function getAllSalaryStructures(search?: string, companyId?: number
 
     const res = await fetch(`${API_BASE_URL}/api/payroll/salaries?${query.toString()}`, {
       method: "GET",
-      headers: getHeaders()
+      headers: getHeaders(false)
     });
     const json = await res.json();
     if (res.ok && json.success) {
@@ -220,7 +224,7 @@ export async function getEmployeeSalaryStructure(
     const queryString = params.toString() ? `?${params.toString()}` : "";
     const res = await fetch(`${API_BASE_URL}/api/payroll/salaries/${userId}${queryString}`, {
       method: "GET",
-      headers: getHeaders()
+      headers: getHeaders(false)
     });
     const json = await res.json();
     if (res.ok && json.success) {
@@ -264,7 +268,7 @@ export async function getPayslips(filters: { userId?: number; month?: number; ye
 
     const res = await fetch(`${API_BASE_URL}/api/payroll/payslips?${query.toString()}`, {
       method: "GET",
-      headers: getHeaders()
+      headers: getHeaders(false)
     });
     const json = await res.json();
     if (res.ok && json.success) {
@@ -283,7 +287,7 @@ export async function getPayslipById(id: number, companyId?: number): Promise<{ 
     const query = cId ? `?companyId=${cId}` : "";
     const res = await fetch(`${API_BASE_URL}/api/payroll/payslips/${id}${query}`, {
       method: "GET",
-      headers: getHeaders()
+      headers: getHeaders(false)
     });
     const json = await res.json();
     if (res.ok && json.success) {
@@ -321,7 +325,7 @@ export async function deletePayslip(id: number, companyId?: number): Promise<{ s
     const query = cId ? `?companyId=${cId}` : "";
     const res = await fetch(`${API_BASE_URL}/api/payroll/payslips/${id}${query}`, {
       method: "DELETE",
-      headers: getHeaders()
+      headers: getHeaders(false)
     });
     const json = await res.json();
     if (res.ok && json.success) {
